@@ -1,0 +1,59 @@
+---
+title: "MB1 Data Reading and Merge"
+author: "The ManyBabies Analysis Team"
+date: '`r format(Sys.time(), "%a %b %d %X %Y")`'
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+---
+
+```{r libraries}
+source(here::here("helper/common.R"))
+source(here("helper/preprocessing_helper.R"))
+```
+
+
+# Intro
+
+Pilot data analysis for MB1. 
+
+# File reading
+
+```{r}
+labs <- dir("pilot_data")
+participants_columns <- read_csv(here("metadata/participants_columns_pilot.csv")) 
+```
+
+Read participant data. 
+
+```{r}
+pd <- labs %>%
+  map_df(function(lab) {
+    lab_files <- dir(here(paste0("pilot_data/",lab))) 
+    participants <- lab_files[str_detect(lab_files, "participants")]
+    
+    participants %>%
+      map_df(function(p) {
+        clean_participant_file(p, 
+                               path = here(paste0("pilot_data/",lab,"/")))
+      })
+  })
+```
+
+Read eye-tracking data.
+
+```{r}
+etd <- labs %>%
+  map_df(function(lab) {
+    lab_files <- dir(here(paste0("pilot_data/",lab))) 
+    et_data <- lab_files[str_detect(lab_files, "data")]
+    
+    et_data %>%
+      map_df(function(p) {
+        read_et_trial_file(p, 
+                           path = here(paste0("pilot_data/",lab,"/")))
+      })
+  })
+```
