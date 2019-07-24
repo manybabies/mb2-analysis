@@ -34,7 +34,6 @@ pd <- labs %>%
   map_df(function(lab) {
     lab_files <- dir(here(paste0("pilot_data/",lab))) 
     participants <- lab_files[str_detect(lab_files, "participants")]
-    
     participants %>%
       map_df(function(p) {
         clean_participant_file(p, 
