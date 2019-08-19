@@ -256,6 +256,49 @@ read_et_trial_file <- function(fname, path) {
     
     
   } else if (str_detect(fname, "SMI")) {
+    # revisit this decision!
+
+    et_raw$TrackLoss <- et_raw[, "Tracking Ratio [%]"] <= 20
+    # et_raw$TrackLoss[is.na(et_raw$ValidityLeft) | is.na(et_raw$ValidityRight)] <- TRUE
+    
+    # get appropriate AOIs
+    # height <- median(et_raw$MediaHeight[str_detect(et_raw$MediaName, "FAM")],na.rm=TRUE)
+    # if (height == 960) {
+    #   correct_aoi <- read_csv(here("metadata/correct_aoi_960.csv"))
+    #   incorrect_aoi <- read_csv(here("metadata/incorrect_aoi_960.csv"))
+    # } else if (height == 900) {
+    correct_aoi <- read_csv(here("metadata/correct_aoi_900.csv"))
+    incorrect_aoi <- read_csv(here("metadata/incorrect_aoi_900.csv"))
+    # } else {
+    #   stop(print("Unrecognized stimulus size!")) 
+    # }
+    
+    # Remove duplicate timestamps within participant
+    et_raw <- et_raw[!duplicated(et_raw[, c("RecordingTime [ms]", "Participant")]),]
+    
+    # ADCSpx is the display coordinates, MCSpx is the media coordinates
+    et_raw <- add_aoi(data = et_raw, aoi_dataframe = correct_aoi, 
+                      x_col = "Point of Regard Left X [px]", y_col = "Point of Regard Left Y [px]", 
+                      aoi_name = "Correct",
+                      x_min_col = "Left", x_max_col = "Right", 
+                      y_min_col = "Top", y_max_col = "Bottom")
+    
+    et_raw <- add_aoi(data = et_raw, aoi_dataframe = incorrect_aoi, 
+                      x_col = "Point of Regard Left X [px]", y_col = "Point of Regard Left Y [px]", 
+                      aoi_name = "Incorrect",
+                      x_min_col = "Left", x_max_col = "Right", 
+                      y_min_col = "Top", y_max_col = "Bottom")
+    
+    etd <- make_eyetrackingr_data(et_raw, 
+                                  participant_column = "Participant",
+                                  item_column = "Stimulus",
+                                  trial_column = "Trial",
+                                  time_column = "RecordingTime [ms]",
+                                  trackloss_column = "TrackLoss",
+                                  aoi_columns = c("Correct", "Incorrect"),
+                                  treat_non_aoi_looks_as_missing = FALSE)
+    
+  } else if (str_detect(fname, "EyeLink")) {
     
   }
   
