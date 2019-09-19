@@ -94,7 +94,7 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
   left_join(trials) %>%
   left_join(subjects) %>%
   select(xy_data_id, subject_id, trial_id, x, y, t)
-
+-u
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
 write_csv(xy_data, "../processed_data/xy_data.csv")
