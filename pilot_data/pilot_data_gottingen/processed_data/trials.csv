@@ -1,0 +1,9 @@
+aoi_region_id,dataset_id,lab_trial_id,distractor_image,distractor_label,full_phrase,point_of_disambiguation,target_image,target_label,target_side,trial_id
+0,3,FAM_LL_1200x9001.avi1,distractor,distractor,NA,30600,target,target,left,0
+0,3,FAM_LR_1200x9001.avi1,distractor,distractor,NA,30600,target,target,right,1
+0,3,FAM_RR_1200x9001.avi1,distractor,distractor,NA,30600,target,target,right,2
+0,3,FAM_RR_1200x9001.avi2,distractor,distractor,NA,30600,target,target,right,3
+0,3,FAM_LL_1200x9001.avi2,distractor,distractor,NA,30600,target,target,left,4
+0,3,FAM_RL_1200x9001.avi1,distractor,distractor,NA,30600,target,target,left,5
+0,3,FAM_LR_1200x9001.avi2,distractor,distractor,NA,30600,target,target,right,6
+0,3,FAM_RL_1200x9001.avi2,distractor,distractor,NA,30600,target,target,left,7
