@@ -1,5 +1,5 @@
 ---
-title: "MB1 Data Reading and Merge"
+title: "MB2 Pilot Analysis"
 author: "The ManyBabies Analysis Team"
 date: '`r format(Sys.time(), "%a %b %d %X %Y")`'
 output: 
@@ -18,42 +18,84 @@ source(here("helper/preprocessing_helper.R"))
 
 # Intro
 
-Pilot data analysis for MB1. 
+Pilot data analysis for MB2)
 
 # File reading
 
 ```{r}
 labs <- dir("pilot_data")
-participants_columns <- read_csv(here("metadata/participants_columns_pilot.csv")) 
 ```
 
-Read participant data. 
 
 ```{r}
-pd <- labs %>%
+d <- labs %>%
   map_df(function(lab) {
-    lab_files <- dir(here(paste0("pilot_data/",lab))) 
-    participants <- lab_files[str_detect(lab_files, "participants")]
-    participants %>%
-      map_df(function(p) {
-        clean_participant_file(p, 
-                               path = here(paste0("pilot_data/",lab,"/")))
-      })
-  })
-```
-
-Read eye-tracking data.
-
-```{r}
-etd <- labs %>%
-  map_df(function(lab) {
-    lab_files <- dir(here(paste0("pilot_data/",lab))) 
-    et_data <- lab_files[str_detect(lab_files, "data")]
+    aoi_data <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/aoi_data.csv"))) 
+    subjects <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/subjects.csv"))) 
+    trials <- read_csv(here(paste0("pilot_data/",
+                                   lab,"/processed_data/trials.csv"))) 
+    datasets <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/datasets.csv")))
     
-    et_data %>%
-      map_df(function(p) {
-        read_et_trial_file(p, 
-                           path = here(paste0("pilot_data/",lab,"/")))
-      })
+    left_join(aoi_data, subjects) %>%
+      left_join(trials) %>%
+      left_join(datasets) %>%
+      select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, 
+             age, t, aoi) %>%
+      rename(subid = lab_subject_id, 
+             lab = lab_dataset_id, 
+             stimulus = lab_trial_id, 
+             trial_num = trial_id) %>%
+      mutate(trial_num = trial_num + 1) # remove 0 indexing
   })
+```
+
+
+# Analysis
+
+Descriptives
+
+```{r}
+d %>%
+  group_by(lab, subid) %>%
+  summarise(age = mean(age)) %>%
+  summarise(n = n(), 
+            age = mean(age)/30.25) %>%
+  kable(digits = 2)
+```
+
+Anticipation plot across all trials. 
+
+```{r}
+ms <- d %>%
+  group_by(t, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm=TRUE),
+            distractor = mean(aoi == "distractor", na.rm=TRUE)) %>%
+  gather(region, looking, target, distractor) 
+
+ggplot(ms, aes(x = t, y = looking, col = region)) + 
+  geom_line() + 
+  geom_vline(xintercept = 120, col = "red", lty = 2)
+
+```    
+   
+Binned for cleaner curves
+
+```{r}
+ms <- d %>%
+  mutate(block = ifelse(trial_num < 5, 1, 2)) %>%
+  group_by(t, block) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  gather(region, looking, target, distractor) 
+  
+ggplot(ms, aes(x = t, y = looking, col = region)) +
+  geom_point() + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) +
+  facet_wrap(~block)
+  
 ```
