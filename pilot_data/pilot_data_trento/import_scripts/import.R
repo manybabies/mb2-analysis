@@ -2,8 +2,12 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
+# fixed screen resolution which was incrementing in original file
 p <- readxl::read_xlsx("../raw_data/babylab-trento-participants.xlsx")
-d = read_tsv("../raw_data/babylab-trento.tsv") # TODO: row 41892 does not parse correctly
+
+# TODO: row 41892 does not parse correctly
+# fixed participant 2 naming convention
+d = read_tsv("../raw_data/babylab-trento.tsv") 
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
