@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 library(peekds)
 
-d <- read_csv("../raw_data/uchicago_babylab_rawdata.csv")
+d <- read_csv("../raw_data/uchicago_babylab_rawdata.csv") # TODO: handle parse failures?
 p <- readxl::read_xlsx("../raw_data/uchicago_babylab_participantsheet.xlsx")
 
 # datasets
@@ -71,7 +71,7 @@ trials <- tibble(aoi_region_id = 0,
                                       "left", "right")) %>%
   mutate(trial_id = 0:(n() - 1))
                    
-
+# TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
 write_csv(trials, "../processed_data/trials.csv")
@@ -94,7 +94,7 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
   left_join(trials) %>%
   left_join(subjects) %>%
   select(xy_data_id, subject_id, trial_id, x, y, t)
--u
+
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
 write_csv(xy_data, "../processed_data/xy_data.csv")
