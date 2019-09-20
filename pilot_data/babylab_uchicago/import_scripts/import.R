@@ -2,6 +2,8 @@ library(tidyverse)
 library(readxl)
 library(peekds)
 
+source("../../../helper/pilot_data_helper.R")
+
 d <- read_csv("../raw_data/uchicago_babylab_rawdata.csv") # TODO: handle parse failures?
 p <- readxl::read_xlsx("../raw_data/uchicago_babylab_participantsheet.xlsx")
 
@@ -48,37 +50,25 @@ write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
 # trials
 # trial_id, aoi_region, dataset, lab_trial_id, distractor_image, distractor_label, 
 # full_phrase, point_of_disambiguation, target_image, target_label, target_side
-
-media <- unique(d$MediaName) 
-media <- media[str_detect(media, "FAM") & !is.na(media)]
-
-# point of disambiguation is 30s plus 18 frames
-pod = 30000 + ((1000/30) * 18) 
-
-# target side is last letter of the media label
-str_sub(media, start = 6, end = 6)
-
-trials <- tibble(aoi_region_id = 0, 
-                 dataset_id = 0, 
-                 lab_trial_id = media, 
-                 distractor_image = "distractor", 
-                 distractor_label = "distractor",
-                 full_phrase = NA,
-                 point_of_disambiguation = pod, 
-                 target_image = "target", 
-                 target_label = "target", 
-                 target_side = ifelse(str_sub(media, start = 6, end = 6) == "L", 
-                                      "left", "right")) %>%
-  mutate(trial_id = 0:(n() - 1))
-                   
+pod <- get_pod()
+trials <- get_trials()
+                     
 # TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
 write_csv(trials, "../processed_data/trials.csv")
 
-
 # xy_data
 # xy_data_id, subject_id, trial_id, x, y, t
+
+# get the trial order based on timestamp
+trialorder <- filter(d, grepl("FAM", d$MediaName), 
+                     is.na(EyeTrackerTimestamp) == F) %>%
+                group_by(ParticipantName, MediaName) %>%
+  summarise(firsttime = min(EyeTrackerTimestamp)) %>%
+  mutate(trial_id=rank(firsttime)) %>%
+  select(ParticipantName, MediaName, trial_id)
+d <- left_join(d, trialorder)
 
 # from https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
 # we want ADCSpx coordinates - those are display coordinates
@@ -87,13 +77,14 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
                   x = d$`GazePointX (ADCSpx)`,
                   y = d$`GazePointY (ADCSpx)`,
                   t = (d$EyeTrackerTimestamp - d$EyeTrackerTimestamp[1])/1000,
-                  lab_trial_id = d$MediaName) %>%
-  filter(str_detect(lab_trial_id, "FAM"), 
+                  lab_trial_id = substr(d$MediaName, 5, 6),
+                  trial_id = d$trial_id) %>%
+  filter(lab_trial_id %in% c("LL", "LR", "RL", "RR"),
          !is.na(t)) %>%
   mutate(xy_data_id = 0:(n() - 1)) %>%
   left_join(trials) %>%
   left_join(subjects) %>%
-  select(xy_data_id, subject_id, trial_id, x, y, t)
+  select(xy_data_id, subject_id, trial_id, lab_trial_id, x, y, t)
 
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
