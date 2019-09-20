@@ -2,6 +2,8 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
+source("../../../helper/pilot_data_helper.R")
+
 # fixed screen resolution which was incrementing in original file
 p <- readxl::read_xlsx("../raw_data/babylab-trento-participants.xlsx")
 
