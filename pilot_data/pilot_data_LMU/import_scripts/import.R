@@ -2,9 +2,12 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
-p <- readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_children.xlsx")
+# parsing errors for adults
+p <- bind_rows(readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_children.xlsx"))
+               #readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_adults.xlsx"))
 
-d = read_tsv("../raw_data/LMU_Munich_rawdata_children.tsv") 
+d = bind_rows(read_tsv("../raw_data/LMU_Munich_rawdata_children.tsv"))
+              #read_tsv("../raw_data/LMU_Munich_rawdata_adults.tsv"))
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
