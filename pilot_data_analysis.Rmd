@@ -43,12 +43,10 @@ d <- labs %>%
       left_join(trials) %>%
       left_join(datasets) %>%
       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, 
-             age, t, aoi) %>%
+             age, t, aoi, trial_num) %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
-             stimulus = lab_trial_id, 
-             trial_num = trial_id) %>%
-      mutate(trial_num = trial_num + 1) # remove 0 indexing
+             stimulus = lab_trial_id)
   })
 ```
 

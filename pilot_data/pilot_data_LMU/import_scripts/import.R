@@ -2,9 +2,12 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
-p <- readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_children.xlsx")
+# parsing errors for adults
+p <- bind_rows(readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_children.xlsx"))
+               #readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_adults.xlsx"))
 
-d = read_tsv("../raw_data/LMU_Munich_rawdata_children.tsv") 
+d = bind_rows(read_tsv("../raw_data/LMU_Munich_rawdata_children.tsv"))
+              #read_tsv("../raw_data/LMU_Munich_rawdata_adults.tsv"))
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
@@ -47,34 +50,37 @@ peekds::validate_table(df_table = aoi_regions,
 write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
 
 # trials
-# trial_id, aoi_region, dataset, lab_trial_id, 
-# distractor_image, distractor_label,
-# full_phrase, point_of_disambiguation, target_image, 
-# target_label, target_side
-media <- unique(d$MediaName) 
-media <- media[str_detect(media, "FAM") & !is.na(media)]
+# trial_id, aoi_region, dataset, lab_trial_id, distractor_image, distractor_label, 
+# full_phrase, point_of_disambiguation, target_image, target_label, target_side
 
 # point of disambiguation is 30s plus 18 frames
-# TODO: is this always the pod? could store in helper script
 pod = 30000 + ((1000/30) * 18)
 
-# target side is last letter of the media label
-str_sub(media, start = 6, end = 6)
+# get the trial_num based on timestamp, for each subject
+# assign trial_id based on subject/MediaName combo
+trials <- filter(d, grepl("FAM", d$MediaName), 
+                 is.na(EyeTrackerTimestamp) == F) %>%
+  group_by(ParticipantName, MediaName) %>%
+  summarise(firsttime = min(EyeTrackerTimestamp)) %>%
+  rename(lab_trial_id = MediaName,
+         lab_subject_id = ParticipantName) %>%
+  mutate(trial_num = rank(firsttime),
+         condition = substr(lab_trial_id, 5, 6),
+         aoi_region_id = 0,
+         dataset_id = 4,
+         distractor_image = "distractor",
+         distractor_label = "distractor",
+         full_phrase = NA,
+         point_of_disambiguation = pod,
+         target_image = "target", 
+         target_label = "target", 
+         target_side = ifelse(str_sub(condition, start = 2, end = 2) == "L", 
+                              "left", "right")) %>%
+  ungroup() %>%
+  mutate(trial_id = 0:(n()-1)) %>%
+  select(-firsttime)
 
-trials <- tibble(aoi_region_id = 0, 
-                 aoi_region = 0,
-                 dataset_id = 4, 
-                 lab_trial_id = media, 
-                 distractor_image = "distractor", 
-                 distractor_label = "distractor",
-                 full_phrase = NA,
-                 point_of_disambiguation = pod, 
-                 target_image = "target", 
-                 target_label = "target", 
-                 target_side = ifelse(str_sub(media, start = 6, end = 6) == "L", 
-                                      "left", "right")) %>%
-  mutate(trial_id = 0:(n() - 1))
-
+# TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
 write_csv(trials, "../processed_data/trials.csv")

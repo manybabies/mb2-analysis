@@ -50,37 +50,41 @@ peekds::validate_table(df_table = aoi_regions,
 write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
 
 # trials
-# trial_id, aoi_region, dataset, lab_trial_id, 
-# distractor_image, distractor_label,
-# full_phrase, point_of_disambiguation, target_image, 
-# target_label, target_side
-media <- unique(d$MediaName) 
-media <- media[str_detect(media, "FAM") & !is.na(media)]
+# trial_id, aoi_region, dataset, lab_trial_id, distractor_image, distractor_label, 
+# full_phrase, point_of_disambiguation, target_image, target_label, target_side
 
 # point of disambiguation is 30s plus 18 frames
-# TODO: is this always the pod? could store in helper script
 pod = 30000 + ((1000/30) * 18)
 
-# target side is last letter of the media label
-str_sub(media, start = 6, end = 6)
+# get the trial_num based on timestamp, for each subject
+# assign trial_id based on subject/MediaName combo
+trials <- filter(d, grepl("FAM", d$MediaName), 
+                 is.na(EyeTrackerTimestamp) == F) %>%
+  group_by(ParticipantName, MediaName) %>%
+  summarise(firsttime = min(EyeTrackerTimestamp)) %>%
+  rename(lab_trial_id = MediaName,
+         lab_subject_id = ParticipantName) %>%
+  mutate(trial_num = rank(firsttime),
+         condition = substr(lab_trial_id, 5, 6),
+         aoi_region_id = 0,
+         dataset_id = 1,
+         distractor_image = "distractor",
+         distractor_label = "distractor",
+         full_phrase = NA,
+         point_of_disambiguation = pod,
+         target_image = "target", 
+         target_label = "target", 
+         target_side = ifelse(str_sub(condition, start = 2, end = 2) == "L", 
+                              "left", "right")) %>%
+  ungroup() %>%
+  mutate(trial_id = 0:(n()-1)) %>%
+  select(-firsttime)
 
-trials <- tibble(aoi_region_id = 0, 
-                 aoi_region = 0,
-                 dataset_id = 1, 
-                 lab_trial_id = media, 
-                 distractor_image = "distractor", 
-                 distractor_label = "distractor",
-                 full_phrase = NA,
-                 point_of_disambiguation = pod, 
-                 target_image = "target", 
-                 target_label = "target", 
-                 target_side = ifelse(str_sub(media, start = 6, end = 6) == "L", 
-                                      "left", "right")) %>%
-  mutate(trial_id = 0:(n() - 1))
-
+# TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
 write_csv(trials, "../processed_data/trials.csv")
+
 
 # from https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
 # we want ADCSpx coordinates - those are display coordinates
@@ -101,7 +105,6 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
 write_csv(xy_data, "../processed_data/xy_data.csv")
-# TODO: do we care if there are many NA x and y?
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
