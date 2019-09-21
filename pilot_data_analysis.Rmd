@@ -62,6 +62,17 @@ d %>%
   summarise(n = n(), 
             age = mean(age)/30.25) %>%
   kable(digits = 2)
+
+d %>%
+  group_by(lab, trial_id) %>%
+  summarise(time_range = (max(t) - min(t))/1000) %>%
+  ungroup() %>%
+  group_by(lab) %>% 
+  summarise(longest_trial=max(time_range),
+            shortest_trial=min(time_range),
+            median_trial=median(time_range),
+            proportion_trials_at_median = mean(time_range == median_trial)) %>%
+  kable(digits=2)
 ```
 
 Anticipation plot across all trials. 
