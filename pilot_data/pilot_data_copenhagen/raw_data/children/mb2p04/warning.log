@@ -1,0 +1,16 @@
+4807.608	DISPLAY_INTRO_VIDEO	playTime:Mozart_-_Rondo_Alla_Turca_(Turkish_March).wav Desired playtime is later than curren time. Desired Time = 4728 Current Time =4805. Playing with offset 0.
+
+4843.919	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
+4844.076	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
+5492.527	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4728 Flip Time=5511 Retrace Rate=16.644, prepareTime=813 flip request time 5492
+100392.991	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=100380 Flip Time=100413 Retrace Rate=16.644, prepareTime=65 flip request time 100392
+127361.943	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:FAM_LL_1280x960X.wav Desired playtime is later than curren time. Desired Time = 127354 Current Time =127360. Playing with offset 0.
+
+127367.595	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=127354 Flip Time=127388 Retrace Rate=16.644, prepareTime=51 flip request time 127367
+167581.779	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=167554 Flip Time=167591 Retrace Rate=16.644, prepareTime=66 flip request time 167581
+328435.059	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:FAM_RL_1280x960X.wav Desired playtime is later than curren time. Desired Time = 328422 Current Time =328427. Playing with offset 0.
+
+328440.653	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=328416 Flip Time=328455 Retrace Rate=16.644, prepareTime=62 flip request time 328440
+368640.444	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:FAM_LR_1280x960X.wav Desired playtime is later than curren time. Desired Time = 368625 Current Time =368634. Playing with offset 0.
+
+368646.039	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=368622 Flip Time=368659 Retrace Rate=16.644, prepareTime=62 flip request time 368645
