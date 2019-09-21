@@ -1,0 +1,10 @@
+5286.027	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
+5286.178	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
+5351.108	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=5250 Flip Time=5366 Retrace Rate=16.927, prepareTime=155 flip request time 5350
+67213.642	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=67180 Flip Time=67229 Retrace Rate=16.927, prepareTime=79 flip request time 67213
+103714.496	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:FAM_RL_1280x960X.wav Desired playtime is later than curren time. Desired Time = 103667 Current Time =103710. Playing with offset 0.
+
+103719.955	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=103669 Flip Time=103734 Retrace Rate=16.927, prepareTime=88 flip request time 103719
+425044.142	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:star_calibX.wav Desired playtime is later than curren time. Desired Time = 425012 Current Time =425033. Playing with offset 0.
+
+425049.088	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=425020 Flip Time=425062 Retrace Rate=16.927, prepareTime=67 flip request time 425048

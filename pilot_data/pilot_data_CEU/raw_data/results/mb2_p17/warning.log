@@ -1,0 +1,6 @@
+4244.92	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
+4245.116	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
+4376.758	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4231 Flip Time=4398 Retrace Rate=16.651, prepareTime=195 flip request time 4376
+79973.408	DISPLAY_BLANK_INTRO_OFF	playTime:silent.wav Desired playtime is later than curren time. Desired Time = 79698 Current Time =79964. Playing with offset 0.
+
+80009.622	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=79698 Flip Time=80031 Retrace Rate=16.651, prepareTime=366 flip request time 80009
