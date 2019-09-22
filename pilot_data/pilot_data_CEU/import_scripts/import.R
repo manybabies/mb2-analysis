@@ -57,8 +57,9 @@ subjects <- p %>%
          age = age_days, 
          sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
-         lab_subject_id = tolower(lab_subject_id)) %>%
-  select(subject_id, age, sex, lab_subject_id)
+         lab_subject_id = tolower(lab_subject_id),
+         error = session_error == "error") %>%
+  select(subject_id, age, sex, lab_subject_id, error)
 
 peekds::validate_table(df_table = subjects, 
                        table_type = "subjects")
