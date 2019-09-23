@@ -78,13 +78,12 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_vline(xintercept = 120, col = "red", lty = 2)
 
 ```    
-   
-Binned for cleaner curves
+
+In the primary time period of interest
 
 ```{r}
 ms <- d %>%
-  mutate(block = ifelse(trial_num < 5, 1, 2)) %>%
-  group_by(t, block) %>%
+  group_by(t) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   gather(region, looking, target, distractor) 
@@ -93,9 +92,75 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
   geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
-  geom_vline(xintercept = 120, col = "red", lty = 2) +
-  facet_wrap(~block)
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0 ) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0 )
+```
+Now, broken down by trial.
+
+```{r}
+ms <- d %>%
+  group_by(t, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  gather(region, looking, target, distractor) 
   
+ggplot(filter(ms, region == "target"), 
+       aes(x = t, y = looking, col = factor(trial_num))) +
+  geom_point() + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0 ) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0 )
+```
+
+Summary across anticipation window.
+
+```{r}
+ms <- d %>%
+  filter(t > -4000, t < 120) %>%
+  group_by(lab, subid, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE)) %>%
+  group_by(trial_num) %>%
+  langcog::multi_boot_standard(col = "target", na.rm = TRUE)
+
+
+ggplot(ms, aes(x = trial_num, y = mean)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
+  geom_line()
+
+```
+  
+   
+Binned for cleaner curves
+
+```{r}
+ms <- d %>%
+  mutate(block = ifelse(trial_num < 5, "Trials 1-4", "Trials 5-8")) %>%
+  group_by(t, block) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  gather(region, looking, target, distractor) 
+  
+ggplot(ms, aes(x = t, y = looking, col = region)) +
+  geom_point() + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) +
+  geom_vline(xintercept = 120, col = "black", lty = 3) + 
+  annotate("text", x = -3800, y = 1, col = "black",
+            label = "Anticipation", hjust = 0) +
+  annotate("text", x = 200, y = 1, col = "black", 
+            label = "Reaction", hjust = 0) + 
+  ggthemes::scale_color_solarized(name = "Area of Interest") + 
+  xlab("Time (msec)") + 
+  ylab("Proportion gaze in AOI") + 
+  theme(legend.position = "bottom") + 
+  facet_wrap(~block)
 ```
 
 And by lab:
