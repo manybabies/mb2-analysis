@@ -27,8 +27,11 @@ write_csv(datasets, "../processed_data/datasets.csv")
 subjects <- p %>%
   select(age = age_days,
          sex = participant_gender,
-         lab_subject_id = subid) %>%
-  mutate(subject_id = 0:(nrow(p) -1 ))
+         lab_subject_id = subid,
+         session_error) %>%
+  mutate(subject_id = 0:(nrow(p) -1 ),
+         error = session_error == "error") %>%
+  select(-session_error)
 
 peekds::validate_table(df_table = subjects,
                        table_type = "subjects")

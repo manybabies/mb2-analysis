@@ -1,0 +1,8 @@
+4631.031	DISPLAY_INTRO_VIDEO	playTime:Mozart_-_Rondo_Alla_Turca_(Turkish_March).wav Desired playtime is later than curren time. Desired Time = 4569 Current Time =4620. Playing with offset 0.
+
+4677.157	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
+4677.298	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
+5292.158	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4569 Flip Time=5302 Retrace Rate=16.645, prepareTime=770 flip request time 5291
+74418.064	DISPLAY_BLANK_INTRO_OFF	playTime:silent.wav Desired playtime is later than curren time. Desired Time = 74396 Current Time =74402. Playing with offset 0.
+
+74453.818	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=74396 Flip Time=74463 Retrace Rate=16.645, prepareTime=104 flip request time 74453
