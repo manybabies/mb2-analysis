@@ -2,6 +2,9 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
+source("../../../metadata/pod.R")
+
+
 # there are many participants here who are not in the participant file
 p <- readxl::read_xlsx("../raw_data/university-goettingen.xlsx")
 d = read_csv("../raw_data/university-goettingen.csv") #%>%
@@ -53,9 +56,6 @@ write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
 # in order to make sure each subject + trial is unique
 d$Stimulus = paste0(d$Stimulus, d$Trial)
 
-# point of disambiguation is 30s plus 18 frames
-pod = 30000 + ((1000/30) * 18)
-
 # get the trial_num based on timestamp, for each subject
 # assign trial_id based on subject/MediaName combo
 trials <- filter(d, grepl("FAM", Stimulus), 
@@ -90,18 +90,20 @@ X = (as.numeric(as.character(d$`Point of Regard Left X [px]`))
      + as.numeric(as.character(d$`Point of Regard Right X [px]`)))/2
 Y = (as.numeric(as.character(d$`Point of Regard Left Y [px]`))
      + as.numeric(as.character(d$`Point of Regard Right Y [px]`)))/2
+
 xy_data <- tibble(lab_subject_id = d$Participant,
                   x = X,
                   y = Y,
-                  t = (d$`RecordingTime [ms]` - d$`RecordingTime [ms]`[1]),
-                  lab_trial_id = d$Stimulus) %>%
+                  lab_trial_id = d$Stimulus,
+                  t = (d$`RecordingTime [ms]` - d$`RecordingTime [ms]`[1])) %>%
   filter(str_detect(lab_trial_id, "FAM"), 
          !is.na(t),
          !is.na(lab_trial_id)) %>%
   mutate(xy_data_id = 0:(n() - 1)) %>%
   left_join(trials) %>%
   left_join(subjects) %>%
-  select(xy_data_id, subject_id, trial_id, x, y, t)
+  select(xy_data_id, subject_id, trial_id, x, y, t) %>%
+  center_time_on_pod()
 
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
@@ -114,3 +116,5 @@ aoi_data <- generate_aoi("../processed_data/")
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
 write_csv(aoi_data, "../processed_data/aoi_data.csv")
+
+

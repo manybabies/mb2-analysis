@@ -2,6 +2,8 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 
+source("../../../metadata/pod.R")
+
 # parsing errors for adults
 p <- bind_rows(readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_children.xlsx"))
                #readxl::read_xlsx("../raw_data/LMU_Munich_participantsheet_adults.xlsx"))
@@ -56,9 +58,6 @@ write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
 # trial_id, aoi_region, dataset, lab_trial_id, distractor_image, distractor_label, 
 # full_phrase, point_of_disambiguation, target_image, target_label, target_side
 
-# point of disambiguation is 30s plus 18 frames
-pod = 30000 + ((1000/30) * 18)
-
 # get the trial_num based on timestamp, for each subject
 # assign trial_id based on subject/MediaName combo
 trials <- filter(d, grepl("FAM", d$MediaName), 
@@ -102,7 +101,8 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
   mutate(xy_data_id = 0:(n() - 1)) %>%
   left_join(trials) %>%
   left_join(subjects) %>%
-  select(xy_data_id, subject_id, trial_id, x, y, t)
+  select(xy_data_id, subject_id, trial_id, x, y, t) %>%
+  center_time_on_pod()
 
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
