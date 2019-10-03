@@ -84,15 +84,14 @@ makeplot <- function(df){
 }
 
 # make all the plots and stitch together into a gif
-for (cond in unique(xy$cond)) {
-  for (res in unique(xy$res)) {
-    save_gif(makeplot(filter(xy, cond == cond,
-                             res == res,
-                             is.na(filename) == F,
-                             frame < 803, frame > 800)),
+for (cc in unique(xy$cond)) {
+  for (rr in unique(xy$res)) {
+    save_gif(makeplot(filter(xy, cond == cc,
+                             res == rr,
+                             is.na(filename) == F)),
              width = 600,
              height = 450,
              delay = .10,
-             gif_file = paste0("full_", cond, "_", res, ".gif"))
+             gif_file = paste0("full_", cc, "_", rr, ".gif"))
   }
 }
