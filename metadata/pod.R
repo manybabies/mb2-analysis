@@ -1,5 +1,5 @@
-## point of disambiguation is 30s plus 18 frames
-pod = 30000 + ((1000/30) * 18)
+## point of disambiguation is 31s plus 17 frames
+pod = 31000 + ((1000/30) * 17)
 
 center_time_on_pod <- function(d) {
   group_by(d, subject_id, trial_id) %>%

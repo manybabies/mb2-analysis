@@ -12,9 +12,9 @@ editor_options:
 ---
 
 ```{r libraries}
-library(here)
-library(jpeg)
-library(grid)
+suppressMessages(library(here))
+suppressMessages(library(jpeg))
+suppressMessages(library(grid))
 
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
@@ -23,13 +23,24 @@ source(here("helper/preprocessing_helper.R"))
 
 # Intro
 
-Pilot data analysis for MB2)
+Pilot data analysis for MB2.
+
+We can re-preprocess all of our data, this is set not to evaluate by default. In order to do this, you will need to register with Eyelink to get their binary package and then install `edfR`.
+
+```{r, eval=FALSE}
+labs <- dir("pilot_data")
+
+for (lab in labs) {
+  print(lab)
+  setwd(here::here(paste0("pilot_data/",lab,"/import_scripts/")))
+  source("import.R")
+  setwd(here::here())
+}
+
+```
+
 
 # File reading
-
-```{r}
-labs <- dir("pilot_data")
-```
 
 
 ```{r}
@@ -131,7 +142,6 @@ ms <- d %>%
   
 ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
   geom_text(x = -4000, y = .95, group = 1, col = "black", 
@@ -222,114 +232,114 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   facet_grid(lab~block)
 ```
 
-# XY visualizations
+<!-- # XY visualizations -->
 
-First get data. 
+<!-- First get data.  -->
 
-```{r}
-xyd <- labs %>%
-  map_df(function(lab) {
-    xy_data <- read_csv(here(paste0("pilot_data/",
-                                     lab,"/processed_data/xy_data.csv"))) 
-    subjects <- read_csv(here(paste0("pilot_data/",
-                                     lab,"/processed_data/subjects.csv"))) 
-    trials <- read_csv(here(paste0("pilot_data/",
-                                   lab,"/processed_data/trials.csv"))) 
-    datasets <- read_csv(here(paste0("pilot_data/",
-                                     lab,"/processed_data/datasets.csv")))
-    
-    left_join(xy_data, subjects) %>%
-      left_join(trials) %>%
-      left_join(datasets) %>%
-      select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, 
-             age, t, x, y, trial_num, error) %>%
-      rename(subid = lab_subject_id, 
-             lab = lab_dataset_id, 
-             stimulus = lab_trial_id)
-  })
-```
+<!-- ```{r} -->
+<!-- xyd <- labs %>% -->
+<!--   map_df(function(lab) { -->
+<!--     xy_data <- read_csv(here(paste0("pilot_data/", -->
+<!--                                      lab,"/processed_data/xy_data.csv")))  -->
+<!--     subjects <- read_csv(here(paste0("pilot_data/", -->
+<!--                                      lab,"/processed_data/subjects.csv")))  -->
+<!--     trials <- read_csv(here(paste0("pilot_data/", -->
+<!--                                    lab,"/processed_data/trials.csv")))  -->
+<!--     datasets <- read_csv(here(paste0("pilot_data/", -->
+<!--                                      lab,"/processed_data/datasets.csv"))) -->
 
-Deal with timing in xy_data. TODO: do this re-zeroing by trial in the importing.
+<!--     left_join(xy_data, subjects) %>% -->
+<!--       left_join(trials) %>% -->
+<!--       left_join(datasets) %>% -->
+<!--       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id,  -->
+<!--              age, t, x, y, trial_num, error) %>% -->
+<!--       rename(subid = lab_subject_id,  -->
+<!--              lab = lab_dataset_id,  -->
+<!--              stimulus = lab_trial_id) -->
+<!--   }) -->
+<!-- ``` -->
 
-```{r}
-pod <- 30600
-xyd <- xyd %>%
-  group_by(subid, lab, trial_id) %>%
-  mutate(t = t - t[1],
-         t = t - pod)
-```
+<!-- Deal with timing in xy_data. TODO: do this re-zeroing by trial in the importing. -->
 
-TODO: add exclusions.
+<!-- ```{r} -->
+<!-- pod <- 30600 -->
+<!-- xyd <- xyd %>% -->
+<!--   group_by(subid, lab, trial_id) %>% -->
+<!--   mutate(t = t - t[1], -->
+<!--          t = t - pod) -->
+<!-- ``` -->
 
-Used the `av` package to split video to 40fps images (just for resampling convenience. 
+<!-- TODO: add exclusions. -->
 
-
-```{r}
-#FAM_LL_1200x900
-# https://stackoverflow.com/questions/42333085/how-to-fit-the-plot-over-a-background-image-in-r-and-ggplot2
-# start time: 27 seconds
-
-screen_size <- c(1920,1080)
-clip_size <- c(1200,900)
-
-frame2time <- function (f) { 
-  ((f / 40)*1000) - pod
-}
-
-frames <- 1200:1205
-p <- list()
-
-for (i in 1:length(frames)) {
-
-  frame <- frames[i]
-  time <- frame2time(frame)
-
-  img <- readJPEG(paste0("media/FAM_LL_1200x900/image_", 
-                         sprintf("%06.0f", frame),".jpg"))
-  
-  g <- rasterGrob(img, 
-                  width = unit(1,"npc"), 
-                  height = unit(1, "npc"), 
-                  interpolate = FALSE)
-  
-  plot_data <- xyd %>%
-    filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
-           t > time, t < time + 25)
-  
-  p[i] <- ggplot(data = plot_data) +
-    annotation_custom(g, 
-                      xmin = (screen_size[1] - clip_size[1])/2, 
-                      xmax = clip_size[1] + (screen_size[1] - clip_size[1])/2, 
-                      ymin = (screen_size[2] - clip_size[2])/2, 
-                      ymax = clip_size[2] + (screen_size[2] - clip_size[2])/2) + 
-    geom_point(aes(x = x, 
-                   y = screen_size[2] - y, 
-                   col = lab), 
-               alpha = 1) +
-    xlim(0,screen_size[1]) + 
-    ylim(0,screen_size[2])
-}
-```
-
-```{r}
-foo <- d %>%
-  filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
-         t > -4*40, t < 0)
-
-foo %>%
-  group_by(lab) %>%
-  summarise(mean = mean(aoi == "target"))
-```
+<!-- Used the `av` package to split video to 40fps images (just for resampling convenience.  -->
 
 
-```{r}
-d %>%
-  filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
-         t > -4*40, t < 0) %>%
-  group_by(lab) %>%
-  summarise(target = mean(aoi == "target"), 
-            distractor = mean(aoi == "distractor"), 
-            other = mean(aoi == "other"), 
-            na = mean(is.na(aoi)))
-```
+<!-- ```{r} -->
+<!-- #FAM_LL_1200x900 -->
+<!-- # https://stackoverflow.com/questions/42333085/how-to-fit-the-plot-over-a-background-image-in-r-and-ggplot2 -->
+<!-- # start time: 27 seconds -->
+
+<!-- screen_size <- c(1920,1080) -->
+<!-- clip_size <- c(1200,900) -->
+
+<!-- frame2time <- function (f) {  -->
+<!--   ((f / 40)*1000) - pod -->
+<!-- } -->
+
+<!-- frames <- 1200:1205 -->
+<!-- p <- list() -->
+
+<!-- for (i in 1:length(frames)) { -->
+
+<!--   frame <- frames[i] -->
+<!--   time <- frame2time(frame) -->
+
+<!--   img <- readJPEG(paste0("media/FAM_LL_1200x900/image_",  -->
+<!--                          sprintf("%06.0f", frame),".jpg")) -->
+
+<!--   g <- rasterGrob(img,  -->
+<!--                   width = unit(1,"npc"),  -->
+<!--                   height = unit(1, "npc"),  -->
+<!--                   interpolate = FALSE) -->
+
+<!--   plot_data <- xyd %>% -->
+<!--     filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
+<!--            t > time, t < time + 25) -->
+
+<!--   p[i] <- ggplot(data = plot_data) + -->
+<!--     annotation_custom(g,  -->
+<!--                       xmin = (screen_size[1] - clip_size[1])/2,  -->
+<!--                       xmax = clip_size[1] + (screen_size[1] - clip_size[1])/2,  -->
+<!--                       ymin = (screen_size[2] - clip_size[2])/2,  -->
+<!--                       ymax = clip_size[2] + (screen_size[2] - clip_size[2])/2) +  -->
+<!--     geom_point(aes(x = x,  -->
+<!--                    y = screen_size[2] - y,  -->
+<!--                    col = lab),  -->
+<!--                alpha = 1) + -->
+<!--     xlim(0,screen_size[1]) +  -->
+<!--     ylim(0,screen_size[2]) -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- foo <- d %>% -->
+<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
+<!--          t > -4*40, t < 0) -->
+
+<!-- foo %>% -->
+<!--   group_by(lab) %>% -->
+<!--   summarise(mean = mean(aoi == "target")) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- d %>% -->
+<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
+<!--          t > -4*40, t < 0) %>% -->
+<!--   group_by(lab) %>% -->
+<!--   summarise(target = mean(aoi == "target"),  -->
+<!--             distractor = mean(aoi == "distractor"),  -->
+<!--             other = mean(aoi == "other"),  -->
+<!--             na = mean(is.na(aoi))) -->
+<!-- ``` -->
 
