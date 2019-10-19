@@ -3,7 +3,7 @@ library(readxl)
 library(tidyverse)
 library(here)
 
-source(lab(here, "metadata/pod.R"))
+source(here("metadata/pod.R"))
 
 lab_dir = "pilot_data/pilot_data_LMU"
 
