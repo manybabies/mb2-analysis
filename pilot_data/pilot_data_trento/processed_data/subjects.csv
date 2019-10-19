@@ -1,6 +1,6 @@
-age,sex,lab_subject_id,subject_id,error
-700,female,MB2_P1,0,FALSE
-568,female,MB2_P2,1,FALSE
-556,male,MB2_P3,2,FALSE
-640,female,MB2_P4,3,FALSE
-774,female,MB2_P5,4,FALSE
+age,sex,lab_subject_id,subject_id,dataset_id,error
+700,female,MB2_P1,0,1,FALSE
+568,female,MB2_P2,1,1,FALSE
+556,male,MB2_P3,2,1,FALSE
+640,female,MB2_P4,3,1,FALSE
+774,female,MB2_P5,4,1,FALSE
