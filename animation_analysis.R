@@ -1,4 +1,4 @@
-library(here)
+library(here)
 library(gifski)
 library(grid)
 library(gganimate)

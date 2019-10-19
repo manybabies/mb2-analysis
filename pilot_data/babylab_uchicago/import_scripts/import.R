@@ -27,8 +27,9 @@ subjects <- p %>%
          age = age_days, 
          sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
-         error = session_error == "error") %>%
-  select(subject_id, age, sex, lab_subject_id, error)
+         error = session_error == "error",
+         dataset_id = 0) %>%
+  select(subject_id, dataset_id, age, sex, lab_subject_id, error)
 
 peekds::validate_table(df_table = subjects, 
                        table_type = "subjects")
@@ -67,6 +68,8 @@ trials <- filter(d, grepl("FAM", d$MediaName),
          aoi_region_id = 0,
          dataset_id = 0,
          distractor_image = "distractor",
+         distractor_id = 0, 
+         target_id = 0,
          distractor_label = "distractor",
          full_phrase = NA,
          point_of_disambiguation = pod,
