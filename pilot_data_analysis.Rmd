@@ -7,10 +7,15 @@ output:
     toc: true
     toc_float: true
     number_sections: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r libraries}
 library(here)
+library(jpeg)
+library(grid)
+
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
 ```
@@ -114,13 +119,12 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_vline(xintercept = 120, col = "red", lty = 2)
 
 ```    
-   
-Binned for cleaner curves
+
+In the primary time period of interest
 
 ```{r}
 ms <- d %>%
-  mutate(block = ifelse(trial_num < 5, 1, 2)) %>%
-  group_by(t, block) %>%
+  group_by(t) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   gather(region, looking, target, distractor) 
@@ -129,9 +133,75 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
   geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
-  geom_vline(xintercept = 120, col = "red", lty = 2) +
-  facet_wrap(~block)
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0)
+```
+
+Now, broken down by trial.
+
+```{r}
+ms <- d %>%
+  group_by(t, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  gather(region, looking, target, distractor) 
   
+ggplot(filter(ms, region == "target"), 
+       aes(x = t, y = looking, col = factor(trial_num))) +
+  geom_point() + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0 ) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0 )
+```
+
+Summary across anticipation window.
+
+```{r}
+ms <- d %>%
+  filter(t > -4000, t < 120) %>%
+  group_by(lab, subid, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE)) %>%
+  group_by(trial_num) %>%
+  langcog::multi_boot_standard(col = "target", na.rm = TRUE)
+
+
+ggplot(ms, aes(x = trial_num, y = mean)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
+  geom_line()
+```
+  
+   
+Binned for cleaner curves
+
+```{r}
+ms <- d %>%
+  mutate(block = ifelse(trial_num < 5, "Trials 1-4", "Trials 5-8")) %>%
+  group_by(t, block) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  gather(region, looking, target, distractor) 
+  
+ggplot(ms, aes(x = t, y = looking, col = region)) +
+  geom_point() + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) +
+  geom_vline(xintercept = 120, col = "black", lty = 3) + 
+  annotate("text", x = -3800, y = 1, col = "black",
+            label = "Anticipation", hjust = 0) +
+  annotate("text", x = 200, y = 1, col = "black", 
+            label = "Reaction", hjust = 0) + 
+  ggthemes::scale_color_solarized(name = "Area of Interest") + 
+  xlab("Time (msec)") + 
+  ylab("Proportion gaze in AOI") + 
+  theme(legend.position = "bottom") + 
+  facet_wrap(~block)
 ```
 
 And by lab:
@@ -150,5 +220,116 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) +
   facet_grid(lab~block)
-  
 ```
+
+# XY visualizations
+
+First get data. 
+
+```{r}
+xyd <- labs %>%
+  map_df(function(lab) {
+    xy_data <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/xy_data.csv"))) 
+    subjects <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/subjects.csv"))) 
+    trials <- read_csv(here(paste0("pilot_data/",
+                                   lab,"/processed_data/trials.csv"))) 
+    datasets <- read_csv(here(paste0("pilot_data/",
+                                     lab,"/processed_data/datasets.csv")))
+    
+    left_join(xy_data, subjects) %>%
+      left_join(trials) %>%
+      left_join(datasets) %>%
+      select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, 
+             age, t, x, y, trial_num, error) %>%
+      rename(subid = lab_subject_id, 
+             lab = lab_dataset_id, 
+             stimulus = lab_trial_id)
+  })
+```
+
+Deal with timing in xy_data. TODO: do this re-zeroing by trial in the importing.
+
+```{r}
+pod <- 30600
+xyd <- xyd %>%
+  group_by(subid, lab, trial_id) %>%
+  mutate(t = t - t[1],
+         t = t - pod)
+```
+
+TODO: add exclusions.
+
+Used the `av` package to split video to 40fps images (just for resampling convenience. 
+
+
+```{r}
+#FAM_LL_1200x900
+# https://stackoverflow.com/questions/42333085/how-to-fit-the-plot-over-a-background-image-in-r-and-ggplot2
+# start time: 27 seconds
+
+screen_size <- c(1920,1080)
+clip_size <- c(1200,900)
+
+frame2time <- function (f) { 
+  ((f / 40)*1000) - pod
+}
+
+frames <- 1200:1205
+p <- list()
+
+for (i in 1:length(frames)) {
+
+  frame <- frames[i]
+  time <- frame2time(frame)
+
+  img <- readJPEG(paste0("media/FAM_LL_1200x900/image_", 
+                         sprintf("%06.0f", frame),".jpg"))
+  
+  g <- rasterGrob(img, 
+                  width = unit(1,"npc"), 
+                  height = unit(1, "npc"), 
+                  interpolate = FALSE)
+  
+  plot_data <- xyd %>%
+    filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
+           t > time, t < time + 25)
+  
+  p[i] <- ggplot(data = plot_data) +
+    annotation_custom(g, 
+                      xmin = (screen_size[1] - clip_size[1])/2, 
+                      xmax = clip_size[1] + (screen_size[1] - clip_size[1])/2, 
+                      ymin = (screen_size[2] - clip_size[2])/2, 
+                      ymax = clip_size[2] + (screen_size[2] - clip_size[2])/2) + 
+    geom_point(aes(x = x, 
+                   y = screen_size[2] - y, 
+                   col = lab), 
+               alpha = 1) +
+    xlim(0,screen_size[1]) + 
+    ylim(0,screen_size[2])
+}
+```
+
+```{r}
+foo <- d %>%
+  filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
+         t > -4*40, t < 0)
+
+foo %>%
+  group_by(lab) %>%
+  summarise(mean = mean(aoi == "target"))
+```
+
+
+```{r}
+d %>%
+  filter(str_detect(stimulus, "FAM_LL_1200x900*"), 
+         t > -4*40, t < 0) %>%
+  group_by(lab) %>%
+  summarise(target = mean(aoi == "target"), 
+            distractor = mean(aoi == "distractor"), 
+            other = mean(aoi == "other"), 
+            na = mean(is.na(aoi)))
+```
+
