@@ -1,15 +1,18 @@
 library(peekds)
 library(readxl)
 library(tidyverse)
+library(here)
 
-source("../../../metadata/pod.R")
+source(here("metadata/pod.R"))
 
-p <- read_csv("../raw_data/InfantLab_UBC_participant_data_total.csv")
+lab_dir = "pilot_data/pilot_data_UBC"
+
+p <- read_csv(here(lab_dir, "raw_data/InfantLab_UBC_participant_data_total.csv"))
 
 # TODO: only BLOCK 1 is here, with the following stimuli:
 # "FAM_LL_1200x9001.avi" "FAM_LR_1200x9001.avi" "FAM_RR_1200x9001.avi" "FAM_RL_1200x9001.avi"
 # we have to use the Trial column to reconstruct blocks, as below
-d = read_csv("../raw_data/InfantLab_UBC_SMI_data_total.csv")
+d = read_csv(here(lab_dir, "raw_data/InfantLab_UBC_SMI_data_total.csv"))
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
@@ -22,7 +25,7 @@ datasets <- tibble(dataset_id = 2,
 
 peekds::validate_table(df_table = datasets,
                        table_type = "datasets")
-write_csv(datasets, "../processed_data/datasets.csv") 
+write_csv(datasets, here(lab_dir, "processed_data/datasets.csv") )
 
 # subjects
 # subject_id, age, sex, lab_subject_id
@@ -32,18 +35,19 @@ subjects <- p %>%
          lab_subject_id = subid,
          session_error) %>%
   mutate(subject_id = 0:(nrow(p) -1 ),
-         error = session_error == "error") %>%
+         error = session_error == "error",
+         dataset_id = 2) %>%
   select(-session_error)
 
 peekds::validate_table(df_table = subjects,
                        table_type = "subjects")
-write_csv(subjects, "../processed_data/subjects.csv") 
+write_csv(subjects, here(lab_dir, "processed_data/subjects.csv") )
 
 
 # aoi_regions
 # aoi_region_id, l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max,
 # r_y_min
-source("../../../metadata/generate_AOIs.R")
+source(here("metadata/generate_AOIs.R"))
 aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x, 
                                    screen_height = datasets$monitor_size_y,
                                    video_width = 1200, 
@@ -51,7 +55,7 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
                                    size = "big")
 peekds::validate_table(df_table = aoi_regions, 
                        table_type = "aoi_regions")
-write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
+write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
 
 # TODO: this is a hack because of how the data is formatted
 # in order to make sure each subject + trial is unique
@@ -76,14 +80,16 @@ trials <- filter(d, grepl("FAM", Stimulus),
          target_image = "target", 
          target_label = "target", 
          target_side = ifelse(str_sub(condition, start = 2, end = 2) == "L", 
-                              "left", "right")) %>%
+                              "left", "right"),
+         distractor_id = 0,
+         target_id = 0) %>%
   ungroup() %>%
   mutate(trial_id = 0:(n()-1)) %>%
   select(-firsttime)
 
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
-write_csv(trials, "../processed_data/trials.csv")
+write_csv(trials, here(lab_dir, "processed_data/trials.csv"))
 
 #################################################3
 # SMI data
@@ -110,12 +116,12 @@ xy_data <- tibble(lab_subject_id = d$Participant,
 
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
-write_csv(xy_data, "../processed_data/xy_data.csv")
+write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
-aoi_data <- generate_aoi("../processed_data/")
+aoi_data <- generate_aoi(here(lab_dir, "processed_data/"))
 
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
-write_csv(aoi_data, "../processed_data/aoi_data.csv")
+write_csv(aoi_data, here(lab_dir, "processed_data/aoi_data.csv"))
