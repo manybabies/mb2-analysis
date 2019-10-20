@@ -1,7 +1,7 @@
-age,sex,lab_subject_id,subject_id,error
-809,male,MB2_P1,0,FALSE
-812,male,MB2_P2,1,FALSE
-640,female,MB2_P3,2,FALSE
-806,male,MB2_P4,3,FALSE
-688,male,MB2_P5,4,FALSE
-745,female,MB2_P6,5,FALSE
+age,sex,lab_subject_id,subject_id,error,dataset_id
+809,male,MB2_P1,0,FALSE,3
+812,male,MB2_P2,1,FALSE,3
+640,female,MB2_P3,2,FALSE,3
+806,male,MB2_P4,3,FALSE,3
+688,male,MB2_P5,4,FALSE,3
+745,female,MB2_P6,5,FALSE,3

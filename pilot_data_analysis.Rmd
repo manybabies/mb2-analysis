@@ -28,13 +28,11 @@ Pilot data analysis for MB2.
 We can re-preprocess all of our data, this is set not to evaluate by default. In order to do this, you will need to register with Eyelink to get their binary package and then install `edfR`.
 
 ```{r, eval=FALSE}
-labs <- dir("pilot_data")
+labs <- dir(here::here("pilot_data"))
 
 for (lab in labs) {
   print(lab)
-  setwd(here::here(paste0("pilot_data/",lab,"/import_scripts/")))
-  source("import.R")
-  setwd(here::here())
+  source(here::here("pilot_data", lab, "import.R"))
 }
 
 ```
@@ -44,6 +42,8 @@ for (lab in labs) {
 
 
 ```{r}
+labs <- dir(here::here("pilot_data"))
+
 d <- labs %>%
   map_df(function(lab) {
     aoi_data <- read_csv(here(paste0("pilot_data/",

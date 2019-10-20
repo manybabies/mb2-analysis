@@ -2,14 +2,15 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 library(edfR)
+library(here)
 
-source("../../../metadata/pod.R")
+source(here("metadata/pod.R"))
 
-# You need edf2asc installed and edfR
-# /Applications/Eyelink/EDF_Access_API/Example/edf2asc */*.edf
-# https://rdrr.io/github/davebraze/FDBeye/man/edf2asc.html
+lab_dir = "pilot_data/pilot_data_CEU"
 
-subjs = dir("../raw_data/results/")
+# You need EyeLink Developers Kit and edfR
+# https://www.sr-support.com/forum/downloads/eyelink-display-software/45-eyelink-developers-kit-for-mac-os-x-mac-os-x-display-software?15-EyeLink-Developers-Kit-for-Mac-OS-X=
+subjs = dir(here(lab_dir, "raw_data", "results"))
 
 # This is currently a little funky.The trials, as output by eyelink, seem to start
 # about 1s before the video and there does not seem to be an easy way to get
@@ -19,16 +20,16 @@ subjs = dir("../raw_data/results/")
 # This seems to make the data line up with the other labs.
 d <- subjs %>%
   map_df(function(subj) {
-    xy = edf.samples(paste0("../raw_data/results/", subj, "/", subj, ".edf"), trials=T) %>%
+    xy = edf.samples(paste0(here(lab_dir, "raw_data", "results/"), subj, "/", subj, ".edf"), trials=T) %>%
       mutate(lab_subject_id = subj)
-    framestart = edf.messages(paste0("../raw_data/results/", subj, "/", subj, ".edf")) %>%
+    framestart = edf.messages(paste0(here(lab_dir, "raw_data", "results/"), subj, "/", subj, ".edf")) %>%
       filter(grepl("Frame to be displayed 1$", msg)) %>%
       mutate(eyetrial = 1:n(),
              msg = str_replace_all(msg, "\\s", "|")) %>%
       separate(msg, into=c("offset", "a", "b", "c", "d", "frame"), sep="\\|") %>%
       mutate(first_frame_time = time + as.numeric(as.character(offset))) %>%
       select(first_frame_time, eyetrial)
-    dd = read_tsv(paste0("../raw_data/results/", subj, "/actual_TRIAL_DataSource_MB2_pilot_24inchTRIAL.dat"),
+    dd = read_tsv(paste0(here(lab_dir, "raw_data", "results/"), subj, "/actual_TRIAL_DataSource_MB2_pilot_24inchTRIAL.dat"),
                   col_names=c("screen", "eyetrial", "cond", "video_name", "sound_name")) %>%
       left_join(framestart)
     left_join(xy, dd)
@@ -37,7 +38,7 @@ d <- subjs %>%
   filter(lab_subject_id %in% c("mb2000", "mb2001b") == F) %>%
   filter(time >= first_frame_time)
 
-p <- readxl::read_xlsx("../raw_data/MB2-Pilot-CEUBudapest Participants Data.xlsx")
+p <- readxl::read_xlsx(here(lab_dir, "raw_data/MB2-Pilot-CEUBudapest Participants Data.xlsx"))
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
@@ -50,7 +51,7 @@ datasets <- tibble(dataset_id = 5,
 
 peekds::validate_table(df_table = datasets, 
                        table_type = "datasets")
-write_csv(datasets, "../processed_data/datasets.csv")
+write_csv(datasets, here(lab_dir, "processed_data/datasets.csv"))
 
 # subjects
 # subject_id, age, sex, lab_subject_id
@@ -60,17 +61,18 @@ subjects <- p %>%
          sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
          lab_subject_id = tolower(lab_subject_id),
-         error = session_error == "error") %>%
-  select(subject_id, age, sex, lab_subject_id, error)
+         error = session_error == "error",
+         dataset_id = 5) %>%
+  select(subject_id, age, sex, lab_subject_id, error, dataset_id)
 
 peekds::validate_table(df_table = subjects, 
                        table_type = "subjects")
-write_csv(subjects, "../processed_data/subjects.csv")
+write_csv(subjects, here(lab_dir, "processed_data/subjects.csv"))
 
 # aoi_regions
 # aoi_region_id, l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, 
 # r_y_min
-source("../../../metadata/generate_AOIs.R")
+source(here("metadata/generate_AOIs.R"))
 aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x, 
                                    screen_height = datasets$monitor_size_y,
                                    video_width = 1200, # from data
@@ -79,7 +81,7 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
 
 peekds::validate_table(df_table = aoi_regions, 
                        table_type = "aoi_regions")
-write_csv(aoi_regions, "../processed_data/aoi_regions.csv")
+write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
 
 # xy_data
 # xy_data_id, subject_id, trial_id, x, y, t
@@ -100,6 +102,8 @@ trials <- filter(d, grepl("FAM", d$video_name),
          dataset_id = 5,
          distractor_image = "distractor",
          distractor_label = "distractor",
+         distractor_id = "distractor_id",
+         target_id = "target_id",
          full_phrase = NA,
          point_of_disambiguation = pod,
          target_image = "target", 
@@ -113,7 +117,7 @@ trials <- filter(d, grepl("FAM", d$video_name),
 # TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
-write_csv(trials, "../processed_data/trials.csv")
+write_csv(trials, here(lab_dir, "processed_data/trials.csv"))
 
 # from https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
 # we want ADCSpx coordinates - those are display coordinates
@@ -138,12 +142,12 @@ peekds::validate_table(df_table = xy_data,
 # avoid writing out excessively long floating point numbers
 xy_data$x = round(xy_data$x, 1)
 xy_data$y = round(xy_data$y, 1)
-write_csv(xy_data, "../processed_data/xy_data.csv")
+write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
-aoi_data <- generate_aoi("../processed_data/")
+aoi_data <- generate_aoi(here(lab_dir, "processed_data/"))
 
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
-write_csv(aoi_data, "../processed_data/aoi_data.csv")
+write_csv(aoi_data, here(lab_dir, "processed_data/aoi_data.csv"))
