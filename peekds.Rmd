@@ -1,0 +1,82 @@
+---
+title: "peekds Categories, for mb pilot data"
+author: "Kyle Mahowald"
+date: "11/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# datasets
+
+Each row is a lab, with some key meta-data on that lab. 
+
+- dataset_id: int with unique identifier for this lab
+- monitor_size_x: int for monitor size in x dimension
+- monitor_size_y: int for monitor size in y dimension
+- sample_rate: int for sample rate of eye tracker
+- tracker: string for name of eye tracker (tobii, smi, etc.)
+- lab_dataset_id: string with your name of lab dataset
+
+# subjects
+
+Each row is a subject, with some key meta-data on that subject.
+
+- subject_id: int for subject_id, this is a count within lab (0, 1, 2,...)
+- dataset_id: int for dataset_id to match the dataset_id in Datasets
+- age: int for age in days
+- sex: string (male or female)
+- lab_subject_id: string for how the lab names subjects
+- error: bool (is this an error trial?)
+
+# aoi_regions
+
+Each row is a set of left/right AOI data.
+
+- aoi_region_id: int for aoi_region_id (we do not really use this)
+- l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, r_y_min: int for coordinates of left and right aoi region bounding boxes
+
+# trials
+
+Each row is a trial (Each subject has 8 trials.)
+
+- lab_subject_id: string for matching lab subject id to subjects df
+- lab_trial_id: string for what the lab calls that particular trial (should be unique for each condition and trial)
+- trial_num: int for trial order number (1-8)
+- condition: str for condition (LL/LR/RL/RR)
+- aoi_region_id: int for matching to aoi_regions (this is probably 0)
+- dataset_id: int for matching to datasets
+- distractor_image: str for name of distractor ("distractor")
+- target_image: str for name of target ("target")
+- distractor_id: int for distractor_id (can be 0)
+- target_id: int for target_id (can be 0)
+- distractor_label: str for name of distractor ("distractor")
+- target_label: str for name of target ("target")
+- full_phrase: str for...something (set to NA)
+- point_of_disambiguation: in ms, point at which the critical manipulation becomes clear
+- target_side: str ("left" or "right") for which side is target
+- trial_id: int which is unique for each subject/trial (0, 1, 2, ...) 
+
+# xy_data
+
+Each row is a data point from the eye tracker, with xy coordinates.
+
+- xy_data_id: int (unique for each row in xy_data)
+- subject_id: int matches subject_id in subj
+- trial_id: int matches trial_id in trial
+- x: x coord
+- y: y coord
+- t: time in ms
+
+# aoi_data
+
+Each row is a sampled data point, with aoi info filled in. This is obtained by combining the xy_data with aoi_data and the aoi functions.
+
+- subject_id: int matches subject_id in subj
+- trial_id: int matches trial_id in trial
+- trial_id: int matches trial_id in trial
+- t: time in ms
+- aoi: str ("distractor", "other", "target")
+- aoi_data_id: int (unique for each row in aoi_data_id)
