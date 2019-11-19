@@ -32,7 +32,7 @@ labs <- dir(here::here("pilot_data"))
 
 for (lab in labs) {
   print(lab)
-  source(here::here("pilot_data", lab, "import.R"))
+  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
 }
 
 ```
