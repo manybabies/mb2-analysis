@@ -14,6 +14,14 @@ p <- read_csv(here(lab_dir, "raw_data/InfantLab_UBC_participant_data_total.csv")
 # we have to use the Trial column to reconstruct blocks, as below
 d = read_csv(here(lab_dir, "raw_data/InfantLab_UBC_SMI_data_total.csv"))
 
+# Before changing anything into peekDS, exclude any observation in d where one of the coordinates
+# for point of regard is 0 as this likely indicates an eye-tracker error
+d <- d %>%
+  filter(`Point of Regard Left X [px]` != 0 &
+           `Point of Regard Left Y [px]` != 0 &
+           `Point of Regard Right X [px]` != 0 &
+           `Point of Regard Right Y [px]` != 0)
+
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
 datasets <- tibble(dataset_id = 2,
