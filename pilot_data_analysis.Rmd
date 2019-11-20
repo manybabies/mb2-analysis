@@ -69,8 +69,8 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-# filter subjects marked error
-d <- filter(d, error == F)
+# bookkeeping of excluded trials
+d <- exclude_by(d, quo(error), quiet=FALSE)
 
 # print trials under 35s
 group_by(d, lab, trial_id, subid) %>%
