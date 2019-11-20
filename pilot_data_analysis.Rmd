@@ -68,17 +68,17 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-# exclude subject marked with any error & less than 8 trials
+# exclude subject marked with any error 
 d <- d %>% 
   group_by(lab, subid) %>%
-  summarise(error_subj = any(error), num_trials = length(unique(trial_id))) %>%
+  mutate(error_subj = any(error), num_trials = length(unique(trial_id))) %>%
       exclude_by(quo(error_subj), quiet=FALSE) %>%
-      exclude_by(quo(num_trials < 8), quiet=FALSE) 
+      exclude_by(quo(num_trials < 8), quiet=FALSE)
 
 # remove trials under 35s (which are not complete trials)
-d <- d %>% 
+d <- ungroup(d) %>% 
   group_by(lab, trial_id, subid) %>%
-  summarise(time_range = (max(t) - min(t))/1000) %>%
+  mutate(time_range = (max(t) - min(t))/1000) %>%
           exclude_by(quo(time_range <= 35), quiet=FALSE)
 
 # print trial time ranges by lab
