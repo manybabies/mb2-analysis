@@ -11,7 +11,7 @@
 
 # generate appropriate specification:
 # aoi_regions
-# aoi_region_id, l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, 
+# aoi_region_id, l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, w_x_max, w_x_min, w_y_max, w_y_min
 
 
 generate_aoi_regions <- function(screen_width = 1280, 
@@ -41,6 +41,10 @@ generate_aoi_regions <- function(screen_width = 1280,
       r_x_max = video_width + (screen_width-video_width)/2,
       r_x_min = ((video_width*9)/16) + (screen_width-video_width)/2,
       r_y_max = video_height + ((screen_height-video_height)/2),
-      r_y_min = ((video_height*9)/16) + ((screen_height-video_height)/2))
+      r_y_min = ((video_height*9)/16) + ((screen_height-video_height)/2),
+      w_x_max = video_width/2 + floor((video_width*.94)/16) + (screen_width-video_width)/2,
+      w_x_min = video_width/2 - floor((video_width*.94)/16) + (screen_width-video_width)/2,
+      w_y_max = video_height/2 + ((screen_height-video_height)/2),
+      w_y_min = video_height/2 - (video_height*2.5)/16 + ((screen_height-video_height)/2) )
   }
 }
