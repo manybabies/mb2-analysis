@@ -14,6 +14,19 @@ p <- read_csv(here(lab_dir, "raw_data/InfantLab_UBC_participant_data_total.csv")
 # we have to use the Trial column to reconstruct blocks, as below
 d = read_csv(here(lab_dir, "raw_data/InfantLab_UBC_SMI_data_total.csv"))
 
+# sanity check to see if a significant number of observations are potential tracker errors
+d$x_left = as.numeric(d$`Point of Regard Left X [px]`)
+d$x_right = as.numeric(d$`Point of Regard Right X [px]`)
+ggplot(sample_n(d, 10000), 
+       aes(x = x_left, y = x_right)) +
+  geom_point()
+
+d$y_left = as.numeric(d$`Point of Regard Left Y [px]`)
+d$y_right = as.numeric(d$`Point of Regard Right Y [px]`)
+ggplot(sample_n(d, 10000), 
+       aes(x = y_left, y = y_right)) +
+  geom_point()
+
 # Before changing anything into peekDS, exclude any observation in d where one of the coordinates
 # for point of regard is 0 as this likely indicates an eye-tracker error
 d <- d %>%
@@ -133,3 +146,4 @@ aoi_data <- generate_aoi(here(lab_dir, "processed_data/"))
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
 write_csv(aoi_data, here(lab_dir, "processed_data/aoi_data.csv"))
+
