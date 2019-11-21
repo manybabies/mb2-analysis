@@ -68,14 +68,13 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-# exclude subject marked with any error 
+# exclude subject marked with any error and/or less than 8 trials
 d <- d %>% 
   group_by(lab, subid) %>%
-  mutate(error_subj = any(error), num_trials = length(unique(trial_id))) %>%
-      exclude_by(quo(error_subj), quiet=FALSE) %>%
-      exclude_by(quo(num_trials < 8), quiet=FALSE)
+  mutate(error_subj = any(error)) %>%
+      exclude_by(quo(error_subj), quiet=FALSE) 
 
-# remove trials under 35s (which are not complete trials)
+# exclude trials under 35s (which are not complete trials)
 d <- ungroup(d) %>% 
   group_by(lab, trial_id, subid) %>%
   mutate(time_range = (max(t) - min(t))/1000) %>%
@@ -87,6 +86,12 @@ ungroup(d) %>%
   summarise(shortest_trial=min(time_range),
             longest_trial=max(time_range)) %>%
   kable(digits=2)
+
+# exclude subjects which did not complete all 8 trials
+d <- ungroup(d) %>% 
+  group_by(lab, subid) %>%
+  mutate(trials_completed = length(unique(trial_id))) %>%
+            exclude_by(quo(trials_completed < 8),quiet=FALSE)
 
 ```
 

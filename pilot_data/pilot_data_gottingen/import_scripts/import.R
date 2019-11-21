@@ -12,6 +12,27 @@ p <- readxl::read_xlsx(here(labdir, "raw_data/university-goettingen.xlsx"))
 d = read_csv(here(labdir, "raw_data/university-goettingen.csv")) #%>%
 d = filter(d, Participant %in% p$subid)
 
+# sanity check to see if a significant number of observations are potential tracker errors
+d$x_left = as.numeric(d$`Point of Regard Left X [px]`)
+d$x_right = as.numeric(d$`Point of Regard Right X [px]`)
+ggplot(sample_n(d, 10000), 
+       aes(x = x_left, y = x_right)) +
+  geom_point()
+
+d$y_left = as.numeric(d$`Point of Regard Left Y [px]`)
+d$y_right = as.numeric(d$`Point of Regard Right Y [px]`)
+ggplot(sample_n(d, 10000), 
+       aes(x = y_left, y = y_right)) +
+  geom_point()
+
+# Before changing anything into peekDS, exclude any observation in d where one of the coordinates
+# for point of regard is 0 as this likely indicates an eye-tracker error
+d <- d %>%
+  filter(`Point of Regard Left X [px]` != "0.0" &
+           `Point of Regard Left Y [px]` != "0.0" &
+           `Point of Regard Right X [px]` != "0.0" &
+           `Point of Regard Right Y [px]` != "0.0")
+
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
 datasets <- tibble(dataset_id = 3,
