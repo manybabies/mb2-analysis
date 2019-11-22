@@ -15,6 +15,8 @@ editor_options:
 suppressMessages(library(here))
 suppressMessages(library(jpeg))
 suppressMessages(library(grid))
+suppressMessages(library(lmerTest))
+suppressMessages(library(car))
 
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
@@ -114,6 +116,8 @@ d %>%
   summarise(n = n(), 
             age = mean(age)/30.25) %>%
   kable(digits = 2)
+  
+
 ```
 
 Anticipation plot across all trials. 
@@ -151,26 +155,6 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 ```
 
 Now, broken down by trial.
-
-```{r}
-ms <- d %>%
-  group_by(t, trial_num) %>%
-  summarise(target = mean(aoi == "target", na.rm = TRUE),
-            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
-  gather(region, looking, target, distractor) 
-  
-ggplot(filter(ms, region == "target"), 
-       aes(x = t, y = looking, col = factor(trial_num))) +
-  geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
-  xlim(-4000 + 120, 4000 + 120) + 
-  geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  geom_text(x = -4000, y = .95, group = 1, col = "black", 
-            label = "Anticipation", hjust = 0 ) + 
-  geom_text(x = 200, y = .95, group = 1, col = "black", 
-            label = "Reaction", hjust = 0 )
-```
-
 Summary across anticipation window.
 
 ```{r}
@@ -231,6 +215,78 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_vline(xintercept = 120, col = "red", lty = 2) +
   facet_grid(lab~block)
 ```
+
+# Main analysis 1: First anticipatory look
+```{r}
+
+
+```
+
+```{r first look analysis, results = "asis"}
+# 
+# first_look_logistic <- glmer(correct_first_anticipation ~ trial_num + (1|subid) + (1|lab), data = anticipations, family = "binomial")
+# 
+# summary(first_look_logistic)
+```
+
+
+
+# Main analysis 2: Differential analysis 
+
+## first, data visualization across different test trials
+```{r}
+ms_proportion_trials <- d %>%
+  group_by(t, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  mutate(proportion_to_target = target / (target + distractor)) %>% 
+  filter(t >= -4000 & t <= 120+ 4000)
+
+
+ggplot(ms_proportion_trials, 
+       aes(x = t, y = proportion_to_target)) +
+  geom_point(alpha = 0.3) + 
+  geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0 ) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0 )+
+  facet_wrap(.~trial_num, ncol = 4)   
+```
+
+Create data-set for the mixed-level analysis
+```{r}
+ms_proportion_trials <- d %>%
+  filter (t >= -4000 & t <= 120) %>% 
+  group_by(trial_num, subid, lab) %>%
+  summarise(mean_target = mean(aoi == "target", na.rm = TRUE),
+            sem_target = sd(aoi == "target", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            mean_distractor = mean(aoi == "distractor", na.rm = TRUE), 
+            sem_distractor = sd(aoi == "distractor", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            up_ci_target = mean_target + (sem_target * 1.96),
+            low_ci_target = mean_target - (sem_target * 1.96),
+            up_ci_distractor = mean_distractor + (sem_distractor * 1.96),
+            low_ci_distractor = mean_distractor - (sem_distractor * 1.96)) %>% 
+  mutate(proportion_to_target = mean_target / (mean_target + mean_distractor))
+```
+
+## Mixed-level analysis for diff-score analysis
+```{r mixed-level analysis}
+# Lmer_originally, I tried the following but it didn't converge:  lmer(proportion_to_target ~ trial_num + + (1|lab) + (trial_num|subid), data = ms_proportion_trials), so I changed the model to a simpler one below
+prop_model <- lmer(proportion_to_target ~ trial_num + (1|subid), data = ms_proportion_trials)
+summary(prop_model) #note that technically we had 68 participants, but this analysis was based on 63 kids because not all kids looked at either target/distractor between -4000 ms to 120 ms (i.e., they either looked away (missing data) or looked at other parts of the screen (other))
+
+
+# did a linear hypothesis test to see if the intercept of the prop_model is signficantly higher than chance level (0.5)
+linearHypothesis(prop_model, "(Intercept) = 0.5")
+
+# the linear hypothesis test is also confirmed by calculating the z score of this intercept, I used the coefficient and the sd of the random intercept
+z_intercept <- 0.7525/0.066 #much higher than 1.96,
+```
+
+
 
 <!-- # XY visualizations -->
 
