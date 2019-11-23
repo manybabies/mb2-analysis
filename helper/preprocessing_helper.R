@@ -152,12 +152,15 @@ exclude_by <- function(d, col, setting = "all", action = "exclude",
       mutate(!! quo_name(col) := ! (!! col))
   }
   
-  if (!quiet) print(paste("filtering by", quo_name(col)))
+  if (!quiet) cat(paste("\nfiltering by", quo_name(col), '\n'))
   
-  percent_trial <- d %>%
-    ungroup %>%
-    summarise(trial_sum = sum(!! col, na.rm=TRUE),
-              trial_mean = mean(!! col, na.rm=TRUE)) 
+  
+  percent_trial <- d %>% ungroup %>%
+    group_by(lab, subid, trial_id) %>%
+    mutate(deletethis = !! col) %>%
+    summarise(deletethis = mean(deletethis)) %>% 
+    ungroup %>% 
+    summarise(trial_sum = sum(deletethis), trial_mean = mean(deletethis))
   
   percent_sub <- d %>%
     group_by(lab, subid) %>%
@@ -170,9 +173,12 @@ exclude_by <- function(d, col, setting = "all", action = "exclude",
               all_mean = mean(all, na.rm=TRUE))
   
   if (!quiet) {
+    
+    
     print(paste("This variable excludes", percent_trial$trial_sum, "trials, which is ", 
                 round(percent_trial$trial_mean*100, digits = 1), "% of all trials."))
     
+
     if (setting == "any") {
       print(paste(percent_sub$any_sum, " subjects,", 
                   round(percent_sub$any_mean*100, digits = 1),
@@ -181,9 +187,21 @@ exclude_by <- function(d, col, setting = "all", action = "exclude",
       print(paste(percent_sub$all_sum, " subjects,", 
                   round(percent_sub$all_mean*100, digits = 1),
                   "%, have all trials where", quo_name(col), "is",
-                  ifelse(action == "include", "true:", "false:"), 
+                  ifelse(action == "include", "false:", "true:"), 
                   action))
     }
+    
+    # give table showing excluded samples
+    print('Excluded: ')
+    
+    # print short table of excluded data
+    d %>%
+      filter( !! col) %>%
+      summarise() %>% 
+      head(5)  %>%
+      kable(digits=2) %>%
+      print(. + '\n')
+
   }
   
   if (action=="NA out") {

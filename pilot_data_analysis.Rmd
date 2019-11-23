@@ -34,14 +34,13 @@ labs <- dir(here::here("pilot_data"))
 
 for (lab in labs) {
   print(lab)
-  source(here::here("pilot_data", lab, "import.R"))
+  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
 }
 
 ```
 
 
 # File reading
-
 
 ```{r}
 labs <- dir(here::here("pilot_data"))
@@ -71,19 +70,17 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-# filter subjects marked error
-d <- filter(d, error == F)
+# exclude subject marked with any error and/or less than 8 trials
+d <- d %>% 
+  group_by(lab, subid) %>%
+  mutate(error_subj = any(error)) %>%
+      exclude_by(quo(error_subj), quiet=FALSE) 
 
-# print trials under 35s
-group_by(d, lab, trial_id, subid) %>%
-  summarise(time_range = (max(t) - min(t))/1000)  %>%
-  filter(time_range <= 35) %>%
-  kable(digits=2)
-
-# filter trials under 35s (which are not complete trials)
-d <- group_by(d, lab, trial_id, subid) %>%
+# exclude trials under 35s (which are not complete trials)
+d <- ungroup(d) %>% 
+  group_by(lab, trial_id, subid) %>%
   mutate(time_range = (max(t) - min(t))/1000) %>%
-  filter(time_range > 35)
+          exclude_by(quo(time_range <= 35), quiet=FALSE)
 
 # print trial time ranges by lab
 ungroup(d) %>%
@@ -92,18 +89,13 @@ ungroup(d) %>%
             longest_trial=max(time_range)) %>%
   kable(digits=2)
 
-# print subjects who did not complete all trials and then filter
-d %>%
+# exclude subjects which did not complete all 8 trials
+d <- ungroup(d) %>% 
   group_by(lab, subid) %>%
-  summarise(trials_completed = length(unique(trial_id))) %>%
-  filter(trials_completed < 8) %>%
-  kable(digits=2)
+  mutate(trials_completed = length(unique(trial_id))) %>%
+            exclude_by(quo(trials_completed < 8),quiet=FALSE)
 
-d <- ungroup(d) %>%
-  group_by(lab, subid) %>%
-  filter(length(unique(trial_id)) >= 8)
 ```
-
 
 # Analysis
 
