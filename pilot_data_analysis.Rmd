@@ -20,6 +20,8 @@ suppressMessages(library(car))
 
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
+
+knitr::opts_chunk$set(cache = TRUE, warn = FALSE, message = FALSE)
 ```
 
 
@@ -176,7 +178,7 @@ ms <- d %>%
   
 ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
+  # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) +
   geom_vline(xintercept = 120, col = "black", lty = 3) + 
   annotate("text", x = -3800, y = 1, col = "black",
@@ -202,7 +204,7 @@ ms <- d %>%
   
 ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
+  # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) +
   facet_grid(lab~block)
@@ -210,7 +212,8 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 
 # Main analysis 1: First anticipatory look
 
-First, create a function that extract the time stamp of first aoi
+First, create a function that extract the time stamp of first aoi.
+
 ```{r}
 t_first_aoi <- function(df){
   
@@ -224,6 +227,9 @@ t_first_aoi <- function(df){
 ```
 
 Second, create a dataframe to identify the first look and see if the first look is >100ms
+
+Note that this is done ad-hoc for a number of participants. TODO - cleanup!
+
 ```{r}
 df_t_first_aoi <- d %>% split(.$subid, .$trial_num) %>% 
   map_df(t_first_aoi) %>% 
@@ -273,14 +279,18 @@ df_t_first_aoi <- df_t_first_aoi %>%
   filter(!is.na(first_look_location))
 ```
 
-## Data visaulization across different test trial
+## Data visualization across different test trials
+
 ```{r}
 ggplot(df_t_first_aoi, aes(x = first_look_location)) + 
   geom_bar() + 
   facet_wrap(.~trial_num, ncol = 4)
 ```
 
-## Descriptive stats: mean and sd of first look location in different trials. All numbers seem to be above 50%
+## Descriptive stats
+
+mean and sd of first look location in different trials. All numbers seem to be above 50%
+
 ```{r}
 df_t_first_aoi %>% 
   select(trial_num, first_look_location) %>% 
@@ -291,14 +301,19 @@ df_t_first_aoi %>%
 ```
 
 ## Mixed-level analysis: First look location
-```{r first look analysis, results = "asis"}
 
+```{r first_look_analysis, results = "verbatim"}
 first_look_logistic <- glmer(first_look_location ~ trial_num + (1|subid), data = df_t_first_aoi, family = "binomial")
 
 summary(first_look_logistic)
+```
 
+Mean level. 
+
+```{r}
 mean(df_t_first_aoi$first_look_location)
 ```
+
 
 
 
@@ -317,7 +332,8 @@ ms_proportion_trials <- d %>%
 ggplot(ms_proportion_trials, 
        aes(x = t, y = proportion_to_target)) +
   geom_point(alpha = 0.3) + 
-  geom_smooth(span = 2, se = FALSE) + 
+  ylim(0,1) + 
+  # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
   geom_text(x = -4000, y = .95, group = 1, col = "black", 
@@ -344,10 +360,15 @@ ms_proportion_trials <- d %>%
 ```
 
 ## Mixed-level analysis for diff-score analysis
+
+Note that technically we had 68 participants, but this analysis was based on 63 kids because not all kids looked at either target/distractor between -4000 ms to 120 ms (i.e., they either looked away (missing data) or looked at other parts of the screen (other))
+
+
 ```{r mixed-level analysis}
 # Lmer_originally, I tried the following but it didn't converge:  lmer(proportion_to_target ~ trial_num + + (1|lab) + (trial_num|subid), data = ms_proportion_trials), so I changed the model to a simpler one below
 prop_model <- lmer(proportion_to_target ~ trial_num + (1|subid), data = ms_proportion_trials)
-summary(prop_model) #note that technically we had 68 participants, but this analysis was based on 63 kids because not all kids looked at either target/distractor between -4000 ms to 120 ms (i.e., they either looked away (missing data) or looked at other parts of the screen (other))
+summary(prop_model) 
+
 
 
 # did a linear hypothesis test to see if the intercept of the prop_model is signficantly higher than chance level (0.5)
@@ -356,117 +377,3 @@ linearHypothesis(prop_model, "(Intercept) = 0.5")
 # the linear hypothesis test is also confirmed by calculating the z score of this intercept, I used the coefficient and the sd of the random intercept
 z_intercept <- 0.7525/0.066 #much higher than 1.96,
 ```
-
-
-
-<!-- # XY visualizations -->
-
-<!-- First get data.  -->
-
-<!-- ```{r} -->
-<!-- xyd <- labs %>% -->
-<!--   map_df(function(lab) { -->
-<!--     xy_data <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/xy_data.csv")))  -->
-<!--     subjects <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/subjects.csv")))  -->
-<!--     trials <- read_csv(here(paste0("pilot_data/", -->
-<!--                                    lab,"/processed_data/trials.csv")))  -->
-<!--     datasets <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/datasets.csv"))) -->
-
-<!--     left_join(xy_data, subjects) %>% -->
-<!--       left_join(trials) %>% -->
-<!--       left_join(datasets) %>% -->
-<!--       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id,  -->
-<!--              age, t, x, y, trial_num, error) %>% -->
-<!--       rename(subid = lab_subject_id,  -->
-<!--              lab = lab_dataset_id,  -->
-<!--              stimulus = lab_trial_id) -->
-<!--   }) -->
-<!-- ``` -->
-
-<!-- Deal with timing in xy_data. TODO: do this re-zeroing by trial in the importing. -->
-
-<!-- ```{r} -->
-<!-- pod <- 30600 -->
-<!-- xyd <- xyd %>% -->
-<!--   group_by(subid, lab, trial_id) %>% -->
-<!--   mutate(t = t - t[1], -->
-<!--          t = t - pod) -->
-<!-- ``` -->
-
-<!-- TODO: add exclusions. -->
-
-<!-- Used the `av` package to split video to 40fps images (just for resampling convenience.  -->
-
-
-<!-- ```{r} -->
-<!-- #FAM_LL_1200x900 -->
-<!-- # https://stackoverflow.com/questions/42333085/how-to-fit-the-plot-over-a-background-image-in-r-and-ggplot2 -->
-<!-- # start time: 27 seconds -->
-
-<!-- screen_size <- c(1920,1080) -->
-<!-- clip_size <- c(1200,900) -->
-
-<!-- frame2time <- function (f) {  -->
-<!--   ((f / 40)*1000) - pod -->
-<!-- } -->
-
-<!-- frames <- 1200:1205 -->
-<!-- p <- list() -->
-
-<!-- for (i in 1:length(frames)) { -->
-
-<!--   frame <- frames[i] -->
-<!--   time <- frame2time(frame) -->
-
-<!--   img <- readJPEG(paste0("media/FAM_LL_1200x900/image_",  -->
-<!--                          sprintf("%06.0f", frame),".jpg")) -->
-
-<!--   g <- rasterGrob(img,  -->
-<!--                   width = unit(1,"npc"),  -->
-<!--                   height = unit(1, "npc"),  -->
-<!--                   interpolate = FALSE) -->
-
-<!--   plot_data <- xyd %>% -->
-<!--     filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--            t > time, t < time + 25) -->
-
-<!--   p[i] <- ggplot(data = plot_data) + -->
-<!--     annotation_custom(g,  -->
-<!--                       xmin = (screen_size[1] - clip_size[1])/2,  -->
-<!--                       xmax = clip_size[1] + (screen_size[1] - clip_size[1])/2,  -->
-<!--                       ymin = (screen_size[2] - clip_size[2])/2,  -->
-<!--                       ymax = clip_size[2] + (screen_size[2] - clip_size[2])/2) +  -->
-<!--     geom_point(aes(x = x,  -->
-<!--                    y = screen_size[2] - y,  -->
-<!--                    col = lab),  -->
-<!--                alpha = 1) + -->
-<!--     xlim(0,screen_size[1]) +  -->
-<!--     ylim(0,screen_size[2]) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- foo <- d %>% -->
-<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--          t > -4*40, t < 0) -->
-
-<!-- foo %>% -->
-<!--   group_by(lab) %>% -->
-<!--   summarise(mean = mean(aoi == "target")) -->
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-<!-- d %>% -->
-<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--          t > -4*40, t < 0) %>% -->
-<!--   group_by(lab) %>% -->
-<!--   summarise(target = mean(aoi == "target"),  -->
-<!--             distractor = mean(aoi == "distractor"),  -->
-<!--             other = mean(aoi == "other"),  -->
-<!--             na = mean(is.na(aoi))) -->
-<!-- ``` -->
-
