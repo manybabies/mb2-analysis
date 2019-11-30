@@ -1,2 +1,2 @@
-aoi_region_id,l_x_max,l_x_min,l_y_max,l_y_min,r_x_max,r_x_min,r_y_max,r_y_min
-0,880,320,1080,660,1600,1040,1080,660
+aoi_region_id,l_x_max,l_x_min,l_y_max,l_y_min,r_x_max,r_x_min,r_y_max,r_y_min,w_x_max,w_x_min,w_y_max,w_y_min
+0,880,320,1080,660,1600,1040,1080,660,1035,885,600,450

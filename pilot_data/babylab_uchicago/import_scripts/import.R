@@ -102,8 +102,11 @@ xy_data <- tibble(lab_subject_id = d$ParticipantName,
   left_join(trials) %>%
   left_join(subjects) %>%
   select(xy_data_id, subject_id, trial_id, x, y, t) %>%
-  center_time_on_pod()
-
+  center_time_on_pod() %>%
+  filter(x >= 0, y >= 0,
+         # negative coordinates should not be possible since tobii is upper-left indexed
+         x <= 1920, y <= 1200)
+# x and y should not exceed monitor size. Unsure if this is an appropriate trimming method?
 peekds::validate_table(df_table = xy_data, 
                        table_type = "xy_data")
 write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
