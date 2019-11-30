@@ -15,9 +15,13 @@ editor_options:
 suppressMessages(library(here))
 suppressMessages(library(jpeg))
 suppressMessages(library(grid))
+suppressMessages(library(lmerTest))
+suppressMessages(library(car))
 
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
+
+knitr::opts_chunk$set(cache = TRUE, warn = FALSE, message = FALSE)
 ```
 
 
@@ -32,14 +36,13 @@ labs <- dir(here::here("pilot_data"))
 
 for (lab in labs) {
   print(lab)
-  source(here::here("pilot_data", lab, "import.R"))
+  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
 }
 
 ```
 
 
 # File reading
-
 
 ```{r}
 labs <- dir(here::here("pilot_data"))
@@ -69,19 +72,17 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-# filter subjects marked error
-d <- filter(d, error == F)
+# exclude subject marked with any error and/or less than 8 trials
+d <- d %>% 
+  group_by(lab, subid) %>%
+  mutate(error_subj = any(error)) %>%
+      exclude_by(quo(error_subj), quiet=FALSE) 
 
-# print trials under 35s
-group_by(d, lab, trial_id, subid) %>%
-  summarise(time_range = (max(t) - min(t))/1000)  %>%
-  filter(time_range <= 35) %>%
-  kable(digits=2)
-
-# filter trials under 35s (which are not complete trials)
-d <- group_by(d, lab, trial_id, subid) %>%
+# exclude trials under 35s (which are not complete trials)
+d <- ungroup(d) %>% 
+  group_by(lab, trial_id, subid) %>%
   mutate(time_range = (max(t) - min(t))/1000) %>%
-  filter(time_range > 35)
+          exclude_by(quo(time_range <= 35), quiet=FALSE)
 
 # print trial time ranges by lab
 ungroup(d) %>%
@@ -90,18 +91,13 @@ ungroup(d) %>%
             longest_trial=max(time_range)) %>%
   kable(digits=2)
 
-# print subjects who did not complete all trials and then filter
-d %>%
+# exclude subjects which did not complete all 8 trials
+d <- ungroup(d) %>% 
   group_by(lab, subid) %>%
-  summarise(trials_completed = length(unique(trial_id))) %>%
-  filter(trials_completed < 8) %>%
-  kable(digits=2)
+  mutate(trials_completed = length(unique(trial_id))) %>%
+            exclude_by(quo(trials_completed < 8),quiet=FALSE)
 
-d <- ungroup(d) %>%
-  group_by(lab, subid) %>%
-  filter(length(unique(trial_id)) >= 8)
 ```
-
 
 # Analysis
 
@@ -114,6 +110,8 @@ d %>%
   summarise(n = n(), 
             age = mean(age)/30.25) %>%
   kable(digits = 2)
+  
+
 ```
 
 Anticipation plot across all trials. 
@@ -151,26 +149,6 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 ```
 
 Now, broken down by trial.
-
-```{r}
-ms <- d %>%
-  group_by(t, trial_num) %>%
-  summarise(target = mean(aoi == "target", na.rm = TRUE),
-            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
-  gather(region, looking, target, distractor) 
-  
-ggplot(filter(ms, region == "target"), 
-       aes(x = t, y = looking, col = factor(trial_num))) +
-  geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
-  xlim(-4000 + 120, 4000 + 120) + 
-  geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  geom_text(x = -4000, y = .95, group = 1, col = "black", 
-            label = "Anticipation", hjust = 0 ) + 
-  geom_text(x = 200, y = .95, group = 1, col = "black", 
-            label = "Reaction", hjust = 0 )
-```
-
 Summary across anticipation window.
 
 ```{r}
@@ -200,7 +178,7 @@ ms <- d %>%
   
 ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
+  # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) +
   geom_vline(xintercept = 120, col = "black", lty = 3) + 
   annotate("text", x = -3800, y = 1, col = "black",
@@ -226,120 +204,176 @@ ms <- d %>%
   
 ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_point() + 
-  geom_smooth(span = 2, se = FALSE) + 
+  # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) +
   facet_grid(lab~block)
 ```
 
-<!-- # XY visualizations -->
+# Main analysis 1: First anticipatory look
 
-<!-- First get data.  -->
+First, create a function that extract the time stamp of first aoi.
 
-<!-- ```{r} -->
-<!-- xyd <- labs %>% -->
-<!--   map_df(function(lab) { -->
-<!--     xy_data <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/xy_data.csv")))  -->
-<!--     subjects <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/subjects.csv")))  -->
-<!--     trials <- read_csv(here(paste0("pilot_data/", -->
-<!--                                    lab,"/processed_data/trials.csv")))  -->
-<!--     datasets <- read_csv(here(paste0("pilot_data/", -->
-<!--                                      lab,"/processed_data/datasets.csv"))) -->
+```{r}
+t_first_aoi <- function(df){
+  
+  df <- df %>% 
+    filter(t >= -4000, t <= 120, aoi == c("target", "distractor")) 
+  
+ df = df %>% group_by(subid, trial_num) %>% mutate(first_look_time = t[1])
+  
+  return(df)
+}
+```
 
-<!--     left_join(xy_data, subjects) %>% -->
-<!--       left_join(trials) %>% -->
-<!--       left_join(datasets) %>% -->
-<!--       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id,  -->
-<!--              age, t, x, y, trial_num, error) %>% -->
-<!--       rename(subid = lab_subject_id,  -->
-<!--              lab = lab_dataset_id,  -->
-<!--              stimulus = lab_trial_id) -->
-<!--   }) -->
-<!-- ``` -->
+Second, create a dataframe to identify the first look and see if the first look is >100ms
 
-<!-- Deal with timing in xy_data. TODO: do this re-zeroing by trial in the importing. -->
+Note that this is done ad-hoc for a number of participants. TODO - cleanup!
 
-<!-- ```{r} -->
-<!-- pod <- 30600 -->
-<!-- xyd <- xyd %>% -->
-<!--   group_by(subid, lab, trial_id) %>% -->
-<!--   mutate(t = t - t[1], -->
-<!--          t = t - pod) -->
-<!-- ``` -->
+```{r}
+df_t_first_aoi <- d %>% split(.$subid, .$trial_num) %>% 
+  map_df(t_first_aoi) %>% 
+  mutate(aoi_dummy = case_when(aoi == "target" ~ 1, aoi == "distractor" ~ 0),
+         subid_trial = paste0(subid, trial_num)) 
 
-<!-- TODO: add exclusions. -->
+df_t_first_aoi <- df_t_first_aoi %>% 
+                  group_by(subid, trial_num) %>% 
+                  mutate(diff = aoi_dummy - lag(aoi_dummy))
 
-<!-- Used the `av` package to split video to 40fps images (just for resampling convenience.  -->
+head_4 <- function(df){df %>% slice(1:4)}
+
+df_t_4 <- df_t_first_aoi %>% split(.$subid, .$trial_num) %>%
+                  map_df(head_4) %>%
+                  filter(diff != 0) %>% 
+                  mutate(subid_trial = paste0(subid, trial_num))
+
+unique(df_t_4$subid_trial) 
+
+df_t_change_kids <- df_t_first_aoi %>% 
+                    mutate(subid_trial = paste0(subid, trial_num)) %>% 
+                    filter(subid_trial %in% df_t_4$subid_trial) %>% 
+                    select(subid_trial, subid, trial_num, t, first_look_time, aoi, aoi_dummy)
+
+df_t_first_aoi <- df_t_first_aoi %>% 
+  select(subid_trial, subid, lab, stimulus, age, trial_num, t, first_look_time, aoi, aoi_dummy) %>% 
+  filter(t == first_look_time) %>% 
+  mutate(first_look_location = case_when(subid_trial == "lmu_child044" ~ 1,
+                                       subid_trial == "lmu_child111" ~ 0,
+                                       subid_trial == "lmu_child115" ~ 0,
+                                       subid_trial == "lmu_child121" ~ 1,
+                                       subid_trial == "mb2_p123" ~ 1,
+                                       subid_trial == "mb2_p164" ~ 1,
+                                       subid_trial == "mb2_p37" ~ 0,
+                                       subid_trial == "MB2_P46" ~ 0,
+                                       subid_trial == "MB2_P56" ~ 0,
+                                       subid_trial == "MB2-108" ~ 0,
+                                       subid_trial == "MB2-117" ~ 1,
+                                       subid_trial == "MB2-124" ~ 1,
+                                       subid_trial == "MB2-126" ~ 1,
+                                       subid_trial == "mb2p067" ~ 1,
+                                       subid_trial == "mb2p103" ~ 1,
+                                       subid_trial == "mb2p114" ~ NA_real_,
+                                       subid_trial == "mb2p126" ~ 0,
+                                       subid_trial == "mb2p127" ~ 1,
+                                       TRUE ~ aoi_dummy)) %>% 
+  filter(!is.na(first_look_location))
+```
+
+## Data visualization across different test trials
+
+```{r}
+ggplot(df_t_first_aoi, aes(x = first_look_location)) + 
+  geom_bar() + 
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
+## Descriptive stats
+
+mean and sd of first look location in different trials. All numbers seem to be above 50%
+
+```{r}
+df_t_first_aoi %>% 
+  select(trial_num, first_look_location) %>% 
+  group_by(trial_num) %>% 
+  summarize(number_of_kids_each_trial = n(),
+            mean(first_look_location),
+            sd(first_look_location))
+```
+
+## Mixed-level analysis: First look location
+
+```{r first_look_analysis, results = "verbatim"}
+first_look_logistic <- glmer(first_look_location ~ trial_num + (1|subid), data = df_t_first_aoi, family = "binomial")
+
+summary(first_look_logistic)
+```
+
+Mean level. 
+
+```{r}
+mean(df_t_first_aoi$first_look_location)
+```
 
 
-<!-- ```{r} -->
-<!-- #FAM_LL_1200x900 -->
-<!-- # https://stackoverflow.com/questions/42333085/how-to-fit-the-plot-over-a-background-image-in-r-and-ggplot2 -->
-<!-- # start time: 27 seconds -->
-
-<!-- screen_size <- c(1920,1080) -->
-<!-- clip_size <- c(1200,900) -->
-
-<!-- frame2time <- function (f) {  -->
-<!--   ((f / 40)*1000) - pod -->
-<!-- } -->
-
-<!-- frames <- 1200:1205 -->
-<!-- p <- list() -->
-
-<!-- for (i in 1:length(frames)) { -->
-
-<!--   frame <- frames[i] -->
-<!--   time <- frame2time(frame) -->
-
-<!--   img <- readJPEG(paste0("media/FAM_LL_1200x900/image_",  -->
-<!--                          sprintf("%06.0f", frame),".jpg")) -->
-
-<!--   g <- rasterGrob(img,  -->
-<!--                   width = unit(1,"npc"),  -->
-<!--                   height = unit(1, "npc"),  -->
-<!--                   interpolate = FALSE) -->
-
-<!--   plot_data <- xyd %>% -->
-<!--     filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--            t > time, t < time + 25) -->
-
-<!--   p[i] <- ggplot(data = plot_data) + -->
-<!--     annotation_custom(g,  -->
-<!--                       xmin = (screen_size[1] - clip_size[1])/2,  -->
-<!--                       xmax = clip_size[1] + (screen_size[1] - clip_size[1])/2,  -->
-<!--                       ymin = (screen_size[2] - clip_size[2])/2,  -->
-<!--                       ymax = clip_size[2] + (screen_size[2] - clip_size[2])/2) +  -->
-<!--     geom_point(aes(x = x,  -->
-<!--                    y = screen_size[2] - y,  -->
-<!--                    col = lab),  -->
-<!--                alpha = 1) + -->
-<!--     xlim(0,screen_size[1]) +  -->
-<!--     ylim(0,screen_size[2]) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- foo <- d %>% -->
-<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--          t > -4*40, t < 0) -->
-
-<!-- foo %>% -->
-<!--   group_by(lab) %>% -->
-<!--   summarise(mean = mean(aoi == "target")) -->
-<!-- ``` -->
 
 
-<!-- ```{r} -->
-<!-- d %>% -->
-<!--   filter(str_detect(stimulus, "FAM_LL_1200x900*"),  -->
-<!--          t > -4*40, t < 0) %>% -->
-<!--   group_by(lab) %>% -->
-<!--   summarise(target = mean(aoi == "target"),  -->
-<!--             distractor = mean(aoi == "distractor"),  -->
-<!--             other = mean(aoi == "other"),  -->
-<!--             na = mean(is.na(aoi))) -->
-<!-- ``` -->
+# Main analysis 2: Differential analysis 
 
+## Data visualization across different test trials
+```{r}
+ms_proportion_trials <- d %>%
+  group_by(t, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  mutate(proportion_to_target = target / (target + distractor)) %>% 
+  filter(t >= -4000 & t <= 120+ 4000)
+
+
+ggplot(ms_proportion_trials, 
+       aes(x = t, y = proportion_to_target)) +
+  geom_point(alpha = 0.3) + 
+  ylim(0,1) + 
+  # geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
+            label = "Anticipation", hjust = 0 ) + 
+  geom_text(x = 200, y = .95, group = 1, col = "black", 
+            label = "Reaction", hjust = 0 )+
+  facet_wrap(.~trial_num, ncol = 4)   
+```
+
+Create data-set for the mixed-level analysis
+```{r}
+ms_proportion_trials <- d %>%
+  filter (t >= -4000 & t <= 120) %>% 
+  group_by(trial_num, subid, lab) %>%
+  summarise(mean_target = mean(aoi == "target", na.rm = TRUE),
+            sem_target = sd(aoi == "target", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            mean_distractor = mean(aoi == "distractor", na.rm = TRUE), 
+            sem_distractor = sd(aoi == "distractor", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            up_ci_target = mean_target + (sem_target * 1.96),
+            low_ci_target = mean_target - (sem_target * 1.96),
+            up_ci_distractor = mean_distractor + (sem_distractor * 1.96),
+            low_ci_distractor = mean_distractor - (sem_distractor * 1.96)) %>% 
+  mutate(proportion_to_target = mean_target / (mean_target + mean_distractor))
+```
+
+## Mixed-level analysis for diff-score analysis
+
+Note that technically we had 68 participants, but this analysis was based on 63 kids because not all kids looked at either target/distractor between -4000 ms to 120 ms (i.e., they either looked away (missing data) or looked at other parts of the screen (other))
+
+
+```{r mixed-level analysis}
+# Lmer_originally, I tried the following but it didn't converge:  lmer(proportion_to_target ~ trial_num + + (1|lab) + (trial_num|subid), data = ms_proportion_trials), so I changed the model to a simpler one below
+prop_model <- lmer(proportion_to_target ~ trial_num + (1|subid), data = ms_proportion_trials)
+summary(prop_model) 
+
+
+
+# did a linear hypothesis test to see if the intercept of the prop_model is signficantly higher than chance level (0.5)
+linearHypothesis(prop_model, "(Intercept) = 0.5")
+
+# the linear hypothesis test is also confirmed by calculating the z score of this intercept, I used the coefficient and the sd of the random intercept
+z_intercept <- 0.7525/0.066 #much higher than 1.96,
+```
