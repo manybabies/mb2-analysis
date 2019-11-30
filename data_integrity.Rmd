@@ -98,8 +98,12 @@ smi <- filter(xy, tracker == "smi")
 ### SMI histogram to check for extreme values
 
 ```{r histograms of coordinate distribution}
-hist(smi$x)
-hist(smi$y)
+hist(smi$x,
+     main = "Histogram of SMI x-coordinates",
+     xlab = "SMI x-coordinates")
+hist(smi$y,
+     main = "Histogram of SMI y-coordinates",
+     xlab = "SMI y-coordinates")
 ```
 
 ### SMI gaze distribution
@@ -107,13 +111,13 @@ hist(smi$y)
 ```{r SMI gaze map}
 ggplot(sample_n(smi, 5000),
        aes(x = x_plot, y = y_plot, col = lab)) +
-  geom_point() + 
+  geom_point(alpha = 0.05) + 
   labs(x = "x", y = "y", col = "Lab") +
   ggtitle("SMI gaze map, unfixed axis")
 
 ggplot(sample_n(smi, 5000),
        aes(x = x_plot, y = y_plot, col = lab)) +
-  geom_point() + 
+  geom_point(alpha = 0.05) + 
   xlim(0, 1200) +
   ylim(0, 900) +
   labs(x = "x", y = "y", col = "Lab") +
@@ -129,6 +133,7 @@ ggplot(smi,
   stat_density2d(aes(fill = ..density..), geom = 'tile', contour = F) + 
   xlim(0,1200) +
   ylim(0,900) +
+  labs(x = "x", y = "y") +
   scale_fill_distiller(palette = "RdYlBu") +
   ggtitle("SMI gaze heat map")
 ```
@@ -142,8 +147,12 @@ tobii <- filter(xy, tracker == "tobii")
 ### Tobii histogram to check for extreme values
 
 ```{r historgrams for coordinates}
-hist(tobii$x)
-hist(tobii$y)
+hist(tobii$x,
+     main = "Tobii x-coordinates",
+     xlab = "x-coordinates")
+hist(tobii$y,
+     main = "Tobii y-coordinates",
+     xlab = "y-coordinates")
 ```
 
 ### Tobii gaze distribution
@@ -151,13 +160,13 @@ hist(tobii$y)
 ```{r Tobii gaze maps}
 ggplot(sample_n(tobii, 5000),
        aes(x = x_plot, y = y_plot, col = lab)) +
-  geom_point() + 
+  geom_point(alpha = 0.05) + 
   labs(x = "x", y = "y", col = "Lab") +
   ggtitle("Tobii gaze map")
 
 ggplot(sample_n(tobii, 5000),
        aes(x = x_plot, y = y_plot, col = lab)) +
-  geom_point(alpha = .1) +
+  geom_point(alpha = .05) +
   xlim(0, 1200) +
   ylim(0, 900) +
   labs(x = "x", y = "y", col = "Lab") +
@@ -173,6 +182,7 @@ ggplot(tobii,
        aes(x = x_plot, y = y_plot)) +
   xlim(0,1200) +
   ylim(0,900) +
+  labs(x = "x", y = "y") +
   stat_density2d(aes(fill = ..density..), geom = 'tile', contour = F) + 
   scale_fill_distiller(palette = "RdYlBu") +
   ggtitle("Tobii gaze heat map")
@@ -187,8 +197,12 @@ eyelink <- filter(xy, tracker == "eyelink")
 ### Eyelink Histogram
 
 ```{r}
-hist(eyelink$x)
-hist(eyelink$y)
+hist(eyelink$x,
+     main = "Eyelink x-coordinates",
+     xlab = "x-coordinates")
+hist(eyelink$y,
+     main = "Eyelink y-coordinates",
+     ylab = "y-coordinates")
 ```
 
 ### Eyelink gaze distribution
@@ -217,6 +231,7 @@ ggplot(sample_n(eyelink, 20000),
   stat_density2d(aes(fill = ..density..), geom = 'tile', contour = F) + 
   xlim(0,1200) +
   ylim(0,900) +
+  labs(x = "x", y = "y") +
   scale_fill_distiller(palette = "RdYlBu") +
   ggtitle("Eyelink gaze heat map")
 ```
