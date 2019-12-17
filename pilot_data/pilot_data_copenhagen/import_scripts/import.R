@@ -145,7 +145,8 @@ xy_data <- tibble(lab_subject_id = d$lab_subject_id,
   left_join(trials) %>%
   left_join(subjects) %>%
   select(xy_data_id, subject_id, trial_id, x, y, t) %>%
-  center_time_on_pod()
+  center_time_on_pod() %>%
+  xy_trim(datasets) 
 
 # round to the precision given to 
 # avoid writing out excessively long floating point numbers
