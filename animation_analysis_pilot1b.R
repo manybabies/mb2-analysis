@@ -111,4 +111,4 @@ save_gif(makeplot(filter(xy,
              width = 600,
              height = 450,
              delay=1/30,
-             gif_file = paste0("full_", cc, "_", rr, ".gif"))
+             gif_file = paste0("pilot1b_outcome.gif"))
