@@ -46,6 +46,8 @@ for (lab in labs) {
 
 ```{r}
 labs <- dir(here::here("pilot_data"))
+labs = labs[!grepl("1b", labs)]
+labs = append(labs, "pilot_1b_copenhagen")
 
 d <- labs %>%
   map_df(function(lab) {
@@ -61,8 +63,9 @@ d <- labs %>%
     left_join(aoi_data, subjects) %>%
       left_join(trials) %>%
       left_join(datasets) %>%
+      mutate(experiment_num = ifelse(dataset_id < 7, "1a", "1b")) %>%
       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, 
-             age, t, aoi, trial_num, error) %>%
+             age, t, aoi, trial_num, error, experiment_num) %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
              stimulus = lab_trial_id)
@@ -117,15 +120,16 @@ d %>%
 Anticipation plot across all trials. 
 
 ```{r}
-ms <- d %>%
-  group_by(t, trial_num) %>%
+ms <- d %>% 
+  group_by(t, trial_num, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm=TRUE),
             distractor = mean(aoi == "distractor", na.rm=TRUE)) %>%
   gather(region, looking, target, distractor) 
 
 ggplot(ms, aes(x = t, y = looking, col = region)) + 
   geom_line() + 
-  geom_vline(xintercept = 120, col = "red", lty = 2)
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  facet_grid(experiment_num ~ .)
 
 ```    
 
@@ -133,7 +137,7 @@ In the primary time period of interest
 
 ```{r}
 ms <- d %>%
-  group_by(t) %>%
+  group_by(t, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   gather(region, looking, target, distractor) 
@@ -145,7 +149,8 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_text(x = -4000, y = .95, group = 1, col = "black", 
             label = "Anticipation", hjust = 0) + 
   geom_text(x = 200, y = .95, group = 1, col = "black", 
-            label = "Reaction", hjust = 0)
+            label = "Reaction", hjust = 0) + 
+  facet_grid(. ~ experiment_num)
 ```
 
 Now, broken down by trial.

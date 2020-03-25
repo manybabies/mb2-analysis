@@ -58,7 +58,8 @@ datasets <- tibble(dataset_id = 7,
                    monitor_size_y = 1024,
                    sample_rate = 500, 
                    tracker = "eyelink", 
-                   lab_dataset_id = "copenhagen_babylab")
+                   lab_dataset_id = "copenhagen_babylab",
+                   experiment_num = "1b")
 
 peekds::validate_table(df_table = datasets, 
                        table_type = "datasets")

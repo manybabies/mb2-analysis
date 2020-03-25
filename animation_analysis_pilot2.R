@@ -110,6 +110,6 @@ for (cc in unique(xy$cond)) {
              width = 600,
              height = 450,
              delay=1/30,
-             gif_file = paste0("full_", cc, "_", rr, ".gif"))
+             gif_file = paste0("1full_", cc, "_", rr, ".gif"))
   }
 }
