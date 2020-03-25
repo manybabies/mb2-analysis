@@ -202,7 +202,7 @@ And by lab:
 ```{r}
 ms <- d %>%
   mutate(block = ifelse(trial_num < 5, 1, 2)) %>%
-  group_by(t, lab, block) %>%
+  group_by(t, lab, block, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   gather(region, looking, target, distractor) 
@@ -212,7 +212,7 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) +
-  facet_grid(lab~block)
+  facet_grid(lab~block + experiment_num)
 ```
 
 # Main analysis 1: First anticipatory look

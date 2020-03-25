@@ -56,7 +56,7 @@ xy <- mutate(xy,
              y_plot = (monitor_size_y - y) - (monitor_size_y - video_size_y)/2,
              res = paste0(video_size_x, "x", video_size_y),
              cond = substr(stimulus, 5, 6),
-             frame = 1 + floor(30 * (t + pod_pilot2)/1000)) %>%
+             frame = 1 + floor(30 * (t + pod_pilot_1b)/1000)) %>%
   left_join(pngs) %>%
   filter(is.na(filename) == F)
 
@@ -110,6 +110,6 @@ for (cc in unique(xy$cond)) {
              width = 600,
              height = 450,
              delay=1/30,
-             gif_file = paste0("1full_", cc, "_", rr, ".gif"))
+             gif_file = paste0("full_", cc, "_", rr, ".gif"))
   }
 }
