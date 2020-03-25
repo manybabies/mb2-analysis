@@ -58,8 +58,7 @@ datasets <- tibble(dataset_id = 7,
                    monitor_size_y = 1024,
                    sample_rate = 500, 
                    tracker = "eyelink", 
-                   lab_dataset_id = "copenhagen_babylab",
-                   experiment_num = "1b")
+                   lab_dataset_id = "copenhagen_babylab")
 
 peekds::validate_table(df_table = datasets, 
                        table_type = "datasets")
@@ -112,6 +111,7 @@ trials <- filter(d, grepl("FAM", d$video_name),
   summarise(firsttime = min(time)) %>%
   mutate(trial_num = rank(firsttime),
          condition = substr(lab_trial_id, 5, 6),
+         experiment_num = ifelse(grepl("no_outcome", lab_trial_id), "pilot_1b_no_outcome", "pilot_1b_outcome"),
          has_outcome = grepl("no_outcome", lab_trial_id) == F,
          aoi_region_id = 0,
          dataset_id = 7,
@@ -119,7 +119,7 @@ trials <- filter(d, grepl("FAM", d$video_name),
          distractor_label = "distractor",
          distractor_id = "distractor",
          full_phrase = NA,
-         point_of_disambiguation = pod_pilot2,
+         point_of_disambiguation = pod_pilot_1b,
          target_image = "target", 
          target_label = "target", 
          target_id = "target",
@@ -148,7 +148,7 @@ xy_data <- tibble(lab_subject_id = d$lab_subject_id,
   left_join(trials) %>%
   left_join(subjects) %>%
   select(xy_data_id, subject_id, trial_id, x, y, t) %>%
-  center_time_on_pod_pilot2()
+  center_time_on_pod()
 
 # round to the precision given to 
 # avoid writing out excessively long floating point numbers

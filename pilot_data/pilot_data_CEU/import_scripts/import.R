@@ -98,6 +98,7 @@ trials <- filter(d, grepl("FAM", d$video_name),
   summarise(firsttime = min(time)) %>%
   mutate(trial_num = rank(firsttime),
          condition = substr(lab_trial_id, 5, 6),
+         experiment_num = "pilot_1a",
          aoi_region_id = 0,
          dataset_id = 5,
          distractor_image = "distractor",

@@ -1,0 +1,5 @@
+subject_id,age,sex,lab_subject_id,error,dataset_id
+0,NA,NA,p1b_01,FALSE,9
+1,NA,NA,p1b_02,FALSE,9
+2,NA,NA,p1b_03,FALSE,9
+3,NA,NA,p1b_04,FALSE,9
