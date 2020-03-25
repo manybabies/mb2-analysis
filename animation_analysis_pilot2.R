@@ -11,7 +11,7 @@ source(here("helper/preprocessing_helper.R"))
 source(here("metadata/pod.R"))
 
 labs <- dir("pilot_data")
-labs <- labs[grepl("pilot_1b_copenhagen", labs)]
+labs <- labs[grepl("1b", labs)] 
 
 xy <- labs %>%
   map_df(function(lab) {
