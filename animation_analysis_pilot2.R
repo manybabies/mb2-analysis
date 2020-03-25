@@ -109,6 +109,7 @@ for (cc in unique(xy$cond)) {
                              is.na(filename) == F)),
              width = 600,
              height = 450,
+             delay=1/30,
              gif_file = paste0("full_", cc, "_", rr, ".gif"))
   }
 }
