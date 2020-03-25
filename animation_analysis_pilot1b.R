@@ -33,19 +33,23 @@ xy <- labs %>%
       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, dataset_id, subject_id,
              age, t, x, y, trial_num, error, monitor_size_x, monitor_size_y,
              l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, r_y_min,
-             point_of_disambiguation) %>%
+             point_of_disambiguation, experiment_num) %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
-             stimulus = lab_trial_id)
+             stimulus = lab_trial_id) %>%
+      filter(experiment_num == "pilot_1b_outcome")
   })
 
+
 # read in all frames
+# we enforce 1280x960 and use only that
 pngs <- data.frame(filename = list.files("stimulus_frames_pilot1b/", full.names=T),
                    files=list.files("stimulus_frames_pilot1b/")) %>%
   mutate(files = gsub("no_outcome", "nooutcome", files)) %>%
   separate(files, into=c("FAM", "cond", "pilot", "outcome", "res", "fnum"), sep="_") %>%
   mutate(frame = as.numeric(substr(fnum, 1, 4)),
-         filename = as.character(filename))
+         filename = as.character(filename)) %>%
+  select(-res)
 
 # transform for plotting, assuming the origin is upper left
 # and video is centered within monitor
@@ -102,14 +106,9 @@ makeplot <- function(df){
 
 
 # make all the plots and stitch together into a gif
-for (cc in unique(xy$cond)) {
-  for (rr in unique(xy$res)) {
-    save_gif(makeplot(filter(xy, cond == cc,
-                             res == rr,
-                             is.na(filename) == F)),
+save_gif(makeplot(filter(xy, 
+                        is.na(filename) == F)),
              width = 600,
              height = 450,
              delay=1/30,
              gif_file = paste0("full_", cc, "_", rr, ".gif"))
-  }
-}
