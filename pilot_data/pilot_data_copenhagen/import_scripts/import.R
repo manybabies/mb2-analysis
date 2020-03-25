@@ -117,7 +117,7 @@ trials <- filter(d, grepl("FAM", d$video_name),
          distractor_label = "distractor",
          distractor_id = "distractor",
          full_phrase = NA,
-         point_of_disambiguation = pod,
+         point_of_disambiguation = pod_pilot_1a
          target_image = "target", 
          target_label = "target", 
          target_id = "target",
