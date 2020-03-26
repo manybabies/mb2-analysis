@@ -35,7 +35,6 @@ d <- subjs %>%
     left_join(xy, dd)
   }
   ) %>%
-  filter(lab_subject_id %in% c("mb2000", "mb2001b") == F) %>%
   filter(time >= first_frame_time)
 
 
@@ -115,7 +114,6 @@ trials <- filter(d, grepl("FAM", d$video_name),
   mutate(trial_id = 0:(n()-1)) %>%
   select(-firsttime)
 
-# TODO: this fails because it is looking for aoi_region and not aoi_region_id
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
 write_csv(trials, here(lab_dir, "processed_data/trials.csv"))

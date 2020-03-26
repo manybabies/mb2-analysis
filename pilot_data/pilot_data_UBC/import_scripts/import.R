@@ -98,7 +98,7 @@ trials <- filter(d, grepl("FAM", Stimulus),
          distractor_image = "distractor",
          distractor_label = "distractor",
          full_phrase = NA,
-         point_of_disambiguation = pod_pilot_1a
+         point_of_disambiguation = pod_pilot_1a,
          target_image = "target", 
          target_label = "target", 
          target_side = ifelse(str_sub(condition, start = 2, end = 2) == "L", 
