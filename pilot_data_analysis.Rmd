@@ -72,9 +72,11 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
+d$experiment = ifelse(grepl("1a", d$experiment_num), "1a", "1b")
+
 # exclude subject marked with any error and/or less than 8 trials
 d <- d %>% 
-  group_by(lab, subid) %>%
+  group_by(lab, subid, experiment) %>%
   mutate(error_subj = any(error)) %>%
       exclude_by(quo(error_subj), quiet=FALSE) 
 
@@ -82,20 +84,20 @@ d <- d %>%
 # changed from 35s to 32 after pilot 1b because no_outcome
 # trials are shorter
 d <- ungroup(d) %>% 
-  group_by(lab, trial_id, subid) %>%
+  group_by(lab, trial_id, subid, experiment) %>%
   mutate(time_range = (max(t) - min(t))/1000) %>%
           exclude_by(quo(time_range <= 32), quiet=FALSE)
 
 # print trial time ranges by lab
 ungroup(d) %>%
-  group_by(lab) %>% 
+  group_by(lab, experiment) %>% 
   summarise(shortest_trial=min(time_range),
             longest_trial=max(time_range)) %>%
   kable(digits=2)
 
-# exclude subjects which did not complete 7/8 trials
+# exclude subjects who did not complete 7/8 trials
 d <- ungroup(d) %>% 
-  group_by(lab, subid) %>%
+  group_by(lab, subid, experiment) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
             exclude_by(quo(trials_completed < 7),quiet=FALSE)
 
