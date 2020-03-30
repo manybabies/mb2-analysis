@@ -48,9 +48,6 @@ group_by(d.pretrim, eyetrial, lab_subject_id) %>% summarise(mintime=min(time),
                                     first_frame_time=first(first_frame_time),
                                     timetostart = (first_frame_time - mintime)/1000)
 
-# TODO: missing participant data sheet
-p <- readxl::read_xlsx(here(lab_dir, ""))
-
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
 datasets <- tibble(dataset_id = 7, 
