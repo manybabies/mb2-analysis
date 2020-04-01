@@ -130,7 +130,8 @@ ms <- d %>%
 ggplot(ms, aes(x = t, y = looking, col = region)) + 
   geom_line() + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  facet_grid(experiment_num ~ .)
+  facet_grid(experiment_num ~ .) + 
+  coord_cartesian(xlim = c(-4000+120, 4120)) #only consider the 4sec window before and after POD
 
 ```    
 
@@ -219,76 +220,65 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 
 # Main analysis 1: First anticipatory look
 
-First, create a function that extract the time stamp of first aoi.
+Create a dataframe to identify the first look and see if the first look is >100ms
 
-```{r}
-t_first_aoi <- function(df){
-  
-  df <- df %>% 
-    filter(t >= -4000, t <= 120, aoi == c("target", "distractor")) 
-  
- df = df %>% group_by(subid, trial_num) %>% mutate(first_look_time = t[1])
-  
-  return(df)
-}
-```
-
-Second, create a dataframe to identify the first look and see if the first look is >100ms
-
-Note that this is done ad-hoc for a number of participants. TODO - cleanup!
-
-```{r}
-df_t_first_aoi <- d %>% split(.$subid, .$trial_num) %>% 
-  map_df(t_first_aoi) %>% 
+```{r, eval = FALSE}
+#First, create several variables that indicate first_look_time in each trial for each subject, recode aoi into dummy variable and combine string 
+df_t_first_aoi <- d %>% 
+  filter(., experiment_num == "pilot_1a",
+         t >= -4000, t <= 120, 
+         aoi %in% c("target", "distractor")) %>% 
   mutate(aoi_dummy = case_when(aoi == "target" ~ 1, aoi == "distractor" ~ 0),
-         subid_trial = paste0(subid, trial_num)) 
+         subid_trial = paste0(subid, sep = "_trial_", trial_num)) %>% 
+  group_by(subid, trial_num) %>% 
+  mutate(first_look_time = t[1],
+         diff = aoi_dummy - lag(aoi_dummy)) %>% 
+  ungroup() 
 
-df_t_first_aoi <- df_t_first_aoi %>% 
-                  group_by(subid, trial_num) %>% 
-                  mutate(diff = aoi_dummy - lag(aoi_dummy))
+#df_t_first_aoi$Mov_Avg <- zoo::rollapply(df_t_first_aoi$diff, width = 4, by = 1, FUN = mean, na.rm = TRUE, align = "left")
 
-head_4 <- function(df){df %>% slice(1:4)}
+# head_4 <- function(df){df %>% slice(1:4)}
+# 
+# df_t_4 <- df_t_first_aoi %>% split(.$subid, .$trial_num) %>%
+#                   map_df(head_4) %>%
+#                   filter(diff != 0) %>% 
+#                   mutate(subid_trial = paste0(subid, trial_num))
 
-df_t_4 <- df_t_first_aoi %>% split(.$subid, .$trial_num) %>%
-                  map_df(head_4) %>%
-                  filter(diff != 0) %>% 
-                  mutate(subid_trial = paste0(subid, trial_num))
-
-unique(df_t_4$subid_trial) 
-
-df_t_change_kids <- df_t_first_aoi %>% 
-                    mutate(subid_trial = paste0(subid, trial_num)) %>% 
-                    filter(subid_trial %in% df_t_4$subid_trial) %>% 
-                    select(subid_trial, subid, trial_num, t, first_look_time, aoi, aoi_dummy)
-
-df_t_first_aoi <- df_t_first_aoi %>% 
-  select(subid_trial, subid, lab, stimulus, age, trial_num, t, first_look_time, aoi, aoi_dummy) %>% 
-  filter(t == first_look_time) %>% 
-  mutate(first_look_location = case_when(subid_trial == "lmu_child044" ~ 1,
-                                       subid_trial == "lmu_child111" ~ 0,
-                                       subid_trial == "lmu_child115" ~ 0,
-                                       subid_trial == "lmu_child121" ~ 1,
-                                       subid_trial == "mb2_p123" ~ 1,
-                                       subid_trial == "mb2_p164" ~ 1,
-                                       subid_trial == "mb2_p37" ~ 0,
-                                       subid_trial == "MB2_P46" ~ 0,
-                                       subid_trial == "MB2_P56" ~ 0,
-                                       subid_trial == "MB2-108" ~ 0,
-                                       subid_trial == "MB2-117" ~ 1,
-                                       subid_trial == "MB2-124" ~ 1,
-                                       subid_trial == "MB2-126" ~ 1,
-                                       subid_trial == "mb2p067" ~ 1,
-                                       subid_trial == "mb2p103" ~ 1,
-                                       subid_trial == "mb2p114" ~ NA_real_,
-                                       subid_trial == "mb2p126" ~ 0,
-                                       subid_trial == "mb2p127" ~ 1,
-                                       TRUE ~ aoi_dummy)) %>% 
-  filter(!is.na(first_look_location))
+#unique(df_t_4$subid_trial) 
+# 
+# df_t_change_kids <- df_t_first_aoi %>% 
+#                     mutate(subid_trial = paste0(subid, trial_num)) %>% 
+#                     filter(subid_trial %in% df_t_4$subid_trial) %>% 
+#                     select(subid_trial, subid, trial_num, t, first_look_time, aoi, aoi_dummy)
+# 
+# df_t_first_aoi <- df_t_first_aoi %>% 
+#   select(subid_trial, subid, lab, stimulus, age, trial_num, t, first_look_time, aoi, aoi_dummy) %>% 
+#   filter(t == first_look_time) %>% 
+#   mutate(first_look_location = case_when(subid_trial == "lmu_child044" ~ 1,
+#                                        subid_trial == "lmu_child111" ~ 0,
+#                                        subid_trial == "lmu_child115" ~ 0,
+#                                        subid_trial == "lmu_child121" ~ 1,
+#                                        subid_trial == "mb2_p123" ~ 1,
+#                                        subid_trial == "mb2_p164" ~ 1,
+#                                        subid_trial == "mb2_p37" ~ 0,
+#                                        subid_trial == "MB2_P46" ~ 0,
+#                                        subid_trial == "MB2_P56" ~ 0,
+#                                        subid_trial == "MB2-108" ~ 0,
+#                                        subid_trial == "MB2-117" ~ 1,
+#                                        subid_trial == "MB2-124" ~ 1,
+#                                        subid_trial == "MB2-126" ~ 1,
+#                                        subid_trial == "mb2p067" ~ 1,
+#                                        subid_trial == "mb2p103" ~ 1,
+#                                        subid_trial == "mb2p114" ~ NA_real_,
+#                                        subid_trial == "mb2p126" ~ 0,
+#                                        subid_trial == "mb2p127" ~ 1,
+#                                        TRUE ~ aoi_dummy)) %>% 
+#   filter(!is.na(first_look_location))
 ```
 
 ## Data visualization across different test trials
 
-```{r}
+```{r, eval = FALSE}
 ggplot(df_t_first_aoi, aes(x = first_look_location)) + 
   geom_bar() + 
   facet_wrap(.~trial_num, ncol = 4)
@@ -298,7 +288,7 @@ ggplot(df_t_first_aoi, aes(x = first_look_location)) +
 
 mean and sd of first look location in different trials. All numbers seem to be above 50%
 
-```{r}
+```{r, eval = FALSE}
 df_t_first_aoi %>% 
   select(trial_num, first_look_location) %>% 
   group_by(trial_num) %>% 
@@ -309,7 +299,7 @@ df_t_first_aoi %>%
 
 ## Mixed-level analysis: First look location
 
-```{r first_look_analysis, results = "verbatim"}
+```{r first_look_analysis, results = "verbatim", eval = FALSE}
 first_look_logistic <- glmer(first_look_location ~ trial_num + (1|subid), data = df_t_first_aoi, family = "binomial")
 
 summary(first_look_logistic)
@@ -317,7 +307,7 @@ summary(first_look_logistic)
 
 Mean level. 
 
-```{r}
+```{r, eval = FALSE}
 mean(df_t_first_aoi$first_look_location)
 ```
 
@@ -325,15 +315,16 @@ mean(df_t_first_aoi$first_look_location)
 
 
 # Main analysis 2: Differential analysis 
+This analysis explores whether kids looked at the target more than distractor during anticipatory period. 
 
 ## Data visualization across different test trials
 ```{r}
 ms_proportion_trials <- d %>%
-  group_by(t, trial_num) %>%
+  group_by(t, trial_num, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(proportion_to_target = target / (target + distractor)) %>% 
-  filter(t >= -4000 & t <= 120+ 4000)
+  filter(t >= -500 & t <= 120+ 500)
 
 
 ggplot(ms_proportion_trials, 
@@ -347,18 +338,18 @@ ggplot(ms_proportion_trials,
             label = "Anticipation", hjust = 0 ) + 
   geom_text(x = 200, y = .95, group = 1, col = "black", 
             label = "Reaction", hjust = 0 )+
-  facet_wrap(.~trial_num, ncol = 4)   
+  facet_wrap(experiment_num~trial_num, ncol = 4)   
 ```
 
 Create data-set for the mixed-level analysis
 ```{r}
 ms_proportion_trials <- d %>%
   filter (t >= -4000 & t <= 120) %>% 
-  group_by(trial_num, subid, lab) %>%
+  group_by(experiment_num, trial_num, subid, lab) %>%
   summarise(mean_target = mean(aoi == "target", na.rm = TRUE),
-            sem_target = sd(aoi == "target", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            sem_target = sd(aoi == "target", na.rm = TRUE) / sqrt(length(aoi == "target")),
             mean_distractor = mean(aoi == "distractor", na.rm = TRUE), 
-            sem_distractor = sd(aoi == "distractor", na.rm = TRUE) / sqrt(length(!is.na(aoi))),
+            sem_distractor = sd(aoi == "distractor", na.rm = TRUE) / sqrt(length(aoi == "distractor")),
             up_ci_target = mean_target + (sem_target * 1.96),
             low_ci_target = mean_target - (sem_target * 1.96),
             up_ci_distractor = mean_distractor + (sem_distractor * 1.96),
@@ -366,21 +357,63 @@ ms_proportion_trials <- d %>%
   mutate(proportion_to_target = mean_target / (mean_target + mean_distractor))
 ```
 
-## Mixed-level analysis for diff-score analysis
+## Logistic Mixed-level analysis during the pre-disambiguation period (-620 to 120 window)
 
-Note that technically we had 68 participants, but this analysis was based on 63 kids because not all kids looked at either target/distractor between -4000 ms to 120 ms (i.e., they either looked away (missing data) or looked at other parts of the screen (other))
+### compare pilot 1a (trial 1 to 4) and pilot 1b outcome
+```{r mixed-level logistic analysis}
+d_620_window_1a_1b_outcome <- d %>% 
+  filter(t >= -620, t <= 120, 
+         experiment_num %in% c("pilot_1a", "pilot_1b_outcome"), 
+         trial_num <5,
+         aoi != "other") %>%
+  mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
+                               aoi == "distractor" ~ 0))
 
+ls_target_620_1a_1b_outcome <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
+                                     data = d_620_window_1a_1b_outcome, family = "binomial")
+summary(ls_target_620_1a_1b_outcome)
+```
 
-```{r mixed-level analysis}
-# Lmer_originally, I tried the following but it didn't converge:  lmer(proportion_to_target ~ trial_num + + (1|lab) + (trial_num|subid), data = ms_proportion_trials), so I changed the model to a simpler one below
-prop_model <- lmer(proportion_to_target ~ trial_num + (1|subid), data = ms_proportion_trials)
-summary(prop_model) 
+### only focus on pilot 1b non outcome
+```{r}
+d_620_window_1b_no_outcome <- d %>% 
+  filter(t >= -620, t <= 120, 
+         experiment_num == "pilot_1b_no_outcome",
+         aoi != "other") %>%
+  mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
+                               aoi == "distractor" ~ 0))
 
+ls_target_620_1b_no_outcome <- glmer(aoi_dummy ~ trial_num + (trial_num|subid), 
+                                     data = d_620_window_1b_no_outcome, family = "binomial")
+summary(ls_target_620_1b_no_outcome)
+```
 
+## Logistic Mixed-level analysis during the poste-disambiguation period (0 to 620), compare pilot 1b outcome vs no-outcome
+```{r}
+d_620_window_1b <- d %>% 
+  filter(t >= 0, t <= 620, 
+         experiment_num != "pilot_1a",
+         aoi != "other") %>%
+  mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
+                               aoi == "distractor" ~ 0))
 
-# did a linear hypothesis test to see if the intercept of the prop_model is signficantly higher than chance level (0.5)
-linearHypothesis(prop_model, "(Intercept) = 0.5")
+ls_target_620_1b <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
+                                     data = d_620_window_1b, family = "binomial")
+summary(ls_target_620_1b)
+```
+
+```{r prop looking, eval = FALSE}
+
+# df_pilot_1a_b_trial1to4 <- ms_proportion_trials %>% filter(experiment_num != "pilot_1b_no_outcome", trial_num <5)
+# 
+# 
+# prop_model_1a_b_trial_1to4 <- lmer(proportion_to_target ~ experiment_num + trial_num + (1|subid), data = df_pilot_1a_b_trial1to4)
+# summary(prop_model_1a_b_trial_1to4) 
+
+## Linear hypothesis test to see if the intercept of the prop_model is signficantly higher than chance level (0.5)
+ 
+# linearHypothesis(prop_model, "(Intercept) = 0.5")
 
 # the linear hypothesis test is also confirmed by calculating the z score of this intercept, I used the coefficient and the sd of the random intercept
-z_intercept <- 0.7525/0.066 #much higher than 1.96,
+# z_intercept <- 0.7525/0.066 #much higher than 1.96
 ```
