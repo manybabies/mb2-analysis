@@ -223,7 +223,25 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 Create a dataframe to identify the first look and see if the first look is >100ms
 
 ```{r, eval = FALSE}
-#First, create several variables that indicate first_look_time in each trial for each subject, recode aoi into dummy variable and combine string 
+ 
+# gal's approach
+df_t_first_aoi <- d %>% 
+  filter(., experiment_num == "pilot_1a",
+         t >= -4000, t <= 120, 
+         aoi %in% c("target", "distractor")) %>% 
+        group_by(subid, trial_num) %>% 
+  mutate(first_look_aoi = rle(aoi)$values[rle(aoi)$lengths > 4][1]) %>% # 4 consecutive timepoints looking at target or distractor is counted as first look
+    ungroup() 
+
+# short df with first looks to check
+first_looks_df <- df_t_first_aoi %>% 
+  select('subid','trial_num','first_look_aoi') %>% 
+  group_by(subid, trial_num) %>%
+  summarize(aoi = unique(first_look_aoi))
+
+
+
+#First, create several variables that indicate first_look_time in each trial for each subject, recode aoi into dummy variable and combine string
 df_t_first_aoi <- d %>% 
   filter(., experiment_num == "pilot_1a",
          t >= -4000, t <= 120, 
