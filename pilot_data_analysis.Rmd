@@ -234,8 +234,7 @@ df_t_first_aoi <- d %>%
   group_by(subid, trial_num) %>% 
     # 4 consecutive timepoints looking at target or distractor is the first look
   mutate(first_look_aoi = rle(aoi)$values[rle(aoi)$lengths >= 4][1],
-   # get t at which first look to target or distractor begins
-         first_look_t = t[which.max(rle(aoi)$lengths >= 4)]) %>% 
+         first_look_t = t[sum(rle(aoi)$lengths[0:(which.max(rle(aoi)$lengths >= 4)-1)])+1]) %>% 
   ungroup()
     
 # short df with first looks to check
