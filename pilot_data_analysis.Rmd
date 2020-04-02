@@ -223,21 +223,21 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 Create a dataframe to identify the first look and see if the first look is >100ms
 
 ```{r, eval = FALSE}
- 
-# gal's approach
+# get time and location of first look (either target or distractor)
+
 df_t_first_aoi <- d %>% 
   # for now only look at exp1, and at window between bear disappearing and point of disambiguation (+120 to account for time to react)
   filter(., experiment_num == "pilot_1a",
          t >= -4000+120, t <= 120) %>% 
-  # create dummy variable for AOI in order to exploit rle, which handles NaN's neatly
-   mutate(aoi_dummy = case_when(aoi == "other" ~ NaN, aoi == "target" ~ 1, aoi == "distractor" ~ 0)) %>%
+  # create variable for AOI in order to exploit rle, which handles NaN's neatly
+    mutate(aoi = ifelse(aoi == "other", NA, aoi)) %>%
   group_by(subid, trial_num) %>% 
-    # 4 consecutive timepoints looking at target or distractor is counted as first look
-  mutate(first_look_aoi_dummy = rle(aoi_dummy)$values[rle(aoi_dummy)$lengths >= 4][1]) %>% 
-   # convert back to  strings
-  mutate(first_look_aoi = case_when(first_look_aoi_dummy == 1 ~ "target", first_look_aoi_dummy == 0 ~ "distractor", is_na(first_look_aoi_dummy) ~ 'NA')) %>% 
+    # 4 consecutive timepoints looking at target or distractor is the first look
+  mutate(first_look_aoi = rle(aoi)$values[rle(aoi)$lengths >= 4][1],
+   # get t at which first look to target or distractor begins
+         first_look_t = t[which.max(rle(aoi)$lengths >= 4)]) %>% 
+  ungroup()
     
-
 # short df with first looks to check
 first_looks_df <- df_t_first_aoi %>% 
   select('subid','trial_num','first_look_aoi') %>% 
