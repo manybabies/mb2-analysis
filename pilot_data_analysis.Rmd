@@ -99,7 +99,9 @@ ungroup(d) %>%
 d <- ungroup(d) %>% 
   group_by(lab, subid, experiment) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
-            exclude_by(quo(trials_completed < 7),quiet=FALSE)
+           exclude_by(quo(trials_completed < 7),quiet=FALSE) %>% 
+  ungroup(d) %>% 
+  mutate(subid = paste0(subid, sep = " _ ", lab, trial_num)) 
 
 ```
 
@@ -222,118 +224,113 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 
 Create a dataframe to identify the first look and see if the first look is >100ms
 
-```{r, eval = FALSE}
+```{r}
 # get time and location of first look (either target or distractor)
 
 df_t_first_aoi <- d %>% 
   # for now only look at exp1, and at window between bear disappearing and point of disambiguation (+120 to account for time to react)
-  filter(., experiment_num == "pilot_1a",
-         t >= -4000+120, t <= 120) %>% 
+  filter(., t >= -4000+120, t <= 120) %>% 
   # create variable for AOI in order to exploit rle, which handles NaN's neatly
-    mutate(aoi = ifelse(aoi == "other", NA, aoi)) %>%
+    mutate(aoi_recode = ifelse(aoi == "other", NA, aoi)) %>%
   group_by(subid, trial_num) %>% 
     # 4 consecutive timepoints looking at target or distractor is the first look
-  mutate(first_look_aoi = rle(aoi)$values[rle(aoi)$lengths >= 4][1],
-         first_look_t = t[sum(rle(aoi)$lengths[0:(which.max(rle(aoi)$lengths >= 4)-1)])+1]) %>% 
+  mutate(first_look_aoi = rle(aoi_recode)$values[rle(aoi_recode)$lengths >= 4][1],
+         first_look_t = t[sum(rle(aoi_recode)$lengths[0:(which.max(rle(aoi_recode)$lengths >= 4)-1)])+1]) %>% 
   ungroup()
+  
+
     
 # short df with first looks to check
 first_looks_df <- df_t_first_aoi %>% 
-  select('subid','trial_num','first_look_aoi') %>% 
-  group_by(subid, trial_num) %>%
+  #select(subid, trial_num, first_look_aoi, first_look_t, age, experiment_num) %>% 
+  group_by(subid, trial_num, experiment_num) %>%
   summarize(aoi = unique(first_look_aoi))
 
-
-
-#First, create several variables that indicate first_look_time in each trial for each subject, recode aoi into dummy variable and combine string
-df_t_first_aoi <- d %>% 
-  filter(., experiment_num == "pilot_1a",
-         t >= -4000, t <= 120, 
-         aoi %in% c("target", "distractor")) %>% 
-  mutate(aoi_dummy = case_when(aoi == "target" ~ 1, aoi == "distractor" ~ 0),
-         subid_trial = paste0(subid, sep = "_trial_", trial_num)) %>% 
-  group_by(subid, trial_num) %>% 
-  mutate(first_look_time = t[1],
-         diff = aoi_dummy - lag(aoi_dummy)) %>% 
-  ungroup() 
-
-#df_t_first_aoi$Mov_Avg <- zoo::rollapply(df_t_first_aoi$diff, width = 4, by = 1, FUN = mean, na.rm = TRUE, align = "left")
-
-# head_4 <- function(df){df %>% slice(1:4)}
-# 
-# df_t_4 <- df_t_first_aoi %>% split(.$subid, .$trial_num) %>%
-#                   map_df(head_4) %>%
-#                   filter(diff != 0) %>% 
-#                   mutate(subid_trial = paste0(subid, trial_num))
-
-#unique(df_t_4$subid_trial) 
-# 
-# df_t_change_kids <- df_t_first_aoi %>% 
-#                     mutate(subid_trial = paste0(subid, trial_num)) %>% 
-#                     filter(subid_trial %in% df_t_4$subid_trial) %>% 
-#                     select(subid_trial, subid, trial_num, t, first_look_time, aoi, aoi_dummy)
-# 
-# df_t_first_aoi <- df_t_first_aoi %>% 
-#   select(subid_trial, subid, lab, stimulus, age, trial_num, t, first_look_time, aoi, aoi_dummy) %>% 
-#   filter(t == first_look_time) %>% 
-#   mutate(first_look_location = case_when(subid_trial == "lmu_child044" ~ 1,
-#                                        subid_trial == "lmu_child111" ~ 0,
-#                                        subid_trial == "lmu_child115" ~ 0,
-#                                        subid_trial == "lmu_child121" ~ 1,
-#                                        subid_trial == "mb2_p123" ~ 1,
-#                                        subid_trial == "mb2_p164" ~ 1,
-#                                        subid_trial == "mb2_p37" ~ 0,
-#                                        subid_trial == "MB2_P46" ~ 0,
-#                                        subid_trial == "MB2_P56" ~ 0,
-#                                        subid_trial == "MB2-108" ~ 0,
-#                                        subid_trial == "MB2-117" ~ 1,
-#                                        subid_trial == "MB2-124" ~ 1,
-#                                        subid_trial == "MB2-126" ~ 1,
-#                                        subid_trial == "mb2p067" ~ 1,
-#                                        subid_trial == "mb2p103" ~ 1,
-#                                        subid_trial == "mb2p114" ~ NA_real_,
-#                                        subid_trial == "mb2p126" ~ 0,
-#                                        subid_trial == "mb2p127" ~ 1,
-#                                        TRUE ~ aoi_dummy)) %>% 
-#   filter(!is.na(first_look_location))
 ```
+
+Number of first look in differnet experiments, looks like pilot 1b outcome and no outcome conditions have similiar number of first look
+
+Note that NA represents trials where the kid only looked at other places (not target/distractor) during the whole anticipatory window between -3880 to +120 ms
+
+I checked online, didn't find any concensus of how to analyze the "other" looking. Different people have different decisions on how to treat the "other" looking in the analyses. 
+
+I suggest removing "NA (other)" in the following analyses, as I think that looking at "distractor" and "other" are two different concepts. Theortically, we are interested in understanding whether kids looked at target more than distractor and we may not want to include the time when kids were bored and didn't pay attention to trials/simply did not understand the task. In addition, the number of cases when kids only looked at "other" is low across experiments, so we are good.
+```{r}
+first_looks_df %>% 
+  group_by(aoi, experiment_num) %>% 
+  count()
+```
+
 
 ## Data visualization across different test trials
 
-```{r, eval = FALSE}
-ggplot(df_t_first_aoi, aes(x = first_look_location)) + 
+```{r}
+ggplot(first_looks_df, aes(x = aoi)) + 
   geom_bar() + 
-  facet_wrap(.~trial_num, ncol = 4)
+  facet_wrap(experiment_num~trial_num, ncol = 4)
 ```
 
 ## Descriptive stats
+Note that the following analyses removed NA (i.e., when kids looked at other all the time during the anticipatory window between -3880ms to +120ms)
 
-mean and sd of first look location in different trials. All numbers seem to be above 50%
+Mean and sd of first look location in different trials. The means of all trials are above 50%
 
-```{r, eval = FALSE}
-df_t_first_aoi %>% 
-  select(trial_num, first_look_location) %>% 
-  group_by(trial_num) %>% 
+```{r}
+mean_sd_aoi <- first_looks_df %>% 
+  filter(!is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
+  group_by(trial_num, experiment_num) %>% 
   summarize(number_of_kids_each_trial = n(),
-            mean(first_look_location),
-            sd(first_look_location))
+            mean(aoi_dummy),
+            sd(aoi_dummy))
+
+```
+
+Data visualization
+
+```{r}
+ggplot(mean_sd_aoi, aes(x = trial_num, y = `mean(aoi_dummy)`)) +
+  geom_line()+
+  facet_grid(.~experiment_num)
 ```
 
 ## Mixed-level analysis: First look location
 
-```{r first_look_analysis, results = "verbatim", eval = FALSE}
-first_look_logistic <- glmer(first_look_location ~ trial_num + (1|subid), data = df_t_first_aoi, family = "binomial")
+Pilot 1a: kids looked at target less over time. But generally speaking, they still looked at targat significantly more than distracter
+```{r first_look_analysis, results = "verbatim"}
+first_looks_df_1a <- first_looks_df %>% 
+  filter(experiment_num == "pilot_1a", !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0))
+  
+first_look_1a <- glmer(aoi_dummy ~ trial_num + (1|subid), data = first_looks_df_1a, family = "binomial")
 
-summary(first_look_logistic)
+summary(first_look_1a)
 ```
 
-Mean level. 
+Pilot 1a (trial 1 to 4) vs Pilot 1b_outcome: no difference between 1a and 1b_outcome in the first look at the target 
+```{r}
+first_looks_df_1a_1b <- first_looks_df %>% 
+  filter(experiment_num != "pilot_1b_no_outcome", 
+         trial_num < 5,
+         !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0))
+  
+first_look_1a_1b <- glmer(aoi_dummy ~ trial_num + experiment_num + (1|subid), data = first_looks_df_1a_1b, family = "binomial")
 
-```{r, eval = FALSE}
-mean(df_t_first_aoi$first_look_location)
+summary(first_look_1a_1b)
 ```
 
+Pilot 1b_outcome vs Pilot 1b_no_outcome, no difference between 1a and 1b in the first look at the target, but need to interpret the results with caution because we have so little data and even the intercept is not significant
+```{r}
+first_looks_df_1b <- first_looks_df %>% 
+  filter(experiment_num != "pilot_1a", 
+         !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0))
+  
+first_look_1b <- glmer(aoi_dummy ~ trial_num + experiment_num + (1|subid), data = first_looks_df_1b, family = "binomial")
 
+summary(first_look_1b)
+```
 
 
 # Main analysis 2: Differential analysis 
@@ -346,7 +343,7 @@ ms_proportion_trials <- d %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(proportion_to_target = target / (target + distractor)) %>% 
-  filter(t >= -2120 & t <= 2120)
+  filter(t >= -2000+120 & t <= 2120)
 
 
 ggplot(ms_proportion_trials, 
@@ -354,9 +351,9 @@ ggplot(ms_proportion_trials,
   geom_point(alpha = 0.3) + 
   ylim(0,1) + 
   # geom_smooth(span = 2, se = FALSE) + 
-  xlim(-2120, 2120) + 
+  xlim(-2000+120, 2120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  geom_text(x = -2000, y = .95, group = 1, col = "black", 
+  geom_text(x = -2000+120, y = .95, group = 1, col = "black", 
             label = "Anticipation", hjust = 0 ) + 
   geom_text(x = 200, y = .95, group = 1, col = "black", 
             label = "Reaction", hjust = 0 )+
@@ -366,7 +363,7 @@ ggplot(ms_proportion_trials,
 Create data-set for the mixed-level analysis
 ```{r}
 ms_proportion_trials <- d %>%
-  filter (t >= -4000 & t <= 120) %>% 
+  filter (t >= -4000+120 & t <= 120) %>% 
   group_by(experiment_num, trial_num, subid, lab) %>%
   summarise(mean_target = mean(aoi == "target", na.rm = TRUE),
             sem_target = sd(aoi == "target", na.rm = TRUE) / sqrt(length(aoi == "target")),
@@ -379,12 +376,12 @@ ms_proportion_trials <- d %>%
   mutate(proportion_to_target = mean_target / (mean_target + mean_distractor))
 ```
 
-## Logistic Mixed-level analysis during the pre-disambiguation period (-2120 to 120 window)
+## Logistic Mixed-level analysis during the pre-disambiguation period (-1880 to 120 window)
 
 ### compare pilot 1a (trial 1 to 4) and pilot 1b outcome
 ```{r mixed-level logistic analysis}
 d_2120_window_1a_1b_outcome <- d %>% 
-  filter(t >= -2120, t <= 120, 
+  filter(t >= -2000+120, t <= 120, 
          experiment_num %in% c("pilot_1a", "pilot_1b_outcome"), 
          trial_num <5,
          aoi != "other") %>%
@@ -399,7 +396,7 @@ summary(ls_target_2120_1a_1b_outcome)
 ### only focus on pilot 1b non outcome
 ```{r}
 d_2120_window_1b_no_outcome <- d %>% 
-  filter(t >= -2120, t <= 120, 
+  filter(t >= -2000+120, t <= 120, 
          experiment_num == "pilot_1b_no_outcome",
          aoi != "other") %>%
   mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
