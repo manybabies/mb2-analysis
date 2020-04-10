@@ -101,7 +101,7 @@ d <- ungroup(d) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
            exclude_by(quo(trials_completed < 7),quiet=FALSE) %>% 
   ungroup(d) %>% 
-mutate(subid = paste(subid, lab, experiment_num, sep="_"))
+mutate(subid = paste(subid, lab, experiment, sep="_"))
 
 ```
 
@@ -111,7 +111,7 @@ Descriptives
 
 ```{r}
 d %>%
-  group_by(lab, subid) %>%
+  group_by(experiment, lab, subid) %>%
   summarise(age = mean(age)) %>%
   summarise(n = n(), 
             age = mean(age)/30.25) %>%
@@ -237,14 +237,14 @@ df_t_first_aoi <- d %>%
   mutate(first_look_aoi = rle(aoi_recode)$values[rle(aoi_recode)$lengths >= 4][1],
          first_look_t = t[sum(rle(aoi_recode)$lengths[0:(which.max(rle(aoi_recode)$lengths >= 4)-1)])+1]) %>% 
   ungroup()
-  
 
-    
 # short df with first looks to check
 first_looks_df <- df_t_first_aoi %>% 
   #select(subid, trial_num, first_look_aoi, first_look_t, age, experiment_num) %>% 
   group_by(subid, trial_num, experiment_num) %>%
-  summarize(aoi = unique(first_look_aoi))
+  summarize(aoi = unique(first_look_aoi)) %>% 
+  mutate(aoi = case_when (is.na(aoi) ~ "other", 
+                          TRUE ~ as.character(aoi)))
 
 ```
 
@@ -264,10 +264,22 @@ first_looks_df %>%
 
 ## Data visualization across different test trials
 
+Pilot 1a
 ```{r}
-ggplot(first_looks_df, aes(x = aoi)) + 
-  geom_bar() + 
-  facet_wrap(experiment_num~trial_num, ncol = 4)
+ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
+
+
+Pilot 1b
+```{r}
+ggplot(data = filter(first_looks_df, experiment_num != "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(trial_num~experiment_num, ncol = 4)
 ```
 
 ## Descriptive stats
@@ -337,6 +349,30 @@ summary(first_look_1b)
 This analysis explores whether kids looked at the target more than distractor during anticipatory period. 
 
 ## Data visualization across different test trials
+```{r}
+df_analysis2 <- d %>%  
+  filter(t >= -2000+120 & t <= 2120)
+```
+
+Pilot 1a
+```{r}
+ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
+
+Pilot 1b
+```{r}
+ggplot(data = filter(df_analysis2, experiment_num != "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(trial_num~experiment_num, ncol = 4)
+```
+
+
+For proportion score, I only focus on target and distractor
 ```{r}
 ms_proportion_trials <- d %>%
   group_by(t, trial_num, experiment_num) %>%
