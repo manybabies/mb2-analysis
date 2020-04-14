@@ -351,10 +351,13 @@ This analysis explores whether kids looked at the target more than distractor du
 ## Data visualization across different test trials
 ```{r}
 df_analysis2 <- d %>%  
-  filter(t >= -2000+120 & t <= 2120)
+  filter(t >= -4000+120 & t <= 120)
+
+df_analysis2_afterPOD <- d %>%  
+  filter(t >= 120 & t <= 4000+120)
 ```
 
-Pilot 1a
+Pilot 1a: Before POD
 ```{r}
 ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
@@ -362,10 +365,25 @@ ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) +
   facet_wrap(.~trial_num, ncol = 4)
 ```
 
+Pilot 1a: after POD
+```{r}
+ggplot(data = filter(df_analysis2_afterPOD, experiment_num == "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
 
-Pilot 1b
+Pilot 1b : before POD
 ```{r}
 ggplot(data = filter(df_analysis2, experiment_num != "pilot_1a")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(trial_num~experiment_num, ncol = 4)
+```
+
+Pilot 1b : after POD
+```{r}
+ggplot(data = filter(df_analysis2_afterPOD, experiment_num != "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(trial_num~experiment_num, ncol = 4)
@@ -379,7 +397,7 @@ ms_proportion_trials <- d %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(proportion_to_target = target / (target + distractor)) %>% 
-  filter(t >= -2000+120 & t <= 2120)
+  filter(t >= -4000+120 & t <= 4120)
 
 
 ggplot(ms_proportion_trials, 
@@ -387,9 +405,9 @@ ggplot(ms_proportion_trials,
   geom_point(alpha = 0.3) + 
   ylim(0,1) + 
   # geom_smooth(span = 2, se = FALSE) + 
-  xlim(-2000+120, 2120) + 
+  xlim(-4000+120, 4120) + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  geom_text(x = -2000+120, y = .95, group = 1, col = "black", 
+  geom_text(x = -4000, y = .95, group = 1, col = "black", 
             label = "Anticipation", hjust = 0 ) + 
   geom_text(x = 200, y = .95, group = 1, col = "black", 
             label = "Reaction", hjust = 0 )+
@@ -416,45 +434,45 @@ ms_proportion_trials <- d %>%
 
 ### compare pilot 1a (trial 1 to 4) and pilot 1b outcome
 ```{r mixed-level logistic analysis}
-d_2120_window_1a_1b_outcome <- d %>% 
-  filter(t >= -2000+120, t <= 120, 
+d_4120_window_1a_1b_outcome <- d %>% 
+  filter(t >= -4000+120, t <= 120, 
          experiment_num %in% c("pilot_1a", "pilot_1b_outcome"), 
          trial_num <5,
          aoi != "other") %>%
   mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
                                aoi == "distractor" ~ 0))
 
-ls_target_2120_1a_1b_outcome <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
-                                     data = d_2120_window_1a_1b_outcome, family = "binomial")
-summary(ls_target_2120_1a_1b_outcome)
+ls_target_4120_1a_1b_outcome <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
+                                     data = d_4120_window_1a_1b_outcome, family = "binomial")
+summary(ls_target_4120_1a_1b_outcome)
 ```
 
 ### only focus on pilot 1b non outcome
 ```{r}
-d_2120_window_1b_no_outcome <- d %>% 
-  filter(t >= -2000+120, t <= 120, 
+d_4120_window_1b_no_outcome <- d %>% 
+  filter(t >= -4000+120, t <= 120, 
          experiment_num == "pilot_1b_no_outcome",
          aoi != "other") %>%
   mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
                                aoi == "distractor" ~ 0))
 
-ls_target_2120_1b_no_outcome <- glmer(aoi_dummy ~ trial_num + (trial_num|subid), 
-                                     data = d_2120_window_1b_no_outcome, family = "binomial")
-summary(ls_target_2120_1b_no_outcome)
+ls_target_4120_1b_no_outcome <- glmer(aoi_dummy ~ trial_num + (trial_num|subid), 
+                                     data = d_4120_window_1b_no_outcome, family = "binomial")
+summary(ls_target_4120_1b_no_outcome)
 ```
 
 ## Logistic Mixed-level analysis during the poste-disambiguation period (0 to 2120), compare pilot 1b outcome vs no-outcome
 ```{r}
-d_2120_window_1b <- d %>% 
-  filter(t >= 0, t <= 2120, 
+d_4120_window_1b <- d %>% 
+  filter(t >= 0, t <= 4120, 
          experiment_num != "pilot_1a",
          aoi != "other") %>%
   mutate(aoi_dummy = case_when(aoi == "target" ~ 1, 
                                aoi == "distractor" ~ 0))
 
-ls_target_2120_1b <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
-                                     data = d_2120_window_1b, family = "binomial")
-summary(ls_target_2120_1b)
+ls_target_4120_1b <- glmer(aoi_dummy ~ trial_num + experiment_num + (trial_num|subid), 
+                                     data = d_4120_window_1b, family = "binomial")
+summary(ls_target_4120_1b)
 ```
 
 ```{r prop looking, eval = FALSE}
