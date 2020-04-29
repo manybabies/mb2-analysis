@@ -9,6 +9,7 @@ library(gganimate)
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
 source(here("metadata/pod.R"))
+source(here("metadata/generate_AOIs.R"))
 
 
 resample_times <- function(df) {
@@ -56,20 +57,23 @@ xy_orig <- labs %>%
                                      lab,"/processed_data/datasets.csv")))
     aoiregions <- read_csv(here(paste0("pilot_data/",
                                        lab,"/processed_data/aoi_regions.csv")))
+    aoidata <- read_csv(here(paste0("pilot_data/",
+                                    lab,"/processed_data/aoi_data.csv")))
     
     left_join(xy_data, subjects) %>%
       left_join(trials) %>%
       left_join(datasets) %>%
       left_join(aoiregions) %>%
+      left_join(aoidata) %>%
       select(lab_subject_id, lab_dataset_id, lab_trial_id, trial_id, dataset_id, subject_id,
              age, t, x, y, trial_num, error, monitor_size_x, monitor_size_y,
              l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, r_y_min,
-             point_of_disambiguation, experiment_num) %>%
+             w_x_max, w_x_min, w_y_max, w_y_min, 
+             point_of_disambiguation, experiment_num, aoi) %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
              stimulus = lab_trial_id) 
-    })
-
+  })
 
 # read in all frames
 # we enforce 1280x960 and use only that
@@ -134,16 +138,49 @@ xy <- ungroup(xy) %>%
 # transform all vidoes to 1280x960
 transform_all = TRUE
 if (transform_all == TRUE) {
+  #xy$l_x_max = (xy$l_x_max/(xy$video_size_x)) * 1280
+  #xy$l_x_max = (xy$l_x_max/(xy$video_size_x)) * 1280
+  #xy$r_x_max = (xy$r_x_max/(xy$video_size_x)) * 1280
+  #xy$r_x_min= (xy$r_x_min/(xy$video_size_x)) * 1280
+  
+  #xy$l_y_max = (xy$l_y_max/(xy$video_size_x)) * 960
+  #xy$l_y_max = (xy$l_y_max/(xy$video_size_x)) * 960
+  #xy$r_y_max = (xy$r_y_max/(xy$video_size_x)) * 960
+  #xy$r_y_min= (xy$r_y_min/(xy$video_size_x)) * 960
+  
   xy$x_plot = (xy$x_plot/(xy$video_size_x)) * 1280
   xy$y_plot = (xy$y_plot/(xy$video_size_y)) * 960
   xy$video_size_x = 1280
   xy$video_size_y = 960
 }
 
+# generate aoi_regions for 1280x960
+aoi_regions = generate_aoi_regions()
+aoi_regions$l_y_max = 960 - min(960, aoi_regions$l_y_max)
+aoi_regions$r_y_max = 960 - min(960, aoi_regions$r_y_max)
+aoi_regions$l_y_min = 960 - min(960, aoi_regions$l_y_min)
+aoi_regions$r_y_min = 960 - min(960, aoi_regions$r_y_min)
+aoi_regions$w_y_max = 960 - min(960, aoi_regions$w_y_max)
+aoi_regions$w_y_min = 960 - min(960, aoi_regions$w_y_min)
+aoi_regions$lb_y_max = 960 - min(960, aoi_regions$lb_y_max)
+aoi_regions$rb_y_max = 960 - min(960, aoi_regions$rb_y_max)
+aoi_regions$lb_y_min = 960 - min(960, aoi_regions$lb_y_min)
+aoi_regions$rb_y_min = 960 - min(960, aoi_regions$rb_y_min)
+
+# flip so the animation is all lined up
+xy = mutate(xy, 
+            x_plot = if_else((cond == "RR" | cond == "RL") & t < -13000,
+                             video_size_x - x_plot,
+                             x_plot),
+            x_plot = if_else((cond == "LR" | cond == "RR") & t >= -13000,
+                             video_size_x - x_plot,
+                             x_plot))
+
 # make heat map
 xy_resampled = resample_times(xy) %>%
   dplyr::select(-t) %>%
   dplyr::rename(t = t_zeroed)
+
 
 make_heat_map <- function(xy_resampled, i, i_end) {
   df = filter(xy_resampled, t > i, t < i_end,
@@ -192,29 +229,45 @@ make_heat_map <- function(xy_resampled, i, i_end) {
   }
 }
 # make heat map
-make_heat_map(xy_resampled, -2000, -100)
-
-
+make_heat_map(xy_resampled, -2000, -30)
 
 # plot a single frame of the data
 print_single_frame <- function(df) {
   print(
-    ggplot(data=df, aes(x=x_plot, 
-                        y=y_plot, 
-                        group=paste(lab, subid, trial_id), 
-                        colour=lab)) +
+    ggplot() +
       annotation_custom(rasterGrob(png::readPNG(as.character(first(df$filename)))), 
                         0,
                         first(df$video_size_x), 
                         0,
                         first(df$video_size_y)) +
-      geom_point()  + 
+      geom_point(data=df, aes(x=x_plot, 
+                              y=y_plot, 
+                              group=paste(lab, subid, trial_id), 
+                              colour=lab))  + 
       coord_fixed() + 
       xlim(0, first(df$video_size_x)) +
-      ylim(0, first(df$video_size_y)) +
-      ggtitle(paste("time:", round(median(df$t/1000), 2), "frame:", first(df$frame)))
+      ylim(0, first(df$video_size_y)) + 
+      ggtitle(paste("time:", round(median(df$t/1000), 2), "frame:", first(df$frame))) + 
+      geom_rect(data=aoi_regions, aes(xmin = l_x_min, xmax = l_x_max,
+                                      ymin = l_y_min, ymax = l_y_max),
+                fill="yellow", alpha=.3) +
+      geom_rect(data=aoi_regions, aes(xmin = r_x_min, xmax = r_x_max,
+                                      ymin = r_y_min, ymax = r_y_max),
+                fill="yellow", alpha=.3) +
+    geom_rect(data=aoi_regions, aes(xmin = w_x_min, xmax = w_x_max,
+                                    ymin = w_y_min, ymax = w_y_max),
+              fill="white", alpha=.3) +
+    geom_rect(data=aoi_regions, aes(xmin = lb_x_min, xmax = lb_x_max,
+                                    ymin = lb_y_min, ymax = lb_y_max),
+              fill="purple", alpha=.3) +
+    geom_rect(data=aoi_regions, aes(xmin = rb_x_min, xmax = rb_x_max,
+                                    ymin = rb_y_min, ymax = rb_y_max),
+              fill="purple", alpha=.3)    
   )
 }
+
+df = filter(xy_resampled, frame == 100)
+print_single_frame(df)
 
 # This syntax is taken mostly from gifski documentation 
 # https://cran.r-project.org/web/packages/gifski/gifski.pdf
@@ -226,16 +279,34 @@ makeplot <- function(df){
   lapply(datalist, print_single_frame)
 }
 
+# make all the plots and stitch together into a gif
+save_gif(makeplot(filter(xy_resampled, 
+                         is.na(filename) == F,
+                         experiment_num == "pilot_1b_outcome")),
+         width = 600,
+         height = 450,
+         delay=1/30,
+         gif_file = paste0("pilot1b_outcome.gif"))
+
 
 # make all the plots and stitch together into a gif
-save_gif(makeplot(filter(xy, 
+save_gif(makeplot(filter(xy_resampled, 
+                         is.na(filename) == F,
+                         experiment_num == "pilot_1b_no_outcome")),
+         width = 600,
+         height = 450,
+         delay=1/30,
+         gif_file = paste0("pilot1b_no_outcome.gif"))
+
+# make all the plots and stitch together into a gif
+save_gif(makeplot(filter(xy_resampled, 
                         is.na(filename) == F,
                         experiment_num == "pilot_1b_outcome",
-                        cond == "LL")),
+                        t < 100000)),
              width = 600,
              height = 450,
              delay=1/30,
-             gif_file = paste0("pilot1b_outcome.gif"))
+             gif_file = paste0("pilot1b_all_normalized.gif"))
 
 
 # make all the plots and stitch together into a gif
@@ -247,6 +318,3 @@ save_gif(makeplot(filter(xy,
          height = 450,
          delay=1/30,
          gif_file = paste0("pilot1b_no_outcome.gif"))
-
-
-head(x)
