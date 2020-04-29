@@ -3,6 +3,8 @@ library(readxl)
 library(tidyverse)
 library(here)
 
+aoi_size = "small"
+
 source(here("metadata/pod.R"))
 
 lab_dir = "pilot_data/pilot_data_UBC"
@@ -73,7 +75,7 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
                                    screen_height = datasets$monitor_size_y,
                                    video_width = 1200, 
                                    video_height = 900, # says 9001 in picture name, but that seems wrong
-                                   size = "big")
+                                   size = aoi_size)
 peekds::validate_table(df_table = aoi_regions, 
                        table_type = "aoi_regions")
 write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
@@ -142,7 +144,7 @@ write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
-aoi_data <- generate_aoi(here(lab_dir, "processed_data/"))
+aoi_data <- generate_aoi_small_or_big(here(lab_dir, "processed_data/"), aoi_size)
 
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
