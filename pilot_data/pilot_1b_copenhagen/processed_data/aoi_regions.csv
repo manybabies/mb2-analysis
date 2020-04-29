@@ -1,2 +1,2 @@
-aoi_region_id,l_x_max,l_x_min,l_y_max,l_y_min,r_x_max,r_x_min,r_y_max,r_y_min,w_x_max,w_x_min,w_y_max,w_y_min,lb_x_max,lb_x_min,lb_y_max,lb_y_min,rb_x_max,rb_x_min,rb_y_max,rb_y_min
-0,473.6,307.2,780.8000000000001,560,972.8,806.4,780.8000000000001,560,715,565,512,362,294.40000000000003,38.4,915.2,627.2,985.5999999999999,1241.6,915.2,627.2
+aoi_region_id,l_x_max,l_x_min,l_y_max,l_y_min,r_x_max,r_x_min,r_y_max,r_y_min,w_x_max,w_x_min,w_y_max,w_y_min,lb_x_max,lb_x_min,lb_y_max,lb_y_min,rb_x_max,rb_x_min,rb_y_max,rb_y_min,lbig_x_max,lbig_x_min,lbig_y_max,lbig_y_min,rbig_x_max,rbig_x_min,rbig_y_max,rbig_y_min
+0,473.6,307.2,780.8000000000001,560,972.8,806.4,780.8000000000001,560,715,565,512,362,294.40000000000003,38.4,915.2,627.2,985.5999999999999,1241.6,915.2,627.2,560,0,992,572,1280,720,992,572

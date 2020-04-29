@@ -256,7 +256,7 @@ print_single_frame <- function(df) {
                 fill="yellow", alpha=.3) +
     geom_rect(data=aoi_regions, aes(xmin = w_x_min, xmax = w_x_max,
                                     ymin = w_y_min, ymax = w_y_max),
-              fill="white", alpha=.3) +
+              fill="white", alpha=.6) +
     geom_rect(data=aoi_regions, aes(xmin = lb_x_min, xmax = lb_x_max,
                                     ymin = lb_y_min, ymax = lb_y_max),
               fill="purple", alpha=.3) +
@@ -266,7 +266,7 @@ print_single_frame <- function(df) {
   )
 }
 
-df = filter(xy_resampled, frame == 100)
+df = sample_n(filter(xy_resampled, is.na(aoi) == F, frame == 100), 30)
 print_single_frame(df)
 
 # This syntax is taken mostly from gifski documentation 
