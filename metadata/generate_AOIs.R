@@ -12,25 +12,36 @@
 # generate appropriate specification:
 # aoi_regions
 # aoi_region_id, l_x_max, l_x_min, l_y_max, l_y_min, r_x_max, r_x_min, r_y_max, w_x_max, w_x_min, w_y_max, w_y_min
-
-
 generate_aoi_regions <- function(screen_width = 1280, 
                                  screen_height = 1024,
                                  video_width = 1280,
                                  video_height = 960, 
-                                 size = "big") {
+                                 size = "small") {
   
   if (size == "small") {
-    # not implemented
-    # ### Tunnel AOIs
-    # #### Left AOI:
-    # Tunnel_leftAOI_top <- ((video_height*11)/16) + ((screen_height-video_height)/2)
-    # Tunnel_leftAOI_left <- ((video_width*5)/16) + (screen_width-video_width)/2
-    # Tunnel_leftAOI_radius <- ((video_height*5)/32)
-    # #### Right AOI:
-    # Tunnel_rightAOI_top <- ((video_height*11)/16) + ((screen_height-video_height)/2)
-    # Tunnel_rightAOI_left <- ((video_width*11)/16) + (screen_width-video_width)/2
-    # Tunnel_rightAOI_radius <- ((video_height*5)/32)
+    aoi_regions = tibble(
+      aoi_region_id = 0, 
+      l_x_max = (video_width*.37) + (screen_width-video_width)/2,
+      l_x_min = (video_width*.24) + (screen_width-video_width)/2,
+      l_y_max = (video_height*0.78) + ((screen_height-video_height)/2),
+      l_y_min = (video_height*0.55) + ((screen_height-video_height)/2),
+      r_x_max = video_width - (video_width*.24) + (screen_width-video_width)/2,
+      r_x_min = video_width - (video_width*.37)  + (screen_width-video_width)/2,
+      r_y_max = (video_height*0.78) + ((screen_height-video_height)/2),
+      r_y_min =  (video_height*0.55) + ((screen_height-video_height)/2),
+      w_x_max = video_width/2 + floor((video_width*.94)/16) + (screen_width-video_width)/2,
+      w_x_min = video_width/2 - floor((video_width*.94)/16) + (screen_width-video_width)/2,
+      w_y_max = video_height/2 + ((screen_height-video_height)/2),
+      w_y_min = video_height/2 - (video_height*2.5)/16 + ((screen_height-video_height)/2),
+      lb_x_max = (video_width*.23) + (screen_width-video_width)/2,
+      lb_x_min = (video_width*.03) + (screen_width-video_width)/2,
+      lb_y_max = (video_height*0.92) + ((screen_height-video_height)/2),
+      lb_y_min = (video_height*0.62) + ((screen_height-video_height)/2),
+      rb_x_max = video_width - (video_width*.23) + (screen_width-video_width)/2,
+      rb_x_min = video_width - (video_width*.03)  + (screen_width-video_width)/2,
+      rb_y_max = (video_height*0.92) + ((screen_height-video_height)/2),
+      rb_y_min =  (video_height*0.62) + ((screen_height-video_height)/2)
+      )
   } else if (size == "big") {
     aoi_regions = tibble(
       aoi_region_id = 0, 
@@ -47,4 +58,82 @@ generate_aoi_regions <- function(screen_width = 1280,
       w_y_max = video_height/2 + ((screen_height-video_height)/2),
       w_y_min = video_height/2 - (video_height*2.5)/16 + ((screen_height-video_height)/2) )
   }
+}
+
+
+na_mode <- function(x) {
+  if (all(is.na(x))) {
+    return(as.character(NA))
+  } else {
+    x_nona <- x[!is.na(x)]
+    
+    # https://stackoverflow.com/questions/2547402/is-there-a-built-in-function-for-finding-the-mode
+    ux <- unique(x_nona)
+    x_mode <- ux[which.max(tabulate(match(x_nona, ux)))]
+    
+    return(x_mode)
+  }
+}
+
+add_aois_small <- function (xy_joined) 
+{
+  xy_joined %<>% dplyr::mutate(
+    side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
+                            x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",
+                            x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "left",
+                            x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "right",
+                            x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",                            
+                            !is.na(x) & !is.na(y) ~ "other", 
+                            TRUE ~  as.character(NA)),
+    aoitype = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "exit",
+                            x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "exit",
+                            x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "box",
+                            x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "box",
+                            x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",                            
+                            !is.na(x) & !is.na(y) ~ "other", 
+                            TRUE ~  as.character(NA)),    
+    aoi = dplyr::case_when(side %in%  c("left", "right") & side == target_side ~ "target", 
+                           side %in% c("left", "right") & side != target_side ~ "distractor",
+                           TRUE ~ side),
+    aoi = paste(aoi, aoitype, sep="_"))
+  return(xy_joined)
+}
+
+add_aois_big <- function (xy_joined) 
+{
+  xy_joined %<>% dplyr::mutate(
+    side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
+                            x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",
+                            !is.na(x) & !is.na(y) ~ "other", 
+                            TRUE ~  as.character(NA)),
+    aoi = dplyr::case_when(side %in%  c("left", "right") & side == target_side ~ "target", 
+                           side %in% c("left", "right") & side != target_side ~ "distractor",
+                           TRUE ~ side)
+  )
+  return(xy_joined)
+}
+
+
+generate_aoi_small_or_big <- function (dir, size) 
+{
+  SAMPLE_RATE = 40
+  SAMPLE_DURATION = 1000/SAMPLE_RATE
+  MAX_GAP_LENGTH = 0.1
+  MAX_GAP_SAMPLES = MAX_GAP_LENGTH/(1/SAMPLE_RATE)
+  xy <- readr::read_csv(file.path(dir, "xy_data.csv"))
+  trials <- readr::read_csv(file.path(dir, "trials.csv"))
+  aoi_regions <- readr::read_csv(file.path(dir, "aoi_regions.csv"))
+  xy_joined <- xy %>% dplyr::left_join(trials) %>% dplyr::left_join(aoi_regions)
+  if (size == "big") {
+    xy_joined <- add_aois_small(xy_joined)
+  } else if (size == "small") {
+    xy_joined <- add_aois_big(xy_joined)
+  }
+  aoi = resample_times(xy_joined) %>% dplyr::select(dataset_id, 
+                                                    subject_id, trial_id, t_zeroed, aoi) %>% dplyr::rename(t = t_zeroed) %>% 
+    dplyr::group_by(dataset_id, subject_id, trial_id, t) %>% 
+    dplyr::summarise(aoi = na_mode(aoi)) %>% dplyr::ungroup() %>% 
+    group_by(dataset_id, subject_id, trial_id) %>% dplyr::mutate(aoi = zoo::na.locf(aoi, 
+                                                                                    maxgap = MAX_GAP_SAMPLES, na.rm = FALSE)) %>% ungroup() %>% 
+    dplyr::mutate(aoi_data_id = 0:(n() - 1))
 }
