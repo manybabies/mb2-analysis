@@ -1,3 +1,4 @@
+library(peekds)
 # Generate AOIs:
 
 ## Set screen and video dimensions. Note: this only works if the zero point of the 

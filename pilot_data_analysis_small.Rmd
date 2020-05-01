@@ -120,31 +120,95 @@ d %>%
 
 ```
 
-Anticipation plot across all trials. 
+The whole time period.
 
 ```{r}
-key_aois = c("target_exit", "target_box",
-             "distractor_exit", "distractor_box",
-             "window_window")
 ms <- d %>% 
-  filter(aoi %in% key_aois) %>%
   group_by(t, trial_num, experiment_num) %>%
   summarise(target_exit = mean(aoi == "target_exit", na.rm=TRUE),
             target_box = mean(aoi == "target_box", na.rm=TRUE),
             distractor_exit = mean(aoi == "distractor_exit", na.rm=TRUE),
             distractor_box = mean(aoi == "distractor_box", na.rm=TRUE),
-            window_window = mean(aoi == "window_window", na.rm=TRUE),
-            ) %>%
+            window_window = mean(aoi == "window_window", na.rm=TRUE)) %>%
   gather(region, looking, target_exit, target_box, distractor_exit, 
-         distractor_box, window_window) 
+         distractor_box, window_window) %>% 
+  mutate(areas = case_when(region %in% c("target_exit", "distractor_exit") ~ "exit",
+         region %in% c("target_box", "distractor_box") ~ "box",
+         region == "window_window" ~"window"))  
+   
 
-ggplot(ms, aes(x = t, y = looking, col = region)) + 
+for (i in unique(ms$experiment_num)) {
+  print(ggplot(data = filter(ms, experiment_num == i), aes(x = t, y = looking, col = region)) + 
   geom_line() + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  facet_grid(experiment_num ~ .) + 
-  coord_cartesian(xlim = c(-4000+120, 4120)) #only consider the 4sec window before and after POD
-
+  facet_grid( areas ~ .) + 
+  theme_bw(12) + 
+      theme(legend.position = "bottom") + 
+    ggtitle(i) #only consider the 4sec window before and after POD
+  )
+}
 ```    
+
+
+Just the means (single lines).
+
+```{r}
+ms <- d %>% 
+  group_by(t, experiment_num) %>%
+  summarise(target_exit = mean(aoi == "target_exit", na.rm=TRUE),
+            target_box = mean(aoi == "target_box", na.rm=TRUE),
+            distractor_exit = mean(aoi == "distractor_exit", na.rm=TRUE),
+            distractor_box = mean(aoi == "distractor_box", na.rm=TRUE),
+            window_window = mean(aoi == "window_window", na.rm=TRUE)) %>%
+  gather(region, looking, target_exit, target_box, distractor_exit, 
+         distractor_box, window_window) %>% 
+  mutate(areas = case_when(region %in% c("target_exit", "distractor_exit") ~ "exit",
+         region %in% c("target_box", "distractor_box") ~ "box",
+         region == "window_window" ~"window"),
+         region_type = case_when(grepl("target", region) ~ "target", 
+                                 grepl("window", region) ~ "window",
+                                 TRUE ~ "distractor")) %>%
+  filter(is.na(experiment_num) == F)
+   
+
+  print(ggplot(data = ms, aes(x = t, y = looking, col = region_type, group=region)) + 
+  geom_line() + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  facet_grid(experiment_num~ areas) + 
+  coord_cartesian(xlim = c(-4000+120, 4120)) +
+  theme_bw(14)   )
+```    
+
+Just the time period of interest
+
+```{r}
+ms <- d %>% 
+  group_by(t, trial_num, experiment_num) %>%
+  summarise(target_exit = mean(aoi == "target_exit", na.rm=TRUE),
+            target_box = mean(aoi == "target_box", na.rm=TRUE),
+            distractor_exit = mean(aoi == "distractor_exit", na.rm=TRUE),
+            distractor_box = mean(aoi == "distractor_box", na.rm=TRUE),
+            window_window = mean(aoi == "window_window", na.rm=TRUE)) %>%
+  gather(region, looking, target_exit, target_box, distractor_exit, 
+         distractor_box, window_window) %>% 
+  mutate(areas = case_when(region %in% c("target_exit", "distractor_exit") ~ "exit",
+         region %in% c("target_box", "distractor_box") ~ "box",
+         region == "window_window" ~"window"))  
+   
+
+for (i in unique(ms$experiment_num)) {
+  print(ggplot(data = filter(ms, experiment_num == i), aes(x = t, y = looking, col = region)) + 
+  geom_line() + 
+  geom_vline(xintercept = 120, col = "red", lty = 2) + 
+  facet_grid(areas ~ .) + 
+  coord_cartesian(xlim = c(-4000+120, 4120)) +
+  theme_bw(12) + 
+      theme(legend.position = "bottom") + 
+    ggtitle(i) #only consider the 4sec window before and after POD
+  )
+}
+```    
+
 
 Now do the analysis using "big AOIs" by combining all targets and all distractors.
 ```{r}
@@ -160,59 +224,13 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   geom_line() + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
   facet_grid(experiment_num ~ .) + 
-  coord_cartesian(xlim = c(-4000+120, 4120)) #only consider the 4sec window before and after POD
+  coord_cartesian(xlim = c(-4000+120, 4120)) 
 ```
-
-In the primary time period of interest
-
-```{r}
-ms <- d %>% 
-  filter(aoi %in% key_aois) %>%
-  group_by(t, experiment_num) %>%
-  summarise(target_exit = mean(aoi == "target_exit", na.rm=TRUE),
-            target_box = mean(aoi == "target_box", na.rm=TRUE),
-            distractor_exit = mean(aoi == "distractor_exit", na.rm=TRUE),
-            distractor_box = mean(aoi == "distractor_box", na.rm=TRUE),
-            window_window = mean(aoi == "window_window", na.rm=TRUE),
-            ) %>%
-  gather(region, looking, target_exit, target_box, distractor_exit, 
-         distractor_box, window_window) 
-
-ggplot(ms, aes(x = t, y = looking, col = region)) +
-  geom_point() + 
-  xlim(-4000 + 120, 4000 + 120) + 
-  geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  geom_text(x = -4000, y = .95, group = 1, col = "black", 
-            label = "Anticipation", hjust = 0) + 
-  geom_text(x = 200, y = .95, group = 1, col = "black", 
-            label = "Reaction", hjust = 0) + 
-  facet_grid(. ~ experiment_num) 
-```
-
-Now, broken down by trial.
-Summary across anticipation window.
-
-```{r}
-ms <- d %>%
-  filter(t > -4000, t < 120) %>%
-  group_by(lab, subid, trial_num, experiment_num) %>%
-  summarise(target_exit = mean(aoi == "target_exit", na.rm = TRUE)) %>%
-  group_by(trial_num, experiment_num) %>%
-  langcog::multi_boot_standard(col = "target_exit", na.rm = TRUE)
-
-
-ggplot(ms, aes(x = trial_num, y = mean)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
-  geom_line() + 
-  facet_grid(. ~ experiment_num)
-```
-  
    
 Binned for cleaner curves
 
 ```{r}
 ms <- d %>%
-  filter(aoi %in% key_aois) %>%
   mutate(block = ifelse(trial_num < 5, "Trials 1-4", "Trials 5-8")) %>%
   group_by(t, block, experiment_num) %>%
   summarise(target_exit = mean(aoi == "target_exit", na.rm=TRUE),
@@ -220,9 +238,15 @@ ms <- d %>%
             distractor_exit = mean(aoi == "distractor_exit", na.rm=TRUE),
             distractor_box = mean(aoi == "distractor_box", na.rm=TRUE),
             window_window = mean(aoi == "window_window", na.rm=TRUE)) %>%
-  gather(region, looking, target_exit, target_box, distractor_exit, distractor_box, window_window) 
+  gather(region, looking, target_exit, target_box, distractor_exit, distractor_box, window_window)  %>%
+  mutate(areas = case_when(region %in% c("target_exit", "distractor_exit") ~ "exit",
+         region %in% c("target_box", "distractor_box") ~ "box",
+         region == "window_window" ~"window"),
+         id = paste(experiment_num, block))  
+
   
-ggplot(ms, aes(x = t, y = looking, col = region)) +
+for (i in unique(ms$id)) { print(
+  ggplot(filter(ms, id == i), aes(x = t, y = looking, col = region)) +
   geom_point() + 
   # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) +
@@ -234,6 +258,10 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   ggthemes::scale_color_solarized(name = "Area of Interest") + 
   xlab("Time (msec)") + 
   ylab("Proportion gaze in AOI") + 
+  theme_bw() + 
   theme(legend.position = "bottom") + 
-  facet_wrap(experiment_num~block)
+  facet_wrap(areas ~block) + 
+    ggtitle(i)
+)
+}
 ```
