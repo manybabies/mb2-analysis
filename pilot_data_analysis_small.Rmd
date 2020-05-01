@@ -148,12 +148,8 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
 
 Now do the analysis using "big AOIs" by combining all targets and all distractors.
 ```{r}
-big_aois = c("target_exit", "target_box",
-             "distractor_exit", "distractor_box",
-             "distractor_general", "target_general")
 
 ms <- d %>% 
-  filter(aoi %in% big_aois) %>%
   group_by(t, trial_num, experiment_num) %>%
   summarise(target = mean(grepl("target", aoi), na.rm=TRUE),
             distractor = mean(grepl("distractor", aoi), na.rm=TRUE)
