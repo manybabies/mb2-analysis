@@ -4,7 +4,7 @@ library(tidyverse)
 library(edfR)
 library(here)
 
-aoi_size = "small"
+
 
 source(here("metadata/pod.R"))
 
@@ -78,8 +78,8 @@ source(here("metadata/generate_AOIs.R"))
 aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x, 
                                    screen_height = datasets$monitor_size_y,
                                    video_width = 1200, # from data
-                                   video_height = 900, 
-                                   size = aoi_size)
+                                   video_height = 900 
+                                   )
 
 peekds::validate_table(df_table = aoi_regions, 
                        table_type = "aoi_regions")
