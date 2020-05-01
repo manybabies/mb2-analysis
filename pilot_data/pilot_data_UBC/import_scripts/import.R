@@ -144,7 +144,7 @@ write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
-aoi_data <- generate_aoi_small_or_big(here(lab_dir, "processed_data/"))
+aoi_data <- generate_aoi_small(here(lab_dir, "processed_data/"))
 
 peekds::validate_table(df_table = aoi_data, 
                        table_type = "aoi_data")
