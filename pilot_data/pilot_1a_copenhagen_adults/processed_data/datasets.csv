@@ -1,0 +1,2 @@
+dataset_id,monitor_size_x,monitor_size_y,sample_rate,tracker,lab_dataset_id
+10,1280,1024,500,eyelink,copenhagen_babylab_adults
