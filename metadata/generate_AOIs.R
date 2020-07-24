@@ -70,7 +70,7 @@ add_aois_small <- function (xy_joined)
   # first we assign aois to a side, then to a type. if it is target or distractor but not
   # specifically in one of the other types, case_when below assigns it to general
   # so left_exit + left_box + left_general is a big AOI
-  xy_joined %<>% dplyr::mutate(
+  xy_joined = xy_joined %>% dplyr::mutate(
     side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
                             x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",
                             x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "left",
@@ -111,10 +111,13 @@ generate_aoi_small <- function (dir)
   xy_joined <- add_aois_small(xy_joined)
   
   aoi = resample_times(xy_joined) %>% dplyr::select(dataset_id, 
-                                                    subject_id, trial_id, t_zeroed, aoi) %>% dplyr::rename(t = t_zeroed) %>% 
+                                                    subject_id, trial_id, t_zeroed, aoi) %>% 
+    dplyr::rename(t = t_zeroed) %>% 
     dplyr::group_by(dataset_id, subject_id, trial_id, t) %>% 
     dplyr::summarise(aoi = na_mode(aoi)) %>% dplyr::ungroup() %>% 
     group_by(dataset_id, subject_id, trial_id) %>% dplyr::mutate(aoi = zoo::na.locf(aoi, 
-                                                                                    maxgap = MAX_GAP_SAMPLES, na.rm = FALSE)) %>% ungroup() %>% 
+                                                                                    maxgap = MAX_GAP_SAMPLES, na.rm = FALSE)) %>%
+    ungroup() %>% 
     dplyr::mutate(aoi_data_id = 0:(n() - 1))
 }
+
