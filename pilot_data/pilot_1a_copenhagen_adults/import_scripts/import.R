@@ -6,7 +6,7 @@ library(here)
 
 source(here("metadata/pod.R"))
 
-lab_dir = "pilot_data/pilot_data_copenhagen/"
+lab_dir = "pilot_data/pilot_1a_copenhagen_adults/"
   
 # You need EyeLink Developers Kit and edfR
 # https://www.sr-support.com/forum/downloads/eyelink-display-software/45-eyelink-developers-kit-for-mac-os-x-mac-os-x-display-software?15-EyeLink-Developers-Kit-for-Mac-OS-X=
@@ -51,7 +51,7 @@ p <- readxl::read_xlsx(here(lab_dir, "raw_data/MB2_pilot_KU_CPH_participantsheet
 
 # datasets
 # dataset_id, monitor_size_x, monitor_size_y, sample_rate, tracker, lab_dataset_id
-datasets <- tibble(dataset_id = 9, 
+datasets <- tibble(dataset_id = 10, 
                    monitor_size_x = 1280,
                    monitor_size_y = 1024,
                    sample_rate = 500, 
@@ -73,7 +73,8 @@ subjects <- p %>%
          lab_subject_id = tolower(gsub("_", "", lab_subject_id)),
          age = as.numeric(as.character(age)),
          error = session_error == "error",
-         dataset_id = 9) %>%
+         lab_subject_id = gsub("mb2p", "mb2p_", lab_subject_id),
+         dataset_id = 10) %>%
   select(subject_id, age, sex, lab_subject_id, error, dataset_id)
 
 peekds::validate_table(df_table = subjects, 
@@ -110,9 +111,9 @@ trials <- filter(d, grepl("FAM", d$video_name),
   summarise(firsttime = min(time)) %>%
   mutate(trial_num = rank(firsttime),
          condition = substr(lab_trial_id, 5, 6),
-         experiment_num = "pilot_1a",
+         experiment_num = "pilot_1a_adult",
          aoi_region_id = 0,
-         dataset_id = 9,
+         dataset_id = 10,
          distractor_image = "distractor",
          distractor_label = "distractor",
          distractor_id = "distractor",
