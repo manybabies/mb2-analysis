@@ -68,8 +68,7 @@ d <- labs %>%
              stimulus = lab_trial_id) %>%
       mutate(aoi = case_when(grepl("target", aoi) ~ "target",
                              grepl("distractor", aoi) ~ "distractor",
-                             is.na(aoi) == F ~ "other",
-                             TRUE ~ NA)
+                             is.na(aoi) == F ~ "other")
              )
   })
 ```
@@ -77,7 +76,9 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-d$experiment = ifelse(grepl("1a", d$experiment_num), "1a", "1b")
+d$experiment = case_when(d$experiment_num == c("pilot_1b_outcome", "pilot_1b_no_outcome") ~ "pilot_1b",
+                         d$experiment_num == "pilot_1a" ~ "pilot_1a_kid",
+                         d$experiment_num == "pilot_1a_adult" ~ "pilot_1a_adult")
 
 # exclude subject marked with any error and/or less than 8 trials
 d <- d %>% 
@@ -105,8 +106,7 @@ d <- ungroup(d) %>%
   group_by(lab, subid, experiment) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
            exclude_by(quo(trials_completed < 7),quiet=FALSE) %>% 
-  ungroup(d) %>% 
-mutate(subid = paste(subid, lab, experiment, sep="_"))
+  mutate(subid = paste(subid, lab, experiment, sep="_"))
 
 ```
 
@@ -118,7 +118,7 @@ Descriptives
 d %>%
   group_by(experiment, lab, subid) %>%
   summarise(age = mean(age)) %>%
-  summarise(n = n(), 
+  summarise(n = n(),
             age = mean(age)/30.25) %>%
   kable(digits = 2)
   
@@ -269,7 +269,7 @@ first_looks_df %>%
 
 ## Data visualization across different test trials
 
-Pilot 1a
+### Pilot 1a kids
 ```{r}
 ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
@@ -277,11 +277,20 @@ ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) +
   facet_wrap(.~trial_num, ncol = 4)
 ```
 
-
-
-Pilot 1b
+### Pilot 1a adult
 ```{r}
-ggplot(data = filter(first_looks_df, experiment_num != "pilot_1a")) + 
+ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a_adult")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
+### Pilot 1b
+```{r}
+pilot_1b_bar <- first_looks_df %>% 
+  filter(experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))
+
+ggplot(data = pilot_1b_bar)  + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(trial_num~experiment_num, ncol = 4)
@@ -324,6 +333,18 @@ first_look_1a <- glmer(aoi_dummy ~ trial_num + (1|subid), data = first_looks_df_
 summary(first_look_1a)
 ```
 
+Pilot 1a: adults. Caution: adults looked more to target in later trials??
+```{r first_look_analysis_adult, results = "verbatim"}
+first_looks_df_1a_adult <- first_looks_df %>% 
+  filter(experiment_num == "pilot_1a_adult", !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0))
+  
+first_look_1a_adult <- glmer(aoi_dummy ~ trial_num + (1|subid), data = first_looks_df_1a_adult, family = "binomial")
+
+summary(first_look_1a_adult)
+```
+
+
 Pilot 1a (trial 1 to 4) vs Pilot 1b_outcome: no difference between 1a and 1b_outcome in the first look at the target 
 ```{r}
 first_looks_df_1a_1b <- first_looks_df %>% 
@@ -340,7 +361,7 @@ summary(first_look_1a_1b)
 Pilot 1b_outcome vs Pilot 1b_no_outcome, no difference between 1a and 1b in the first look at the target, but need to interpret the results with caution because we have so little data and even the intercept is not significant
 ```{r}
 first_looks_df_1b <- first_looks_df %>% 
-  filter(experiment_num != "pilot_1a", 
+  filter(experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"), 
          !is.na(aoi)) %>% 
   mutate(aoi_dummy = ifelse(aoi == "target", 1, 0))
   
@@ -362,7 +383,7 @@ df_analysis2_afterPOD <- d %>%
   filter(t >= 120 & t <= 4000+120)
 ```
 
-Pilot 1a: Before POD
+Pilot 1a kid: Before POD
 ```{r}
 ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
@@ -370,7 +391,7 @@ ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) +
   facet_wrap(.~trial_num, ncol = 4)
 ```
 
-Pilot 1a: after POD
+Pilot 1a kid: after POD
 ```{r}
 ggplot(data = filter(df_analysis2_afterPOD, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
@@ -378,9 +399,25 @@ ggplot(data = filter(df_analysis2_afterPOD, experiment_num == "pilot_1a")) +
   facet_wrap(.~trial_num, ncol = 4)
 ```
 
+Pilot 1a adult: Before POD
+```{r}
+ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a_adult")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
+Pilot 1a adult: after POD
+```{r}
+ggplot(data = filter(df_analysis2_afterPOD, experiment_num == "pilot_1a_adult")) + 
+  geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(.~trial_num, ncol = 4)
+```
+
 Pilot 1b : before POD
 ```{r}
-ggplot(data = filter(df_analysis2, experiment_num != "pilot_1a")) + 
+ggplot(data = filter(df_analysis2, experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(trial_num~experiment_num, ncol = 4)
@@ -388,7 +425,7 @@ ggplot(data = filter(df_analysis2, experiment_num != "pilot_1a")) +
 
 Pilot 1b : after POD
 ```{r}
-ggplot(data = filter(df_analysis2_afterPOD, experiment_num != "pilot_1a")) + 
+ggplot(data = filter(df_analysis2_afterPOD, experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(trial_num~experiment_num, ncol = 4)
@@ -416,7 +453,7 @@ ggplot(ms_proportion_trials,
             label = "Anticipation", hjust = 0 ) + 
   geom_text(x = 200, y = .95, group = 1, col = "black", 
             label = "Reaction", hjust = 0 )+
-  facet_wrap(experiment_num~trial_num, ncol = 4)   
+  facet_wrap(experiment_num~trial_num, ncol = 8)   
 ```
 
 Create data-set for the mixed-level analysis
