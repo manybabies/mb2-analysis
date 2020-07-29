@@ -1,0 +1,2 @@
+dataset_id,monitor_size_x,monitor_size_y,sample_rate,tracker,lab_dataset_id
+13,1280,1024,60,tobii,lmu_babylab_adult
