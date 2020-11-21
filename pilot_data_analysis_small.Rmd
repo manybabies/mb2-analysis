@@ -72,7 +72,9 @@ d <- labs %>%
 # Exclusions
 
 ```{r}
-d$experiment = ifelse(grepl("1a", d$experiment_num), "1a", "1b")
+d$experiment = case_when(d$experiment_num == c("pilot_1b_outcome", "pilot_1b_no_outcome") ~ "pilot_1b",
+                         d$experiment_num == "pilot_1a" ~ "pilot_1a_kid",
+                         d$experiment_num == "pilot_1a_adult" ~ "pilot_1a_adult")
 
 # exclude subject marked with any error and/or less than 8 trials
 d <- d %>% 
@@ -100,7 +102,7 @@ d <- ungroup(d) %>%
   group_by(lab, subid, experiment) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
            exclude_by(quo(trials_completed < 7),quiet=FALSE) %>% 
-  ungroup(d) %>% 
+  #ungroup(d) %>% 
 mutate(subid = paste(subid, lab, experiment, sep="_"))
 
 ```

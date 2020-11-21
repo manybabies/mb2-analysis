@@ -269,31 +269,38 @@ first_looks_df %>%
 
 ## Data visualization across different test trials
 
-### Pilot 1a kids
+
 ```{r}
+### Pilot 1a kids
 ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(.~trial_num, ncol = 4)
+  facet_wrap(.~trial_num, ncol = 4)+
+  labs(title = "Pilot 1a kids")
 ```
 
-### Pilot 1a adult
+
 ```{r}
+### Pilot 1a adult
 ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a_adult")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(.~trial_num, ncol = 4)
+  facet_wrap(.~trial_num, ncol = 4)+ 
+  labs(title = "Pilot 1a adult")
 ```
 
-### Pilot 1b
+
 ```{r}
+### Pilot 1b
+
 pilot_1b_bar <- first_looks_df %>% 
   filter(experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))
 
 ggplot(data = pilot_1b_bar)  + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(trial_num~experiment_num, ncol = 4)
+  facet_wrap(trial_num~experiment_num, ncol = 4) +
+  labs(title = "Pilot 1b")
 ```
 
 ## Descriptive stats
