@@ -539,3 +539,74 @@ summary(ls_target_4120_1b)
 # the linear hypothesis test is also confirmed by calculating the z score of this intercept, I used the coefficient and the sd of the random intercept
 # z_intercept <- 0.7525/0.066 #much higher than 1.96
 ```
+
+```{r}
+labs_expected = read_csv("mb2_labs_expected.csv") %>%
+  filter(kids > 0)
+
+# make a simulated data frame, with number of subjects equal to what we will actually have
+sim.data = NULL
+for (i in unique(labs_expected$lab_name)) {
+  df = expand.grid(lab=i, subj=seq(1, labs_expected[labs_expected$lab_name == i, ]$kids), cond=c(0, 1))
+  sim.data = rbind(sim.data, df)
+}
+sim.data = mutate(sim.data, subj = paste(lab, subj),
+                  resp = sample(c(0,1),
+                                replace=TRUE,
+                                size=n()))
+
+# get first looks from 1a and 1b
+first_look_1a_1b_for_power <- glmer(aoi_dummy ~ 1 + (1|subid),
+                                    data = first_looks_df_1a_1b, family = "binomial")
+summary(first_look_1a_1b_for_power)
+
+# use 1.015 for intercept
+# use .4334 for subid std dev
+# vary the beta
+
+# taken in part from https://rstudio-pubs-static.s3.amazonaws.com/11703_21d1c073558845e1b56ec921c6e0931e.html
+simulate_power_params <- function(num.iter, intercept, beta, subj.intercept, sim.data) {
+  set.seed(101)
+  beta <- c(intercept, beta) # intercept effect
+  names(beta) = c("(Intercept)", "cond")
+  
+  # specify sigma and theta in sd space
+  theta <- c(subj.intercept)
+  names(theta) = c("subj.(Intercept)")
+
+  # simulate 
+  ss <- simulate(~cond + (1 | subj),
+                   nsim = num.iter,
+                   family = "binomial", 
+                   newdata = sim.data,
+                   newparams = list(theta = theta, beta = beta))
+  
+  # assign responses
+  sim.data$resp <- ss[, 1]
+  
+  # fit a first model
+  fit1 <- lmer(resp ~ cond + (1 | subj),
+               data = sim.data)
+  
+  # fit a model for num.iter times, return time t value is greater than 1.96
+  fitsim <- function(i) {
+    coef(summary(refit(fit1, ss[[i]])))["cond", ]
+  }
+  fitAll <- t(data.frame(sapply(seq(num.iter), function(i) fitsim(i))))
+  return(mean(fitAll[, 't value'] < -1.96))
+}
+
+simulate.grid = expand.grid(intercept=getME(first_look_1a_1b_for_power, "beta"),
+                            beta=-1 * c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1),
+                            subj.intercept=getME(first_look_1a_1b_for_power, "theta"))
+simulate.grid = rowwise(simulate.grid) %>% mutate(
+                       mean.power = simulate_power_params(50, intercept, beta,
+                                                          subj.intercept, sim.data))
+
+inv.logit = function(x) {exp(x)/(1 + exp(x))}
+simulate.grid$pct.change = inv.logit(simulate.grid$intercept + simulate.grid$beta) - 
+                          inv.logit(simulate.grid$intercept)
+simulate.grid
+
+print(simulate.grid)
+```
