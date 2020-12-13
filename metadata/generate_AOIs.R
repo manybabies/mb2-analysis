@@ -17,16 +17,29 @@ generate_aoi_regions <- function(screen_width = 1280,
                                  screen_height = 1024,
                                  video_width = 1280,
                                  video_height = 960) {
+  
+## the approach to genrate the AOIs is as follows:
+  #1. take the tunnel exit diameter of D units. 
+
+  #2. create a rectangular bounding box that extends D units from 
+  # the uppermost, leftmost, rightmost, and bottommost points of the tunnel exit
+  
+  # we do this calculation for the 1200 x 900 video below, 
+  # and express the result in terms of ratios of video heights and widths. 
+  # since the x/y ratios are the same for the two video sizes, i.e. (1280 x 960) / (1200 x 900) = 1
+  # the AOIs will scale correctly to the 1280 x 960 case. This is done in the function below
+      ratios = ratios_of_bounding_box(video_width, video_height)
+  
       aoi_regions = tibble(
       aoi_region_id = 0, 
-      l_x_max = (video_width*.37) + (screen_width-video_width)/2,
-      l_x_min = (video_width*.24) + (screen_width-video_width)/2,
-      l_y_max = (video_height*0.78) + ((screen_height-video_height)/2),
-      l_y_min = (video_height*0.55) + ((screen_height-video_height)/2),
-      r_x_max = video_width - (video_width*.24) + (screen_width-video_width)/2,
-      r_x_min = video_width - (video_width*.37)  + (screen_width-video_width)/2,
-      r_y_max = (video_height*0.78) + ((screen_height-video_height)/2),
-      r_y_min =  (video_height*0.55) + ((screen_height-video_height)/2),
+      l_x_max = (video_width*ratios$L_right) + (screen_width-video_width)/2,
+      l_x_min = (video_width*ratios$L_left) + (screen_width-video_width)/2,
+      l_y_max = (video_height*ratios$bottom) + ((screen_height-video_height)/2),
+      l_y_min = (video_height*ratios$top) + ((screen_height-video_height)/2),
+      r_x_max = (video_width*ratios$R_right)  + (screen_width-video_width)/2,
+      r_x_min = (video_width*ratios$R_left)  + (screen_width-video_width)/2,
+      r_y_max = (video_height*ratios$bottom) + ((screen_height-video_height)/2),
+      r_y_min =  (video_height*ratios$top) + ((screen_height-video_height)/2),
       w_x_max = video_width/2 + floor((video_width*.94)/16) + (screen_width-video_width)/2,
       w_x_min = video_width/2 - floor((video_width*.94)/16) + (screen_width-video_width)/2,
       w_y_max = video_height/2 + ((screen_height-video_height)/2),
@@ -120,4 +133,71 @@ generate_aoi_small <- function (dir)
     ungroup() %>% 
     dplyr::mutate(aoi_data_id = 0:(n() - 1))
 }
+
+resample_times <- function(df) {
+  # set sample rates
+  SAMPLE_RATE = 40 # Hz
+  SAMPLE_DURATION = 1000/SAMPLE_RATE
+  MAX_GAP_LENGTH = .100 # S
+  MAX_GAP_SAMPLES = MAX_GAP_LENGTH / (1/SAMPLE_RATE)
+  
+  # center timestamp (0 POD)
+  df <- df %>%
+    dplyr::group_by(.data$subject_id, .data$trial_id, .data$dataset_id) %>%
+    dplyr::mutate(t_trial = .data$t - .data$t[1],
+                  t_zeroed = .data$t_trial - .data$point_of_disambiguation)
+  
+  df %>% dplyr::group_by(.data$subject_id, .data$trial_id) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      data = .data$data %>%
+        purrr::map(function(df) {
+          df_rounded <- df %>%
+            dplyr::mutate(t_zeroed = round(SAMPLE_DURATION * round(t_zeroed/SAMPLE_DURATION)))
+          
+          t_resampled <- tibble::tibble(t_zeroed = round(seq(min(df_rounded$t_zeroed),
+                                                             max(df_rounded$t_zeroed),
+                                                             SAMPLE_DURATION)))
+          
+          dplyr::left_join(t_resampled, df_rounded) %>%
+            dplyr::group_by(t_zeroed)
+        })) %>%
+    tidyr::unnest(.data$data) 
+}
+
+ratios_of_bounding_box <- function(video_width, video_height) {
+  
+
+  ## coordinates for left tunnel exit 
+  L_left_X = 304; L_left_Y = 618;   # leftmost part
+  L_right_X = 370; L_right_Y = 650;   # rightmost part
+  L_top_X = 328; L_top_Y = 586;   # topmost part
+  L_bottom_X = 339; L_bottom_Y = 678;   # bottommost part
+
+  # horizontal tunnel diameter in 2D (turns out to be 66 pixels)
+  D = L_right_X - L_left_X;
+  
+  ## compute ratios with respect to video dimensions (computed from the left tunnel)
+  L_left_ratio = (L_left_X - D) / video_width; # 0.1983
+  L_right_ratio = (L_right_X + D) / video_width; # 0.3633
+  
+  # since the stimuli are symmetric, we can use the ratios
+  # to get the bounding box for the right tunnel as well 
+  # i.e. R_right_ratio is 1 - L_left_ratio
+  R_right_ratio = 1 - L_left_ratio # 0.8017
+  R_left_ratio = 1 - L_right_ratio # 0.6367
+  
+  # ratios of screen height are invariant to left/right tunnel
+  top_ratio = (L_top_Y - D) / video_height; # 0.5778
+  bottom_ratio = (L_bottom_Y + D) / video_height; # 0.8267
+  
+  return(list(L_left = L_left_ratio,
+              L_right = L_right_ratio, 
+              R_right = R_right_ratio, 
+              R_left = R_left_ratio,
+              top = top_ratio,
+              bottom = bottom_ratio))
+}
+  
+  
 

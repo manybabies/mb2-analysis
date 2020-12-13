@@ -31,7 +31,7 @@ Pilot data analysis for MB2.
 
 We can re-preprocess all of our data, this is set not to evaluate by default. In order to do this, you will need to register with Eyelink to get their binary package and then install `edfR`.
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, warning=FALSE, message=FALSE}
 labs <- dir(here::here("pilot_data"))
 
 for (lab in labs) {
@@ -82,7 +82,7 @@ d$experiment = case_when(d$experiment_num == c("pilot_1b_outcome", "pilot_1b_no_
 
 # exclude subject marked with any error and/or less than 8 trials
 d <- d %>% 
-  group_by(lab, subid, experiment) %>%
+  group_by(lab, subid, experiment_num) %>%
   mutate(error_subj = any(error)) %>%
       exclude_by(quo(error_subj), quiet=FALSE) 
 
