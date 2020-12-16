@@ -46,8 +46,8 @@ datasets <- tibble(dataset_id = 2,
                    tracker = "smi",
                    lab_dataset_id = "ubc_infantlab")
 
-peekds::validate_table(df_table = datasets,
-                       table_type = "datasets")
+#peekds::validate_table(df_table = datasets,
+#                       table_type = "datasets")
 write_csv(datasets, here(lab_dir, "processed_data/datasets.csv") )
 
 # subjects
@@ -62,8 +62,8 @@ subjects <- p %>%
          dataset_id = 2) %>%
   select(-session_error)
 
-peekds::validate_table(df_table = subjects,
-                       table_type = "subjects")
+#peekds::validate_table(df_table = subjects,
+#                       table_type = "subjects")
 write_csv(subjects, here(lab_dir, "processed_data/subjects.csv") )
 
 
@@ -76,8 +76,8 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
                                    video_width = 1200, 
                                    video_height = 900 # says 9001 in picture name, but that seems wrong
                                    )
-peekds::validate_table(df_table = aoi_regions, 
-                       table_type = "aoi_regions")
+#peekds::validate_table(df_table = aoi_regions, 
+#                       table_type = "aoi_regions")
 write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
 
 # TODO: this is a hack because of how the data is formatted
@@ -111,8 +111,8 @@ trials <- filter(d, grepl("FAM", Stimulus),
   mutate(trial_id = 0:(n()-1)) %>%
   select(-firsttime)
 
-peekds::validate_table(df_table = trials, 
-                       table_type = "trials")
+#peekds::validate_table(df_table = trials, 
+#                      table_type = "trials")
 write_csv(trials, here(lab_dir, "processed_data/trials.csv"))
 
 #################################################3
@@ -138,14 +138,14 @@ xy_data <- tibble(lab_subject_id = d$Participant,
   select(xy_data_id, subject_id, trial_id, x, y, t, point_of_disambiguation) %>%
   center_time_on_pod()
 
-peekds::validate_table(df_table = xy_data, 
-                       table_type = "xy_data")
+#peekds::validate_table(df_table = xy_data, 
+#                       table_type = "xy_data")
 write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
 
 # aoi_data
 # aoi_data_id, aoi, subject, t, trial
 aoi_data <- generate_aoi_small(here(lab_dir, "processed_data/"))
 
-peekds::validate_table(df_table = aoi_data, 
-                       table_type = "aoi_data")
+#peekds::validate_table(df_table = aoi_data, 
+#                       table_type = "aoi_data")
 write_csv(aoi_data, here(lab_dir, "processed_data/aoi_data.csv"))
