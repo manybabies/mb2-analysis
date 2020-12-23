@@ -57,7 +57,8 @@ run_simulation <- function(it) {
         cores=6,
         iter = 40000,
         save_all_pars=T,
-        control = list(adapt_delta = 0.99))
+        control = list(adapt_delta = 0.99),
+	seed = as.integer(runif(1, 1,  100000)))
 
 
     l.null = brm(data=newd_, 
@@ -67,7 +68,8 @@ run_simulation <- function(it) {
         cores=6,
         iter=40000,
         save_all_pars = T,
-        control = list(adapt_delta = 0.99))
+        control = list(adapt_delta = 0.99),
+	seed = as.integer(runif(1, 1,  100000)))
     
     bf.new.null = as.numeric(bayes_factor(l.new, l.null)[1])
     
