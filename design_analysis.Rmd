@@ -1,0 +1,160 @@
+---
+title: "Design Analysis: Test Trial"
+author: "Kyle Mahowald"
+date: "12/17/2020"
+output: html_document
+---
+```{r setup include=F}
+library(tidyverse)
+library(brms)
+inv.logit = function(x) {exp(x)/(1 + exp(x))}
+
+```
+
+# Design analysis
+
+A traditional frequentist power analysis is not applicable for our project for two reasons. First, we use Bayesian methods to quantify the strength of our evidence for or against our hypotheses, rather than assessing the probability of rejecting the null hypothesis. Second, because of the many-labs nature of the study, the sample size will be determined not by power analysis or stopping criteria but by the amount of data that participating labs can provide given their limitations. Even if the effect size is much smaller than what we anticipate, the results here would be informative since our study is dramatically larger than any previous study in this area. Or in contrast, if the effect size is large and our precision is high, this increased precision will allow us to test a number of other theoretically and methodologically important hypotheses (see Results section).
+
+Although we did not not determine our sample size based on power analysis, here we provide a simulation-based design analysis to demonstrate the range of Bayes Factors we might expect to see, given a plausible range of effect sizes and parameters. We focus this analysis on our key analysis of the test trials as specified below, namely the difference in anticipatory looking on the first test trial that children saw. (We do not distinguish here between the two dependent variables described below as they are functionally equivalent from the perspective of our planned analysis). In each iteration of our simulation, we used our priors to simulate a particular set of parameters. 
+
+We adopted all of the priors specified in the results section:
+
+```{r}
+priors <-c(set_prior("normal(0, 2)", class = "Intercept"),
+              set_prior("normal(0, 2)", class = "b"),
+              set_prior("normal(0, .1)", class = "sd"),
+              set_prior("lkj(2)", class = "L"))
+
+```
+
+
+We then sampled simulated data from a range of effect sizes spanning from small to large effects (Cohen’s d = .2 - .8; log odds from .36 - 1.45). We then used these sampled data to sampled parameters to simulate an experiment with 22 labs and 440 children and computed the resulting Bayes Factors.
+
+measure ~ 1 + condition * age + (1 + condition * age | lab).
+
+Below, we simulate data for a given experiment (we use 22 labs, with 20 subjects per each lab).
+
+Age is sampled uniformly between 18 and 27 months, and then we center it.
+
+Using the level of anticipation from the pilot study as a rough heuristic and rounding to a round number, we assume the intercept (overall rate of looking across conditions) is drawn from a Normal(1, .25).
+
+The condition effect is as described above (sampled uniformly from .36 to 1.45).
+
+We assume age and the age x condition interaction are small (sampled uniformly -.20 to .20) in logit space. This corresponds to a change in logit space of .92 for the largest or smallest age groups for the age term.
+
+For lab random effects, we sample a random intercept (which corresponds roughly to lab-specific differences in overall anticipation) and a random slope for condition (corresponding to lab-specific condition effects) from our prior Normal(0, .1). We assume the random slopes for age, age:condition and the correlation parameters are 0, for the purposes of our simulation.
+
+```{r}
+simulate.df = function(num_subjects, num_labs) {
+  
+  # parameters
+  condition_beta = runif(1, .36, 1.45) # small to medium effects
+  age_beta = runif(1, -.20, .20) 
+  age_condition_beta = runif(1, -.20, .20)
+  sigma = runif(1, .5, 2) # may want to change this
+  minage = 18
+  maxage = 27
+  intercept_mean = 1
+  intercept_sd = .25
+  lab_intercept_sd = .1
+  lab_slope_sd = .1
+
+  d = expand.grid(subj = 1:num_subjects,
+                  lab = 1:num_labs) %>%
+      mutate(condition = ifelse(subj %% 2 == 0, .5, -.5),
+             age = round(runif(n(), minage, maxage))) 
+  
+  d$age = d$age - mean(d$age)
+  
+  d = tibble(lab = 1:num_labs,
+                lab_intercept = rnorm(num_labs, 0, lab_intercept_sd),
+                lab_condition_slope = rnorm(num_labs, 0, lab_slope_sd)) %>%
+    right_join(d)
+  
+  d = d %>%
+    mutate(intercept = rnorm(n(), intercept_mean, intercept_sd),
+           simulated_datapoint = intercept + 
+                        lab_intercept + 
+                        condition * (condition_beta + lab_condition_slope) + 
+                        age * age_beta + 
+                        age * condition * age_condition_beta +
+                        rnorm(n(), 0, sigma) 
+            )
+  return(d)
+}
+```
+
+Next, we use a function to simulate and conduct the planned analysis.
+
+For coefficients, we choose a normal distribution with mean of 0 and SD of 2. Based on our pilot testing and the results of MB1, we assume that lab and participant-level variation will be relatively small, and so for the standard deviation of random effects (variation in effects across labs and, in the case of the familiarization trials, participants) we set a normal prior with mean of 0 and SD of .1. We set an LKJ(2) prior on the correlation matrix in the random effect structure, a prior that is commonly used in Bayesian analyses of this type.
+
+measure ~ 1 + condition * age + (1 + condition * age | lab).
+
+```{r}
+
+x = simulate.df(20, 22)
+
+# the full model
+l = brm(data=x,
+        simulated_datapoint ~ condition + age + condition:age + (condition * age | lab),
+        prior=priors,
+        chains=4,
+        cores=4,
+        iter = 1000,
+        save_all_pars=T,
+        control = list(adapt_delta = 0.99))
+
+# the full model minus the main effect of condition, random effect structure the same
+l0 = brm(data=x, 
+        simulated_datapoint ~ age + condition:age + (condition * age | lab),
+        prior=nullprior,
+        chains=4,
+        cores=4,
+        iter=1000,
+        save_all_pars = T,
+        control = list(adapt_delta = 0.99))
+
+run_simulation <- function(it) {
+    mult = 40
+    newd_ = simulate.df(20, 22)
+    
+    l.null = update(l0, newdata=newd_,
+                    cores=4,
+                    chains=4,
+                    iter=1000 * mult,
+                    save_all_pars=T,
+                    warmup = 1000,
+                    control = list(adapt_delta = 0.99,
+                                  max_treedepth = 15))
+    
+    l.new = update(l, newdata=newd_, cores=4,
+                       chains=4,
+                       iter=1000 * mult,
+                       save_all_pars=T,
+                       warmup = 1000,
+                       control = list(adapt_delta = 0.99,
+                                      max_treedepth = 15))
+    
+    bf.new.null = as.numeric(bayes_factor(l.new, l.null)[1])
+    
+    newd.sum = group_by(newd_, condition) %>% 
+      summarise(m=inv.logit(mean(simulated_datapoint)))
+
+    tibble(it=it, bf=bf.new.null,
+          cond1_mean = newd.sum$m[1],
+          cond2_mean = newd.sum$m[2],
+          lower=fixef(l.new)["condition", ]["Q2.5"], 
+          upper=fixef(l.new)["condition", ]["Q97.5"])
+}
+
+niter = 100
+df = map_df(1:100, ~run_simulation(.))
+write_csv(df, file="bayes_factor_design_analysis.csv")
+
+ggplot(df, aes(x=bf)) +
+  geom_histogram() +
+  xlab("Bayes Factor") +
+  theme_bw(12)
+  
+ggsave("bf_hist.png") 
+```
