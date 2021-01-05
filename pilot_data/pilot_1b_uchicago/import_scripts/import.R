@@ -3,8 +3,6 @@ library(readxl)
 library(tidyverse)
 library(here)
 
-
-
 lab_dir = "pilot_data/pilot_1b_uchicago"
 source(here("metadata/pod.R"))
 
@@ -51,8 +49,7 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
   
 #peekds::validate_table(df_table = aoi_regions, 
 #                       table_type = "aoi_regions")
-write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
-                     
+
 # xy_data
 # xy_data_id, subject_id, trial_id, x, y, t
 

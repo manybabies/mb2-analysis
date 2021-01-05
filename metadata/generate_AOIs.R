@@ -28,7 +28,7 @@ generate_aoi_regions <- function(screen_width = 1280,
   # and express the result in terms of ratios of video heights and widths. 
   # since the x/y ratios are the same for the two video sizes, i.e. (1280 x 960) / (1200 x 900) = 1
   # the AOIs will scale correctly to the 1280 x 960 case. This is done in the function below
-      ratios = ratios_of_bounding_box(video_width, video_height)
+      ratios = ratios_of_bounding_box()
   
       aoi_regions = tibble(
       aoi_region_id = 0, 
@@ -165,31 +165,34 @@ resample_times <- function(df) {
     tidyr::unnest(.data$data) 
 }
 
-ratios_of_bounding_box <- function(video_width, video_height) {
+ratios_of_bounding_box <- function() {
   
-
+  # compute ratios using these video dimensions
+  video_width = 1200
+  video_height = 900
+  
   ## coordinates for left tunnel exit 
   L_left_X = 304; L_left_Y = 618;   # leftmost part
   L_right_X = 370; L_right_Y = 650;   # rightmost part
   L_top_X = 328; L_top_Y = 586;   # topmost part
   L_bottom_X = 339; L_bottom_Y = 678;   # bottommost part
 
-  # horizontal tunnel diameter in 2D (turns out to be 66 pixels)
-  D = L_right_X - L_left_X;
+  # horizontal tunnel diameter in 2D (turns out to be 66 pixels) * 0.25
+  D = 1.25 * (L_right_X - L_left_X);
   
   ## compute ratios with respect to video dimensions (computed from the left tunnel)
-  L_left_ratio = (L_left_X - D) / video_width; # 0.1983
-  L_right_ratio = (L_right_X + D) / video_width; # 0.3633
+  L_left_ratio = (L_left_X - D) / video_width;
+  L_right_ratio = (L_right_X + D) / video_width;
   
   # since the stimuli are symmetric, we can use the ratios
   # to get the bounding box for the right tunnel as well 
   # i.e. R_right_ratio is 1 - L_left_ratio
-  R_right_ratio = 1 - L_left_ratio # 0.8017
-  R_left_ratio = 1 - L_right_ratio # 0.6367
+  R_right_ratio = 1 - L_left_ratio;
+  R_left_ratio = 1 - L_right_ratio; 
   
   # ratios of screen height are invariant to left/right tunnel
-  top_ratio = (L_top_Y - D) / video_height; # 0.5778
-  bottom_ratio = (L_bottom_Y + D) / video_height; # 0.8267
+  top_ratio = (L_top_Y - D) / video_height; 
+  bottom_ratio = (L_bottom_Y + D) / video_height; 
   
   return(list(L_left = L_left_ratio,
               L_right = L_right_ratio, 

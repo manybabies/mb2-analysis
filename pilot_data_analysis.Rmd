@@ -66,8 +66,8 @@ d <- labs %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
              stimulus = lab_trial_id) %>%
-      mutate(aoi = case_when(grepl("target", aoi) ~ "target",
-                             grepl("distractor", aoi) ~ "distractor",
+      mutate(aoi = case_when(grepl("target_exit", aoi) ~ "target",
+                             grepl("distractor_exit", aoi) ~ "distractor",
                              is.na(aoi) == F ~ "other")
              )
   })
