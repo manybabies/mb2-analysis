@@ -111,7 +111,7 @@ d <- ungroup(d) %>%
 
 ```
 
-# Analysis
+# Descriptive Analysis
 
 Descriptives
 
@@ -240,7 +240,13 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   facet_grid(lab~block + experiment_num)
 ```
 
-## Set up priors for Bayesian analyses below. We are using a weakly informed prior for all analyses
+
+# Main analysis 1: First anticipatory look
+
+## Set up priors 
+
+For Bayesian analyses below. We are using a weakly informed prior for all analyses.
+
 ```{r}
 priors <-c(set_prior("normal(0, 2)", class = "Intercept"),
               set_prior("normal(0, 2)", class = "b"),
@@ -264,8 +270,7 @@ null_prior_weaker <- c(set_prior("normal(0, 3)", class = "b"),
 
 
 
-# Main analysis 1: First anticipatory look
-
+## Bayesian First Look
 Create a dataframe to identify the first look and see if the first look is >150ms (AT: change it to 150ms based on Dana's comment on RR)
 Ref: Rayner, K., Smith, T. J., Malcolm, G. L., & Henderson, J. M. (2009). Eye Movements and Visual Encoding During Scene Perception. Psychological Science, 20(1), 6-10. doi:10.1111/j.1467-9280.2008.02243.x
 
@@ -476,17 +481,19 @@ BF_weaker_In
 
 
 # Main analysis 2: Differential time looking analysis
+
 This analysis explores whether kids looked at the target more than distractor during anticipatory period. 
 
 ## Data visualization across different test trials
+
 ```{r}
-df_analysis2 <- d %>%  
+df_analysis_windowed <- d %>%  
   filter(t >= -4000+120 & t <= 120)
 ```
 
 Pilot 1a kid 
 ```{r}
-ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) + 
+ggplot(data = filter(df_analysis_windowed, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(.~trial_num, ncol = 4)
@@ -494,7 +501,7 @@ ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a")) +
 
 Pilot 1a adult
 ```{r}
-ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a_adult")) + 
+ggplot(data = filter(df_analysis_windowed, experiment_num == "pilot_1a_adult")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(.~trial_num, ncol = 4)
@@ -502,7 +509,7 @@ ggplot(data = filter(df_analysis2, experiment_num == "pilot_1a_adult")) +
 
 Pilot 1b :
 ```{r}
-ggplot(data = filter(df_analysis2, experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))) + 
+ggplot(data = filter(df_analysis_windowed, experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(trial_num~experiment_num, ncol = 4)
@@ -510,8 +517,8 @@ ggplot(data = filter(df_analysis2, experiment_num %in% c("pilot_1b_outcome", "pi
 
 For proportion score, focus on target and distractor
 ```{r}
-ms_proportion_trials <- df_analysis2 %>%
-  group_by(t, trial_num, experiment_num) %>%
+ms_proportion_trials <- df_analysis_windowed %>%
+  group_by(t, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(proportion_to_target = target / (target + distractor))
@@ -527,27 +534,70 @@ ggplot(ms_proportion_trials,
             label = "Anticipation", hjust = 0 ) +
   geom_text(x = 200, y = .95, group = 1, col = "black",
             label = "Reaction", hjust = 0 )+
-  facet_wrap(experiment_num~trial_num, ncol = 8)
+  facet_wrap(~experiment_num)
 ```
 
-Create data-set for the mixed-level analysis
+
+
+## Mirman growth curve analysis
+
+Create dataset with sub-sampled counts for growth curve analysis a la Mirman (2014). 
+
 ```{r}
-ms_proportion_trials_MLM <- df_analysis2 %>%
-  group_by(experiment_num, trial_num, subid, lab) %>%
-  summarise(mean_target = mean(aoi == "target", na.rm = TRUE),
-            mean_distractor = mean(aoi == "distractor", na.rm = TRUE)) %>% 
-  mutate(p = mean_target / (mean_target + mean_distractor)) %>% 
-  ungroup()
+POLY_DEG <- 2
+ms_timecourse <- df_analysis_windowed %>%
+  filter(experiment_num == "pilot_1a", 
+         lab == "uchicago_babylab") %>%
+  mutate(target = as.numeric(aoi == "target"),
+         trial_id = as.character(trial_id))
+         
+ops <- poly(unique(ms_timecourse$t), POLY_DEG)
+ops_tibble <- tibble(ot1 = ops[,1], 
+                     ot2 = ops[,2],
+                     # ot3 = ops[,3], 
+                     t = unique(ms_timecourse$t))
 
 
-ggplot(data = ms_proportion_trials_MLM, aes(x = p))+
-  geom_histogram()+
-  facet_grid(.~experiment_num)#we have a lot of proportion clustering at 1 (meaning participants look at target often)
+ms_timecourse <- left_join(ms_timecourse, ops_tibble)
+```
 
-ggplot(data = ms_proportion_trials_MLM, aes(x = log(p)))+
-  geom_histogram()+
-  facet_grid(.~experiment_num)+
-  ggtitle(label = "log-transformed p")#let us examine if we can log-transformed p
 
+```{r}
+m.full <- glmer(target ~ (ot1 + ot2) + 
+                  (ot1 + ot2 | trial_id) +
+                  (ot1 + ot2 | subid), 
+                family = "binomial", 
+                data = ms_timecourse)
+
+ms_timecourse$fit <- fitted(m.full)
+```
+
+```{r}
+ggplot(ms_timecourse, aes(x = t, y = target)) + 
+  stat_summary(fun.data = mean_se, geom="pointrange") + 
+  stat_summary(aes(y = fit), fun = mean, geom = "line")
+```
+
+## Beta regression
+
+
+```{r}
+ms_proportion_trials <- df_analysis_windowed %>%
+  filter(experiment_num == "pilot_1a") %>%
+  group_by(trial_num, subid, lab) %>%
+  summarise(sum_target = sum(aoi == "target", na.rm = TRUE),
+            sum_distractor = sum(aoi == "distractor", na.rm = TRUE)) %>%
+  mutate(p = sum_target / (sum_target + sum_distractor), 
+         p_laplace = (sum_target + 1) / (sum_target + sum_distractor + 2)) 
+ggplot(data = ms_proportion_trials, aes(x = p_laplace))+
+  geom_histogram()
+```
+
+```{r}
+library(brms)
+
+bayes_mod <- brm(p_laplace ~ 1 + (1 | subid) + (1 | lab), 
+                 family = "beta",
+                 data = ms_proportion_trials)
 ```
 
