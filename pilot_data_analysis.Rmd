@@ -546,16 +546,24 @@ Create dataset with sub-sampled counts for growth curve analysis a la Mirman (20
 ```{r}
 POLY_DEG <- 2
 ms_timecourse <- df_analysis_windowed %>%
-  filter(experiment_num == "pilot_1a", 
-         lab == "uchicago_babylab") %>%
-  mutate(target = as.numeric(aoi == "target"),
-         trial_id = as.character(trial_id))
-         
-ops <- poly(unique(ms_timecourse$t), POLY_DEG)
+  mutate(trial_id = as.character(paste(lab, experiment_num, trial_id)),
+         trial_num_recoded = trial_num - 8, 
+         t_window = as.numeric(as.factor(cut(t, breaks=10)))
+  ) %>%
+  group_by(lab, trial_id, trial_num_recoded, subid, t_window) %>%
+  summarise(aoi_target = sum(aoi == "target"),
+            aoi_distractor = sum(aoi == "distractor")) %>%
+  mutate(target = case_when(aoi_target > aoi_distractor ~ 1,
+                            aoi_distractor > aoi_target ~ 0
+                            )) %>%
+  filter(is.na(target) == F)
+
+
+ops <- poly(unique(ms_timecourse$t_window), POLY_DEG)
 ops_tibble <- tibble(ot1 = ops[,1], 
                      ot2 = ops[,2],
                      # ot3 = ops[,3], 
-                     t = unique(ms_timecourse$t))
+                     t_window = unique(ms_timecourse$t_window))
 
 
 ms_timecourse <- left_join(ms_timecourse, ops_tibble)
@@ -563,17 +571,52 @@ ms_timecourse <- left_join(ms_timecourse, ops_tibble)
 
 
 ```{r}
-m.full <- glmer(target ~ (ot1 + ot2) + 
-                  (ot1 + ot2 | trial_id) +
-                  (ot1 + ot2 | subid), 
-                family = "binomial", 
-                data = ms_timecourse)
 
-ms_timecourse$fit <- fitted(m.full)
+priors <-c(set_prior("normal(0, .5)", class = "Intercept"),
+              set_prior("normal(0, .5)", class = "b"),
+              set_prior("normal(0, .1)", class = "sd"),
+              set_prior("lkj(2)", class = "L"))
+
+m.full <- brm(target ~ (ot1 + ot2) * trial_num_recoded +
+                  (ot1 + ot2 | trial_id) +
+                  ((ot1 + ot2) * trial_num_recoded | subid) +
+                ((ot1 + ot2) * trial_num_recoded | lab),
+              family = "bernoulli",
+              chains = 4,
+              cores=4,
+              prior= priors,
+              data = ms_timecourse)
+
+
+
+ms_timecourse$fit <- fitted(m.full)[, "Estimate"]
+ms_timecourse %>%
+  group_by(lab, trial_id) %>%
+  mutate(resid = fit - target,
+         lag.resid = lag(resid)) %>%
+  ggplot(data=., aes(x=lag.resid, y=resid)) + 
+  geom_point()
+ms_timecourse %>%
+  group_by(lab, trial_id) %>%
+  mutate(resid = fit - target,
+         lag.resid = lag(resid)) %>%
+  ggplot(data=., aes(x=t_window, y=resid)) + 
+  geom_point()
+
+ms_timecourse %>%
+  group_by(lab, trial_id) %>%
+  mutate(resid = fit - target,
+         lag.resid = lag(resid)) %>%
+  ungroup() %>%
+  na.omit() %>%
+  summarise(c=cor(resid, lag.resid))
+
+hist(ms_timecourse$fit)
+hist(ms_timecourse$target)
 ```
 
 ```{r}
-ggplot(ms_timecourse, aes(x = t, y = target)) + 
+ggplot(ms_timecourse, aes(x = t_window, y = target)) + 
   stat_summary(fun.data = mean_se, geom="pointrange") + 
   stat_summary(aes(y = fit), fun = mean, geom = "line")
 ```
