@@ -632,15 +632,55 @@ ms_proportion_trials <- df_analysis_windowed %>%
             sum_distractor = sum(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(p = sum_target / (sum_target + sum_distractor), 
          p_laplace = (sum_target + 1) / (sum_target + sum_distractor + 2)) 
-ggplot(data = ms_proportion_trials, aes(x = p_laplace))+
-  geom_histogram()
+
+ggplot(data = ms_proportion_trials, aes(x = p))+
+  geom_histogram() #no values are exactly 0 and 1 now, can run beta regression as usual
 ```
 
 ```{r}
-library(brms)
+#library(zoib)
 
-bayes_mod <- brm(p_laplace ~ 1 + (1 | subid) + (1 | lab), 
-                 family = "beta",
-                 data = ms_proportion_trials)
+bcpriors <- brms::get_prior(p_laplace ~ trial_num + (trial_num | subid), data=ms_proportion_trials, family="beta")
+
+# bayes_mod <- brms::brm(p_laplace ~ trial_num + (trial_num | subid), data=ms_proportion_trials, family=gaussian(), #prior = bcpriors,
+#                  save_all_pars=T,
+#                           warmup = 10000,
+#                           iter = 20000,
+#                           chains = 2,
+#                           cores = 2,
+#                  control = list(adapt_delta = 0.95),
+#                           seed = 123)
+```
+Not working....
+```{r}
+zero_beta_mod <- brm(
+  formula = bf(
+    p_laplace ~ 1 + trial_num + (1 + trial_num | subid), 
+    zi ~ 1 + trial_num),
+  data = ms_proportion_trials,
+  family = zero_inflated_beta)
+  # prior = c(
+  #   set_prior("normal(0, 1)", class = "b"),
+  #   set_prior("cauchy(0, 2)", class = "sd")
+  #),
+```
+codes adapted from https://vuorre.netlify.app/post/2019/02/18/analyze-analog-scale-ratings-with-zero-one-inflated-beta-models/#the-zero-one-inflated-beta-model
+
+not working at all 
+```{r}
+zoib_model <- bf(
+  p ~ 1 + trial_num + (1 + trial_num | subid),
+  phi ~ 1 + trial_num + (1 + trial_num | subid),
+  zoi ~ 1 + trial_num + (1 + trial_num | subid),
+  coi ~ 1 + trial_num + (1 + trial_num | subid), 
+  family = zero_one_inflated_beta()
+)
+
+zero_beta_mod_more_spec <- brm(formula = zoib_model,
+                               data = ms_proportion_trials,
+                               cores = 4, seed = 1,
+                               save_all_pars=T)
+
+
 ```
 
