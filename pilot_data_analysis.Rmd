@@ -555,7 +555,8 @@ ms_timecourse <- df_analysis_windowed %>%
             aoi_distractor = sum(aoi == "distractor")) %>%
   mutate(target = case_when(aoi_target > aoi_distractor ~ 1,
                             aoi_distractor > aoi_target ~ 0
-                            )) %>%
+                            ),
+         elogit  = log(aoi_target + 0.5) - log(aoi_distractor + 0.5)) %>%
   filter(is.na(target) == F)
 
 
@@ -574,8 +575,24 @@ ms_timecourse <- left_join(ms_timecourse, ops_tibble)
 
 priors <-c(set_prior("normal(0, .5)", class = "Intercept"),
               set_prior("normal(0, .5)", class = "b"),
-              set_prior("normal(0, .1)", class = "sd"),
+              set_prior("normal(0, .5)", class = "sd"),
               set_prior("lkj(2)", class = "L"))
+
+priors_null <-c(set_prior("normal(0, .5)", class = "b"),
+              set_prior("normal(0, .5)", class = "sd"),
+              set_prior("lkj(2)", class = "L"))
+
+m.full.elogit <- brm(elogit ~ (ot1 + ot2) * trial_num_recoded +
+                  (ot1 + ot2 | trial_id) +
+                  ((ot1 + ot2) * trial_num_recoded | subid) +
+                ((ot1 + ot2) * trial_num_recoded | lab),
+              chains = 4,
+              cores=4,
+              prior= priors,
+              data = ms_timecourse,
+              iter = 4000,
+              control = list(adapt_delta = 0.95))
+
 
 m.full <- brm(target ~ (ot1 + ot2) * trial_num_recoded +
                   (ot1 + ot2 | trial_id) +
@@ -585,8 +602,21 @@ m.full <- brm(target ~ (ot1 + ot2) * trial_num_recoded +
               chains = 4,
               cores=4,
               prior= priors,
-              data = ms_timecourse)
+              data = ms_timecourse,
+              iter = 4000,
+              control = list(adapt_delta = 0.95))
 
+m.null <- brm(target ~ 0 + (ot1 + ot2) * trial_num_recoded +
+                  (ot1 + ot2 | trial_id) +
+                  ((ot1 + ot2) * trial_num_recoded | subid) +
+                ((ot1 + ot2) * trial_num_recoded | lab),
+              family = "bernoulli",
+              chains = 4,
+              cores=4,
+              prior= priors_null,
+              data = ms_timecourse,
+              iter = 4000,
+              control = list(adapt_delta = 0.95))
 
 
 ms_timecourse$fit <- fitted(m.full)[, "Estimate"]
@@ -619,6 +649,10 @@ hist(ms_timecourse$target)
 ggplot(ms_timecourse, aes(x = t_window, y = target)) + 
   stat_summary(fun.data = mean_se, geom="pointrange") + 
   stat_summary(aes(y = fit), fun = mean, geom = "line")
+```
+
+```{r}
+pp_check(m.full) #, type = "stat_grouped", group = "trial_id", nsamples = 100)
 ```
 
 ## Beta regression
