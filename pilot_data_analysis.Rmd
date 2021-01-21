@@ -33,12 +33,12 @@ Pilot data analysis for MB2.
 We can re-preprocess all of our data, this is set not to evaluate by default. In order to do this, you will need to register with Eyelink to get their binary package and then install `edfR`.
 
 ```{r, eval=FALSE, warning=FALSE, message=FALSE}
-labs <- dir(here::here("pilot_data"))
+#labs <- dir(here::here("pilot_data"))
 
-for (lab in labs) {
-  print(lab)
-  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
-}
+#for (lab in labs) {
+#  print(lab)
+#  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
+#}
 
 ```
 
@@ -558,6 +558,22 @@ ms_timecourse <- df_analysis_windowed %>%
                             ),
          elogit  = log(aoi_target + 0.5) - log(aoi_distractor + 0.5)) %>%
   filter(is.na(target) == F)
+
+group_by(ms_timecourse, lab, trial_id, subid) %>%
+  mutate(lag.target = lag(target)) %>%
+  na.omit() %>%
+  summarise(autoc = cor(target, lag.target)) %>%
+  group_by() %>%
+  summarise(mean.c = mean(autoc,na.rm=T))
+
+sample_n(ungroup(ms_timecourse), nrow(ms_timecourse)) %>%
+  group_by(lab, trial_id, subid) %>%
+  mutate(lag.target = lag(target)) %>%
+  na.omit() %>%
+  summarise(autoc = cor(target, lag.target)) %>%
+  group_by() %>%
+  summarise(mean.c = mean(autoc,na.rm=T))
+
 
 
 ops <- poly(unique(ms_timecourse$t_window), POLY_DEG)
