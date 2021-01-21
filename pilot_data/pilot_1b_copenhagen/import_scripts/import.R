@@ -12,7 +12,7 @@ lab_dir = "pilot_data/pilot_1b_copenhagen/"
   
 # You need EyeLink Developers Kit and edfR
 # https://www.sr-support.com/forum/downloads/eyelink-display-software/45-eyelink-developers-kit-for-mac-os-x-mac-os-x-display-software?15-EyeLink-Developers-Kit-for-Mac-OS-X=
-subjs = dir(here(lab_dir, "raw_data/"))
+subjs = dir(here(lab_dir, "raw_data/children/"))
 
 # This is currently a little funky.The trials, as output by eyelink, seem to start
 # about 1s before the video and there does not seem to be an easy way to get
@@ -22,9 +22,9 @@ subjs = dir(here(lab_dir, "raw_data/"))
 # This seems to make the data line up with the other labs.
 d.pretrim <- subjs %>%
   map_df(function(subj) {
-    xy = edf.samples(paste0(here(lab_dir, "raw_data/"), subj, "/", subj, ".edf"), trials=T) %>%
+    xy = edf.samples(paste0(here(lab_dir, "raw_data/children/"), subj, "/", subj, ".edf"), trials=T) %>%
       mutate(lab_subject_id = subj)
-    msg = edf.messages(paste0(here(lab_dir, "raw_data/"), subj, "/", subj, ".edf"))
+    msg = edf.messages(paste0(here(lab_dir, "raw_data/children/"), subj, "/", subj, ".edf"))
 
     framestart =  filter(msg, grepl("Frame to be displayed 1$", msg)) %>%
       mutate(eyetrial = 1:n(),
@@ -66,14 +66,18 @@ write_csv(datasets, here(lab_dir, "processed_data/datasets.csv"))
 # subjects
 # subject_id, age, sex, lab_subject_id
 # TODO: one subject has age NC
-p <- tibble(lab_subject_id = unique(d$lab_subject_id), age = NA, sex = NA)
-  
+p <- readxl::read_xlsx(here(lab_dir, "raw_data/MB2_pilot1b_KU_CPH_participantsheet_children.xlsx"))
+
+
 subjects <- p %>%
+  rename(lab_subject_id = subid,
+         age = age_days, 
+         sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
          lab_subject_id = tolower(gsub("_", "", lab_subject_id)),
          age = as.numeric(as.character(age)),
-         error = F, 
-         dataset_id = 7) %>%
+         error = session_error == "error",
+         dataset_id = 6) %>%
   select(subject_id, age, sex, lab_subject_id, error, dataset_id)
 
 #peekds::validate_table(df_table = subjects, 
