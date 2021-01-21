@@ -12,7 +12,7 @@ lab_dir = "pilot_data/pilot_1b_CEU/"
 
 # You need EyeLink Developers Kit and edfR
 # https://www.sr-support.com/forum/downloads/eyelink-display-software/45-eyelink-developers-kit-for-mac-os-x-mac-os-x-display-software?15-EyeLink-Developers-Kit-for-Mac-OS-X=
-subjs = dir(here(lab_dir, "raw_data"))
+subjs = dir(here(lab_dir, "raw_data/children/"))
 
 # This is currently a little funky.The trials, as output by eyelink, seem to start
 # about 1s before the video and there does not seem to be an easy way to get
@@ -22,16 +22,16 @@ subjs = dir(here(lab_dir, "raw_data"))
 # This seems to make the data line up with the other labs.
 d <- subjs %>%
   map_df(function(subj) {
-    xy = edf.samples(paste0(here(lab_dir, "raw_data/"), subj, "/", subj, ".edf"), trials=T) %>%
+    xy = edf.samples(paste0(here(lab_dir, "raw_data/children/"), subj, "/", subj, ".edf"), trials=T) %>%
       mutate(lab_subject_id = subj)
-    framestart = edf.messages(paste0(here(lab_dir, "raw_data/"), subj, "/", subj, ".edf")) %>%
+    framestart = edf.messages(paste0(here(lab_dir, "raw_data/children/"), subj, "/", subj, ".edf")) %>%
       filter(grepl("Frame to be displayed 1$", msg)) %>%
       mutate(eyetrial = 1:n(),
              msg = str_replace_all(msg, "\\s", "|")) %>%
       separate(msg, into=c("offset", "a", "b", "c", "d", "frame"), sep="\\|") %>%
       mutate(first_frame_time = time + as.numeric(as.character(offset))) %>%
       select(first_frame_time, eyetrial)
-    dd = read_tsv(paste0(here(lab_dir, "raw_data/"), subj, "/actual_TRIAL_DataSource_MB2_pilot_24inch_2020TRIAL.dat"),
+    dd = read_tsv(paste0(here(lab_dir, "raw_data/children/"), subj, "/actual_TRIAL_DataSource_MB2_pilot_24inch_2020TRIAL.dat"),
                   col_names=c("screen", "eyetrial", "cond", "video_name", "sound_name")) %>%
       left_join(framestart)
     left_join(xy, dd)
@@ -55,15 +55,18 @@ write_csv(datasets, here(lab_dir, "processed_data/datasets.csv"))
 
 # subjects
 # subject_id, age, sex, lab_subject_id
-p <- tibble(lab_subject_id = unique(d$lab_subject_id),
-            age = NA,
-            sex= NA)
+p <- readxl::read_xlsx(here(lab_dir, "raw_data/MB2-Pilot_1B-CEUBudapest_Participants_Data.xlsx"))
+
 
 subjects <- p %>%
+  rename(lab_subject_id = subid,
+         age = age_days, 
+         sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
-         lab_subject_id = tolower(lab_subject_id),
-         dataset_id = 9,
-         error = F) %>%
+         lab_subject_id = tolower(gsub("_", "", lab_subject_id)),
+         age = as.numeric(as.character(age)),
+         error = session_error == "error",
+         dataset_id = 6) %>%
   select(subject_id, age, sex, lab_subject_id, error, dataset_id)
 
 #peekds::validate_table(df_table = subjects, 

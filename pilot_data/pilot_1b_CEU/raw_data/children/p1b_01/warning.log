@@ -1,0 +1,16 @@
+4593.145	DISPLAY_INTRO_VIDEO	playTime:Mozart_-_Rondo_Alla_Turca_(Turkish_March).wav Desired playtime is later than curren time. Desired Time = 4573 Current Time =4588. Playing with offset 0.
+
+4630.012	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
+4630.187	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
+4986.811	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4573 Flip Time=5007 Retrace Rate=16.652, prepareTime=452 flip request time 4986
+89890.345	DISPLAY_BLANK_INTRO_OFF	playTime:silent.wav Desired playtime is later than curren time. Desired Time = 89590 Current Time =89884. Playing with offset 0.
+
+89926.526	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=89590 Flip Time=89940 Retrace Rate=16.652, prepareTime=386 flip request time 89926
+114767.998	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=114754 Flip Time=114790 Retrace Rate=16.652, prepareTime=52 flip request time 114767
+154422.412	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=154420 Flip Time=154440 Retrace Rate=16.652, prepareTime=40 flip request time 154421
+233655.002	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=233655 Flip Time=233674 Retrace Rate=16.652, prepareTime=38 flip request time 233654
+273286.671	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=273282 Flip Time=273307 Retrace Rate=16.652, prepareTime=43 flip request time 273286
+309956.105	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=309956 Flip Time=309974 Retrace Rate=16.652, prepareTime=38 flip request time 309955
+346585.239	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=346588 Flip Time=346607 Retrace Rate=16.652, prepareTime=35 flip request time 346584
+383261.149	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=383256 Flip Time=383274 Retrace Rate=16.652, prepareTime=43 flip request time 383260
+419796.46	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=419789 Flip Time=419807 Retrace Rate=16.652, prepareTime=45 flip request time 419795

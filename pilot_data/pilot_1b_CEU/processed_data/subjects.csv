@@ -1,5 +1,5 @@
 subject_id,age,sex,lab_subject_id,error,dataset_id
-0,NA,NA,p1b_01,FALSE,9
-1,NA,NA,p1b_02,FALSE,9
-2,NA,NA,p1b_03,FALSE,9
-3,NA,NA,p1b_04,FALSE,9
+0,759,female,mb2p1b01,FALSE,6
+1,788,male,mb2p1b02,FALSE,6
+2,774,male,mb2p1b03,FALSE,6
+3,736,male,mb2p1b04,FALSE,6
