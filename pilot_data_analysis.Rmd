@@ -281,7 +281,7 @@ null_prior_weaker <- c(set_prior("normal(0, 3)", class = "b"),
 
 # Main analysis 1: First anticipatory look
 
-## Bayesian First Look
+## First Look dataframe
 Create a dataframe to identify the first look and see if the first look is >150ms (AT: change it to 150ms based on Dana's comment on RR)
 Ref: Rayner, K., Smith, T. J., Malcolm, G. L., & Henderson, J. M. (2009). Eye Movements and Visual Encoding During Scene Perception. Psychological Science, 20(1), 6-10. doi:10.1111/j.1467-9280.2008.02243.x
 
@@ -301,8 +301,9 @@ df_t_first_aoi <- d %>%
 
 # short df with first looks to check
 first_looks_df <- df_t_first_aoi %>% 
+  mutate(trial_num_factor = as.factor(paste0("Trial",sep = " ", trial_num))) %>% 
   #select(subid, trial_num, first_look_aoi, first_look_t, age, experiment_num) %>% 
-  group_by(subid, trial_num, experiment_num,lab) %>%
+  group_by(subid, trial_num, experiment_num,lab, trial_num_factor) %>%
   summarize(aoi = unique(first_look_aoi)) %>% 
   mutate(aoi = case_when (is.na(aoi) ~ "other", 
                           TRUE ~ as.character(aoi))) 
@@ -319,6 +320,7 @@ I suggest removing "NA (other)" in the following analyses, as I think that looki
 ```{r}
 first_looks_df %>% 
   group_by(aoi, experiment_num) %>% 
+  arrange(experiment_num) %>% 
   count()
 ```
 
@@ -328,21 +330,27 @@ first_looks_df %>%
 
 ```{r}
 ### Pilot 1a kids
-ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) + 
+p1a_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(.~trial_num, ncol = 4)+
-  labs(title = "Pilot 1a kids")
+  facet_wrap(.~trial_num_factor, ncol = 4) +
+  labs(title = "Pilot 1 (Children)") +
+  ylab("Proportion") 
+
+ggsave(filename = "1a_first_look.jpg", p1a_first_look, width = 10, height = 7)
 ```
 
 
 ```{r}
 ### Pilot 1a adult
-ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a_adult")) + 
+p1adult_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a_adult")) + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(.~trial_num, ncol = 4)+ 
-  labs(title = "Pilot 1a adult")
+  facet_wrap(.~trial_num_factor, ncol = 4)+ 
+  labs(title = "Pilot 1 adult") +
+  ylab("Proportion") 
+
+ggsave(filename = "1adult_first_look.jpg", p1adult_first_look, width = 10, height = 7)
 ```
 
 
@@ -352,11 +360,23 @@ ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a_adult")) +
 pilot_1b_bar <- first_looks_df %>% 
   filter(experiment_num %in% c("pilot_1b_outcome", "pilot_1b_no_outcome"))
 
-ggplot(data = pilot_1b_bar)  + 
+#change labeller
+exp_num_lab <- c("Pilot 2 outcome", "Pilot 2 no outcome")
+names(exp_num_lab) <- c("pilot_1b_outcome", "pilot_1b_no_outcome")
+
+trial_num_lab <- c("Trial 1", "Trial 2", "Trial 3", "Trial 4", "Trial 1", "Trial 2", "Trial 3", "Trial 4")
+names(trial_num_lab) <- c("1", "2", "3", "4", "5", "6", "7", "8")
+
+pilot_1b_first_look <- ggplot(data = pilot_1b_bar)  + 
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(trial_num~experiment_num, ncol = 4) +
-  labs(title = "Pilot 1b")
+  facet_wrap(trial_num~experiment_num, ncol = 4, 
+             labeller = labeller(trial_num = trial_num_lab,
+                                 experiment_num = exp_num_lab)) +
+  labs(title = "Pilot 2 (Children)")
+
+ggsave(filename = "1b_first_look.jpg", pilot_1b_first_look, width = 10, height = 7)
+
 ```
 
 ## Descriptive stats
@@ -600,7 +620,7 @@ first_looks_df_1b_o <- first_looks_df %>%
   filter(experiment_num == "pilot_1b_outcome", !is.na(aoi)) %>% 
   mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
   group_by(subid) %>% 
-  mutate(trial_num_recoded = trial_num - 8) %>% 
+  mutate(trial_num_recoded = trial_num - 4) %>% 
   ungroup()
 ```
 
@@ -703,7 +723,7 @@ first_looks_df_1b_no <- first_looks_df %>%
   filter(experiment_num == "pilot_1b_no_outcome", !is.na(aoi)) %>% 
   mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
   group_by(subid) %>% 
-  mutate(trial_num_recoded = trial_num - 8) %>% 
+  mutate(trial_num_recoded = trial_num - 4) %>% 
   ungroup()
 ```
 
@@ -819,8 +839,7 @@ ms_proportion_each_trial <- df_analysis_windowed %>%
   group_by(lab, subid, experiment_num, trial_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
-  mutate(trial_num_recoded = trial_num - 8,
-         proportion_target = target/(target + distractor),
+  mutate(proportion_target = target/(target + distractor),
          proportion_target_c = proportion_target - 0.5) %>%
   filter(!is.na(proportion_target)) %>% 
   ungroup()
@@ -831,7 +850,8 @@ ms_proportion_each_trial <- df_analysis_windowed %>%
 Mixed effect model for pilot 1a (kids) - full model (more info prior)
 ```{r}
 df_ms_proportion_1a <- ms_proportion_each_trial %>% 
-  filter(experiment_num == "pilot_1a")
+  filter(experiment_num == "pilot_1a") %>% 
+  mutate(trial_num_recoded = trial_num - 8)
 
 m_lmer_full_1a <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                    data=df_ms_proportion_1a, 
@@ -842,7 +862,6 @@ m_lmer_full_1a <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recod
                           iter = 2000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.95),
                           seed = 1)
 
 m_lmer_full_1a
@@ -886,7 +905,8 @@ BF_prop_In_more_info_1a
 Mixed effect model for pilot 1a (adult) - full model (more info prior)
 ```{r}
 df_ms_proportion_1adult <- ms_proportion_each_trial %>% 
-  filter(experiment_num == "pilot_1a_adult")
+  filter(experiment_num == "pilot_1a_adult") %>% 
+  mutate(trial_num_recoded = trial_num - 8)
 
 m_lmer_full_1adult <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                    data=df_ms_proportion_1adult, 
@@ -897,7 +917,7 @@ m_lmer_full_1adult <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_r
                           iter = 2000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.996),
+                          control = list(adapt_delta = 0.999999),
                           seed = 1)
 
 m_lmer_full_1adult
@@ -934,7 +954,7 @@ Mixed effect model for pilot 1b (kids) - full model (more info prior)
 ```{r}
 df_ms_proportion_1b_o <- ms_proportion_each_trial %>% 
   filter(experiment_num == "pilot_1b_outcome") %>%
-  mutate(trial_num_recoded = (trial_num_recoded + 4))
+  mutate(trial_num_recoded = trial_num - 4)
 
 m_lmer_full_1b_o <- brm(proportion_target_c ~ trial_num_recoded + 
                           (trial_num_recoded | lab) +
@@ -947,7 +967,7 @@ m_lmer_full_1b_o <- brm(proportion_target_c ~ trial_num_recoded +
                           iter = 40000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.99),
+                          control = list(adapt_delta = 0.999),
                           seed = 1)
 
 m_lmer_full_1b_o
@@ -961,7 +981,7 @@ m_lmer_null_1b_o <- brm(proportion_target_c ~ 0 + trial_num_recoded +
                           (trial_num_recoded | subid),
                    data=df_ms_proportion_1b_o, 
                    family = gaussian(), 
-                           prior = null_prior,
+                           prior = null_prior_diff,
                           save_pars = save_pars(all = TRUE),
                           warmup = 20000,
                           iter = 40000,
@@ -984,18 +1004,19 @@ BF_prop_In_more_info_1b_o
 Mixed effect model for pilot 1b (no outcome) - full model (more info prior)
 ```{r}
 df_ms_proportion_1b_no <- ms_proportion_each_trial %>% 
-  filter(experiment_num == "pilot_1b_no_outcome")
+  filter(experiment_num == "pilot_1b_no_outcome") %>% 
+  mutate(trial_num_recoded = trial_num - 4)
 
 m_lmer_full_1b_no <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                    data=df_ms_proportion_1b_no, 
                    family = gaussian(), 
-                           prior = priors,
+                           prior = priors_diff,
                           save_pars = save_pars(all = TRUE),
                           warmup = 1000,
                           iter = 2000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.995),
+                          control = list(adapt_delta = 0.999),
                           seed = 1)
 
 m_lmer_full_1b_no
@@ -1007,7 +1028,7 @@ Null model pilot 1b (no outcome) - (more info prior)
 m_lmer_null_1b_no <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                    data=df_ms_proportion_1b_no, 
                    family = gaussian(), 
-                           prior = null_prior,
+                           prior = null_prior_diff,
                           save_pars = save_pars(all = TRUE),
                           warmup = 1000,
                           iter = 2000,
