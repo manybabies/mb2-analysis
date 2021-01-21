@@ -22,7 +22,7 @@ suppressMessages(library(brms))
 source(here::here("helper/common.R"))
 source(here("helper/preprocessing_helper.R"))
 
-knitr::opts_chunk$set(cache = TRUE, warn = FALSE, message = FALSE)
+#knitr::opts_chunk$set(cache = TRUE, warn = FALSE, message = FALSE)
 ```
 
 
@@ -33,12 +33,12 @@ Pilot data analysis for MB2.
 We can re-preprocess all of our data, this is set not to evaluate by default. In order to do this, you will need to register with Eyelink to get their binary package and then install `edfR`.
 
 ```{r, eval=FALSE, warning=FALSE, message=FALSE}
-labs <- dir(here::here("pilot_data"))
-
-for (lab in labs) {
-  print(lab)
-  source(here::here("pilot_data", lab, "import_scripts", "import.R"))
-}
+# labs <- dir(here::here("pilot_data"))
+# 
+# for (lab in labs) {
+#   print(lab)
+#   source(here::here("pilot_data", lab, "import_scripts", "import.R"))
+# }
 
 ```
 
@@ -240,10 +240,7 @@ ggplot(ms, aes(x = t, y = looking, col = region)) +
   facet_grid(lab~block + experiment_num)
 ```
 
-
-# Main analysis 1: First anticipatory look
-
-## Set up priors 
+# Set up priors for Analyses 1 and 2
 
 For Bayesian analyses below. We are using a weakly informed prior for all analyses.
 
@@ -253,14 +250,16 @@ priors <-c(set_prior("normal(0, 2)", class = "Intercept"),
               set_prior("normal(0, .1)", class = "sd"),
               set_prior("lkj(2)", class = "L"))
 
+null_prior <- c(set_prior("normal(0, 2)", class = "b"),
+                set_prior("normal(0, .1)", class = "sd"),
+                set_prior("lkj(2)", class = "L"))
+```
+
+```{r include = FALSE}
 priors_weaker <- c(set_prior("normal(0, 3)", class = "Intercept"),
               set_prior("normal(0, 3)", class = "b"),
               set_prior("normal(0, .5)", class = "sd"),
               set_prior("lkj(2)", class = "L"))
-
-null_prior <- c(set_prior("normal(0, 2)", class = "b"),
-                set_prior("normal(0, .1)", class = "sd"),
-                set_prior("lkj(2)", class = "L"))
 
 null_prior_weaker <- c(set_prior("normal(0, 3)", class = "b"),
                        set_prior("normal(0, .5)", class = "sd"),
@@ -268,7 +267,7 @@ null_prior_weaker <- c(set_prior("normal(0, 3)", class = "b"),
 
 ```
 
-
+# Main analysis 1: First anticipatory look
 
 ## Bayesian First Look
 Create a dataframe to identify the first look and see if the first look is >150ms (AT: change it to 150ms based on Dana's comment on RR)
@@ -376,31 +375,24 @@ ggplot(mean_sd_aoi, aes(x = trial_num, y = `mean(aoi_dummy)`)) +
 
 ## Mixed-level analysis: First look location
 
-### Pilot 1a: kids looked at target less over time. But generally speaking, they still looked at targat significantly more than distracter
-```{r first_look_analysis, results = "verbatim"}
+### Pilot 1a
+```{r first_look_analysis}
 first_looks_df_1a <- first_looks_df %>% 
   filter(experiment_num == "pilot_1a", !is.na(aoi)) %>% 
   mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
   group_by(subid) %>% 
-  mutate(trial_num_recoded = case_when(trial_num == 8 ~ 0,
-                                       trial_num == 7 ~ -1,
-                                       trial_num == 6 ~ -2,
-                                       trial_num == 5 ~ -3,
-                                       trial_num == 4 ~ -4,
-                                       trial_num == 3 ~ -5,
-                                       trial_num == 2 ~ -6,
-                                       trial_num == 1 ~ -7)) %>% 
+  mutate(trial_num_recoded = trial_num - 8) %>% 
   ungroup()
 ```
 
 
 Pilot_1a_child: model_fit (Full model) (more info prior)
 ```{r}
-full_first_look_1a <- brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+full_first_look_1a <- brms::brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                           data = first_looks_df_1a,
                           family = bernoulli(link = "logit"),
                           prior = priors,
-                          save_all_pars=T,
+                          save_pars = save_pars(all = TRUE),
                           warmup = 1000, 
                           iter = 2000, 
                           chains = 4, 
@@ -410,13 +402,14 @@ full_first_look_1a <- brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded
 summary(full_first_look_1a)
 ```
 
-Pilot_1a_child: model_fit (Full model) (weaker info prior)
-```{r}
+
+```{r include = FALSE}
+#Pilot_1a_child: model_fit (Full model) (weaker info prior)
 full_first_look_1a_weaker <- brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                           data = first_looks_df_1a,
                           family = bernoulli(link = "logit"),
                           prior = priors_weaker,
-                          save_all_pars=T,
+                          save_pars = save_pars(all = TRUE),
                           warmup = 1000, 
                           iter = 2000, 
                           chains = 4, 
@@ -432,7 +425,7 @@ null_first_look_1a_full <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_re
                           data = first_looks_df_1a,
                           family = bernoulli(link = "logit"),
                           prior = null_prior,
-                          save_all_pars=T,
+                          save_pars = save_pars(all = TRUE),
                           warmup = 1000, 
                           iter = 2000, 
                           chains = 4, 
@@ -442,12 +435,12 @@ null_first_look_1a_full <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_re
 summary(null_first_look_1a_full)
 ```
 
-```{r}
+```{r include = FALSE}
 null_first_look_1a_weaker <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
                           data = first_looks_df_1a,
                           family = bernoulli(link = "logit"),
                           prior = null_prior_weaker,
-                          save_all_pars=T,
+                          save_pars = save_pars(all = TRUE),
                           warmup = 1000, 
                           iter = 2000, 
                           chains = 4, 
@@ -462,7 +455,9 @@ Calculate the marginal log likelihoods for each hypothese using Bridge sampling
 marloglik_full_pilot1a <- bridge_sampler(full_first_look_1a, silent = T)
 
 marloglik_null_pilot1a <- bridge_sampler(null_first_look_1a_full, silent = T)
+```
 
+```{r include = FALSE}
 marloglike_full_weaker_pilot1a <- bridge_sampler(full_first_look_1a_weaker, silent = T)
 
 marloglike_null_weaker_pilot1a <- bridge_sampler(null_first_look_1a_weaker, silent = T)
@@ -470,15 +465,282 @@ marloglike_null_weaker_pilot1a <- bridge_sampler(null_first_look_1a_weaker, sile
 
 Bayes factor
 ```{r}
-BF_full_In <- bayes_factor(marloglik_full_pilot1a, marloglik_null_pilot1a)
+BF_full_In_1a <- bayes_factor(marloglik_full_pilot1a, marloglik_null_pilot1a)
 
-BF_weaker_In <- bayes_factor(marloglike_full_weaker_pilot1a, marloglike_null_weaker_pilot1a)
-
-BF_full_In
-
-BF_weaker_In
+BF_full_In_1a
 ```
 
+```{r include = FALSE}
+BF_weaker_In_1a <- bayes_factor(marloglike_full_weaker_pilot1a, marloglike_null_weaker_pilot1a)
+
+BF_weaker_In_1a
+```
+
+### Pilot 1a adult
+```{r}
+first_looks_df_1adult <- first_looks_df %>% 
+  filter(experiment_num == "pilot_1a_adult", !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
+  group_by(subid) %>% 
+  mutate(trial_num_recoded = trial_num - 8) %>% 
+  ungroup()
+```
+
+
+Pilot_1a_adult: model_fit (Full model) (more info prior)
+```{r}
+full_first_look_1adult <- brms::brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1adult,
+                          family = bernoulli(link = "logit"),
+                          prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 123,
+                          control = list(adapt_delta = 0.91))
+  
+summary(full_first_look_1adult)
+```
+
+
+```{r include = FALSE}
+
+#Pilot_1a_adult: model_fit (Full model) (weaker info prior)
+full_first_look_1adult_weaker <- brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1adult,
+                          family = bernoulli(link = "logit"),
+                          prior = priors_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 456, control = list(adapt_delta = 0.99))
+  
+summary(full_first_look_1adult_weaker)
+```
+
+Pilot_1a_adult: simpler model_fit (null model)
+```{r}
+null_first_look_1adult_full <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1adult,
+                          family = bernoulli(link = "logit"),
+                          prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 789, 
+                          control = list(adapt_delta = 0.99))
+  
+summary(null_first_look_1adult_full)
+```
+
+```{r include = FALSE}
+#Pilot_1a_adult: model_fit (null model) (weaker info prior)
+null_first_look_1adult_weaker <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1adult,
+                          family = bernoulli(link = "logit"),
+                          prior = null_prior_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 1,
+                          control = list(adapt_delta = 0.9912))
+  
+summary(null_first_look_1adult_weaker)
+```
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+marloglik_full_pilot1adult <- bridge_sampler(full_first_look_1adult, silent = T)
+
+marloglik_null_pilot1adult <- bridge_sampler(null_first_look_1adult_full, silent = T)
+```
+
+```{r include = FALSE}
+marloglike_full_weaker_pilot1adult <- bridge_sampler(full_first_look_1adult_weaker, silent = T)
+
+marloglike_null_weaker_pilot1adult <- bridge_sampler(null_first_look_1adult_weaker, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_full_In_1adult <- bayes_factor(marloglik_full_pilot1adult, marloglik_null_pilot1adult)
+
+BF_full_In_1adult
+```
+
+```{r include = FALSE}
+BF_weaker_In_1adult <- bayes_factor(marloglike_full_weaker_pilot1adult, marloglike_null_weaker_pilot1adult)
+
+BF_weaker_In_1adult
+```
+
+### Pilot 1b outcome
+```{r}
+first_looks_df_1b_o <- first_looks_df %>% 
+  filter(experiment_num == "pilot_1b_outcome", !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
+  group_by(subid) %>% 
+  mutate(trial_num_recoded = trial_num - 8) %>% 
+  ungroup()
+```
+
+
+Pilot_1b_outcome: model_fit (Full model) (more info prior)
+```{r}
+full_first_look_1b_o <- brms::brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_o,
+                          family = bernoulli(link = "logit"),
+                          prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 123)
+  
+summary(full_first_look_1b_o)
+```
+
+
+```{r include = FALSE}
+#Pilot_1b_child: model_fit (Full model) (weaker info prior)
+full_first_look_1b_weaker_o <- brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_o,
+                          family = bernoulli(link = "logit"),
+                          prior = priors_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 456)
+  
+summary(full_first_look_1b_weaker_o)
+```
+
+Pilot_1b_outcome: simpler model_fit (null model)
+```{r}
+null_first_look_1b_full_o <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_o,
+                          family = bernoulli(link = "logit"),
+                          prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 789)
+  
+summary(null_first_look_1b_full_o)
+```
+
+```{r include = FALSE}
+#Pilot_1b_child: model_fit (null model) (weaker info prior)
+null_first_look_1b_weaker_o <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_o,
+                          family = bernoulli(link = "logit"),
+                          prior = null_prior_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 1, control = list(adapt_delta = 0.9))
+  
+summary(null_first_look_1b_weaker_o)
+```
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+marloglik_full_pilot1b_o <- bridge_sampler(full_first_look_1b_o, silent = T)
+
+marloglik_null_pilot1b_o <- bridge_sampler(null_first_look_1b_full_o, silent = T)
+```
+
+```{r include = FALSE}
+marloglike_full_weaker_pilot1b_o <- bridge_sampler(full_first_look_1b_weaker_o, silent = T)
+
+marloglike_null_weaker_pilot1b_o <- bridge_sampler(null_first_look_1b_weaker_o, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_full_In_1b_o <- bayes_factor(marloglik_full_pilot1b_o, marloglik_null_pilot1b_o)
+
+BF_full_In_1b_o
+```
+
+
+```{r include = FALSE}
+BF_weaker_In_1b_o <- bayes_factor(marloglike_full_weaker_pilot1b_o, marloglike_null_weaker_pilot1b_o)
+
+BF_weaker_In_1b_o
+```
+
+### Pilot 1b no outcome
+```{r}
+first_looks_df_1b_no <- first_looks_df %>% 
+  filter(experiment_num == "pilot_1b_no_outcome", !is.na(aoi)) %>% 
+  mutate(aoi_dummy = ifelse(aoi == "target", 1, 0)) %>% 
+  group_by(subid) %>% 
+  mutate(trial_num_recoded = trial_num - 8) %>% 
+  ungroup()
+```
+
+
+Pilot_1b_no_outcome: model_fit (Full model) (more info prior)
+```{r}
+full_first_look_1b_no <- brms::brm(aoi_dummy ~ 1 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_no,
+                          family = bernoulli(link = "logit"),
+                          prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 123)
+  
+summary(full_first_look_1b_no)
+```
+
+Pilot_1b_outcome: simpler model_fit (null model)
+```{r}
+null_first_look_1b_full_no <- brm(aoi_dummy ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                          data = first_looks_df_1b_no,
+                          family = bernoulli(link = "logit"),
+                          prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000, 
+                          iter = 2000, 
+                          chains = 4, 
+                          cores = 4,
+                          seed = 789)
+  
+summary(null_first_look_1b_full_no)
+```
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+marloglik_full_pilot1b_no <- bridge_sampler(full_first_look_1b_no, silent = T)
+
+marloglik_null_pilot1b_no <- bridge_sampler(null_first_look_1b_full_no, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_full_In_1b_no <- bayes_factor(marloglik_full_pilot1b_no, marloglik_null_pilot1b_no)
+
+BF_full_In_1b_no
+```
 
 # Main analysis 2: Differential time looking analysis
 
@@ -521,7 +783,8 @@ ms_proportion_trials <- df_analysis_windowed %>%
   group_by(t, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm = TRUE),
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
-  mutate(proportion_to_target = target / (target + distractor))
+  mutate(proportion_to_target = target / (target + distractor)) 
+ 
 
 ggplot(ms_proportion_trials,
        aes(x = t, y = proportion_to_target)) +
@@ -537,13 +800,290 @@ ggplot(ms_proportion_trials,
   facet_wrap(~experiment_num)
 ```
 
+## Traditional approach - Mixed level approach
 
+```{r}
+ms_proportion_each_trial <- df_analysis_windowed %>%
+  group_by(lab, subid, experiment_num, trial_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
+  mutate(trial_num_recoded = trial_num - 8,
+         proportion_target = target/(target + distractor),
+         proportion_target_c = proportion_target - 0.5) %>%
+  filter(!is.na(proportion_target)) %>% 
+  ungroup()
+
+```
+
+## Pilot 1a
+Mixed effect model for pilot 1a (kids) - full model (more info prior)
+```{r}
+df_ms_proportion_1a <- ms_proportion_each_trial %>% 
+  filter(experiment_num == "pilot_1a")
+
+m_lmer_full_1a <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1a, 
+                   family = gaussian(), 
+                           prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.95),
+                          seed = 1)
+
+m_lmer_full_1a
+```
+
+
+```{r include=FALSE}
+#Mixed effect model for pilot 1a (kids) - full model (weaker info prior)
+m_lmer_full_weaker_1a <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1a, 
+                   family = gaussian(), 
+                           prior = priors_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.99),
+                          seed = 1)
+
+m_lmer_full_weaker_1a
+
+```
+
+Null model pilot 1a (kid) - (more info prior)
+```{r}
+
+m_lmer_null_1a <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1a, 
+                   family = gaussian(), 
+                           prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.9999),#need to adjust the delta value to a very high number in order to get rid of divergence messages
+                          seed = 2)
+
+m_lmer_null_1a
+```
+
+
+```{r include = FALSE}
+#Null model pilot 1a (kid) - (weaker info prior)
+m_lmer_null_weaker_1a <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1a, 
+                   family = gaussian(), 
+                           prior = null_prior_weaker,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.9999),#need to adjust the delta value to a very high number in order to get rid of divergence messages
+                          seed = 2)
+
+m_lmer_null_weaker_1a
+```
+
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+prop_marloglik_full_pilot1a <- bridge_sampler(m_lmer_full_1a, silent = T)
+
+prop_marloglik_null_pilot1a <- bridge_sampler(m_lmer_null_1a, silent = T)
+```
+
+```{r include = FALSE}
+prop_marloglik_full_weaker_pilot1a <- bridge_sampler(m_lmer_full_weaker_1a, silent = T)
+
+prop_marloglik_null_weaker_pilot1a <- bridge_sampler(m_lmer_null_weaker_1a, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_prop_In_more_info_1a <- bayes_factor(prop_marloglik_full_pilot1a, prop_marloglik_null_pilot1a)
+
+BF_prop_In_more_info_1a
+```
+
+```{r include = FALSE}
+BF_prop_In_weaker_info_1a <- bayes_factor(prop_marloglik_full_weaker_pilot1a, prop_marloglik_null_weaker_pilot1a)
+
+BF_prop_In_weaker_info_1a
+```
+
+## Pilot 1a adult
+Mixed effect model for pilot 1a (adult) - full model (more info prior)
+```{r}
+df_ms_proportion_1adult <- ms_proportion_each_trial %>% 
+  filter(experiment_num == "pilot_1a_adult")
+
+m_lmer_full_1adult <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1adult, 
+                   family = gaussian(), 
+                           prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.996),
+                          seed = 1)
+
+m_lmer_full_1adult
+```
+
+Null model pilot 1a (adult) - (more info prior)
+```{r}
+
+m_lmer_null_1adult <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1adult, 
+                   family = gaussian(), 
+                           prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.9995),#need to adjust the delta value to a very high number in order to get rid of divergence messages
+                          seed = 2)
+
+m_lmer_null_1adult
+```
+
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+prop_marloglik_full_pilot1adult <- bridge_sampler(m_lmer_full_1adult, silent = T)
+
+prop_marloglik_null_pilot1adult <-bridge_sampler(m_lmer_null_1adult, silent = T)
+```
+
+
+Bayes factor
+```{r}
+BF_prop_In_more_info_adult <- bayes_factor(prop_marloglik_full_pilot1adult, prop_marloglik_null_pilot1adult)
+
+BF_prop_In_more_info_adult
+```
+
+## Pilot 1b outcome 
+Mixed effect model for pilot 1b (kids) - full model (more info prior)
+```{r}
+df_ms_proportion_1b_o <- ms_proportion_each_trial %>% 
+  filter(experiment_num == "pilot_1b_outcome")
+
+m_lmer_full_1b_o <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1b_o, 
+                   family = gaussian(), 
+                           prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.995),
+                          seed = 1)
+
+m_lmer_full_1b_o
+```
+
+Null model pilot 1b (kid) - (more info prior)
+```{r}
+
+m_lmer_null_1b_o <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1b_o, 
+                   family = gaussian(), 
+                           prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.9999),#need to adjust the delta value to a very high number in order to get rid of divergence messages
+                          seed = 2)
+
+m_lmer_null_1b_o
+```
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+prop_marloglik_full_pilot1b_o <- bridge_sampler(m_lmer_full_1b_o, silent = T)
+
+prop_marloglik_null_pilot1b_o <- bridge_sampler(m_lmer_null_1b_o, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_prop_In_more_info_1b_o <- bayes_factor(prop_marloglik_full_pilot1b_o, prop_marloglik_null_pilot1b_o)
+
+BF_prop_In_more_info_1b_o
+```
+
+## Pilot 1b no outcome 
+Mixed effect model for pilot 1b (no outcome) - full model (more info prior)
+```{r}
+df_ms_proportion_1b_no <- ms_proportion_each_trial %>% 
+  filter(experiment_num == "pilot_1b_no_outcome")
+
+m_lmer_full_1b_no <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1b_no, 
+                   family = gaussian(), 
+                           prior = priors,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.995),
+                          seed = 1)
+
+m_lmer_full_1b_no
+```
+
+Null model pilot 1b (no outcome) - (more info prior)
+```{r}
+
+m_lmer_null_1b_no <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_num_recoded | lab) + (trial_num_recoded | subid),
+                   data=df_ms_proportion_1b_no, 
+                   family = gaussian(), 
+                           prior = null_prior,
+                          save_pars = save_pars(all = TRUE),
+                          warmup = 1000,
+                          iter = 2000,
+                          chains = 4,
+                          cores = 4,
+                          control = list(adapt_delta = 0.9999),#need to adjust the delta value to a very high number in order to get rid of divergence messages
+                          seed = 2)
+
+m_lmer_null_1b_no
+```
+
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+prop_marloglik_full_pilot1b_no <- bridge_sampler(m_lmer_full_1b_no, silent = T)
+
+prop_marloglik_null_pilot1b_no <- bridge_sampler(m_lmer_null_1b_no, silent = T)
+```
+
+Bayes factor
+```{r}
+BF_prop_In_more_info_1b_no <- bayes_factor(prop_marloglik_full_pilot1b_no, prop_marloglik_null_pilot1b_no)
+
+BF_prop_In_more_info_1b_no
+```
 
 ## Mirman growth curve analysis
 
 Create dataset with sub-sampled counts for growth curve analysis a la Mirman (2014). 
 
-```{r}
+```{r, eval = FALSE, include = FALSE}
 POLY_DEG <- 2
 ms_timecourse <- df_analysis_windowed %>%
   mutate(trial_id = as.character(paste(lab, experiment_num, trial_id)),
@@ -555,8 +1095,7 @@ ms_timecourse <- df_analysis_windowed %>%
             aoi_distractor = sum(aoi == "distractor")) %>%
   mutate(target = case_when(aoi_target > aoi_distractor ~ 1,
                             aoi_distractor > aoi_target ~ 0
-                            ),
-         elogit  = log(aoi_target + 0.5) - log(aoi_distractor + 0.5)) %>%
+                            )) %>%
   filter(is.na(target) == F)
 
 
@@ -571,28 +1110,12 @@ ms_timecourse <- left_join(ms_timecourse, ops_tibble)
 ```
 
 
-```{r}
+```{r, eval = FALSE, include = FALSE}
 
 priors <-c(set_prior("normal(0, .5)", class = "Intercept"),
               set_prior("normal(0, .5)", class = "b"),
-              set_prior("normal(0, .5)", class = "sd"),
+              set_prior("normal(0, .1)", class = "sd"),
               set_prior("lkj(2)", class = "L"))
-
-priors_null <-c(set_prior("normal(0, .5)", class = "b"),
-              set_prior("normal(0, .5)", class = "sd"),
-              set_prior("lkj(2)", class = "L"))
-
-m.full.elogit <- brm(elogit ~ (ot1 + ot2) * trial_num_recoded +
-                  (ot1 + ot2 | trial_id) +
-                  ((ot1 + ot2) * trial_num_recoded | subid) +
-                ((ot1 + ot2) * trial_num_recoded | lab),
-              chains = 4,
-              cores=4,
-              prior= priors,
-              data = ms_timecourse,
-              iter = 4000,
-              control = list(adapt_delta = 0.95))
-
 
 m.full <- brm(target ~ (ot1 + ot2) * trial_num_recoded +
                   (ot1 + ot2 | trial_id) +
@@ -602,21 +1125,8 @@ m.full <- brm(target ~ (ot1 + ot2) * trial_num_recoded +
               chains = 4,
               cores=4,
               prior= priors,
-              data = ms_timecourse,
-              iter = 4000,
-              control = list(adapt_delta = 0.95))
+              data = ms_timecourse)
 
-m.null <- brm(target ~ 0 + (ot1 + ot2) * trial_num_recoded +
-                  (ot1 + ot2 | trial_id) +
-                  ((ot1 + ot2) * trial_num_recoded | subid) +
-                ((ot1 + ot2) * trial_num_recoded | lab),
-              family = "bernoulli",
-              chains = 4,
-              cores=4,
-              prior= priors_null,
-              data = ms_timecourse,
-              iter = 4000,
-              control = list(adapt_delta = 0.95))
 
 
 ms_timecourse$fit <- fitted(m.full)[, "Estimate"]
@@ -645,76 +1155,9 @@ hist(ms_timecourse$fit)
 hist(ms_timecourse$target)
 ```
 
-```{r}
+```{r, eval = FALSE, include = FALSE}
 ggplot(ms_timecourse, aes(x = t_window, y = target)) + 
   stat_summary(fun.data = mean_se, geom="pointrange") + 
   stat_summary(aes(y = fit), fun = mean, geom = "line")
-```
-
-```{r}
-pp_check(m.full) #, type = "stat_grouped", group = "trial_id", nsamples = 100)
-```
-
-## Beta regression
-
-
-```{r}
-ms_proportion_trials <- df_analysis_windowed %>%
-  filter(experiment_num == "pilot_1a") %>%
-  group_by(trial_num, subid, lab) %>%
-  summarise(sum_target = sum(aoi == "target", na.rm = TRUE),
-            sum_distractor = sum(aoi == "distractor", na.rm = TRUE)) %>%
-  mutate(p = sum_target / (sum_target + sum_distractor), 
-         p_laplace = (sum_target + 1) / (sum_target + sum_distractor + 2)) 
-
-ggplot(data = ms_proportion_trials, aes(x = p))+
-  geom_histogram() #no values are exactly 0 and 1 now, can run beta regression as usual
-```
-
-```{r}
-#library(zoib)
-
-bcpriors <- brms::get_prior(p_laplace ~ trial_num + (trial_num | subid), data=ms_proportion_trials, family="beta")
-
-# bayes_mod <- brms::brm(p_laplace ~ trial_num + (trial_num | subid), data=ms_proportion_trials, family=gaussian(), #prior = bcpriors,
-#                  save_all_pars=T,
-#                           warmup = 10000,
-#                           iter = 20000,
-#                           chains = 2,
-#                           cores = 2,
-#                  control = list(adapt_delta = 0.95),
-#                           seed = 123)
-```
-Not working....
-```{r}
-zero_beta_mod <- brm(
-  formula = bf(
-    p_laplace ~ 1 + trial_num + (1 + trial_num | subid), 
-    zi ~ 1 + trial_num),
-  data = ms_proportion_trials,
-  family = zero_inflated_beta)
-  # prior = c(
-  #   set_prior("normal(0, 1)", class = "b"),
-  #   set_prior("cauchy(0, 2)", class = "sd")
-  #),
-```
-codes adapted from https://vuorre.netlify.app/post/2019/02/18/analyze-analog-scale-ratings-with-zero-one-inflated-beta-models/#the-zero-one-inflated-beta-model
-
-not working at all 
-```{r}
-zoib_model <- bf(
-  p ~ 1 + trial_num + (1 + trial_num | subid),
-  phi ~ 1 + trial_num + (1 + trial_num | subid),
-  zoi ~ 1 + trial_num + (1 + trial_num | subid),
-  coi ~ 1 + trial_num + (1 + trial_num | subid), 
-  family = zero_one_inflated_beta()
-)
-
-zero_beta_mod_more_spec <- brm(formula = zoib_model,
-                               data = ms_proportion_trials,
-                               cores = 4, seed = 1,
-                               save_all_pars=T)
-
-
 ```
 
