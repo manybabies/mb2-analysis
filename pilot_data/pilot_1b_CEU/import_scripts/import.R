@@ -12,7 +12,7 @@ lab_dir = "pilot_data/pilot_1b_CEU/"
 
 # You need EyeLink Developers Kit and edfR
 # https://www.sr-support.com/forum/downloads/eyelink-display-software/45-eyelink-developers-kit-for-mac-os-x-mac-os-x-display-software?15-EyeLink-Developers-Kit-for-Mac-OS-X=
-subjs = dir(here(lab_dir, "raw_data/children/"))
+subjs = dir(here(lab_dir, "raw_data/children"))
 
 # This is currently a little funky.The trials, as output by eyelink, seem to start
 # about 1s before the video and there does not seem to be an easy way to get
@@ -57,17 +57,17 @@ write_csv(datasets, here(lab_dir, "processed_data/datasets.csv"))
 # subject_id, age, sex, lab_subject_id
 p <- readxl::read_xlsx(here(lab_dir, "raw_data/MB2-Pilot_1B-CEUBudapest_Participants_Data.xlsx"))
 
-
 subjects <- p %>%
   rename(lab_subject_id = subid,
          age = age_days, 
          sex = participant_gender) %>%
   mutate(subject_id = 0:(n() - 1),
-         lab_subject_id = tolower(gsub("_", "", lab_subject_id)),
+         lab_subject_id = unique(d$lab_subject_id),
          age = as.numeric(as.character(age)),
          error = session_error == "error",
-         dataset_id = 6) %>%
+         dataset_id = 9) %>%
   select(subject_id, age, sex, lab_subject_id, error, dataset_id)
+
 
 #peekds::validate_table(df_table = subjects, 
 #                       table_type = "subjects")
@@ -81,7 +81,7 @@ aoi_regions = generate_aoi_regions(screen_width = datasets$monitor_size_x,
                                    screen_height = datasets$monitor_size_y,
                                    video_width = 1200, # from data
                                    video_height = 900 
-                                   )
+)
 
 #peekds::validate_table(df_table = aoi_regions, 
 #                       table_type = "aoi_regions")
