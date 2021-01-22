@@ -136,7 +136,7 @@ d %>%
 d %>%  
   distinct(subid, .keep_all = TRUE) %>% 
   group_by(experiment, sex) %>% 
-  tally() 
+  tally()
 
 ```
 
