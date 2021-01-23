@@ -82,7 +82,7 @@ d$experiment = case_when(str_detect(d$experiment_num, "1b") ~ "pilot_1b",
                          d$experiment_num == "pilot_1a" ~ "pilot_1a_kid",
                          d$experiment_num == "pilot_1a_adult" ~ "pilot_1a_adult")
 
-# exclude subject marked with any error and/or less than 8 trials
+# exclude subject marked with any error 
 d <- d %>% 
   group_by(lab, subid, experiment_num) %>%
   mutate(error_subj = any(error)) %>%
@@ -103,11 +103,11 @@ ungroup(d) %>%
             longest_trial=max(time_range)) %>%
   kable(digits=2)
 
-# exclude subjects who did not complete at least 7 trials
+# exclude subjects who did not complete at least 6 trials (AST note: change it to 6 trials to make the criteria less strigent)
 d <- ungroup(d) %>% 
   group_by(lab, subid, experiment) %>%
   mutate(trials_completed = length(unique(trial_id))) %>%
-           exclude_by(quo(trials_completed < 7),quiet=FALSE) %>% 
+           exclude_by(quo(trials_completed < 6),quiet=FALSE) %>% 
   mutate(subid = paste(subid, lab, experiment, sep="_"))
 
 ```
@@ -125,19 +125,31 @@ d %>%
   kable(digits = 2)
 
 #mean age, min and max age
+#pilot 1a and 1b children 
 d %>%  
   distinct(subid, .keep_all = TRUE) %>% 
   group_by(experiment) %>% 
+  filter(experiment_num != "pilot_1a_adult") %>% 
   summarise(n = n(), 
-            age = mean(age, na.rm = TRUE)/30.25,
             min_age = min(age, na.rm = TRUE)/30.25,
-            max_age = max(age, na.rm = TRUE)/30.25) #some pilot 1b lab has NA for age...
+            max_age = max(age, na.rm = TRUE)/30.25,
+            mean_age = mean(age, na.rm = TRUE)/30.25) 
+
+#pilot 1 adult
+d %>%  
+  distinct(subid, .keep_all = TRUE) %>% 
+  group_by(experiment) %>% 
+  filter(experiment_num == "pilot_1a_adult") %>% 
+  summarise(n = n(), 
+            min_age = min(age, na.rm = TRUE),
+            max_age = max(age, na.rm = TRUE),
+            mean_age = mean(age, na.rm = TRUE)) 
 
 # sex  
 d %>%  
   distinct(subid, .keep_all = TRUE) %>% 
   group_by(experiment, sex) %>% 
-  tally()
+  tally() 
 
 ```
 
@@ -817,8 +829,12 @@ ms_proportion_trials <- df_analysis_windowed %>%
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   mutate(proportion_to_target = target / (target + distractor)) 
  
+#change labeller
+exp_num_lab <- c("Pilot 1 (Children)", "Pilot 1 (Adult)", "Pilot 2 outcome", "Pilot 2 no outcome")
+names(exp_num_lab) <- c("pilot_1a", "pilot_1a_adult", "pilot_1b_outcome", "pilot_1b_no_outcome")
 
-ggplot(ms_proportion_trials,
+
+diff_plot <- ggplot(ms_proportion_trials,
        aes(x = t, y = proportion_to_target)) +
   geom_point(alpha = 0.3) +
   ylim(0,1) +
@@ -829,7 +845,11 @@ ggplot(ms_proportion_trials,
             label = "Anticipation", hjust = 0 ) +
   geom_text(x = 200, y = .95, group = 1, col = "black",
             label = "Reaction", hjust = 0 )+
-  facet_wrap(~experiment_num)
+  facet_wrap(~experiment_num, labeller = labeller(                            experiment_num = exp_num_lab)) +
+  ylab("Proportion looking to the correct AOI (p)") +
+  xlab("Time (t)")
+
+ggsave("diff_plot.jpg", diff_plot, width = 10, height = 7)
 ```
 
 ## Traditional approach - Mixed level approach
@@ -858,6 +878,7 @@ m_lmer_full_1a <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_recod
                    family = gaussian(), 
                            prior = priors_diff,
                           save_pars = save_pars(all = TRUE),
+                          control = list(adapt_delta = 0.95), #get rid of divergent issues
                           warmup = 1000,
                           iter = 2000,
                           chains = 4,
@@ -895,7 +916,7 @@ prop_marloglik_null_pilot1a <- bridge_sampler(m_lmer_null_1a, silent = T)
 
 Bayes factor
 ```{r}
-BF_prop_In_more_info_1a <- bayes_factor(m_lmer_full_1a, m_lmer_null_1a)
+BF_prop_In_more_info_1a <- bayes_factor(prop_marloglik_full_pilot1a, prop_marloglik_null_pilot1a)
 
 BF_prop_In_more_info_1a
 ```
@@ -917,7 +938,7 @@ m_lmer_full_1adult <- brm(proportion_target_c ~ trial_num_recoded + (trial_num_r
                           iter = 2000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.999999),
+                          control = list(adapt_delta = 0.9999999), #failling to get rid of divergent issues
                           seed = 1)
 
 m_lmer_full_1adult
@@ -941,10 +962,17 @@ m_lmer_null_1adult <- brm(proportion_target_c ~ 0 + trial_num_recoded + (trial_n
 m_lmer_null_1adult
 ```
 
+Calculate the marginal log likelihoods for each hypothese using Bridge sampling
+```{r}
+prop_marloglik_full_pilot1adult <- bridge_sampler(m_lmer_full_1adult, silent = T)
+
+prop_marloglik_null_pilot1adult <- bridge_sampler(m_lmer_null_1adult, silent = T)
+```
+
 
 Bayes factor
 ```{r}
-BF_prop_In_more_info_adult <- bayes_factor(m_lmer_full_1adult, m_lmer_null_1adult)
+BF_prop_In_more_info_adult <- bayes_factor(prop_marloglik_full_pilot1adult, prop_marloglik_null_pilot1adult)
 
 BF_prop_In_more_info_adult
 ```
@@ -967,7 +995,7 @@ m_lmer_full_1b_o <- brm(proportion_target_c ~ trial_num_recoded +
                           iter = 40000,
                           chains = 4,
                           cores = 4,
-                          control = list(adapt_delta = 0.999),
+                          control = list(adapt_delta = 0.999), #failing to get rid of divergent issues
                           seed = 1)
 
 m_lmer_full_1b_o
