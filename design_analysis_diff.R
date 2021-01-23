@@ -39,7 +39,10 @@ simulate.df = function(num_subjects, num_labs) {
                         condition * (condition_beta + lab_condition_slope) + 
                         age * age_beta + 
                         age * condition * age_condition_beta +
-                        sigma)
+                        sigma,
+           simulated_datapoint = ifelse(simulated_datapoint > 1, 1, simulated_datapoint),
+           simulated_datapoint = ifelse(simulated_datapoint < 0, 0, simulated_datapoint)
+    )
   return(d)
 }
 
