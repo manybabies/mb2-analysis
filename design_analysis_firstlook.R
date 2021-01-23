@@ -50,6 +50,7 @@ l.new = brm(data=newd_,
   cores=6,
   iter = 40000,
   save_all_pars=T,
+  family = 'bernoulli',
   control = list(adapt_delta = 0.99))
 
 
@@ -60,6 +61,7 @@ l.null = brm(data=newd_,
   cores=6,
   iter=40000,
   save_all_pars = T,
+  family = 'bernoulli',
   control = list(adapt_delta = 0.99))
 
 bf.new.null = as.numeric(bayes_factor(l.new, l.null)[1])
@@ -67,11 +69,11 @@ bf.new.null = as.numeric(bayes_factor(l.new, l.null)[1])
 newd.sum = group_by(newd_, condition) %>% 
 summarise(m=inv.logit(mean(simulated_datapoint)))
 
-d = tibble(it=it, bf=bf.new.null,
+df = tibble(bf=bf.new.null,
     cond1_mean = newd.sum$m[1],
     cond2_mean = newd.sum$m[2],
     lower=fixef(l.new)["condition", ]["Q2.5"], 
     upper=fixef(l.new)["condition", ]["Q97.5"])
 
 
-write_csv(df, file="bayes_factor_design_analysis_gaussian.csv", append = T)
+write_csv(df, file="bayes_factor_design_analysis_firstlook.csv", append = T)
