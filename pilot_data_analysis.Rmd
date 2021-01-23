@@ -322,7 +322,16 @@ first_looks_df %>%
   group_by(aoi, experiment_num) %>% 
   arrange(experiment_num) %>% 
   count()
+
+group_by(first_looks_df, experiment_num) %>%
+  summarise(nlabs=length(unique(lab)),
+            aoi = mean(aoi == "target"))
+
+group_by(first_looks_df, grepl("adult", experiment_num)) %>%
+  summarise(nlabs=length(unique(lab)),
+            aoi = mean(aoi == "target"))
 ```
+
 
 
 ## Data visualization across different test trials
@@ -843,6 +852,16 @@ ms_proportion_each_trial <- df_analysis_windowed %>%
          proportion_target_c = proportion_target - 0.5) %>%
   filter(!is.na(proportion_target)) %>% 
   ungroup()
+
+mutate(ms_proportion_each_trial,
+         exp = case_when(grepl("1b", experiment_num) ~ "1b",
+                         grepl("adult", experiment_num) ~ "adult",
+                         TRUE ~ "1a")) %>%
+  group_by(exp) %>%
+  summarise(m=mean(proportion_target),
+            se = sd(proportion_target)/sqrt(n()),
+            lower = m - 1.96*se,
+            upper = m + 1.96*se)
 
 ```
 
