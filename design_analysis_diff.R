@@ -54,7 +54,7 @@ l.new = brm(data=newd_,
   cores=6,
   iter = 40000,
   save_all_pars=T,
-  family = 'bernoulli',
+  family = 'gaussian',
   control = list(adapt_delta = 0.99))
 
 
@@ -65,7 +65,7 @@ l.null = brm(data=newd_,
   cores=6,
   iter=40000,
   save_all_pars = T,
-  family = 'bernoulli',
+  family = 'gaussian',
   control = list(adapt_delta = 0.99))
 
 bf.new.null = as.numeric(bayes_factor(l.new, l.null)[1])
