@@ -68,9 +68,10 @@ d <- labs %>%
       rename(subid = lab_subject_id, 
              lab = lab_dataset_id, 
              stimulus = lab_trial_id) %>%
-      mutate(aoi = case_when(grepl("target", aoi) ~ "target",
+      mutate(window_aoi  = grepl("window", aoi),
+          aoi = case_when(grepl("target", aoi) ~ "target",
                              grepl("distractor", aoi) ~ "distractor",
-                             is.na(aoi) == F ~ "other")
+                             is.na(aoi) == F ~ "other"),
              )
   })
 ```
@@ -151,22 +152,46 @@ d %>%
   group_by(experiment, sex) %>% 
   tally() 
 
+filter(ungroup(d), t > -4120, t < -3900) %>%
+  group_by(t) %>%
+  summarise(m=mean(aoi != "other"))
+
+
+
 ```
 
 Anticipation plot across all trials. 
 
 ```{r}
+maxt = group_by(d, subid, trial_id, lab) %>%
+  summarise(n=n()) %>%
+  ungroup() %>%
+  mutate(maxn = max(n),
+         newn=n/maxn)
+mean(maxt$newn  > .75)
+mean(maxt$newn  > .5)
+mean(maxt$newn  > .25)
+
 ms <- d %>% 
   group_by(t, trial_num, experiment_num) %>%
   summarise(target = mean(aoi == "target", na.rm=TRUE),
             distractor = mean(aoi == "distractor", na.rm=TRUE)) %>%
   gather(region, looking, target, distractor) 
 
-ggplot(ms, aes(x = t, y = looking, col = region)) + 
+ggplot(rename(ms, AOI = region) %>%
+         mutate(e = case_when(experiment_num == "pilot_1a" ~ "Pilot 1 Kids",
+                                           experiment_num == "pilot_1a_adult" ~ "Pilot 1 Adults",
+                                           experiment_num == "pilot_1b_no_outcome" ~ "Pilot 2 (no outcome",
+                experiment_num == "pilot_1b_outcome" ~ "Pilot 2 (outcome)")),
+       aes(x = t, y = looking, col = AOI)) + 
   geom_line() + 
   geom_vline(xintercept = 120, col = "red", lty = 2) + 
-  facet_grid(experiment_num ~ .) + 
-  coord_cartesian(xlim = c(-4000+120, 4120)) #only consider the 4sec window before and after POD
+  facet_grid(e ~ .) + 
+  coord_cartesian(xlim = c(-4000+120, 4120)) +
+    ggthemes::scale_color_solarized(name = "Area of Interest") + 
+
+  xlab("time (ms)") + ylab("proportion looking") #only consider the 4sec window before and after POD
+ggsave("supp_fig1.png")
 
 ```    
 
@@ -219,20 +244,45 @@ ms <- d %>%
             distractor = mean(aoi == "distractor", na.rm = TRUE)) %>%
   gather(region, looking, target, distractor) 
   
-ggplot(ms, aes(x = t, y = looking, col = region)) +
+ggplot(mutate(ms, e = case_when(experiment_num == "pilot_1a" ~ "Pilot 1 Kids",
+                                           experiment_num == "pilot_1a_adult" ~ "Pilot 1 Adults",
+                                           experiment_num == "pilot_1b_no_outcome" ~ "Pilot 2",
+                experiment_num == "pilot_1b_outcome" ~ "Pilot 2")), aes(x = t, y = looking, col = region)) +
   geom_point() + 
   # geom_smooth(span = 2, se = FALSE) + 
   xlim(-4000 + 120, 4000 + 120) +
   geom_vline(xintercept = 120, col = "black", lty = 3) + 
-  annotate("text", x = -3800, y = 1, col = "black",
-            label = "Anticipation", hjust = 0) +
-  annotate("text", x = 200, y = 1, col = "black", 
-            label = "Reaction", hjust = 0) + 
   ggthemes::scale_color_solarized(name = "Area of Interest") + 
   xlab("Time (msec)") + 
   ylab("Proportion gaze in AOI") + 
   theme(legend.position = "bottom") + 
-  facet_wrap(experiment_num~block)
+  facet_grid(e~block)
+
+ggsave("across_trial_blocks.png")
+```
+```{r}
+ms <- d %>%
+  mutate(block = ifelse(trial_num < 5, "Trials 1-4", "Trials 5-8")) %>%
+  group_by(t, block, experiment_num) %>%
+  summarise(target = mean(aoi == "target", na.rm = TRUE),
+            distractor = mean(aoi == "distractor", na.rm = TRUE),
+            window = mean(window_aoi == T, na.rm=T)) %>%
+  gather(region, looking, window) 
+  
+ggplot(mutate(ms, e = case_when(experiment_num == "pilot_1a" ~ "Pilot 1 Kids",
+                                           experiment_num == "pilot_1a_adult" ~ "Pilot 1 Adults",
+                                           experiment_num == "pilot_1b_no_outcome" ~ "Pilot 2",
+                experiment_num == "pilot_1b_outcome" ~ "Pilot 2")), aes(x = t, y = looking, col = region)) +
+  geom_point() + 
+  # geom_smooth(span = 2, se = FALSE) + 
+  xlim(-4000 + 120, 4000 + 120) +
+  geom_vline(xintercept = 120, col = "black", lty = 3) + 
+  ggthemes::scale_color_solarized(name = "Area of Interest") + 
+  xlab("Time (msec)") + 
+  ylab("Proportion gaze in AOI") + 
+  theme(legend.position = "bottom") + 
+  facet_grid(e~block)
+ggsave("looks_to_window.png", width=5, height=5)
 ```
 
 And by lab:
@@ -359,6 +409,29 @@ p1a_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_
   ylab("Proportion") 
 
 ggsave(filename = "1a_first_look.jpg", p1a_first_look, width = 10, height = 7)
+
+
+p1a_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a") %>%
+                           mutate(trial_num_factor = as.numeric(as.factor(trial_num_factor))) %>%
+                           group_by(trial_num_factor) %>%
+                           summarise(target=mean(aoi == "target"),
+                                     distractor=mean(aoi == "distractor"),
+                                     other=mean(aoi == "other")) %>%
+                           gather(variable, value, -trial_num_factor),
+                         aes(x = trial_num_factor, y = value, group = variable, colour=variable)
+                         ) + 
+  geom_line() + 
+  geom_point() + 
+  ylim(0, 1) + 
+  labs(title = "Pilot 1 (Children)") +
+  ylab("Proportion")  +
+        ggthemes::scale_color_solarized(name = "Area of Interest")   +
+  xlab("Trial Number") +
+  theme(legend.position="bottom")
+
+
+ggsave(filename = "1a_first_look.jpg", p1a_first_look, width = 4, height = 3)
+
 ```
 
 
@@ -804,6 +877,16 @@ This analysis explores whether kids looked at the target more than distractor du
 ```{r}
 df_analysis_windowed <- d %>%  
   filter(t >= -4000+120 & t <= 120)
+
+filter(mutate(df_analysis_windowed, id=paste(subid, trial_num)), experiment_num == 'pilot_1a') %>%
+  ggplot(data=., aes(x=t, y=id, colour=aoi)) +
+    geom_point(size=.1) +
+  theme_bw(14) + 
+  theme(axis.text.y = element_blank()) + 
+  scale_colour_manual(values=c("blue", "gray", "red")) +
+  ylab("trial") + 
+  xlab("time (ms relative to disambiguation point)")
+ggsave("dotmap.png", height=7, width=5)
 ```
 
 Pilot 1a kid 
@@ -813,6 +896,31 @@ ggplot(data = filter(df_analysis_windowed, experiment_num == "pilot_1a")) +
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(.~trial_num, ncol = 4)
 ```
+
+```{r}
+
+filter(ungroup(df_analysis_windowed), experiment_num == "pilot_1a") %>%
+  group_by(trial_num) %>%
+  summarise(target=mean(aoi == "target"),
+            distractor = mean(aoi == "distractor"),
+            other = mean(aoi == "other"))  %>%
+  gather(variable, value, -trial_num) %>%
+  ggplot(data = .,
+       aes(x=trial_num, y=value, group=variable, colour=variable)) + 
+  geom_line() + 
+  geom_point() + 
+  ylim(0, 1) + 
+  labs(title = "Pilot 1 (Children) Proportion Looking") +
+  ylab("Proportion")  +
+        ggthemes::scale_color_solarized(name = "Area of Interest")   +
+  xlab("Trial Number") +
+  theme(legend.position="bottom")
+  
+ggsave("pilot1_kids_trialnum.png", width=4, height=3)
+
+
+```
+
 
 Pilot 1a adult
 ```{r}
