@@ -405,32 +405,33 @@ p1a_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_
   geom_bar(mapping = aes(x = aoi, y = ..prop.., group = 1, stat = "count")) + 
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(.~trial_num_factor, ncol = 4) +
-  labs(title = "Pilot 1 (Children)") +
+  labs(title = "Pilot 1 (Children) First Look") +
   ylab("Proportion") 
 
 ggsave(filename = "1a_first_look.jpg", p1a_first_look, width = 10, height = 7)
 
 
-p1a_first_look <- ggplot(data = filter(first_looks_df, experiment_num == "pilot_1a") %>%
-                           mutate(trial_num_factor = as.numeric(as.factor(trial_num_factor))) %>%
-                           group_by(trial_num_factor) %>%
-                           summarise(target=mean(aoi == "target"),
-                                     distractor=mean(aoi == "distractor"),
-                                     other=mean(aoi == "other")) %>%
-                           gather(variable, value, -trial_num_factor),
-                         aes(x = trial_num_factor, y = value, group = variable, colour=variable)
+p1a_first_look <- ggplot(data = filter(first_looks_df) %>%
+                           mutate(Experiment = case_when(experiment_num == "pilot_1a" ~ "Pilot 1 Kids",
+                                           experiment_num == "pilot_1a_adult" ~ "Pilot 1 Adults",
+                                           experiment_num == "pilot_1b_no_outcome" ~ "Pilot 2",
+                                           experiment_num == "pilot_1b_outcome" ~ "Pilot 2"),
+                             trial_num_factor = as.numeric(as.factor(trial_num_factor)),
+                             outcome = ifelse(grepl("no_outcome", experiment_num), "no outcome", "outcome")) %>%
+                           group_by(trial_num_factor, Experiment, outcome) %>%
+                           summarise(target=sum(aoi == "target")/(sum(aoi == "target") + 
+                                                                    sum(aoi == "distractor"))) ,
+                         aes(x = trial_num_factor, y = target, group = outcome, colour=outcome)
                          ) + 
   geom_line() + 
   geom_point() + 
   ylim(0, 1) + 
-  labs(title = "Pilot 1 (Children)") +
-  ylab("Proportion")  +
-        ggthemes::scale_color_solarized(name = "Area of Interest")   +
-  xlab("Trial Number") +
-  theme(legend.position="bottom")
-
-
-ggsave(filename = "1a_first_look.jpg", p1a_first_look, width = 4, height = 3)
+  labs(title = "First Look") +
+  ylab("Proportion First Looks to Target")  +
+  xlab("Trial Number") + 
+  geom_hline(yintercept = 0.5, colour='gray') +
+  facet_grid(. ~ Experiment)
+ggsave(filename = "first_look_trial_number.png", p1a_first_look, width = 5.5, height = 3)
 
 ```
 
@@ -899,24 +900,28 @@ ggplot(data = filter(df_analysis_windowed, experiment_num == "pilot_1a")) +
 
 ```{r}
 
-filter(ungroup(df_analysis_windowed), experiment_num == "pilot_1a") %>%
-  group_by(trial_num) %>%
-  summarise(target=mean(aoi == "target"),
-            distractor = mean(aoi == "distractor"),
-            other = mean(aoi == "other"))  %>%
-  gather(variable, value, -trial_num) %>%
-  ggplot(data = .,
-       aes(x=trial_num, y=value, group=variable, colour=variable)) + 
+prop_looking =  filter(df_analysis_windowed, aoi %in% c("target", "distractor")) %>%
+                           mutate(Experiment = case_when(experiment_num == "pilot_1a" ~ "Pilot 1 Kids",
+                                           experiment_num == "pilot_1a_adult" ~ "Pilot 1 Adults",
+                                           experiment_num == "pilot_1b_no_outcome" ~ "Pilot 2",
+                                           experiment_num == "pilot_1b_outcome" ~ "Pilot 2"),
+                             trial_num_factor = trial_num,
+                             outcome = ifelse(grepl("no_outcome", experiment_num), "no outcome", "outcome")) %>%
+                           group_by(trial_num_factor, Experiment, outcome, lab, subid) %>%
+                           summarise(group_target=mean(aoi == "target")) %>%
+                           ungroup() %>%
+                           group_by(trial_num_factor, Experiment, outcome) %>%
+                                    summarise(target=mean(group_target))
+ggplot(data = prop_looking, aes(x = trial_num_factor, y = target, group = outcome, colour=outcome)) + 
   geom_line() + 
   geom_point() + 
   ylim(0, 1) + 
-  labs(title = "Pilot 1 (Children) Proportion Looking") +
-  ylab("Proportion")  +
-        ggthemes::scale_color_solarized(name = "Area of Interest")   +
-  xlab("Trial Number") +
-  theme(legend.position="bottom")
-  
-ggsave("pilot1_kids_trialnum.png", width=4, height=3)
+  labs(title = "Proportion Looking") +
+  ylab("Proportion Looking to Target")  +
+  xlab("Trial Number") + 
+  geom_hline(yintercept = 0.5, colour='gray') +
+  facet_grid(. ~ Experiment)
+ggsave("pro_looking_trialnum.png", width=5.5, height=3)
 
 
 ```
