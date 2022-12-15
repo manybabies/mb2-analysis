@@ -1,6 +1,6 @@
 # mb2-analysis
 
-Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, Schuwerk, Kampis et al. (accepted pending data collection). 
+Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, [Schuwerk, Kampis et al. (accepted pending data collection)](https://psyarxiv.com/x4jbm/). 
 
 Subdirectories catalog different stages of the analysis:
 
@@ -11,4 +11,10 @@ Subdirectories catalog different stages of the analysis:
 * `pilot_data` contains raw and processed data as well as import scripts for each pilot dataset.
 * `data` contains raw and processed data and import scripts for the main dataset.
 
-All 
+## Data preprocessing
+
+All data directories follow the following format (adapted from [peekbank](http://peekbank.stanford.edu)):
+
+* `raw_data` - as received from lab
+* `processed_data` - data in the peekbank data standard format (current specification used in this project is described in `data_integrity/peekds.Rmd`). 
+* `import_scripts` - contains `import.R` and other helper scripts to go from raw to processed data formats. 
