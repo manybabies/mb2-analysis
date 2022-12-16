@@ -8,10 +8,23 @@
 ## eyetracker's coordinate systems is top left, and if the video was displayed centered,
 ## i.e., the video's and the screen's center were aligned. 
 
-# For the pilot, the dimensions are:
-## 1280 x 1024 screen and 1280 x 960 video
-## 1920 x 1080 screen and 1200 x 900 video
-## 1920 x 1200 screen and 1200 x 900 video
+## TODO: Trial_types:
+## create these from the trial order csvs and pod.R
+## delete these general notes
+# trial_type_id = rownumber()
+# full_phrase = ''
+# full_phrase_language = ''
+# point_of_disambiguation = pod.R
+# target_side = c('left', 'right'...)
+# lab_trial_id = c('FAM_LL, FAM_LR'.... 'IG')
+# condition = c('FAM', ....'KNOW'....)
+# vanilla_trial = '' #
+# trial_type_aux_data = '' #
+# aoi_region_set_id = 0
+# dataset_id = 0
+# distractor_id = 0
+# target_id = 0
+
 
 ratios_of_bounding_box <- function() {
   
@@ -124,11 +137,6 @@ function(xy_timepoints, trials, screen_width, screen_height){
 }
 
 
-
-
-
-
-# 
 # 
 # 
 # add_aois_small <- function (xy_joined) 
