@@ -46,8 +46,11 @@ write_csv(subjects, here(lab_dir, "processed_data/subjects.csv") )
 
 # ------------------------------------------------------------------------------
 # administrations
+
+
 administrations <- subjects |>
   mutate(administration_id = subject_id, 
+         lab_administration_id = lab_subject_id,
          dataset_id = 0, 
          subject_id = subject_id,
          age = p$age_years * 12, 
@@ -57,7 +60,7 @@ administrations <- subjects |>
          monitor_size_y = 1080,
          sample_rate = 120,
          tracker = "tobii", # ??
-         coding_method = "eye-tracking")
+         coding_method = "eyetracking")
 
 peekds::validate_table(df_table = administrations, 
                        table_type = "administrations")
@@ -66,7 +69,7 @@ write_csv(administrations, here(lab_dir, "processed_data/administrations.csv") )
 # ------------------------------------------------------------------------------
 # trial_types
 trial_types <- tibble(lab_trial_type_id = unique(d$`Event value`)) |>
-  filter(str_detect(lab_trial_type_id, "FAM|KNOW|IG")) |>
+  filter(str_detect(lab_trial_type_id, "FAM|KNOW|IG|star_calib")) |>
   mutate(trial_type_id = 0:(n() -1),
          dataset_id = 0, 
          lab_dataset_id = "babylabTrento",
@@ -134,41 +137,57 @@ peekds::validate_table(df_table = aoi_region_sets,
 write_csv(aoi_region_sets, here(lab_dir, "processed_data/aoi_region_sets.csv"))
 
 
-# TODO: this fails because it is looking for aoi_region and not aoi_region_id
-#peekds::validate_table(df_table = trials, 
-#                       table_type = "trials")
-write_csv(trials, here(lab_dir, "processed_data/trials.csv"))
+# ------------------------------------------------------------------------------
+# xy_timepoints
+# note that tobii puts 0,0 at upper left, not lower left so we flip
+source(here("metadata/pod.R"))
 
+xy_timepoints <- d |>
+  rename(x = `Gaze point X`, 
+         y = `Gaze point Y`,
+         t = `Eyetracker timestamp`,
+         lab_trial_type_id  = `Presented Stimulus name`, 
+         lab_administration_id = `Participant name`) |>
+  mutate(t = t / 1000) |> # microseconds to milliseconds correction
+  select(x, y, t, lab_trial_type_id, lab_administration_id) |>
+  filter(lab_trial_type_id %in% unique(trials$lab_trial_type_id)) |>
+  left_join(select(trials, lab_trial_type_id, trial_id, lab_subject_id) |>
+              rename(lab_administration_id = lab_subject_id)) |>
+  left_join(select(administrations, lab_administration_id, administration_id)) |>
+  group_by(lab_trial_type_id, lab_administration_id) |>
+  mutate(t_zeroed = t - t[1]) |>
+  add_pod() |>
+  peekds::normalize_times() |>
+  select(trial_id, administration_id, lab_trial_type_id, lab_administration_id, x, y, t_norm) |>
+  peekds::resample_times(table_type = "xy_timepoints") |>
+  xy_trim(x_max = administrations$monitor_size_x[1], 
+          y_max = administrations$monitor_size_y[1]) |>
+  mutate(y = administrations$monitor_size_y[1] - y) 
 
+peekds::validate_table(df_table = xy_timepoints,
+                      table_type = "xy_timepoints")
+write_csv(xy_timepoints, here(lab_dir, "processed_data/xy_timepoints.csv"))
 
 # ------------------------------------------------------------------------------
-# from https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
-# we want ADCSpx coordinates - those are display coordinates
-# note tobii gives upper-left indexed coordinates
-xy_data <- tibble(lab_subject_id = d$ParticipantName,
-                  x = d$`GazePointX (ADCSpx)`,
-                  y = d$`GazePointY (ADCSpx)`,
-                  t = (d$EyeTrackerTimestamp - d$EyeTrackerTimestamp[1])/1000,
-                  lab_trial_id = d$MediaName) %>%
-  filter(str_detect(lab_trial_id, "FAM"), 
-         !is.na(t),
-         !is.na(lab_trial_id)) %>%
-  mutate(xy_data_id = 0:(n() - 1)) %>%
-  left_join(trials) %>%
-  left_join(subjects) %>%
-  select(xy_data_id, subject_id, trial_id, x, y, t, point_of_disambiguation) %>%
-  center_time_on_pod() %>%
-  xy_trim(datasets)
+# aoi_timepoints
+# aoi_timepoint_id,  trial_id, aoi,  t_norm,  administration_id
+aoi_timepoints <- xy_timepoints |>
+  mutate(aoi_region_set_id = 0, 
+         target_side = "left") |>
+  left_join(aoi_region_sets) |>
+  add_aois() |>
+  rename(aoi_timepoint_id = xy_timepoint_id) |>
+  select(aoi_timepoint_id, trial_id, administration_id, t_norm, aoi, side)
 
-#peekds::validate_table(df_table = xy_data, 
-#                       table_type = "xy_data")
-write_csv(xy_data, here(lab_dir, "processed_data/xy_data.csv"))
+peekds::validate_table(df_table = aoi_timepoints,
+                     table_type = "aoi_timepoints")
+write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))
 
 # ------------------------------------------------------------------------------
-# aoi_data
-# aoi_data_id, aoi, subject, t, trial
-aoi_data <- generate_aoi_small(here(lab_dir, "processed_data/"))
+# validation
 
-#peekds::validate_table(df_table = aoi_data, 
-#                      table_type = "aoi_data")
-write_csv(aoi_data, here(lab_dir, "processed_data/aoi_data.csv"))
+ggplot(xy_timepoints, aes(x = x, y = y)) + 
+  geom_point(alpha = .05) + 
+  xlim(0, administrations$monitor_size_x[1]) + 
+  ylim(0, administrations$monitor_size_y[1]) 
+
