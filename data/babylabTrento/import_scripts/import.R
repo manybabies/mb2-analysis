@@ -61,7 +61,7 @@ administrations <- subjects |>
 
 peekds::validate_table(df_table = administrations, 
                        table_type = "administrations")
-write_csv(subjects, here(lab_dir, "processed_data/administrations.csv") )
+write_csv(administrations, here(lab_dir, "processed_data/administrations.csv") )
 
 # ------------------------------------------------------------------------------
 # trial_types
@@ -74,7 +74,7 @@ trial_types <- tibble(lab_trial_type_id = unique(d$`Event value`)) |>
 
 peekds::validate_table(df_table = trial_types, 
                        table_type = "trial_types")
-write_csv(subjects, here(lab_dir, "processed_data/trial_types.csv") )
+write_csv(trial_types, here(lab_dir, "processed_data/trial_types.csv") )
 
 # ------------------------------------------------------------------------------
 # trials
@@ -118,7 +118,7 @@ trials <- left_join(trials, excluded_trials) |>
 
 peekds::validate_table(df_table = trials, 
                        table_type = "trials")
-write_csv(subjects, here(lab_dir, "processed_data/trial_types.csv") )
+write_csv(trials, here(lab_dir, "processed_data/trials.csv") )
 
 # ------------------------------------------------------------------------------
 # aoi_region_sets
@@ -126,12 +126,12 @@ write_csv(subjects, here(lab_dir, "processed_data/trial_types.csv") )
 source(here("metadata/generate_AOIs_for_primary_data.R"))
 aoi_region_sets <- generate_aoi_regions(screen_width = administrations$monitor_size_x[1], 
                                         screen_height = administrations$monitor_size_y[1],
-                                        video_width = 1280, # from data #TODO: how do we get this from data?
+                                        video_width = 1280, 
                                         video_height = 1024)
 
-#peekds::validate_table(df_table = aoi_regions, 
-#                       table_type = "aoi_regions")
-write_csv(aoi_regions, here(lab_dir, "processed_data/aoi_regions.csv"))
+peekds::validate_table(df_table = aoi_region_sets,
+                      table_type = "aoi_region_sets")
+write_csv(aoi_region_sets, here(lab_dir, "processed_data/aoi_region_sets.csv"))
 
 
 # TODO: this fails because it is looking for aoi_region and not aoi_region_id

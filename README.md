@@ -19,3 +19,5 @@ All data directories follow the following format (adapted from [peekbank](http:/
 * `raw_data` - as received from lab
 * `processed_data` - data in the peekbank data standard format (current specification used in this project is described in `data_integrity/peekds.Rmd`). 
 * `import_scripts` - contains `import.R` and other helper scripts to go from raw to processed data formats. 
+
+Important notes on how to do this task are in the [MB2 data import guide](https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit).
