@@ -34,7 +34,7 @@ generate_aoi_regions <- function(screen_width = 1280,
   ratios = ratios_of_bounding_box()
   
   aoi_regions = tibble(
-    aoi_region_id = 0, 
+    aoi_region_set_id = 0, 
     l_x_max = (video_width*ratios$L_right) + (screen_width-video_width)/2,
     l_x_min = (video_width*ratios$L_left) + (screen_width-video_width)/2,
     l_y_max = (video_height*ratios$bottom) + ((screen_height-video_height)/2),
