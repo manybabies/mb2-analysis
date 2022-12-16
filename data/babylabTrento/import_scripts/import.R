@@ -96,9 +96,10 @@ trials <- d |>
     ungroup() |>
     mutate(trial_id = 0:(n() - 1), 
            trial_type_aux_data = case_when(
-             str_detect(lab_trial_type_id, "FAM") ~ glue("fam{trial_order+1}"),
-             TRUE ~ glue("test{trial_order - 3}")
-             ))
+             str_detect(lab_trial_type_id, "FAM") ~ glue("fam{trial_order}"),
+             str_detect(lab_trial_type_id, "star") ~ "calib check",
+             TRUE ~ glue("test{trial_order - 4}")
+             )) # note, this part is totally magic-numbered to deal with calib check ordering
   
 # parse out exclusions
 excluded_trials <- p |>
