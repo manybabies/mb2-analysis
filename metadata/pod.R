@@ -1,3 +1,5 @@
+# Used for pilot data, deprecated for real data
+
 # point of disambiguation information
 
 pod_pilot_1a = 31130

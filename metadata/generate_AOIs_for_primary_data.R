@@ -11,23 +11,30 @@
 ## Set screen and video dimensions. Note: this only works if the zero point of the 
 ## eyetracker's coordinate systems is top left, and if the video was displayed centered,
 ## i.e., the video's and the screen's center were aligned. 
+library(tidyverse)
 
-## TODO: Trial_types:
-## create these from the trial order csvs and pod.R
-## delete these general notes
-# trial_type_id = rownumber()
-# full_phrase = ''
-# full_phrase_language = ''
-# point_of_disambiguation = pod.R
-# target_side = c('left', 'right'...)
-# lab_trial_id = c('FAM_LL, FAM_LR'.... 'IG')
-# condition = c('FAM', ....'KNOW'....)
-# vanilla_trial = '' #
-# trial_type_aux_data = '' #
-# aoi_region_set_id = 0
-# dataset_id = 0
-# distractor_id = 0
-# target_id = 0
+trial_data <- read.csv('trial_details.csv')
+
+trial_types <- trial_data |> 
+  mutate(
+    trial_type_id = row_number(),
+    full_phrase = '',
+    full_phrase_language = '',
+    vanilla_trial = '',
+    trial_type_aux_data = '',
+    aoi_region_set_id = 0,
+    # dataset_id = 0,
+    distractor_id = 0,
+    target_id = 0,
+    lab_trial_id = substr(trial_file_name, 1, nchar(trial_file_name)-4),
+  ) |> 
+  select(
+    point_of_disambiguation = point_of_disambig_ms,
+    target_side = target,
+    everything()
+  ) |> select(-trial_file_name)
+
+  
 
 # ------------------------------------------------------------------------------
 # do bounding box ratios
@@ -105,7 +112,7 @@ aoi_region_sets = tibble(
 )
 
 
-function(xy_timepoints, trials, screen_width, screen_height){
+create_aoi_timepoints <- function(xy_timepoints, trials, screen_width, screen_height){
   xy_timepoints %>% 
   left_join(trials) %>%
   left_join(trial_types) %>%
