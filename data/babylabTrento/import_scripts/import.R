@@ -6,7 +6,10 @@ library(glue)
 # ------------------------------------------------------------------------------
 # preliminaries 
 # load point of disambiguation data
+# and helper functions for XY and AOI
 source(here("metadata/pod.R"))
+source(here("metadata/generate_AOIs_for_primary_data.R"))
+
 
 lab_dir <- "data/babylabTrento/"
 
@@ -16,20 +19,14 @@ p <- read_csv(here(lab_dir, "raw_data/BLT_Trento_participantdata.csv"))
 # eye-tracking data
 d <- read_tsv(here(lab_dir, "raw_data/BLT_Trento_eyetrackingdata.tsv") )
 
-# ------------------------------------------------------------------------------
-# datasets
-datasets <- tibble(dataset_id = 0, # deal with this later
-                   lab_dataset_id = "babylabTrento",
-                   cite = NA, 
-                   shortcite = NA, 
-                   dataset_aux_data = NA, 
-                   dataset_name = "babylabTrento")
+# following data import guide:
+# https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit
 
-peekds::validate_table(df_table = datasets, table_type = "datasets")
-write_csv(datasets, here(lab_dir, "processed_data/datasets.csv") )
 
 # ------------------------------------------------------------------------------
-# subjects
+# subjects & administrations
+# only administrations is necessary
+
 subjects <- p |>
   mutate(lab_subject_id = participant_id, 
          sex = case_when(participant_gender == "man" ~ "male",
@@ -39,14 +36,6 @@ subjects <- p |>
                                      TRUE ~ "other"),
          subject_id = 0:(n()-1)) |>
   select(subject_id, lab_subject_id, sex, native_language)
-
-peekds::validate_table(df_table = subjects, 
-                       table_type = "subjects")
-write_csv(subjects, here(lab_dir, "processed_data/subjects.csv") )
-
-# ------------------------------------------------------------------------------
-# administrations
-
 
 administrations <- subjects |>
   mutate(administration_id = subject_id, 
@@ -67,26 +56,17 @@ peekds::validate_table(df_table = administrations,
 write_csv(administrations, here(lab_dir, "processed_data/administrations.csv") )
 
 # ------------------------------------------------------------------------------
-# trial_types
-trial_types <- tibble(lab_trial_type_id = unique(d$`Event value`)) |>
-  filter(str_detect(lab_trial_type_id, "FAM|KNOW|IG|star_calib")) |>
-  mutate(trial_type_id = 0:(n() -1),
-         dataset_id = 0, 
-         lab_dataset_id = "babylabTrento",
-         aoi_region_set_id = 0) 
-
-peekds::validate_table(df_table = trial_types, 
-                       table_type = "trial_types")
-write_csv(trial_types, here(lab_dir, "processed_data/trial_types.csv") )
-
-# ------------------------------------------------------------------------------
 # trials
 # note: trial_type_aux_data contains a fam/test numbering for each participant 
 # so their exclusion info can be joined in below
 # note: this code depends on a LOT of ordering assumptions about trials that 
 # could be violated silently, causing badness
+lab_trial_type_ids = unique(d$`Event value`) 
+lab_trial_type_ids <- lab_trial_type_ids[grepl("FAM|KNOW|IG|star_calib",
+                                               lab_trial_type_ids)]
+
 trials <- d |>
-  filter(`Event value` %in% trial_types$lab_trial_type_id, 
+  filter(`Event value` %in% lab_trial_type_ids, 
          `Event` == "VideoStimulusStart") |>
     select(`Event value`, `Participant name`) |>
     rename(lab_trial_type_id = `Event value`,
@@ -117,31 +97,13 @@ excluded_trials <- p |>
 
 # join in exclusions and also trial_type_ids (being lazy and just doing this from 
 # the prior table)  
-trials <- left_join(trials, excluded_trials) |>
-  left_join(select(trial_types, trial_type_id, lab_trial_type_id))
+trials <- left_join(trials, excluded_trials) 
 
-peekds::validate_table(df_table = trials, 
-                       table_type = "trials")
 write_csv(trials, here(lab_dir, "processed_data/trials.csv") )
-
-# ------------------------------------------------------------------------------
-# aoi_region_sets
-# note, relies on assumption that all admins within dataset had the same monitor size!
-source(here("metadata/generate_AOIs_for_primary_data.R"))
-aoi_region_sets <- generate_aoi_regions(screen_width = administrations$monitor_size_x[1], 
-                                        screen_height = administrations$monitor_size_y[1],
-                                        video_width = 1280, 
-                                        video_height = 1024)
-
-peekds::validate_table(df_table = aoi_region_sets,
-                      table_type = "aoi_region_sets")
-write_csv(aoi_region_sets, here(lab_dir, "processed_data/aoi_region_sets.csv"))
-
 
 # ------------------------------------------------------------------------------
 # xy_timepoints
 # note that tobii puts 0,0 at upper left, not lower left so we flip
-source(here("metadata/pod.R"))
 
 xy_timepoints <- d |>
   rename(x = `Gaze point X`, 
@@ -172,16 +134,8 @@ write_csv(xy_timepoints, here(lab_dir, "processed_data/xy_timepoints.csv"))
 # ------------------------------------------------------------------------------
 # aoi_timepoints
 # aoi_timepoint_id,  trial_id, aoi,  t_norm,  administration_id
-aoi_timepoints <- xy_timepoints |>
-  mutate(aoi_region_set_id = 0, 
-         target_side = "left") |>
-  left_join(aoi_region_sets) |>
-  add_aois() |>
-  rename(aoi_timepoint_id = xy_timepoint_id) |>
-  select(aoi_timepoint_id, trial_id, administration_id, t_norm, aoi, side)
 
-peekds::validate_table(df_table = aoi_timepoints,
-                     table_type = "aoi_timepoints")
+
 write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))
 
 # ------------------------------------------------------------------------------
