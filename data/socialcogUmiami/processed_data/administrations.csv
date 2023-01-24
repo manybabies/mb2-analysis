@@ -1,0 +1,4 @@
+subject_id,lab_subject_id,sex,native_language,administration_id,lab_administration_id,dataset_id,age,lab_age,lab_age_units,monitor_size_x,monitor_size_y,sample_rate,tracker,coding_method
+0,UMIA001,female,spa,0,UMIA001,0,240,20,years,1920,1080,120,tobii,eyetracking
+1,UMIA002,female,eng,1,UMIA002,0,240,20,years,1920,1080,120,tobii,eyetracking
+2,NA,other,other,2,NA,0,NA,NA,years,1920,1080,120,tobii,eyetracking
