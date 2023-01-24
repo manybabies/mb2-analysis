@@ -35,7 +35,7 @@ trial_types <- trial_data |>
   ) |> select(-trial_file_name)
 
   
-
+# TODO: These are broken right now, they need to be adjusted to the new origin
 # ------------------------------------------------------------------------------
 # do bounding box ratios
 ratios_of_bounding_box <- function() {
