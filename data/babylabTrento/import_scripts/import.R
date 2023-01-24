@@ -7,9 +7,7 @@ library(glue)
 # preliminaries 
 # load point of disambiguation data
 # and helper functions for XY and AOI
-source(here("metadata/pod.R"))
 source(here("metadata/generate_AOIs_for_primary_data.R"))
-
 
 lab_dir <- "data/babylabTrento/"
 
@@ -22,6 +20,8 @@ d <- read_tsv(here(lab_dir, "raw_data/BLT_Trento_eyetrackingdata.tsv") )
 # following data import guide:
 # https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit
 
+screen_width <- 1920
+screen_height <- 1080
 
 # ------------------------------------------------------------------------------
 # subjects & administrations
@@ -61,26 +61,26 @@ write_csv(administrations, here(lab_dir, "processed_data/administrations.csv") )
 # so their exclusion info can be joined in below
 # note: this code depends on a LOT of ordering assumptions about trials that 
 # could be violated silently, causing badness
-lab_trial_type_ids = unique(d$`Event value`) 
-lab_trial_type_ids <- lab_trial_type_ids[grepl("FAM|KNOW|IG|star_calib",
-                                               lab_trial_type_ids)]
+
+lab_trial_type_ids <- unique(d$`Event value`)
+lab_trial_type_ids <- lab_trial_type_ids[grepl("FAM|KNOW|IG|star_calib",lab_trial_type_ids)]
 
 trials <- d |>
   filter(`Event value` %in% lab_trial_type_ids, 
          `Event` == "VideoStimulusStart") |>
     select(`Event value`, `Participant name`) |>
-    rename(lab_trial_type_id = `Event value`,
+    rename(lab_trial_id = `Event value`,
            lab_subject_id = `Participant name`) |>
     group_by(lab_subject_id) |>
     mutate(trial_order = 0:(n() - 1)) |>
     ungroup() |>
     mutate(trial_id = 0:(n() - 1), 
            trial_type_aux_data = case_when(
-             str_detect(lab_trial_type_id, "FAM") ~ glue("fam{trial_order}"),
-             str_detect(lab_trial_type_id, "star") ~ "calib check",
+             str_detect(lab_trial_id, "FAM") ~ glue("fam{trial_order}"),
+             str_detect(lab_trial_id, "star") ~ "calib check",
              TRUE ~ glue("test{trial_order - 4}")
              )) # note, this part is totally magic-numbered to deal with calib check ordering
-  
+
 # parse out exclusions
 excluded_trials <- p |>
   select(participant_id, contains("error")) |>
@@ -97,7 +97,8 @@ excluded_trials <- p |>
 
 # join in exclusions and also trial_type_ids (being lazy and just doing this from 
 # the prior table)  
-trials <- left_join(trials, excluded_trials) 
+trials <- left_join(trials, excluded_trials) |>
+  left_join(select(trial_types, trial_type_id, lab_trial_id))
 
 write_csv(trials, here(lab_dir, "processed_data/trials.csv") )
 
@@ -109,19 +110,19 @@ xy_timepoints <- d |>
   rename(x = `Gaze point X`, 
          y = `Gaze point Y`,
          t = `Eyetracker timestamp`,
-         lab_trial_type_id  = `Presented Stimulus name`, 
+         lab_trial_id  = `Presented Stimulus name`, 
          lab_administration_id = `Participant name`) |>
   mutate(t = t / 1000) |> # microseconds to milliseconds correction
-  select(x, y, t, lab_trial_type_id, lab_administration_id) |>
-  filter(lab_trial_type_id %in% unique(trials$lab_trial_type_id)) |>
-  left_join(select(trials, lab_trial_type_id, trial_id, lab_subject_id) |>
+  select(x, y, t, lab_trial_id, lab_administration_id) |>
+  filter(lab_trial_id %in% unique(trials$lab_trial_id)) |>
+  left_join(select(trials, lab_trial_id, trial_id, lab_subject_id) |>
               rename(lab_administration_id = lab_subject_id)) |>
   left_join(select(administrations, lab_administration_id, administration_id)) |>
-  group_by(lab_trial_type_id, lab_administration_id) |>
+  group_by(lab_trial_id, lab_administration_id) |>
   mutate(t_zeroed = t - t[1]) |>
-  add_pod() |>
+  left_join(select(trial_types, lab_trial_id, point_of_disambiguation)) |>
   peekds::normalize_times() |>
-  select(trial_id, administration_id, lab_trial_type_id, lab_administration_id, x, y, t_norm) |>
+  select(trial_id, administration_id, lab_trial_id, lab_administration_id, x, y, t_norm) |>
   peekds::resample_times(table_type = "xy_timepoints") |>
   xy_trim(x_max = administrations$monitor_size_x[1], 
           y_max = administrations$monitor_size_y[1]) |>
@@ -133,8 +134,7 @@ write_csv(xy_timepoints, here(lab_dir, "processed_data/xy_timepoints.csv"))
 
 # ------------------------------------------------------------------------------
 # aoi_timepoints
-# aoi_timepoint_id,  trial_id, aoi,  t_norm,  administration_id
-
+aoi_timepoints <- create_aoi_timepoints(xy_timepoints, trials, screen_width, screen_height)
 
 write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))
 
@@ -146,3 +146,10 @@ ggplot(xy_timepoints, aes(x = x, y = y)) +
   xlim(0, administrations$monitor_size_x[1]) + 
   ylim(0, administrations$monitor_size_y[1]) 
 
+ggplot(left_join(aoi_timepoints, 
+                 trials) |>
+         left_join(trial_types) |>
+         filter(lab_trial_id != "star_calib"), aes(x = aoi)) + 
+  geom_histogram(stat = "count") + 
+  coord_flip() + 
+  facet_wrap(~lab_trial_id)

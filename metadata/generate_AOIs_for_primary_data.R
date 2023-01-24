@@ -13,11 +13,11 @@
 ## i.e., the video's and the screen's center were aligned. 
 library(tidyverse)
 
-trial_data <- read.csv('trial_details.csv')
+trial_data <- read_csv(here("metadata","trial_details.csv"))
 
 trial_types <- trial_data |> 
   mutate(
-    trial_type_id = row_number(),
+    trial_type_id = row_number()-1,
     full_phrase = '',
     full_phrase_language = '',
     vanilla_trial = '',
@@ -113,34 +113,37 @@ aoi_region_sets = tibble(
 
 
 create_aoi_timepoints <- function(xy_timepoints, trials, screen_width, screen_height){
-  xy_timepoints %>% 
-  left_join(trials) %>%
-  left_join(trial_types) %>%
-  mutate(x = x+(screen_width-video_width)/2,
-         y = y+(screen_height-video_height)/2,
-         aoi_timepoint_id = rownumber(),
-         side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
-                            x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",
-                            x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "left",
-                            x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "right",
-                            x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",
-                            x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "left",
-                            x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "right",
-                            !is.na(x) & !is.na(y) ~ "other",
-                            TRUE ~  as.character(NA)),
-         aoitype = dplyr::case_when(x > l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "exit",
-                               x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "exit",
-                               x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "box",
-                               x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "box",
-                               x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",
-                               x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "general",
-                               x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "general",
-                               !is.na(x) & !is.na(y) ~ "other",
-                               TRUE ~  as.character(NA)),
-        aoi = dplyr::case_when(side %in%  c("left", "right") & side == target_side ~ "target",
-                           side %in% c("left", "right") & side != target_side ~ "distractor",
-                           TRUE ~ side),
-        aoi = paste(aoi, aoitype, sep="_")) %>%
+  
+  xy_timepoints |> 
+    left_join(trials) |>
+    left_join(trial_types) |>
+    mutate(aoi_region_set_id = 0) |>
+    left_join(aoi_region_sets) |>
+    mutate(x = x + (screen_width-video_width)/2,
+           y = y + (screen_height-video_height)/2,
+           aoi_timepoint_id = row_number()-1,
+           side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
+                                   x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",
+                                   x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "left",
+                                   x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "right",
+                                   x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",
+                                   x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "left",
+                                   x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "right",
+                                   !is.na(x) & !is.na(y) ~ "other",
+                                   TRUE ~  as.character(NA)),
+           aoitype = dplyr::case_when(x > l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "exit",
+                                      x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "exit",
+                                      x >  lb_x_min & x < lb_x_max & y > lb_y_min & y < lb_y_max ~ "box",
+                                      x > rb_x_min & x < rb_x_max & y > rb_y_min & y < rb_y_max ~ "box",
+                                      x > w_x_min & x < w_x_max & y > w_y_min & y < w_y_max ~ "window",
+                                      x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "general",
+                                      x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "general",
+                                      !is.na(x) & !is.na(y) ~ "other",
+                                      TRUE ~  as.character(NA)),
+           aoi = dplyr::case_when(side %in%  c("left", "right") & side == target_side ~ "target",
+                                  side %in% c("left", "right") & side != target_side ~ "distractor",
+                                  TRUE ~ side),
+           aoi = paste(aoi, aoitype, sep="_")) |>
     select(aoi_timepoint_id,
            trial_id,
            aoi,
@@ -182,18 +185,18 @@ xy_trim <- function(xy, x_max, y_max) {
 #   xy <- readr::read_csv(file.path(dir, "xy_data.csv"))
 #   trials <- readr::read_csv(file.path(dir, "trials.csv"))
 #   aoi_regions <- readr::read_csv(file.path(dir, "aoi_regions.csv"))
-#   xy_joined <- xy %>% dplyr::left_join(trials) %>% dplyr::left_join(aoi_regions)
+#   xy_joined <- xy |> dplyr::left_join(trials) |> dplyr::left_join(aoi_regions)
 #   
 #   xy_joined <- add_aois_small(xy_joined)
 #   
-#   aoi = resample_times(xy_joined) %>% dplyr::select(dataset_id, 
-#                                                     subject_id, trial_id, t_zeroed, aoi) %>% 
-#     dplyr::rename(t = t_zeroed) %>% 
-#     dplyr::group_by(dataset_id, subject_id, trial_id, t) %>% 
-#     dplyr::summarise(aoi = na_mode(aoi)) %>% dplyr::ungroup() %>% 
-#     group_by(dataset_id, subject_id, trial_id) %>% dplyr::mutate(aoi = zoo::na.locf(aoi, 
-#                                                                                     maxgap = MAX_GAP_SAMPLES, na.rm = FALSE)) %>%
-#     ungroup() %>% 
+#   aoi = resample_times(xy_joined) |> dplyr::select(dataset_id, 
+#                                                     subject_id, trial_id, t_zeroed, aoi) |> 
+#     dplyr::rename(t = t_zeroed) |> 
+#     dplyr::group_by(dataset_id, subject_id, trial_id, t) |> 
+#     dplyr::summarise(aoi = na_mode(aoi)) |> dplyr::ungroup() |> 
+#     group_by(dataset_id, subject_id, trial_id) |> dplyr::mutate(aoi = zoo::na.locf(aoi, 
+#                                                                                     maxgap = MAX_GAP_SAMPLES, na.rm = FALSE)) |>
+#     ungroup() |> 
 #     dplyr::mutate(aoi_data_id = 0:(n() - 1))
 # }
 # 
@@ -205,26 +208,26 @@ xy_trim <- function(xy, x_max, y_max) {
 #   MAX_GAP_SAMPLES = MAX_GAP_LENGTH / (1/SAMPLE_RATE)
 #   
 #   # center timestamp (0 POD)
-#   df <- df %>%
-#     dplyr::group_by(.data$subject_id, .data$trial_id, .data$dataset_id) %>%
+#   df <- df |>
+#     dplyr::group_by(.data$subject_id, .data$trial_id, .data$dataset_id) |>
 #     dplyr::mutate(t_trial = .data$t - .data$t[1],
 #                   t_zeroed = .data$t_trial - .data$point_of_disambiguation)
 #   
-#   df %>% dplyr::group_by(.data$subject_id, .data$trial_id) %>%
-#     tidyr::nest() %>%
+#   df |> dplyr::group_by(.data$subject_id, .data$trial_id) |>
+#     tidyr::nest() |>
 #     dplyr::mutate(
-#       data = .data$data %>%
+#       data = .data$data |>
 #         purrr::map(function(df) {
-#           df_rounded <- df %>%
+#           df_rounded <- df |>
 #             dplyr::mutate(t_zeroed = round(SAMPLE_DURATION * round(t_zeroed/SAMPLE_DURATION)))
 #           
 #           t_resampled <- tibble::tibble(t_zeroed = round(seq(min(df_rounded$t_zeroed),
 #                                                              max(df_rounded$t_zeroed),
 #                                                              SAMPLE_DURATION)))
 #           
-#           dplyr::left_join(t_resampled, df_rounded) %>%
+#           dplyr::left_join(t_resampled, df_rounded) |>
 #             dplyr::group_by(t_zeroed)
-#         })) %>%
+#         })) |>
 #     tidyr::unnest(.data$data) 
 # }
 # 
