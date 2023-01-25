@@ -35,7 +35,7 @@ trial_types <- trial_data |>
   ) |> select(-trial_file_name)
 
   
-
+# TODO: These are broken right now, they need to be adjusted to the new origin
 # ------------------------------------------------------------------------------
 # do bounding box ratios
 ratios_of_bounding_box <- function() {
@@ -44,11 +44,18 @@ ratios_of_bounding_box <- function() {
   video_width = 1200
   video_height = 900
   
+  ## coordinates for left tunnel exit - old: assuming top left origin
+  #L_left_X = 304; L_left_Y = 618;   # leftmost part
+  #L_right_X = 370; L_right_Y = 650;   # rightmost part
+  #L_top_X = 328; L_top_Y = 586;   # topmost part
+  #L_bottom_X = 339; L_bottom_Y = 678;   # bottommost part
+  
   ## coordinates for left tunnel exit
-  L_left_X = 304; L_left_Y = 618;   # leftmost part
-  L_right_X = 370; L_right_Y = 650;   # rightmost part
-  L_top_X = 328; L_top_Y = 586;   # topmost part
-  L_bottom_X = 339; L_bottom_Y = 678;   # bottommost part
+  L_left_X = 304; L_left_Y = 200;   # leftmost part
+  L_right_X = 370; L_right_Y = 168;   # rightmost part
+  L_top_X = 328; L_top_Y = 228;   # topmost part
+  L_bottom_X = 339; L_bottom_Y = 136;   # bottommost part
+  
   
   # horizontal tunnel diameter in 2D (turns out to be 66 pixels) * 0.25
   D = 1.25 * (L_right_X - L_left_X);
@@ -89,24 +96,42 @@ aoi_region_sets = tibble(
   r_x_min = (video_width*ratios$R_left),
   r_y_max = (video_height*ratios$bottom),
   r_y_min =  (video_height*ratios$top),
+  
   w_x_max = video_width/2 + floor((video_width*.94)/16),
   w_x_min = video_width/2 - floor((video_width*.94)/16),
-  w_y_max = video_height/2,
-  w_y_min = video_height/2 - (video_height*2.5)/16,
+  
+  #old: assuming top left origin
+  #w_y_max = video_height/2,
+  #w_y_min = video_height/2 - (video_height*2.5)/16,
+  
+  w_y_max = video_height/2 + (video_height*2.5)/16,
+  w_y_min = video_height/2,
+  
   lb_x_max = (video_width*.23),
   lb_x_min = (video_width*.03),
+  
+  #old: assuming top left origin
   lb_y_max = (video_height*0.92),
   lb_y_min = (video_height*0.62),
+  
   rb_x_max = video_width - (video_width*.23),
   rb_x_min = video_width - (video_width*.03),
+  
+  #old: assuming top left origin
   rb_y_max = (video_height*0.92),
   rb_y_min =  (video_height*0.62),
+  
   lbig_x_max = (video_width*7)/16,
   lbig_x_min = 0,
+  
+  #old: assuming top left origin
   lbig_y_max = video_height, 
   lbig_y_min = ((video_height*9)/16),
+  
   rbig_x_max = video_width,
   rbig_x_min = ((video_width*9)/16),
+  
+  #old: assuming top left origin
   rbig_y_max = video_height,
   rbig_y_min = ((video_height*9)/16)
 )
