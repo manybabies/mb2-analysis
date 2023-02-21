@@ -20,9 +20,6 @@ d <- read_tsv(here(lab_dir, "raw_data/BLT_Trento_eyetrackingdata.tsv") )
 # following data import guide:
 # https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit
 
-screen_width <- 1920
-screen_height <- 1080
-
 # ------------------------------------------------------------------------------
 # subjects & administrations
 # only administrations is necessary
@@ -133,23 +130,9 @@ peekds::validate_table(df_table = xy_timepoints,
 write_csv(xy_timepoints, here(lab_dir, "processed_data/xy_timepoints.csv"))
 
 # ------------------------------------------------------------------------------
-# aoi_timepoints
-aoi_timepoints <- create_aoi_timepoints(xy_timepoints, trials, screen_width, screen_height)
-
-write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))
-
-# ------------------------------------------------------------------------------
 # validation
 
 ggplot(xy_timepoints, aes(x = x, y = y)) + 
   geom_point(alpha = .05) + 
   xlim(0, administrations$monitor_size_x[1]) + 
   ylim(0, administrations$monitor_size_y[1]) 
-
-ggplot(left_join(aoi_timepoints, 
-                 trials) |>
-         left_join(trial_types) |>
-         filter(lab_trial_id != "star_calib"), aes(x = aoi)) + 
-  geom_histogram(stat = "count") + 
-  coord_flip() + 
-  facet_wrap(~lab_trial_id)
