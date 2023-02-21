@@ -4,6 +4,15 @@ library(here)
 
 source(here("metadata/generate_AOIs_for_primary_data.R"))
 
+
+#verify boundaries
+for (aoi_name in c('r','l','w','lb','rb','lbig','rbig')) {
+  print(aoi_name)
+  stopifnot(aoi_region_sets[[1,paste(aoi_name,'_x_min',sep="")]] <= aoi_region_sets[[1,paste(aoi_name,'_x_max',sep="")]])
+  stopifnot(aoi_region_sets[[1,paste(aoi_name,'_y_min',sep="")]] <= aoi_region_sets[[1,paste(aoi_name,'_y_max',sep="")]])
+}
+
+
 draw_aoi <- function(img, aoi_name, color){
   return(
     draw_rect(

@@ -8,6 +8,7 @@
 # ------------------------------------------------------------------------------
 # Generate AOIs:
 
+# TODO fix the ratios and update the descriptions to reflect the way it works for the pirmary data 
 ## Set screen and video dimensions. Note: this only works if the zero point of the 
 ## eyetracker's coordinate systems is top left, and if the video was displayed centered,
 ## i.e., the video's and the screen's center were aligned. 
@@ -118,6 +119,8 @@ aoi_region_sets = tibble(
   w_y_max = video_height/2 + (video_height*2.5)/16,
   w_y_min = video_height/2,
   
+  # old: min and max flipped ?
+  # TODO: Check if this affected pilot
   lb_x_max = (video_width*.23),
   lb_x_min = (video_width*.03),
   
@@ -128,8 +131,13 @@ aoi_region_sets = tibble(
   lb_y_max = (video_height*0.38),
   lb_y_min = (video_height*0.08),
   
-  rb_x_max = video_width - (video_width*.23),
-  rb_x_min = video_width - (video_width*.03),
+  # old: min and max flipped ?
+  # TODO: Check if this affected pilot
+  #rb_x_max = video_width - (video_width*.23),
+  #rb_x_min = video_width - (video_width*.03),
+  
+  rb_x_max = (video_width*.97),
+  rb_x_min = (video_width*.77),
   
   #old: assuming top left origin
   #rb_y_max = (video_height*0.92),
