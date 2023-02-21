@@ -1,0 +1,4 @@
+subject_id,dataset_id,lab_age,lab_age_units,age,monitor_size_x,monitor_size_y,sample_rate,tracker,coding_method,administration_aux_data,administration_id
+0,0,21,years,252,1920,1080,300,Tobii Pro Spectrum,in-lab eye tracking,NA,0
+1,0,21,years,252,1920,1080,300,Tobii Pro Spectrum,in-lab eye tracking,NA,1
+2,0,21,years,252,1920,1080,300,Tobii Pro Spectrum,in-lab eye tracking,NA,2
