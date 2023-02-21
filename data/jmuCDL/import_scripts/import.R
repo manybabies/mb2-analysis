@@ -2,7 +2,6 @@ library(peekds)
 library(readxl)
 library(tidyverse)
 library(here)
-<<<<<<< HEAD
 library(glue)
 
 ## TO-DO:
@@ -10,10 +9,6 @@ library(glue)
 # Adapt xy time points from Trento: https://github.com/manybabies/mb2-analysis/blob/master/data/babylabTrento/import_scripts/import.R
 #g enerate AOI region sets: ??
 # generate AOI timepoints: create_aoi_timepoints()
-=======
-
->>>>>>> f4fe8d6aadb01b97cf74d2a1d2178d01bde61ebf
-
 lab_dir = "data/jmuCDL/"
 
 
@@ -21,7 +16,6 @@ raw_data = read.csv(here(lab_dir, 'raw_data/jmuCDL_PilotData.csv'))
 
 ## datasets
 # dataset_id, lab_dataset_id, cite, sortcite, dataset_aux_data
-<<<<<<< HEAD
 # datasets <- tibble(dataset_id = 0,
 #                    lab_dataset_id = "jmuCDL",
 #                    dataset_name = '',
@@ -52,7 +46,6 @@ raw_data = read.csv(here(lab_dir, 'raw_data/jmuCDL_PilotData.csv'))
 # #peekds::validate_table(df_table = subjects, 
 # #                       table_type = "subjects")
 # write_csv(subjects, here(lab_dir, "processed_data/subjects.csv"))
-=======
 datasets <- tibble(dataset_id = 0,
                    lab_dataset_id = "jmuCDL",
                    dataset_name = '',
@@ -83,8 +76,6 @@ subjects <- p %>%
 #peekds::validate_table(df_table = subjects, 
 #                       table_type = "subjects")
 write_csv(subjects, here(lab_dir, "processed_data/subjects.csv"))
->>>>>>> f4fe8d6aadb01b97cf74d2a1d2178d01bde61ebf
-
 
 ## administrations
 # administration_id, dataset_id, subject_id,age,lab_age,lab_age_units,monitor_size_x,monitor_size_y,sample_rate,tracker,coding_method,administration_aux_data
@@ -133,11 +124,7 @@ trials <- tibble(lab_trial_type_id = trial_info$Event.value,	lab_subject_id	= tr
                                         fam_or_test == 'test' ~ paste('test',row_number(),sep=""),
                                         )
                                       ) %>% ungroup() %>%
-<<<<<<< HEAD
                                       mutate(trial_type_id = match(lab_trial_type_id, unique(lab_trial_type_id)) - 1) %>%
-=======
-                                      mutate(trial_type_id = match(trials$lab_trial_type_id, unique(trials$lab_trial_type_id)) - 1) %>%
->>>>>>> f4fe8d6aadb01b97cf74d2a1d2178d01bde61ebf
                                       mutate(trial_id = 0:(n()-1))
                                     
 excluded_trials <- p |>
@@ -158,7 +145,6 @@ trials <- left_join(trials, excluded_trials, by = c('trial_aux_data', 'lab_subje
 write_csv(trials, here(lab_dir, "processed_data/trials.csv"))
 
 
-<<<<<<< HEAD
 # xy_timepoints
 # note that tobii puts 0,0 at upper left, not lower left so we flip
 source(here("metadata/generate_AOIs.R"))
@@ -191,8 +177,6 @@ peekds::validate_table(df_table = xy_timepoints,
                        table_type = "xy_timepoints")
 write_csv(xy_timepoints, here(lab_dir, "processed_data/xy_timepoints.csv"))
 
-=======
->>>>>>> f4fe8d6aadb01b97cf74d2a1d2178d01bde61ebf
 
 ## aoi_region_sets ##UNDER CONSTRUCTION - NEED TO FIND VIDEO WIDTH/HEIGHT
 source(here("metadata/generate_AOIs.R"))
@@ -217,8 +201,6 @@ write_csv(stimuli, here(labdir, "processed_data/stimuli.csv"))
 
 ## trial_types 
 trial_types <- tibble(trial_type_id = )
-
-
 
 
 write_csv(trial_types, here(labdir, "processed_data/trial_types.csv"))
