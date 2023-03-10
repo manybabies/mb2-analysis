@@ -1,0 +1,4 @@
+subject_id,lab_subject_id,sex,native_language,administration_id,lab_administration_id,dataset_id,age,lab_age,lab_age_units,monitor_size_x,monitor_size_y,sample_rate,tracker,coding_method
+0,jmuCDL_Pilot1,female,eng,0,jmuCDL_Pilot1,0,252,21,years,1920,1080,120,tobii,eyetracking
+1,jmuCDL_Pilot2,female,eng,1,jmuCDL_Pilot2,0,252,21,years,1920,1080,120,tobii,eyetracking
+2,jmuCDL_Pilot3,female,eng,2,jmuCDL_Pilot3,0,252,21,years,1920,1080,120,tobii,eyetracking
