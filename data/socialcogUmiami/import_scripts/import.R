@@ -13,6 +13,22 @@ lab_dir <- "data/socialcogUmiami/"
 
 # participant data
 p <- read_csv(here(lab_dir, "raw_data/Lab Participant Data_socialcogUmiami.csv"))
+fix_labid <- p |>
+  filter(is.na(participant_id)) |>
+  pull(labid)
+
+new_p <- data.frame(v1 = fix_labid) |>
+  mutate(v1 = strsplit(as.character(v1), ',')) |>
+  unnest(v1) |>
+  filter(v1 != "\"United States") |>
+  mutate(v1 = ifelse(v1 == " Australia\"", "United States, Australia", v1)) |>
+  mutate(v1 = ifelse(v1 == "NA", NA, v1)) |>
+  t()
+  
+new_p <- as.data.frame(new_p)
+colnames(new_p) <- colnames(p)
+
+p <- rbind(p |> filter(!is.na(participant_id)), new_p)
 
 # eye-tracking data
 d <- read_tsv(here(lab_dir, "raw_data/Raw Eye-Tracking Data_socialcogUmiami.tsv") )
@@ -43,13 +59,13 @@ administrations <- subjects |>
          lab_administration_id = lab_subject_id,
          dataset_id = 0, 
          subject_id = subject_id,
-         age = p$age_years * 12, 
+         age = as.numeric(p$age_years) * 12, 
          lab_age = p$age_years, 
          lab_age_units = "years",
          monitor_size_x = 1920,
          monitor_size_y = 1080,
          sample_rate = 120,
-         tracker = "tobii", # ??
+         tracker = "tobii", # ?? NEED TO CHECK
          coding_method = "eyetracking")
 
 peekds::validate_table(df_table = administrations, 
@@ -103,28 +119,30 @@ trials <- left_join(trials, excluded_trials) |>
   left_join(select(trial_types, trial_type_id, lab_trial_id))
 
 write_csv(trials, here(lab_dir, "processed_data/trials.csv") )
-#Khuyen 012423 -- STOPPED HERE --
 
 # ------------------------------------------------------------------------------
 # xy_timepoints
 # note that tobii puts 0,0 at upper left, not lower left so we flip
 
 xy_timepoints <- d |>
-  rename(x = `Gaze point X`, 
-         y = `Gaze point Y`,
-         t = `Eyetracker timestamp`,
-         lab_trial_id  = `Presented Stimulus name`, 
-         lab_administration_id = `Participant name`) |>
+  rename(x = `GazePointX (ADCSpx)`, 
+         y = `GazePointY (ADCSpx)`,
+         t = `EyeTrackerTimestamp`,
+         lab_trial_id  = `MediaName`, 
+         lab_administration_id = `ParticipantName`) |>
   mutate(t = t / 1000) |> # microseconds to milliseconds correction
+  mutate(lab_trial_id = substr(lab_trial_id, 1, nchar(lab_trial_id) - 4)) |> #standardise lab_trial_id
   select(x, y, t, lab_trial_id, lab_administration_id) |>
   filter(lab_trial_id %in% unique(trials$lab_trial_id)) |>
   left_join(select(trials, lab_trial_id, trial_id, lab_subject_id) |>
               rename(lab_administration_id = lab_subject_id)) |>
-  left_join(select(administrations, lab_administration_id, administration_id)) |>
+  left_join(select(administrations, lab_administration_id, administration_id, coding_method)) |>
   group_by(lab_trial_id, lab_administration_id) |>
-  mutate(t_zeroed = t - t[1]) |>
+  mutate(t_zeroed = t - min(t)) |>
+  filter(!is.na(t_zeroed)) |>
   left_join(select(trial_types, lab_trial_id, point_of_disambiguation)) |>
   peekds::normalize_times() |>
+  filter(!is.na(t_norm)) |>
   select(trial_id, administration_id, lab_trial_id, lab_administration_id, x, y, t_norm) |>
   peekds::resample_times(table_type = "xy_timepoints") |>
   xy_trim(x_max = administrations$monitor_size_x[1], 
