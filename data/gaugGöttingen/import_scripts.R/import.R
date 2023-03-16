@@ -12,24 +12,23 @@ library(glue)
 # preliminaries 
 # load point of disambiguation data
 # and helper functions for XY and AOI
-source(here("metadata/generate_AOIs_for_primary_data.R"))
 source(here("metadata/generate_AOIs.R"))
 source(here("metadata/pod.R"))
 
 lab_dir = "data/gaugGöttingen/"
 
 # raw eye-tracking data
-d = read.csv(here(lab_dir, 'raw_data/SMI_Test_2participants.csv'))
+d = read.table(here(lab_dir, 'raw_data/gaugGöttingen_eyetrackingdata_pilot.tsv'), sep = '\t', header = TRUE)
 
 ## participant data (not saved)
-p <- read.csv(here(lab_dir, "raw_data/ManyBabies2_ Lab Participants Data Adults_jmuCDL.csv"))
+p <- read.csv(here(lab_dir, "raw_data/gaugGöttingen_participantdata.csv"))
 
 subjects <- p |>
   mutate(lab_subject_id = participant_id, 
-         sex = case_when(participant_gender == "man" ~ "male",
-                         participant_gender == "woman" ~ "female",
+         sex = case_when(participant_gender == "boy" ~ "male",
+                         participant_gender == "girl" ~ "female",
                          TRUE ~ "other"),
-         native_language = case_when(native_lang1 == "English" ~ "eng",
+         native_language = case_when(lang1 == "German" ~ "ger",
                                      TRUE ~ "other"),
          subject_id = 0:(n()-1)) |>
   select(subject_id, lab_subject_id, sex, native_language)
@@ -44,9 +43,9 @@ administrations <-
          lab_administration_id = lab_subject_id,
          dataset_id = 0, 
          subject_id = subject_id,
-         age = p$age_years * 12, 
-         lab_age = p$age_years, 
-         lab_age_units = "years",
+         age = p$age_days/365 * 12, 
+         lab_age = p$age_days, 
+         lab_age_units = "days",
          monitor_size_x = d$Recording.resolution.width[1],
          monitor_size_y = d$Recording.resolution.height[1],
          sample_rate = 120,
@@ -83,6 +82,7 @@ trials <- d |>
 
 excluded_trials <- p |>
   select(participant_id, contains("error")) |>
+  mutate(session_error_info = as.character(session_error_info)) |>
   pivot_longer(contains("error"), names_to = "trial", values_to = "error") |>
   filter(!str_detect(trial, "session_error")) |>
   separate(trial, into = c("trial","type"), extra = "merge") |>
@@ -133,6 +133,8 @@ aoi_region_sets = generate_aoi_regions(screen_width = administrations$monitor_si
 write_csv(aoi_region_sets, here(lab_dir, "processed_data/aoi_region_sets.csv"))
 
 ## aoi_timepoints
+source(here("metadata/generate_AOIs_for_primary_data.R"))
+
 aoi_timepoints <- create_aoi_timepoints(xy_timepoints, trials, screen_width = administrations$monitor_size_x[1], screen_height = administrations$monitor_size_y[1])
 
 write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))

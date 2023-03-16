@@ -12,7 +12,6 @@ library(glue)
 # preliminaries 
 # load point of disambiguation data
 # and helper functions for XY and AOI
-source(here("metadata/generate_AOIs_for_primary_data.R"))
 source(here("metadata/generate_AOIs.R"))
 source(here("metadata/pod.R"))
 
@@ -21,8 +20,8 @@ lab_dir = "data/jmuCDL/"
 # raw eye-tracking data
 d = read.csv(here(lab_dir, 'raw_data/jmuCDL_PilotData.csv'))
 
-## participant data (not saved)
-p <- read.csv(here(lab_dir, "raw_data/ManyBabies2_ Lab Participants Data Adults_jmuCDL.csv"))
+## participant data (not saved, unzip .zip file)
+p <- read.csv(here(lab_dir, "raw_data/ManyBabies2_Lab Participants Data Adults_jmuCDL.csv"))
 
 subjects <- p |>
   mutate(lab_subject_id = participant_id, 
@@ -133,6 +132,8 @@ aoi_region_sets = generate_aoi_regions(screen_width = administrations$monitor_si
 write_csv(aoi_region_sets, here(lab_dir, "processed_data/aoi_region_sets.csv"))
 
 ## aoi_timepoints
+source(here("metadata/generate_AOIs_for_primary_data.R"))
+
 aoi_timepoints <- create_aoi_timepoints(xy_timepoints, trials, screen_width = administrations$monitor_size_x[1], screen_height = administrations$monitor_size_y[1])
 
 write_csv(aoi_timepoints, here(lab_dir, "processed_data/aoi_timepoints.csv"))
