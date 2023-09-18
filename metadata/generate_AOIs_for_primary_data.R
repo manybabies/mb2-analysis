@@ -52,13 +52,13 @@ ratios_of_bounding_box <- function() {
   
   # TODO: These do not make the most sense right now, simplify this??
   ## coordinates for left tunnel exit
-  L_left_X = 304; L_left_Y = 282;   # leftmost part
-  L_right_X = 370; L_right_Y = 150;   # rightmost part
-  L_top_X = 328; L_top_Y = 304;   # topmost part
-  L_bottom_X = 339; L_bottom_Y = 222;   # bottommost part
+  L_left_X = 304;   # leftmost part
+  L_right_X = 370;   # rightmost part
+  L_top_Y = 304;   # topmost part
+  L_bottom_Y = 222;   # bottommost part
   
   
-  # horizontal tunnel diameter in 2D (turns out to be 66 pixels) * 0.25
+  # horizontal tunnel diameter in 2D (turns out to be 66 pixels) * 1.25
   D = 1.25 * (L_right_X - L_left_X);
   
   ## compute ratios with respect to video dimensions (computed from the left tunnel)
@@ -72,8 +72,8 @@ ratios_of_bounding_box <- function() {
   R_left_ratio = 1 - L_right_ratio;
   
   # ratios of screen height are invariant to left/right tunnel
-  top_ratio = (L_top_Y - D) / video_height;
-  bottom_ratio = (L_bottom_Y + D) / video_height;
+  top_ratio = (L_top_Y + D) / video_height;
+  bottom_ratio = (L_bottom_Y - D) / video_height;
   
   return(list(L_left = L_left_ratio,
               L_right = L_right_ratio,

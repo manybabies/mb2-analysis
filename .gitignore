@@ -40,3 +40,6 @@ stimulus_frames*
 
 *.html
 .DS_Store
+
+# for testing importscript templates
+data/testLabtestLab/
