@@ -17,7 +17,7 @@ data_toddlers <- data_toddlers %>%
          pupil_left = NA,
          pupil_right = NA)
 
-write.csv(data_toddlers, here(file.path('data', LAB_NAME, 'processed_data', paste0(LAB_NAME,'_toddlers_xy_timepoints.csv'))))
+write.csv(data_toddlers, here(file.path('data', LAB_NAME, 'processed_data', paste0(LAB_NAME,'_toddlers_xy_timepoints.csv'))), row.names = FALSE)
 
 
 

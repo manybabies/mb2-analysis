@@ -18,7 +18,4 @@ data_toddlers <- rbind(data_adults1, data_adults2) %>%
          pupil_left = NA,
          pupil_right = NA)
 
-write.csv(data_toddlers, here(file.path('data', LAB_NAME, 'processed_data', paste0(LAB_NAME,'_adults_xy_timepoints.csv'))))
-
-
-
+write.csv(data_toddlers, here(file.path('data', LAB_NAME, 'processed_data', paste0(LAB_NAME,'_adults_xy_timepoints.csv'))), row.names = FALSE)
