@@ -1,0 +1,93 @@
+---
+title: "MB2 Demographic Data Processing"
+format: html
+editor: visual
+---
+
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+```
+
+```{r}
+files <- dir(here("demographic_data/"))
+adults <- files[str_detect(files, "adults")]
+toddlers <- files[str_detect(files, "toddlers")]
+
+setdiff(files, c(adults, toddlers))
+assert_that(length(files) == length(adults) + length(toddlers))
+```
+
+Note that despite validation we still didn't end up get perfectly valid data. BUT - better than MB1!!!
+
+```{r}
+adult_demo <- adults |>
+  map_df(function(fname) {
+    print(fname)
+    read_csv(here("demographic_data/",fname),
+             show_col_types = FALSE)  |>
+      mutate(education = as.character(education),
+             testing_date = as.character(testing_date),
+             test2_error_info = as.character(test2_error_info),
+             ra_id = as.character(ra_id), 
+             age_years = as.character(age_years),
+             participant_id = as.character(participant_id)) |>
+      select(labid:bear_knowledge_info)
+  }) 
+```
+
+Fix our sadness. 
+
+```{r}
+adult_demo <- adult_demo |>
+  mutate(age_years = as.numeric(age_years))
+```
+Toddlers next. 
+
+```{r}
+columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
+                          "fam1_error_info","fam2_error_info","fam3_error_info",
+                          "ra_id","hours_other","hours_children",
+                          "testing_date","sibling3_age","hours_daycare",
+                          "hours_parentA","hours_parentB","hours_siblings",
+                          "hours_adults", "sibling1_age", "sibling2_age", 
+                          "parentB_education", "sibling4_age", "sibling5_age", 
+                          "lang4_exposure", "parentA_education", 
+                          "test2_error_info", "participant_id", 
+                          "lang1_exposure","fam4_error_info","test1_error_info")
+                          
+toddler_demo <- toddlers |>
+  map_df(function(fname) {
+    print(fname)
+    read_csv(here("demographic_data/",fname),
+             show_col_types = FALSE)  |>
+      mutate(across(columns_to_character, as.character)) |>
+      select(labid:anything_else)
+  }) 
+```
+
+We will need to fix these. 
+
+## Demographics
+
+Age histogram. 
+
+Based on spot checks, it appears that these are real kids who just fall outside of age range. 
+
+```{r}
+days_in_month = 365.25/12
+ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = labid)) + 
+  geom_histogram() + 
+  theme(legend.position = "bottom")
+```
+
+
+
+# Exclusions
+
+Note to write out a table here. 
+
+
+

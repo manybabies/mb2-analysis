@@ -1,0 +1,85 @@
+---
+title: "Merge eye-tracking data"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+```
+
+Download data locally
+
+```{r}
+
+mb2_data <- osfr::osf_retrieve_node("p3txj")
+files <- osfr::osf_ls_files(mb2_data)
+
+files |>
+  mutate(idx = 1:n()) %>%
+  base::split(.$idx) |>
+  map(function(f) {
+    print(f)
+    osfr::osf_download(f, path = here("processed_xy_data"))
+  })
+```
+
+Load local data
+
+```{r}
+cols <- c("lab_id", "participant_id", "media_name", 
+          "x", "y", "t", "pupil_left", "pupil_right")
+
+local_files <- dir(here("processed_xy_data"))
+
+xy <- local_files |>
+  map_df(function(x) {
+    print(x)
+    d <- read_csv(here("processed_xy_data",x), 
+             col_types = "cccddddd")
+    
+    # check that all columns are in the col list
+    assert_that(all(cols %in% names(d)))
+    
+    # check that no extra cols
+    assert_that(all(names(d) %in% cols))
+    
+    # check for milliseconds
+    assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & 
+                mean(diff(d$t), na.rm=TRUE) < 100) 
+    
+    return(d)
+  })
+```
+## Processing tasks that we will do centrally
+
+Reconcile media names
+Create trial numbers
+Standardize media names
+Zero times within trials
+Resample times 
+Clip XY outside of screen coordinates
+Create/process AOIs
+Standardize pupil sizes
+
+
+```{r}
+media_events <- xy |>
+  filter(!is.na(media_name)) |>
+  group_by(lab_id, participant_id, media_name) |>
+  count()
+```
+
+
+
+
+
+
+
+
+
+## Tests that we need on the merged data
+Validate media orders with trial orders in the demographics file
+Validate media names
+Validate that the scale of timesteps is correct
