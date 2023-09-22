@@ -43,3 +43,7 @@ stimulus_frames*
 
 # for testing importscript templates
 data/testLabtestLab/
+
+raw_data
+processed_data
+*_xy_timepoints.csv
