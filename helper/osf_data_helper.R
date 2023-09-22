@@ -9,9 +9,9 @@ library(dplyr)
 #'   relevant OSF repo.
 #' @param path Where you want it on your own machine. Will error if directory
 #'   doesn't exist.
-#' @param osf_address p3txj for ManyBabies 2.
+#' @param osf_address p3txj for ManyBabies 2 eyetracking data or qv5hb for ManyBabies 2 demographics data.
 #' @export
-get_raw_data <- function(lab_dataset_id, path = ".", osf_address = "p3txj") {
+get_raw_data <- function(lab_dataset_id, path = ".", osf_address = c("p3txj","qv5hb")) {
   
   # get file list in the relevant raw data directory and download
   osfr::osf_retrieve_node(osf_address) %>%
@@ -30,10 +30,10 @@ get_raw_data <- function(lab_dataset_id, path = ".", osf_address = "p3txj") {
 #'   relevant OSF repo.
 #' @param path Where you want it on your own machine. Will error if directory
 #'   doesn't exist.
-#' @param osf_address p3txj for ManyBabies 2.
+#' @param osf_address p3txj for ManyBabies 2 eyetracking data or qv5hb for ManyBabies 2 demographics data.
 #' @export
 get_processed_data <- function(lab_dataset_id, path = ".",
-                               osf_address = "p3txj") {
+                               osf_address = c("p3txj","qv5hb")) {
   # check if path exists, if not, create path
   if (!file.exists(path)) {
     dir.create(file.path(path), showWarnings = FALSE)
@@ -56,10 +56,10 @@ get_processed_data <- function(lab_dataset_id, path = ".",
 #' @param dataset_name Specific dataset name occurring in the file hierarchy of
 #'   the relevant OSF repo.
 #' @param path Where the data live on your own machine.
-#' @param osf_address p3txj for ManyBabies 2.
+#' @param osf_address p3txj for ManyBabies 2 eyetracking data or qv5hb for ManyBabies 2 demographics data.
 #' @export
 put_processed_data <- function(token, dataset_name, path = ".",
-                               osf_address = "p3txj") {
+                               osf_address = c("p3txj","qv5hb")) {
   osfr::osf_auth(token = token)
   
   osfr::osf_retrieve_node(osf_address) %>%
