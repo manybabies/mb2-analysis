@@ -58,51 +58,68 @@ xy <- local_files |>
     # check that no extra cols
     assert_that(all(names(d) %in% cols))
     
-    
-    # check for milliseconds
-    #assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & 
-    #            mean(diff(d$t), na.rm=TRUE) < 100)
-    
     return(d)
   })
 ```
 ## Processing tasks that we will do centrally
 
-Reconcile media names
-Create trial numbers
-Standardize media names
-Zero times within trials
-Resample times 
-Clip XY outside of screen coordinates
-Create/process AOIs
-Standardize pupil sizes
+Reconcile media names - Code done, renamings for new datasets still pending
+Create trial numbers - Done
+Standardize media names - Code done, renamings for new datasets still pending
+Zero times within trials - Martin
+Resample times - Marin
+Clip XY outside of screen coordinates - Adrian
+Create/process AOIs - Adrian
+Standardize pupil sizes - ?
 
 
-```{r}
+```{r standardize and validate data}
 
-media_renamings <- read.csv(here('metadata','media_renaming.csv'))
+vec_renaming <- read.csv(here('metadata','media_renaming.csv')) %>%
+  {setNames(as.character(.$target), .$original)}
+media_deletion <- readLines(here('metadata','media_names_to_remove.txt'))
+media_names_valid <- readLines(here('metadata','media_names_validate.txt'))
 
-media_names <- xy |>
-  filter(!is.na(media_name)) |>
-  mutate(media_name = tools::file_path_sans_ext(media_name)) %>% 
-  group_by(media_name) %>%
-  count()
+data <- xy |>
+  mutate(media_name = tools::file_path_sans_ext(media_name)) %>%
+  filter(!is.na(media_name) & !(media_name %in% media_deletion)) %>% 
+  mutate(media_name = ifelse(media_name %in% names(vec_renaming), vec_renaming[as.character(media_name)], media_name)) %>% 
+  group_by(lab_id, participant_id) %>% 
+  mutate(media_index = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>% 
+  ungroup()
 
-media_events <- xy |>
-  filter(!is.na(media_name)) |>
-  group_by(lab_id, participant_id, media_name) |>
-  count()
+
+# Validate that the participant ids in the data line up with the ids from the demographic files
+# TODO (Adrian)
+  
+# Validate media names
+invalid_names <- setdiff(unique(data$media_name), media_names_valid)
+# TODO check for new datasets, update the renaming/deletion file accordingly
+
+
+# Extract media version information from media version string
+data <- data %>% mutate(media_version = ifelse(grepl('_new', media_name),0,1),
+         media_name = gsub("_new", "", media_name))
+
+
+# Add trial numbers to the data
+trial_orders <- data %>% filter(media_name %in% media_names_valid) %>%
+  group_by(lab_id, participant_id) %>%
+  mutate(trial_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>%
+  distinct(lab_id, participant_id, media_name, trial_num)
+
+data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
+
+# Validate trial order
+# TODO: get ground truth and demographic information in here for comparison (Adrian)
+
+rm(trial_orders)
+
+# Validate that the scale of timesteps is correct
+# TODO once martin has taken care of the timepoints (Martin)
+    # Mikes previous code: #assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & mean(diff(d$t), na.rm=TRUE) < 100)
+    
 ```
 
 
 
-
-
-
-
-
-
-## Tests that we need on the merged data
-Validate media orders with trial orders in the demographics file
-Validate media names
-Validate that the scale of timesteps is correct
