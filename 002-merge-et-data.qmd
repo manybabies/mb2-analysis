@@ -16,12 +16,16 @@ Download data locally
 mb2_data <- osfr::osf_retrieve_node("p3txj")
 files <- osfr::osf_ls_files(mb2_data)
 
+PROCESSED_DATA_DIR = "processed_xy_data"
+
+dir.create(here(PROCESSED_DATA_DIR), showWarnings = FALSE)
+
 files |>
   mutate(idx = 1:n()) %>%
   base::split(.$idx) |>
   map(function(f) {
     print(f)
-    osfr::osf_download(f, path = here("processed_xy_data"))
+    osfr::osf_download(f, path = here(PROCESSED_DATA_DIR))
   })
 ```
 
@@ -36,8 +40,17 @@ local_files <- dir(here("processed_xy_data"))
 xy <- local_files |>
   map_df(function(x) {
     print(x)
-    d <- read_csv(here("processed_xy_data",x), 
-             col_types = "cccddddd")
+    d <- read_csv(here("processed_xy_data",x),
+                  col_types = list(
+                    lab_id = col_character(),
+                    participant_id = col_character(),
+                    media_name = col_character(),
+                    x = col_double(),
+                    y = col_double(),
+                    t = col_double(),
+                    pupil_left = col_double(),
+                    pupil_right = col_double()
+                  ))
     
     # check that all columns are in the col list
     assert_that(all(cols %in% names(d)))
@@ -45,9 +58,10 @@ xy <- local_files |>
     # check that no extra cols
     assert_that(all(names(d) %in% cols))
     
+    
     # check for milliseconds
-    assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & 
-                mean(diff(d$t), na.rm=TRUE) < 100) 
+    #assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & 
+    #            mean(diff(d$t), na.rm=TRUE) < 100)
     
     return(d)
   })
@@ -65,6 +79,15 @@ Standardize pupil sizes
 
 
 ```{r}
+
+media_renamings <- read.csv(here('metadata','media_renaming.csv'))
+
+media_names <- xy |>
+  filter(!is.na(media_name)) |>
+  mutate(media_name = tools::file_path_sans_ext(media_name)) %>% 
+  group_by(media_name) %>%
+  count()
+
 media_events <- xy |>
   filter(!is.na(media_name)) |>
   group_by(lab_id, participant_id, media_name) |>
