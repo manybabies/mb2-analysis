@@ -190,7 +190,7 @@ data_rezeroed <- data %>%
 # Martin: normalizing isn't really relevant here (I don't think) but preserving for now in case we want to include any time normalization
 # Adrian: TODO: I think this differs based on trial? - discuss later
 data_normalized <- data_rezeroed %>%
-  mutate(point_of_disambiguation=0) %>% # data is already joined correctly, but function currently fails
+  mutate(point_of_disambiguation = replace_na(point_of_disambiguation, 0)) %>% # TODO: check if this hits trial on accident
   normalize_times()
 
 #Validate that time is provided in milliseconds
@@ -267,7 +267,7 @@ Issues to deal with:
   
 - osf download still fails (?), having some trouble pulling the current version of the data from OSF 
 
-- point of disambiguation is currently not used to normalize trials (this probably needs to happen)
+- point of disambiguation usage?
 
 - more integrity checking is needed in between operations to validate that data is not lost on accident(need to have a look at every step once more data is here)
 
@@ -279,6 +279,8 @@ Issues to deal with:
 - passing the final/correct column names to resample_xy_trial - we could redesign the function to make it agnostic?
 
 - How to standardize pupil sizes?
+
+- cleanup the pipline (a lot of intermediat steps can be combined to make this more compact)
 
 
 
