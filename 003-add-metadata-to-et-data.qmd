@@ -3,7 +3,18 @@ title: "Add metadata and validate"
 format: html
 ---
 
-Add trial orders
+## Processing tasks that we will do centrally
+
+Reconcile media names - Code done, renamings for new datasets still pending
+Create trial numbers - done
+Standardize media names - Code done, renamings for new datasets still pending
+Zero times within trials - done
+Resample times - done
+Clip XY outside of screen coordinates - done
+Flip coordinate origin - Done
+Create/process AOIs - Done
+
+Standardize pupil sizes
 
 
 ```{r}
