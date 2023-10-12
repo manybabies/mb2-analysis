@@ -11,7 +11,9 @@ IG_LR_ExitRight_INC
 IG_LR_new
 IG_RL
 IG_RL_ExitLeft_INC
+IG_RL_ExitLeft_INC_new
 IG_RL_ExitRight_CON
+IG_RL_ExitRight_CON_new
 IG_RL_new
 IG_RR
 IG_RR_ExitLeft_CON
@@ -34,3 +36,6 @@ KNOW_RR
 KNOW_RR_ExitLeft_CON
 KNOW_RR_ExitRight_INC
 KNOW_RR_new
+star_calib
+star_calib_pre
+star_calib_post

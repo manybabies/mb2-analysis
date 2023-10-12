@@ -13,9 +13,8 @@ FIRST_TIME = FALSE
 Download data locally
 
 ```{r download, eval= FIRST_TIME}
-
 mb2_data <- osfr::osf_retrieve_node("p3txj")
-files <- osfr::osf_ls_files(mb2_data)
+files <- osfr::osf_ls_files(mb2_data, n_max = 1000)
 
 PROCESSED_DATA_DIR = "processed_xy_data"
 
@@ -25,58 +24,73 @@ files |>
   mutate(idx = 1:n()) %>%
   base::split(.$idx) |>
   map(function(f) {
-    print(f)
-    osfr::osf_download(f, path = here(PROCESSED_DATA_DIR))
+    print(f$name[1])
+    osfr::osf_download(f, 
+                       path = here(PROCESSED_DATA_DIR), 
+                       conflicts = "skip", 
+                       progress = TRUE)
   })
 ```
+Before we load these data, let's quickly check for compliance with column naming conventions. 
 
-Load local data
-
-```{r}
+```{r validate columns}
 cols <- c("lab_id", "participant_id", "media_name", 
           "x", "y", "t", "pupil_left", "pupil_right")
 
-local_files <- dir(here("processed_xy_data"))
+col_types = list(lab_id = col_character(),
+                 participant_id = col_character(),
+                 media_name = col_character(),
+                 x = col_double(),
+                 y = col_double(),
+                 t = col_double(),
+                 pupil_left = col_double(),
+                 pupil_right = col_double())
 
+local_files <- dir(here("processed_xy_data"), pattern = "*.csv")
+
+for (f in local_files) {
+  print(f)
+  
+  d <- read_csv(here("processed_xy_data",f), n_max = 100, 
+                col_types = col_types)
+  
+  # check that all columns are in the col list
+  print(see_if(all(cols %in% names(d))))
+  
+  # check that no extra cols
+  print(see_if(all(names(d) %in% cols)))
+}
+```
+Now, load local data.
+
+```{r load data}
 xy <- local_files |>
-  map_df(function(x) {
-    print(x)
-    d <- read_csv(here("processed_xy_data",x),
-                  col_types = list(
-                    lab_id = col_character(),
-                    participant_id = col_character(),
-                    media_name = col_character(),
-                    x = col_double(),
-                    y = col_double(),
-                    t = col_double(),
-                    pupil_left = col_double(),
-                    pupil_right = col_double()
-                  ))
+  map_df(function(f) {
+    d <- read_csv(here("processed_xy_data",f),
+                  col_types = col_types)
     
-    # check that all columns are in the col list
-    assert_that(all(cols %in% names(d)))
     
-    # check that no extra cols
-    assert_that(all(names(d) %in% cols))
-    
-    d$age_cohort <- case_when(grepl('_adults_', x) ~ 'adults',
-                              grepl('_toddlers_', x) ~ 'toddlers',
+    d$age_cohort <- case_when(grepl('_adults_', f) ~ 'adults',
+                              grepl('_toddlers_', f) ~ 'toddlers',
                               T ~ NA)
     
     return(d)
   })
 ```
 
+Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
-Begin standardizing data.
-
+When there are invalid media names, you need to put them in the right `txt` files below. 
 
 ```{r standardize and validate data}
+vec_renaming <- read_csv(here('metadata', 
+                              'media_renaming.csv')) 
 
-vec_renaming <- read_csv(here('helper','metadata', 'media_renaming.csv')) %>%
-  {setNames(as.character(.$target), .$original)}
-media_deletion <- readLines(here('helper','metadata', 'media_names_to_remove.txt'))
-media_names_valid <- readLines(here('helper','metadata', 'media_names_validate.txt'))
+media_deletion <- readLines(here('metadata', 
+                                 'media_names_to_remove.txt'))
+
+media_names_valid <- readLines(here('metadata', 
+                                    'media_names_validate.txt'))
 
 data <- xy |>
   mutate(media_name = tools::file_path_sans_ext(media_name)) %>%
@@ -85,12 +99,18 @@ data <- xy |>
   group_by(lab_id, participant_id) %>% 
   mutate(event_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>% 
   ungroup()
-
-  
-# Validate media names
-invalid_names <- setdiff(unique(data$media_name), media_names_valid)
-# TODO check for new datasets, update the renaming/deletion file accordingly
 ```
 
+Check that all media names fit the appropriate schema. 
 
-TODO: LOCAL SAVING
+```{r checking_names}
+setdiff(unique(data$media_name), media_names_valid)
+assert_that(is_empty(setdiff(unique(data$media_name), media_names_valid)))
+```
+
+Now save the merged xy data locally.
+
+```{r saving}
+save(data, 
+```
+
