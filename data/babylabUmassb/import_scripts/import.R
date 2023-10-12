@@ -28,7 +28,6 @@ write_csv(data_adults_cleaned,
 #### Toddler data ####
 data_toddlers <- read_tsv(here(DATA_DIR, "raw_data", "babylabUmassb_toddlers_eyetrackingdata.tsv"))
 
-# !!! Toddler data has all NAs for media_name
 data_toddlers_cleaned <- data_toddlers |> 
   select(participant_id = ParticipantName,
          x = `GazePointX (ADCSpx)`,
@@ -38,3 +37,6 @@ data_toddlers_cleaned <- data_toddlers |>
          pupil_left = PupilLeft,
          pupil_right = PupilRight) |> 
   mutate(lab_id = LAB_NAME)
+
+write_csv(data_toddlers_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
