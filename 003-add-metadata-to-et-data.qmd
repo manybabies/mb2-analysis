@@ -19,6 +19,7 @@ Standardize pupil sizes
 
 ```{r}
 
+# add point of disambiguation and target aoi to the data
 data <- data %>% 
   left_join(
     read.csv(here('helper', 'metadata', 'trial_details.csv')) %>%
@@ -140,7 +141,7 @@ data_resampled_specs <- data_resampled %>%
   filter(point_zero %in% allowed_origins)
 
 
-# Flip Coordinate Origin # TODO
+# Flip Coordinate Origin
 data_corrected_origin <- data_resampled_specs  %>% 
     mutate(
       y = case_when(
@@ -164,7 +165,38 @@ data_with_aois <- data_trimmed %>%
   create_aoi_timepoints()
 
 
-# TODO: Visualize this data to double check?
+# TODO: Visualize this data to double check
+
+```
+
+```{r visualize AOIs and data}
+source(here('helper', 'aoi_helper.R'))
+
+draw_aoi <- function(aoi_name, color){
+  return(
+    geom_rect(aes(xmin = aoi_region_sets[[1,paste(aoi_name,'_x_min',sep="")]],
+                  xmax = aoi_region_sets[[1,paste(aoi_name,'_x_max',sep="")]],
+                  ymin = aoi_region_sets[[1,paste(aoi_name,'_y_min',sep="")]],
+                  ymax = aoi_region_sets[[1,paste(aoi_name,'_y_max',sep="")]], 
+            fill = color, alpha = 0.7, color = color))
+  )
+}
+
+ggplot() + 
+  xlim(0, 1280) +
+  ylim(0, 960) +
+  draw_aoi("lbig", "blue") +
+  draw_aoi("rbig", "blue") +
+  draw_aoi("l", "red") +
+  draw_aoi("r", "red") +
+  draw_aoi("lb", "yellow") +
+  draw_aoi("rb", "yellow") +
+  draw_aoi("w", "white")
+
+#ggplot(xy_timepoints, aes(x = x, y = y)) + 
+#  geom_point(alpha = .05) + 
+#  xlim(0, administrations$monitor_size_x[1]) + 
+#  ylim(0, administrations$monitor_size_y[1]) 
 
 ```
 
