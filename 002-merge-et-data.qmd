@@ -111,6 +111,6 @@ assert_that(is_empty(setdiff(unique(data$media_name), media_names_valid)))
 Now save the merged xy data locally.
 
 ```{r saving}
-save(data, 
+save(data, file = here("processed_data", "002-merged-et-data.Rds"))
 ```
 
