@@ -82,7 +82,9 @@ resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm",trial_col_
     y = y_resampled,
     media_name = df_trial$media_name[1],
     media_version = df_trial$media_version[1],
-    trial_num = df_trial$trial_num[1]
+    trial_num = df_trial$trial_num[1],
+    age_cohort = df_trial$age_cohort[1],
+    target = df_trial$target[1]
     )
 }
 

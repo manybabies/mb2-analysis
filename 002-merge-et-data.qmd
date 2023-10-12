@@ -7,7 +7,6 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
-source(here("helper","resampling_helper.R"))
 FIRST_TIME = FALSE
 ```
 
@@ -60,6 +59,10 @@ xy <- local_files |>
     # check that no extra cols
     assert_that(all(names(d) %in% cols))
     
+    d$age_cohort <- case_when(grepl('_adults_', x) ~ 'adults',
+                              grepl('_toddlers_', x) ~ 'toddlers',
+                              T ~ NA)
+    
     return(d)
   })
 ```
@@ -70,21 +73,21 @@ Create trial numbers - done
 Standardize media names - Code done, renamings for new datasets still pending
 Zero times within trials - done
 Resample times - done
+Clip XY outside of screen coordinates - done
 
-Flip coordinate origin
-Clip XY outside of screen coordinates
-Create/process AOIs
+Flip coordinate origin - Done
+Create/process AOIs - Done
+
 Standardize pupil sizes
-
 
 
 
 ```{r standardize and validate data}
 
-vec_renaming <- read_csv(here('metadata','media_renaming.csv')) %>%
+vec_renaming <- read_csv(here('helper','metadata', 'media_renaming.csv')) %>%
   {setNames(as.character(.$target), .$original)}
-media_deletion <- readLines(here('metadata','media_names_to_remove.txt'))
-media_names_valid <- readLines(here('metadata','media_names_validate.txt'))
+media_deletion <- readLines(here('helper','metadata', 'media_names_to_remove.txt'))
+media_names_valid <- readLines(here('helper','metadata', 'media_names_validate.txt'))
 
 data <- xy |>
   mutate(media_name = tools::file_path_sans_ext(media_name)) %>%
@@ -98,6 +101,14 @@ data <- xy |>
 # Validate media names
 invalid_names <- setdiff(unique(data$media_name), media_names_valid)
 # TODO check for new datasets, update the renaming/deletion file accordingly
+
+
+data <- data %>% 
+  left_join(
+    read.csv(here('helper', 'metadata', 'trial_details.csv')) %>%
+      mutate(media_name = tools::file_path_sans_ext(trial_file_name)) %>% 
+      rename(point_of_disambiguation = point_of_disambig_ms), 
+    by=join_by(media_name))
 
 # Extract media version information from media version string
 data <- data %>% mutate(
@@ -113,43 +124,56 @@ trial_orders <- data %>%
 
 data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
 
+# create a table containing some demographic data from both toddlers and adults to perform integrity checks
+combined_demo <- adult_demo %>%
+  select(labid, participant_id, test_order, pilot) %>% 
+  bind_rows(
+    toddler_demo %>%
+      select(labid, participant_id, test_order, pilot)
+    )
 
 # Validate that the (lab specific) participant ids in the data line up with the ids from the (lab specific) demographic files
 # This also triggers on mismatches in labid namings
-id_mismatches <- trial_orders %>% 
+id_orphans <- trial_orders %>% 
   distinct(lab_id, participant_id) %>% 
   mutate(xy_exists = T) %>%
-  full_join(adult_demo, by=c('lab_id' = 'labid', 'participant_id')) %>% 
-  filter(is.na(xy_exists) | is.na(testing_date))
-#assert_that(nrow(id_mismatches) == 0)
+  full_join(combined_demo, by=c('lab_id' = 'labid', 'participant_id')) %>%
+  # pilot and teest order are used as a stand in to check if demographic data for this participant exists
+  mutate(demo_exists = !is.na(pilot) | !is.na(test_order)) %>%
+  select(-c('test_order','pilot')) %>% 
+  filter(is.na(xy_exists) | !demo_exists)
+
+#assert_that(nrow(id_orphans) == 0)
 # TODO Have a close look at this once all of the data was collected
 
 # Validate trial orders
 trial_orders_wide <- trial_orders %>%
   pivot_wider(id_cols = c('lab_id', 'participant_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
 
-trial_orders_design <- read.csv(here('helper','trial_order.csv')) %>% 
-  left_join(read.csv(here('helper','fam_order.csv')), by=join_by(fam_order))
+trial_orders_design <- read.csv(here('helper', 'metadata', 'trial_order.csv')) %>% 
+  left_join(read.csv(here('helper','metadata', 'fam_order.csv')), by=join_by(fam_order))
 
 invalid_trial_orders <- trial_orders_wide %>% 
   anti_join(trial_orders_design, by=paste0('trial_',1:6))
 #assert_that(nrow(invalid_trial_orders) == 0)
 
-trial_order_mismatches <- adult_demo %>% # TODO: This only includes adult data right now as the demographic script is still WIP
+trial_order_mismatches <- combined_demo %>%
   select(labid, participant_id, test_order) %>% 
   inner_join(trial_orders_wide %>% 
                inner_join(trial_orders_design, by=paste0('trial_',1:6)) # determine seen trials
     , by=c('labid' = 'lab_id', 'participant_id')) %>% 
   filter(test_order != trial_order)
 
-assert_that(nrow(trial_order_mismatches) == 0)
-rm(trial_orders, trial_orders_design)
+#assert_that(nrow(trial_order_mismatches) == 0)
+#rm(trial_orders, trial_orders_design)
 ```
 
 Rezero and resample times
 
 
 ```{r}
+source(here("helper","resampling_helper.R"))
+
 #filter timepoints with NAs
 data <- data %>%
   filter(!is.na(t))
@@ -162,28 +186,67 @@ data <- data %>%
 data_rezeroed <- data %>%
   rezero_times() # right now, rezeroing on event_num (NOT trial_num)
 
-#"normalize" time according to a point of disambiguation
-#normalizing isn't really relevant here (I don't think) but preserving for now in case we want to include any time normalization
-data_normalized <- data_rezeroed %>%
-  mutate(point_of_disambiguation=0) %>% 
-  normalize_times()
 
-# resample time to 40 Hz
-data_resampled <- data_normalized %>%
-  resample_times()
+#"normalize" time according to a point of disambiguation
+# Martin: normalizing isn't really relevant here (I don't think) but preserving for now in case we want to include any time normalization
+# Adrian: TODO: I think this differs based on trial? - discuss later
+data_normalized <- data_rezeroed %>%
+  mutate(point_of_disambiguation=0) %>% # data is already joined correctly, but function currently fails
+  normalize_times()
 
 #Validate that time is provided in milliseconds
 #assert_that(mean(diff(data_normalized$t_norm),na.rm=TRUE) > 1 & mean(diff(data_normalized$t_norm), na.rm=TRUE) < 100)
 # TODO this still fails, have a closer look
+  
+# resample time to 40 Hz
+data_resampled <- data_normalized %>%
+  resample_times()
+# TODO make this function agnostic to additional columns
 
 ```
 
 ```{r}
 
-# Adrian (centered in screen, not fullscreen): 
-# TODO: Flip Coordinate Origin
-# TODO: XY Trimming
-# TODO: XY -> Trimming, import the screensizes from the google sheet
+# add information about screen size and eyetracker coordinate origin
+dataset_specs <- read.csv(here('helper', 'metadata', 'dataset_sheet.csv')) %>%
+  select(data_id, screen_dimensions, point_zero) %>%
+  separate(data_id, c("lab_id", "age_cohort"), sep="_") %>% 
+  separate(screen_dimensions, c("screen_width", "screen_height"), sep=" x ") %>% 
+  mutate(screen_width = as.numeric(str_trim(screen_width)),
+         screen_height = as.numeric(str_trim(screen_height)))
+
+# TODO: One lab is missing the zero coordinate
+allowed_origins <- c('upper left','lower left','center')
+invalid_origins <- dataset_specs %>% filter(!(point_zero %in% allowed_origins))
+
+data_resampled_specs <- data_resampled %>% 
+  left_join(dataset_specs, by=join_by(lab_id, age_cohort)) %>% 
+  filter(point_zero %in% allowed_origins)
+
+
+# Flip Coordinate Origin # TODO
+data_corrected_origin <- data_resampled_specs  %>% 
+    mutate(
+      y = case_when(
+        point_zero == 'upper_left' ~ screen_height - y,
+        point_zero == 'center' ~ y + screen_height/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
+        T ~ x),
+      x = case_when(
+        point_zero == 'center' ~ x + screen_width/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
+        T ~ x),
+    )
+
+# trim xy that land outside of the screen
+data_trimmed <- data_corrected_origin  %>% 
+    mutate(x = ifelse(x >= 0 & x <= screen_width, x, NA),
+           y = ifelse(y >= 0 & y <= screen_height, y, NA))
+
+# add aois
+source(here('helper', 'aoi_helper.R'))
+data_with_aois <- data_trimmed %>%
+  rename(target_side = target) %>% 
+  create_aoi_timepoints()
+
 
 # TODO: Visualize this data to double check?
 
