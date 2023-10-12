@@ -1,14 +1,13 @@
+# BABYLAB TRENTO
+
 library(peekds)
 library(tidyverse)
 library(here)
-library(glue)
 
 # ------------------------------------------------------------------------------
 # preliminaries 
 # load point of disambiguation data
 # and helper functions for XY and AOI
-source(here("metadata/generate_AOIs_for_primary_data.R"))
-
 lab_dir <- "data/babylabTrento/"
 
 # participant data

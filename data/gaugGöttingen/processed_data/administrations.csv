@@ -1,6 +1,0 @@
-subject_id,lab_subject_id,sex,native_language,administration_id,lab_administration_id,dataset_id,age,lab_age,lab_age_units,monitor_size_x,monitor_size_y,sample_rate,tracker,coding_method
-0,GAUG_001P,female,ger,0,GAUG_001P,0,21.435616438356163,652,days,1920,1080,120,tobii,eyetracking
-1,GAUG_002,female,ger,1,GAUG_002,0,20.284931506849315,617,days,1920,1080,120,tobii,eyetracking
-2,GAUG_004,female,ger,2,GAUG_004,0,23.40821917808219,712,days,1920,1080,120,tobii,eyetracking
-3,GAUG_005,male,ger,3,GAUG_005,0,27.12328767123288,825,days,1920,1080,120,tobii,eyetracking
-4,GAUG_006,female,other,4,GAUG_006,0,24.526027397260272,746,days,1920,1080,120,tobii,eyetracking
