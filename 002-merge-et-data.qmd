@@ -74,7 +74,6 @@ Standardize media names - Code done, renamings for new datasets still pending
 Zero times within trials - done
 Resample times - done
 Clip XY outside of screen coordinates - done
-
 Flip coordinate origin - Done
 Create/process AOIs - Done
 
@@ -255,20 +254,31 @@ data_with_aois <- data_trimmed %>%
 
 Issues to deal with:
 
-- Repo needs some serious cleanup - hard to keep track of what files contain relevant code and what is not needed anymore
-- osf download still fails (?)
-- Adults and toddlers share most (all) of the pipeline but have differing demo files - combine into one dataset and split later for analysis?
+- Pipeline is glued together, but needs sanity checking/visualization to see if it is working correctly (it probably isn't right now)
+
+- Repo needs cleanup
+  - the following import scripts are outdated (folders also contain data) - people did not push their import scripts?
+    - babylabTrento
+    - gaugGöttingen
+    - jmuCDL
+    - lmuMunich
+    - socialcogUmiami
+  - all R Code/ metadata files currently used reside in in 001 and 002 as well as the top level of 'helper' (what is up with 'metadata' and 'helper/unused'?)
+  
+- osf download still fails (?), having some trouble pulling the current version of the data from OSF 
+
+- point of disambiguation is currently not used to normalize trials (this probably needs to happen)
+
+- more integrity checking is needed in between operations to validate that data is not lost on accident(need to have a look at every step once more data is here)
 
 - some timepoints are not being read in correctly (e.g. in careylabHarvard_adults_xy_timepoints), apparently because these are too large (10^12) - Martin: I think I fixed this now by removing invariant leading digits (on OSF)
 - some residual import/ processing issues with some datasets
 -- careylabHarvard_adults_xy_timepoints has some participant ids under lab_id - Martin: this is now fixed on OSF
-- having some trouble pulling the current version of the data from OSF 
 -resampling pupil size??
 - really need to be cautious about the definition of trials/ events/ etc. - currently fragile 
-- passing the final/correct column names to resample_xy_trial
+- passing the final/correct column names to resample_xy_trial - we could redesign the function to make it agnostic?
 
 - How to standardize pupil sizes?
-- Web-based eyetracking will need special treatment at specific points of the pipeline (Adrian: Think about this some more)
 
 
 
