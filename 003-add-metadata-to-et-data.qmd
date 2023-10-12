@@ -3,6 +3,13 @@ title: "Add metadata and validate"
 format: html
 ---
 
+Load data from the cached datafile. 
+
+```{r}
+load(here("processed_data", "002-merged-et-data.Rds"))
+```
+
+
 ## Processing tasks that we will do centrally
 
 Reconcile media names - Code done, renamings for new datasets still pending
