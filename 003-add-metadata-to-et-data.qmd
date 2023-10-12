@@ -153,7 +153,7 @@ data_corrected_origin <- data_resampled_specs  %>%
   
     mutate(
       y = case_when(
-        point_zero == 'upper_left' ~ screen_height - y, #TODO: at least some point zeros are "upper left"
+        point_zero == 'upper left' ~ screen_height - y, #TODO: at least some point zeros are "upper left"
         point_zero == 'center' ~ y + screen_height/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
         T ~ x),
       x = case_when(
