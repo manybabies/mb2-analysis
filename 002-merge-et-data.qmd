@@ -67,19 +67,8 @@ xy <- local_files |>
   })
 ```
 
-## Processing tasks that we will do centrally
 
-Reconcile media names - Code done, renamings for new datasets still pending
-Create trial numbers - done
-Standardize media names - Code done, renamings for new datasets still pending
-Zero times within trials - done
-Resample times - done
-Clip XY outside of screen coordinates - done
-Flip coordinate origin - Done
-Create/process AOIs - Done
-
-Standardize pupil sizes
-
+Begin standardizing data.
 
 
 ```{r standardize and validate data}
@@ -103,3 +92,5 @@ invalid_names <- setdiff(unique(data$media_name), media_names_valid)
 # TODO check for new datasets, update the renaming/deletion file accordingly
 ```
 
+
+TODO: LOCAL SAVING
