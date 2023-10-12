@@ -1,0 +1,4 @@
+fam_order,trial_1,trial_2,trial_3,trial_4
+A,FAM_LR,FAM_LL,FAM_RL,FAM_RR
+B,FAM_RL,FAM_RR,FAM_LR,FAM_LL
+

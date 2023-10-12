@@ -66,13 +66,16 @@ xy <- local_files |>
 ## Processing tasks that we will do centrally
 
 Reconcile media names - Code done, renamings for new datasets still pending
-Create trial numbers - Done
+Create trial numbers - done
 Standardize media names - Code done, renamings for new datasets still pending
-Zero times within trials - Martin - done
-Resample times - Marin
-Clip XY outside of screen coordinates - Adrian
-Create/process AOIs - Adrian
-Standardize pupil sizes - ?
+Zero times within trials - done
+Resample times - done
+
+Flip coordinate origin
+Clip XY outside of screen coordinates
+Create/process AOIs
+Standardize pupil sizes
+
 
 
 
@@ -88,12 +91,9 @@ data <- xy |>
   filter(!is.na(media_name) & !(media_name %in% media_deletion)) %>% 
   mutate(media_name = ifelse(media_name %in% names(vec_renaming), vec_renaming[as.character(media_name)], media_name)) %>% 
   group_by(lab_id, participant_id) %>% 
-  mutate(media_index = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>% 
+  mutate(event_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>% 
   ungroup()
 
-
-# Validate that the participant ids in the data line up with the ids from the demographic files
-# TODO (Adrian)
   
 # Validate media names
 invalid_names <- setdiff(unique(data$media_name), media_names_valid)
@@ -113,15 +113,37 @@ trial_orders <- data %>%
 
 data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
 
-# Add event numbers to the data (just in case we need to distinguish this from trial numbers)
-data <- data %>% 
-  group_by(lab_id, participant_id) %>%
-  mutate(event_num = cumsum(c(1, na.omit(media_name != lag(media_name)))))
 
-# Validate trial order
-# TODO: get ground truth and demographic information in here for comparison (Adrian)
+# Validate that the (lab specific) participant ids in the data line up with the ids from the (lab specific) demographic files
+# This also triggers on mismatches in labid namings
+id_mismatches <- trial_orders %>% 
+  distinct(lab_id, participant_id) %>% 
+  mutate(xy_exists = T) %>%
+  full_join(adult_demo, by=c('lab_id' = 'labid', 'participant_id')) %>% 
+  filter(is.na(xy_exists) | is.na(testing_date))
+#assert_that(nrow(id_mismatches) == 0)
+# TODO Have a close look at this once all of the data was collected
 
-rm(trial_orders)
+# Validate trial orders
+trial_orders_wide <- trial_orders %>%
+  pivot_wider(id_cols = c('lab_id', 'participant_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
+
+trial_orders_design <- read.csv(here('helper','trial_order.csv')) %>% 
+  left_join(read.csv(here('helper','fam_order.csv')), by=join_by(fam_order))
+
+invalid_trial_orders <- trial_orders_wide %>% 
+  anti_join(trial_orders_design, by=paste0('trial_',1:6))
+#assert_that(nrow(invalid_trial_orders) == 0)
+
+trial_order_mismatches <- adult_demo %>% # TODO: This only includes adult data right now as the demographic script is still WIP
+  select(labid, participant_id, test_order) %>% 
+  inner_join(trial_orders_wide %>% 
+               inner_join(trial_orders_design, by=paste0('trial_',1:6)) # determine seen trials
+    , by=c('labid' = 'lab_id', 'participant_id')) %>% 
+  filter(test_order != trial_order)
+
+assert_that(nrow(trial_order_mismatches) == 0)
+rm(trial_orders, trial_orders_design)
 ```
 
 Rezero and resample times
@@ -149,11 +171,31 @@ data_normalized <- data_rezeroed %>%
 # resample time to 40 Hz
 data_resampled <- data_normalized %>%
   resample_times()
-  
+
+#Validate that time is provided in milliseconds
+#assert_that(mean(diff(data_normalized$t_norm),na.rm=TRUE) > 1 & mean(diff(data_normalized$t_norm), na.rm=TRUE) < 100)
+# TODO this still fails, have a closer look
+
+```
+
+```{r}
+
+# Adrian (centered in screen, not fullscreen): 
+# TODO: Flip Coordinate Origin
+# TODO: XY Trimming
+# TODO: XY -> Trimming, import the screensizes from the google sheet
+
+# TODO: Visualize this data to double check?
+
 ```
 
 
 Issues to deal with:
+
+- Repo needs some serious cleanup - hard to keep track of what files contain relevant code and what is not needed anymore
+- osf download still fails (?)
+- Adults and toddlers share most (all) of the pipeline but have differing demo files - combine into one dataset and split later for analysis?
+
 - some timepoints are not being read in correctly (e.g. in careylabHarvard_adults_xy_timepoints), apparently because these are too large (10^12) - Martin: I think I fixed this now by removing invariant leading digits (on OSF)
 - some residual import/ processing issues with some datasets
 -- careylabHarvard_adults_xy_timepoints has some participant ids under lab_id - Martin: this is now fixed on OSF
@@ -162,10 +204,8 @@ Issues to deal with:
 - really need to be cautious about the definition of trials/ events/ etc. - currently fragile 
 - passing the final/correct column names to resample_xy_trial
 
+- How to standardize pupil sizes?
+- Web-based eyetracking will need special treatment at specific points of the pipeline (Adrian: Think about this some more)
 
-```{r}
-# Validate that the scale of timesteps is correct
-# TODO once martin has taken care of the timepoints (Martin)
-    # Mikes previous code: #assert_that(mean(diff(d$t),na.rm=TRUE) > 1 & mean(diff(d$t), na.rm=TRUE) < 100)
-```
+
 
