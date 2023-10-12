@@ -143,9 +143,10 @@ data_resampled_specs <- data_resampled %>%
 
 # Flip Coordinate Origin
 data_corrected_origin <- data_resampled_specs  %>% 
+  
     mutate(
       y = case_when(
-        point_zero == 'upper_left' ~ screen_height - y,
+        point_zero == 'upper_left' ~ screen_height - y, #TODO: at least some point zeros are "upper left"
         point_zero == 'center' ~ y + screen_height/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
         T ~ x),
       x = case_when(
@@ -182,7 +183,9 @@ draw_aoi <- function(aoi_name, color){
   )
 }
 
-ggplot() + 
+temp <- filter(data_with_aois, lab_id=="careylabHarvard"&participant_id=="1810EmCh")
+
+ggplot(temp,aes(x,y)) + 
   xlim(0, 1280) +
   ylim(0, 960) +
   draw_aoi("lbig", "blue") +
@@ -191,7 +194,8 @@ ggplot() +
   draw_aoi("r", "red") +
   draw_aoi("lb", "yellow") +
   draw_aoi("rb", "yellow") +
-  draw_aoi("w", "white")
+  draw_aoi("w", "white")+
+  geom_point(alpha=0.5)
 
 #ggplot(xy_timepoints, aes(x = x, y = y)) + 
 #  geom_point(alpha = .05) + 
