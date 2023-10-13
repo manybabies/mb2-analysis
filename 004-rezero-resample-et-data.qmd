@@ -3,6 +3,10 @@ title: "Add metadata and validate"
 format: html
 ---
 
+```{r}
+load(here("processed_data", "003-traildata-added-data.Rds"))
+```
+
 Rezero and resample times
 
 
@@ -40,4 +44,11 @@ data_resampled <- data_normalized %>%
   resample_times()
 # TODO make this function agnostic to additional columns
 
+```
+
+Now save the resampled data locally.
+
+```{r saving}
+dir.create(here("processed_data"), showWarnings = FALSE)
+save(data_resampled, file = here("processed_data", "004-resampled-data.Rds"))
 ```

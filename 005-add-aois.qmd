@@ -3,6 +3,10 @@ title: "Add metadata and validate"
 format: html
 ---
 
+```{r}
+load(here("processed_data", "004-resampled-data.Rds"))
+```
+
 
 ```{r}
 
@@ -84,4 +88,10 @@ ggplot(temp,aes(x,y)) +
 #  xlim(0, administrations$monitor_size_x[1]) + 
 #  ylim(0, administrations$monitor_size_y[1]) 
 
+```
+
+
+```{r saving}
+dir.create(here("processed_data"), showWarnings = FALSE)
+save(data_with_aois, file = here("processed_data", "005-aoi-data.Rds"))
 ```

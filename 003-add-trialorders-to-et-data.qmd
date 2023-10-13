@@ -7,6 +7,8 @@ Load data from the cached datafile.
 
 ```{r}
 load(here("processed_data", "002-merged-et-data.Rds"))
+load(here("processed_data", "001-demographic-data-adults.Rds"))
+load(here("processed_data", "001-demographic-data-toddlers.Rds"))
 ```
 
 
@@ -37,6 +39,9 @@ data <- data %>%
 
 data %>% group_by(lab_id, participant_id, media_name)
 
+
+# We need to do the following two steps here, as trial_details depend on specific filenames, 
+# while trial ordering only cares about the canon media names
 data <- data %>%
   # add point of disambiguation and target aoi to the data
   left_join(
@@ -110,37 +115,12 @@ trial_order_mismatches <- combined_demo %>%
 #rm(trial_orders, trial_orders_design)
 ```
 
+Now save the trial order data locally.
 
-
-Issues to deal with:
-
-- Pipeline is glued together, but needs sanity checking/visualization to see if it is working correctly (it probably isn't right now)
-
-- Repo needs cleanup
-  - the following import scripts are outdated (folders also contain data) - people did not push their import scripts?
-    - babylabTrento
-    - gaugGöttingen
-    - jmuCDL
-    - lmuMunich
-    - socialcogUmiami
-  - all R Code/ metadata files currently used reside in in 001 and 002 as well as the top level of 'helper' (what is up with 'metadata' and 'helper/unused'?)
-  
-- osf download still fails (?), having some trouble pulling the current version of the data from OSF 
-
-- point of disambiguation usage?
-
-- more integrity checking is needed in between operations to validate that data is not lost on accident(need to have a look at every step once more data is here)
-
-- some timepoints are not being read in correctly (e.g. in careylabHarvard_adults_xy_timepoints), apparently because these are too large (10^12) - Martin: I think I fixed this now by removing invariant leading digits (on OSF)
-- some residual import/ processing issues with some datasets
--- careylabHarvard_adults_xy_timepoints has some participant ids under lab_id - Martin: this is now fixed on OSF
--resampling pupil size??
-- really need to be cautious about the definition of trials/ events/ etc. - currently fragile 
-- passing the final/correct column names to resample_xy_trial - we could redesign the function to make it agnostic?
-
-- How to standardize pupil sizes?
-
-- cleanup the pipline (a lot of intermediat steps can be combined to make this more compact)
+```{r saving}
+dir.create(here("processed_data"), showWarnings = FALSE)
+save(data, file = here("processed_data", "003-traildata-added-data.Rds"))
+```
 
 
 

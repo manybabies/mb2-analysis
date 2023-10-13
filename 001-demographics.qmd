@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 ```{r}
 library(tidyverse)
 library(here)
@@ -38,13 +37,14 @@ adult_demo <- adults |>
   }) 
 ```
 
-Fix our sadness. 
+Fix our sadness.
 
 ```{r}
 adult_demo <- adult_demo |>
   mutate(age_years = as.numeric(age_years))
 ```
-Toddlers next. 
+
+Toddlers next.
 
 ```{r}
 columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
@@ -68,13 +68,13 @@ toddler_demo <- toddlers |>
   }) 
 ```
 
-We will need to fix these. 
+We will need to fix these.
 
 ## Demographics
 
-Age histogram. 
+Age histogram.
 
-Based on spot checks, it appears that these are real kids who just fall outside of age range. 
+Based on spot checks, it appears that these are real kids who just fall outside of age range.
 
 ```{r}
 days_in_month = 365.25/12
@@ -83,11 +83,13 @@ ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = labid)) +
   theme(legend.position = "bottom")
 ```
 
+```{r saving}
+dir.create(here("processed_data"), showWarnings = FALSE)
 
+save(adult_demo, file = here("processed_data", "001-demographic-data-adults.Rds"))
+save(toddler_demo, file = here("processed_data", "001-demographic-data-toddlers.Rds"))
+```
 
 # Exclusions
 
-Note to write out a table here. 
-
-
-
+Note to write out a table here.

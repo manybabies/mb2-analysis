@@ -2,30 +2,38 @@
 
 Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, [Schuwerk, Kampis et al. (accepted pending data collection)](https://psyarxiv.com/x4jbm/). 
 
-For the analysis files for the pilot, look towards the 'Pilot analysis' release or the 'pilot_final' branch.
+For the analysis files of the pilot, look towards the 'Pilot analysis' release or the 'pilot_final' branch.
 
 Subdirectories explanations:
 
 * `helper` stores general helper functions
-* `metadata` stores functions that create metadata for analysis
-* `data` contains import scripts for the main dataset.
+* `metadata` stores functions that create metadata for preprocessing/analysis
+* `import_scripts` contains import scripts for the main dataset.
   * Important notes on how to do this task are in the [MB2 data import guide](https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit).
-* `demographic_data`
-* `processed_data`
-* `processed_xy_data`
+* `data` (will be created while running the pipeline is gitignored )
+  * `01_xy_data` - xy data will be downloaded from osf into this
+  * `01_demographic_data` - demographic data will be downloaded from osf into this
+  * `02_intermediates` - preprocessing steps will save intermediate rds files here
+  * `03_preprocessed` - the result of the preprocessing steps - to be consumed by the analysis script
 
-## TODOS:
-
-Is design_analysis from the pilot still relevant to the study? If so, get it from the pilot branch and put it back in here
-Also add
-* `design_analysis` is power analysis for the Child Development registered report paper
 
 Proposed changes to folder structure:
-* data -> import_scripts (as that's all that's being commited into that folder anyway)
+* data ->  (as that's all that's being commited into that folder anyway)
 * create new folder `data` (gitignored), and move the following things there
-  * 01_xy_data (data that is currently downloaded to `processed_xy_data` at top level)
-  * 01_demographic_data (data that is currently downloaded to `demographic_data` at top level)
-  * 02_intermediates (Rds fioles that are shared between preprocessing steps - is currently living in `processed_data` at top level)
-  * 03_preprocessed (will contain data that can be directly consumed by the analysis scripts)
 
 
+
+Issues to deal with:
+
+- download demographic data!
+
+- Pipeline is glued together, but needs sanity checking/visualization to see if it is working correctly (it probably isn't right now)
+
+- more integrity checking is needed in between operations to validate that data is not lost on accident(need to have a look at every step once more data is here)
+
+
+- passing the final/correct column names to resample_xy_trial - we could redesign the function to make it agnostic?
+
+- How to standardize pupil sizes?
+
+- cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
