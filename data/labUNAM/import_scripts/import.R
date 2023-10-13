@@ -19,6 +19,7 @@ data_adults_cleaned <- data_adults |>
          pupil_left = `Pupil diameter left`,
          pupil_right = `Pupil diameter right`) |> 
   mutate(media_name = str_replace_all(media_name, "_new", ""),
+         t = t / 1000,
          lab_id = LAB_NAME)
 
 write_csv(data_adults_cleaned,
@@ -36,7 +37,8 @@ data_toddlers_cleaned <- data_toddlers |>
          media_name = MediaName,
          pupil_left = PupilLeft,
          pupil_right = PupilRight) |> 
-  mutate(lab_id = LAB_NAME)
+  mutate(t = t / 1000,
+         lab_id = LAB_NAME)
 
 write_csv(data_toddlers_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
