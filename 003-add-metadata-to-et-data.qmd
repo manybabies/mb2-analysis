@@ -125,6 +125,8 @@ data <- data %>%
 data_rezeroed <- data %>%
   rezero_times() # right now, rezeroing on event_num (NOT trial_num)
 
+# discuss timing related issues? not a lot of trials affected
+#overly_long_trials <- data_rezeroed %>% filter(t_zeroed > video_duration_ms)
 
 #"normalize" time according to a point of disambiguation
 # Martin: normalizing isn't really relevant here (I don't think) but preserving for now in case we want to include any time normalization
