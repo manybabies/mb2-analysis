@@ -99,7 +99,30 @@ ggplot(temp,aes(x,y)) +
 #  ylim(0, administrations$monitor_size_y[1]) 
 
 ```
+```{r}
+# preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
+# needs some tweaking, just throwing the code into the repo for now
 
+create_and_save_linegraph <- function(data, info){
+  render <- data %>%
+    group_by(t_norm) %>%
+    summarise(ls = sum(hit)/n())
+  
+  png(filename=paste0('lookingscore_fam', info$lab_id[1], '_', info$age_cohort[1],'.png'))
+  plot(render$t_norm, render$ls, type = "l")
+  dev.off()
+}
+
+# uncomment this once I have decided where to put the images, they currently get dumped into the projects root
+#data_with_aois %>% 
+#  filter(media_name != 'star_calib') %>%
+#  filter(grepl('FAM', media_name)) %>% 
+#  filter(grepl('target|distractor', aoi)) %>% 
+#  mutate(hit = ifelse(grepl('target', aoi), 1, 0)) %>%
+#  group_by(lab_id, age_cohort) %>% 
+#  group_walk(create_and_save_linegraph)
+
+```
 
 ```{r saving}
 save(data_with_aois, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
