@@ -26,28 +26,43 @@ Standardize pupil sizes
 
 ```{r}
 
-# add point of disambiguation and target aoi to the data
+# TODO these labs are currently broken - investigate this
+# (lab_id, participant_id, media_name) does not uniquely identify a trial_number
+# (duplicate participant namings?)
 data <- data %>% 
-  left_join(
-    read.csv(here('helper', 'metadata', 'trial_details.csv')) %>%
-      mutate(media_name = tools::file_path_sans_ext(trial_file_name)) %>% 
-      rename(point_of_disambiguation = point_of_disambig_ms), 
-    by=join_by(media_name))
+  filter(!(lab_id %in% c(
+  'babylabNijmegen', # various participants affected
+  'babylabAmsterdam' # UVA_127
+  )))
 
-# Extract media version information from media version string
-data <- data %>% mutate(
-  media_version = ifelse(grepl('_new', media_name),0,1),
-  media_name = gsub("_new", "", media_name))
+data <- data %>%
+  # add point of disambiguation and target aoi to the data
+  left_join(
+    read.csv(here('metadata', 'trial_details.csv')) %>%
+      mutate(media_name = tools::file_path_sans_ext(trial_file_name)) %>%
+      rename(point_of_disambiguation = point_of_disambig_ms), 
+    by=join_by(media_name)) %>%
+  # Extract media version information from media version string
+  mutate( 
+    media_version = ifelse(grepl('_new', media_name),0,1),
+    media_name = gsub("_new", "", media_name)
+    )
 
 # Add trial numbers to the data
 trial_orders <- data %>% 
-  filter(media_name %in% media_names_valid) %>%
+  filter(media_name != 'star_calib') %>% # remove calibration from numbering
   group_by(lab_id, participant_id) %>%
   mutate(trial_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>%
   distinct(lab_id, participant_id, media_name, trial_num)
 
+# validate trial_orders before joining them to the data
+media_name_collisions <- trial_orders %>% 
+  group_by(lab_id, participant_id, media_name) %>% 
+  filter(n() > 1)
+
 data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
 
+# TODO: Save the adult/toddler demographic data in 001 and read it into this script
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
   select(labid, participant_id, test_order, pilot) %>% 
@@ -62,7 +77,7 @@ id_orphans <- trial_orders %>%
   distinct(lab_id, participant_id) %>% 
   mutate(xy_exists = T) %>%
   full_join(combined_demo, by=c('lab_id' = 'labid', 'participant_id')) %>%
-  # pilot and teest order are used as a stand in to check if demographic data for this participant exists
+  # pilot and test order are used as a stand in to check if demographic data for this participant exists
   mutate(demo_exists = !is.na(pilot) | !is.na(test_order)) %>%
   select(-c('test_order','pilot')) %>% 
   filter(is.na(xy_exists) | !demo_exists)
@@ -74,8 +89,8 @@ id_orphans <- trial_orders %>%
 trial_orders_wide <- trial_orders %>%
   pivot_wider(id_cols = c('lab_id', 'participant_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
 
-trial_orders_design <- read.csv(here('helper', 'metadata', 'trial_order.csv')) %>% 
-  left_join(read.csv(here('helper','metadata', 'fam_order.csv')), by=join_by(fam_order))
+trial_orders_design <- read.csv(here('metadata', 'trial_order.csv')) %>% 
+  left_join(read.csv(here('metadata', 'fam_order.csv')), by=join_by(fam_order))
 
 invalid_trial_orders <- trial_orders_wide %>% 
   anti_join(trial_orders_design, by=paste0('trial_',1:6))
@@ -132,7 +147,7 @@ data_resampled <- data_normalized %>%
 ```{r}
 
 # add information about screen size and eyetracker coordinate origin
-dataset_specs <- read.csv(here('helper', 'metadata', 'dataset_sheet.csv')) %>%
+dataset_specs <- read.csv(here('metadata', 'dataset_sheet.csv')) %>%
   select(data_id, screen_dimensions, point_zero) %>%
   separate(data_id, c("lab_id", "age_cohort"), sep="_") %>% 
   separate(screen_dimensions, c("screen_width", "screen_height"), sep=" x ") %>% 
