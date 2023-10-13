@@ -1,0 +1,43 @@
+---
+title: "Add metadata and validate"
+format: html
+---
+
+Rezero and resample times
+
+
+```{r}
+source(here("helper","resampling_helper.R"))
+
+#filter timepoints with NAs
+data <- data %>%
+  filter(!is.na(t))
+
+#filter data without associated events
+data <- data %>%
+  filter(!is.na(event_num))
+
+#rezero time
+data_rezeroed <- data %>%
+  rezero_times() # right now, rezeroing on event_num (NOT trial_num)
+
+# discuss timing related issues? not a lot of trials affected
+#overly_long_trials <- data_rezeroed %>% filter(t_zeroed > video_duration_ms)
+
+#"normalize" time according to a point of disambiguation
+# Martin: normalizing isn't really relevant here (I don't think) but preserving for now in case we want to include any time normalization
+# Adrian: TODO: I think this differs based on trial? - discuss later
+data_normalized <- data_rezeroed %>%
+  mutate(point_of_disambiguation = replace_na(point_of_disambiguation, 0)) %>% # TODO: check if this hits trial on accident
+  normalize_times()
+
+#Validate that time is provided in milliseconds
+#assert_that(mean(diff(data_normalized$t_norm),na.rm=TRUE) > 1 & mean(diff(data_normalized$t_norm), na.rm=TRUE) < 100)
+# TODO this still fails, have a closer look
+  
+# resample time to 40 Hz
+data_resampled <- data_normalized %>%
+  resample_times()
+# TODO make this function agnostic to additional columns
+
+```
