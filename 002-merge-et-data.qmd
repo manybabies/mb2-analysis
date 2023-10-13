@@ -84,7 +84,8 @@ When there are invalid media names, you need to put them in the right `txt` file
 
 ```{r standardize and validate data}
 vec_renaming <- read_csv(here('metadata', 
-                              'media_renaming.csv')) 
+                              'media_renaming.csv')) %>%
+  {setNames(as.character(.$target), .$original)}
 
 media_deletion <- readLines(here('metadata', 
                                  'media_names_to_remove.txt'))
@@ -104,13 +105,21 @@ data <- xy |>
 Check that all media names fit the appropriate schema. 
 
 ```{r checking_names}
-setdiff(unique(data$media_name), media_names_valid)
-assert_that(is_empty(setdiff(unique(data$media_name), media_names_valid)))
+# this object helps to determine where invalid media names are coming from in cases where the fix is non-obvious
+invalid_media_names <- data %>% 
+  distinct(lab_id, participant_id, media_name) %>% 
+  filter(!media_name %in% media_names_valid)
+
+invalid_media_names$media_name
+
+assert_that(nrow(invalid_media_names) == 0)
+rm(invalid_media_names)
 ```
 
 Now save the merged xy data locally.
 
 ```{r saving}
+dir.create(here("processed_data"), showWarnings = FALSE)
 save(data, file = here("processed_data", "002-merged-et-data.Rds"))
 ```
 
