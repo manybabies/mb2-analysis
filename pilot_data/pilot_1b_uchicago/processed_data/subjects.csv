@@ -1,7 +1,0 @@
-subject_id,dataset_id,age,sex,lab_subject_id,error
-0,8,688,F,MB2_1b_1,TRUE
-1,8,716,M,MB2_1b_2,FALSE
-2,8,725,F,MB2_1b_3,FALSE
-3,8,696,F,MB2_1b_4,FALSE
-4,8,579,M,MB2_1b_5,FALSE
-5,8,690,F,MB2_1b_6,FALSE

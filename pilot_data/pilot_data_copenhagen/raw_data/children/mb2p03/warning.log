@@ -1,8 +1,0 @@
-4416.22	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
-4416.376	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
-4482.215	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4387 Flip Time=4504 Retrace Rate=16.646, prepareTime=148 flip request time 4481
-91223.338	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=91192 Flip Time=91242 Retrace Rate=16.646, prepareTime=76 flip request time 91223
-104400.004	TRIAL.RECORDING.DISPLAY_VIDEO	playTime:star_calibX.wav Desired playtime is later than curren time. Desired Time = 104388 Current Time =104390. Playing with offset 0.
-
-104405.038	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=104382 Flip Time=104421 Retrace Rate=16.646, prepareTime=61 flip request time 104404
-438725.687	TRIAL.RECORDING.DISPLAY_VIDEO	flip time is later than desired time. Desired Time=438722 Flip Time=438745 Retrace Rate=16.646, prepareTime=41 flip request time 438725

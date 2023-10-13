@@ -1,4 +1,0 @@
-4269.026	DISPLAY_INTRO_VIDEO	LOADING RESOURCE SURFACE FROM DISK
-4269.217	DISPLAY_INTRO_VIDEO	LOADING VIDEO RESOURCE AT RUNTIME
-4399.938	DISPLAY_INTRO_VIDEO	flip time is later than desired time. Desired Time=4254 Flip Time=4421 Retrace Rate=16.651, prepareTime=194 flip request time 4399
-178056.152	DISPLAY_BLANK_INTRO_OFF	flip time is later than desired time. Desired Time=178054 Flip Time=178071 Retrace Rate=16.651, prepareTime=55 flip request time 178055

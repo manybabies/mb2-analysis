@@ -1,6 +1,0 @@
-subject_id,age,sex,lab_subject_id,error,dataset_id
-0,745,male,p1b01,FALSE,7
-1,771,male,p1b02,FALSE,7
-2,777,female,p1b03,FALSE,7
-3,776,male,p1b04,FALSE,7
-4,753,female,p1b05,FALSE,7

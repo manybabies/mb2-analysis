@@ -1,7 +1,0 @@
-"Seq_A_24inch"	1	"re-calibrate"	"star_calibX.xvd"	"star_calibX.wav"
-"Seq_A_24inch"	2	"LL1"	"FAM_LL_1200x900X.xvd"	"FAM_LL_1200x900X.wav"
-"Seq_A_24inch"	3	"LR2"	"FAM_LR_1200x900X.xvd"	"FAM_RL_1200x900X.wav"
-"Seq_A_24inch"	4	"RR2"	"FAM_RR_1200x900X.xvd"	"FAM_RR_1200x900X.wav"
-"Seq_A_24inch"	5	"RR1"	"FAM_RR_1200x900X.xvd"	"FAM_RR_1200x900X.wav"
-"Seq_A_24inch"	6	"LL2"	"FAM_LL_1200x900X.xvd"	"FAM_LL_1200x900X.wav"
-"Seq_A_24inch"	7	"RL2"	"FAM_RL_1200x900X.xvd"	"FAM_RL_1200x900X.wav"
