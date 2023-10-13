@@ -37,3 +37,39 @@ Issues to deal with:
 - How to standardize pupil sizes?
 
 - cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
+
+## column-wise validations to be implemented
+Basic columns need to be validated/tested before we pass them on. 
+
+These are: lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right
+
+### lab_id
+- should be in the list 
+- should be characters
+
+### participant_id
+- should be characters
+- should be unique within lab (how to check) 
+- check if it's unique between labs? uniquify?
+- from alvin: how to check participant_id: filter for the rows where t is less than lag(t), i.e., timestamps where t “resets”. then see if length(ppt_id) == length(unique(ppt_id))
+
+### media name
+- should be characters
+- check again that they're in the list
+- check that they're unique within participant_id
+
+### x, y
+- numbers
+- within coordinate system (check coordinate system)
+- not all NA within participant_id, lab_id
+- different from one another within participant_id, lab_id
+
+### t
+- range of t should be on the order of 10^5 and not 10^8
+- check that resampling interval is correct
+- check that they're unique within participant id, lab id, and media name
+
+### pupil_left, pupil_right
+- check that units are scaled
+- check not all NA within participant_id, lab_id
+
