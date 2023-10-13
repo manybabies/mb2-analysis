@@ -27,13 +27,8 @@ xy_timepoints <- d_toddlers |>
          participant_id = ParticipantName,
          pupil_left = PupilLeft,
          pupil_right = PupilRight) |>
-  mutate(lab_id = "babylabChicago",
-         t = t / 1000,
-         average_pupil_size = (pupil_left + pupil_right)/2) |> # microseconds to milliseconds correction, avg pupil size
+  mutate(lab_id = "babylabChicago") |>
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right) |>
   filter(!is.na(media_name)) 
 
 write_csv(xy_timepoints, here(lab_dir, "processed_data/babylabChicago_toddlers_xy_timepoints.csv"))
-
-
-

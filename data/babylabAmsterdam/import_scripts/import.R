@@ -26,11 +26,9 @@ xy_timepoints <- d_adults |>
          participant_id = Session_Name_,
          pupil_left = LEFT_PUPIL_SIZE,
          pupil_right = RIGHT_PUPIL_SIZE) |>
-  mutate(lab_id = "babylabAmsterdam",
-         t = t / 1000,
-         average_pupil_size = AVERAGE_PUPIL_SIZE) |> # microseconds to milliseconds correction, avg pupil size
+  mutate_at(c("x", "y", "t", "pupil_left", "pupil_right"), as.numeric) |>
+  mutate(lab_id = "babylabAmsterdam") |> 
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right) |>
-  # select(x, y, t, media_name, participant_id, pupil_left, pupil_right, average_pupil_size) |>
   filter(!is.na(media_name)) 
 
 write_csv(xy_timepoints, here(lab_dir, "processed_data/babylabAmsterdam_adults_xy_timepoints.csv"))
@@ -46,12 +44,10 @@ xy_timepoints <- d_toddlers |>
          media_name  = videofile, 
          participant_id = Session_Name_,
          pupil_left = LEFT_PUPIL_SIZE,
-         pupil_right = RIGHT_PUPIL_SIZE) |>
-  mutate(lab_id = "babylabAmsterdam",
-         t = t / 1000,
-         average_pupil_size = AVERAGE_PUPIL_SIZE) |> # microseconds to milliseconds correction, avg pupil size
+         pupil_right = RIGHT_PUPIL_SIZE)  |>
+  mutate_at(c("x", "y", "t", "pupil_left", "pupil_right"), as.numeric) |>
+  mutate(lab_id = "babylabAmsterdam") |> 
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right) |>
-  # select(x, y, t, media_name, participant_id, pupil_left, pupil_right, average_pupil_size) |>
   filter(!is.na(media_name)) 
 
 write_csv(xy_timepoints, here(lab_dir, "processed_data/babylabAmsterdam_toddlers_xy_timepoints.csv"))
