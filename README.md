@@ -8,7 +8,7 @@ For the importers:
 
 For the pipeline (affected: Martin, Mike, and Adrian):
 
-* `demographic_data`, `processed_data`, `xy_processed_data` have all been moved to the (now gitignored) `data` folder
+* `demographic_data`, `processed_data`, `xy_processed_data` have all been renamed and moved to the (now gitignored) `data` folder
 * this folder will be automatically populated with subfolders and data through the .qmd files - both demo and et data are downloaded through osf
 * To migrate, simply delete the 3 folders and run both 001 and 002 again (applying some temporary fixes when specific integrity checks fail - these are explained at the specific checks)
 
