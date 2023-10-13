@@ -8,7 +8,7 @@ library(here)
 
 # ------------------------------------------------------------------------------
 # preliminaries 
-lab_dir <- "data/babylabAmsterdam/"
+lab_dir <- "import_scripts/babylabAmsterdam/"
 
 # ------------------------------------------------------------------------------
 # xy_timepoints

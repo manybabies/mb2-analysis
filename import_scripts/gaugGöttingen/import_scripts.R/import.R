@@ -11,7 +11,7 @@ library(janitor)
 # preliminaries 
 
 lab_name <- "gaugGöttingen"
-lab_dir <- paste0("data/", lab_name)
+lab_dir <- paste0("import_scripts/", lab_name)
 
 # eye-tracking data
 d_a <- read_tsv(here(lab_dir, "raw_data/gaugGöttingen_adults_eyetrackingdata.tsv") )

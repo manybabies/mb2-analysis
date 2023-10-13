@@ -2,7 +2,7 @@ library(tidyverse)
 library(here)
 
 LAB_NAME <- 'babylingOslo'
-DATA_DIR = file.path('data', LAB_NAME, 'raw_data')
+DATA_DIR = file.path('import_scripts', LAB_NAME, 'raw_data')
 
 data_toddlers <- read.csv(here(DATA_DIR, "babylingOslo_toddlers_eyetrackingdata.csv"))
 

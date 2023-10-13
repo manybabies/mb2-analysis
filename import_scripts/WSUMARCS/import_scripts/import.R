@@ -2,7 +2,7 @@ library(tidyverse)
 library(here)
 
 LAB_NAME <- 'WSUMARCS'
-DATA_DIR = file.path('data', LAB_NAME, 'raw_data')
+DATA_DIR = file.path('import_scripts', LAB_NAME, 'raw_data')
 
 data_adults1 <- read.csv(here(DATA_DIR, "WSUMARCS_adults_eyetrackingdata_Bin1_order1.csv"))
 data_adults2 <- read.csv(here(DATA_DIR, "WSUMARCS_adults_eyetrackingdata_Bin1 order 2_to_16.csv"))

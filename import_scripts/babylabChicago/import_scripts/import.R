@@ -7,7 +7,7 @@ library(here)
 # and helper functions for XY and AOI
 
 
-lab_dir <- "data/babylabChicago/"
+lab_dir <- "import_scripts/babylabChicago/"
 
 # eye-tracking data
 d_toddlers <- read_tsv(here(lab_dir, "raw_data/babylabChicago_toddlers_eyetrackingdata.tsv"))

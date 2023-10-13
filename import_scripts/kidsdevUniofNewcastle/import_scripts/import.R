@@ -8,7 +8,7 @@ library(here)
 library(edfR)
 # ------------------------------------------------------------------------------
 # preliminaries 
-lab_dir <- "data/kidsdevUniofNewcastle/"
+lab_dir <- "import_scripts/kidsdevUniofNewcastle/"
 
 subjs = dir(here(lab_dir, "raw_data/Adult EDF Files/"))
 

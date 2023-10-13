@@ -3,7 +3,7 @@ library(here)
 library(glue)
 
 LAB_NAME <- "babyLeidenEdu"
-DATA_DIR <- here("data", LAB_NAME)
+DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####

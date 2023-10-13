@@ -3,7 +3,7 @@ library(here)
 library(janitor)
 
 # paths
-lab_dir <- here("data","careylabHarvard")
+lab_dir <- here("import_scripts","careylabHarvard")
 lab_dataset_name <- "careylabHarvard_adults"
 
 # eye-tracking data

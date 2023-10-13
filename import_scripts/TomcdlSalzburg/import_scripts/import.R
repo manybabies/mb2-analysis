@@ -3,7 +3,7 @@ library(here)
 library(janitor)
 
 # paths
-lab_dir <- here("data","TomcdlSalzburg")
+lab_dir <- here("import_scripts","TomcdlSalzburg")
 lab_dataset_name <- "ToMcdlSalzburg_adults"
 
 #dataset 1

@@ -11,7 +11,7 @@ library(janitor)
 # preliminaries 
 
 lab_name <- "socialcogUmiami"
-lab_dir <- paste0("data/", lab_name, "/")
+lab_dir <- paste0("import_scripts/", lab_name, "/")
 
 # eye-tracking data
 d <- read_tsv(here(lab_dir, "raw_data/socialcogUmiami_adults_eyetracking.tsv") )

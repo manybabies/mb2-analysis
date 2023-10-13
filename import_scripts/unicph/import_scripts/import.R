@@ -12,7 +12,7 @@ library(eyelinkReader)
 # load point of disambiguation data
 # and helper functions for XY and AOI
 
-lab_dir <- "data/unicph/"
+lab_dir <- "import_scripts/unicph/"
 
 # participant data
 p <- read_csv(here(lab_dir, "raw_data/"))

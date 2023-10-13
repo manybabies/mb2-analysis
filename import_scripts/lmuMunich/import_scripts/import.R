@@ -5,7 +5,7 @@ library(here)
 library(janitor)
 
 lab_name <- "lmuMunich"
-lab_dir <- paste0("data/", lab_name, "/")
+lab_dir <- paste0("import_scripts/", lab_name, "/")
 
 # ------------------------------------------------------------------------------
 # adults 

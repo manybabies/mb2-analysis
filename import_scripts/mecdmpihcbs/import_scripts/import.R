@@ -7,7 +7,7 @@ library(tidyverse)
 library(here)
 
 # preliminaries 
-lab_dir <- "data/mecdmpihcbs"
+lab_dir <- "import_scripts/mecdmpihcbs"
 
 d_adults <- read_csv(here(lab_dir, "raw_data/mecdmpihcbs_adults_eyetracking_data.csv"))
 
