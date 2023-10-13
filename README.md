@@ -1,3 +1,18 @@
+## Repo restructuring notice 2023/10/14 (leave this up for the next few meetings until all contributors have updated their setup)
+
+For the importers:
+
+* The prior 'data' folder has been renamed to 'import_scripts'
+  * if you were currently working on a specific input when pulling, be sure to move over your 'raw_data' subfolder(s) over
+  * be sure to create all new import scripts under the new folder (the import guide has already been updated)
+
+For the pipeline (affected: Martin, Mike, and Adrian):
+
+* `demographic_data`, `processed_data`, `xy_processed_data` have all been moved to the (now gitignored) `data` folder
+* this folder will be automatically populated with subfolders and data through the .qmd files - both demo and et data are downloaded through osf
+* To migrate, simply delete the 3 folders and run both 001 and 002 again (applying some temporary fixes when specific integrity checks fail - these are explained at the specific checks)
+
+
 # mb2-analysis
 
 Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, [Schuwerk, Kampis et al. (accepted pending data collection)](https://psyarxiv.com/x4jbm/). 
@@ -25,7 +40,7 @@ Proposed changes to folder structure:
 
 Issues to deal with:
 
-- download demographic data!
+- demo files need some cleaning up
 
 - Pipeline is glued together, but needs sanity checking/visualization to see if it is working correctly (it probably isn't right now)
 
@@ -37,6 +52,8 @@ Issues to deal with:
 - How to standardize pupil sizes?
 
 - cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
+
+- how to preprocess exclusion data?
 
 ## column-wise validations to be implemented
 Basic columns need to be validated/tested before we pass them on. 
@@ -73,3 +90,19 @@ These are: lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right
 - check that units are scaled
 - check not all NA within participant_id, lab_id
 
+
+
+## leftover text from the files (delete?):
+
+Processing tasks that we will do centrally:
+
+Reconcile media names - Code done, renamings for new datasets still pending
+Create trial numbers - done
+Standardize media names - Code done, renamings for new datasets still pending
+Zero times within trials - done
+Resample times - done
+Clip XY outside of screen coordinates - done
+Flip coordinate origin - Done
+Create/process AOIs - Done
+
+Standardize pupil sizes

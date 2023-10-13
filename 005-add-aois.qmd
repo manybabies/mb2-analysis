@@ -1,10 +1,18 @@
 ---
-title: "Add metadata and validate"
+title: "Add aois-hits to the eyetracking data"
 format: html
 ---
 
 ```{r}
-load(here("processed_data", "004-resampled-data.Rds"))
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+```
+
+```{r}
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
 ```
 
 
@@ -71,6 +79,8 @@ draw_aoi <- function(aoi_name, color){
 
 temp <- filter(data_with_aois, lab_id=="careylabHarvard"&participant_id=="1810EmCh")
 
+# Todo: visualisations like this are still a bit accurate as the x/y coordinates are based on the screen, not the stimulus dimensions
+
 ggplot(temp,aes(x,y)) + 
   xlim(0, 1280) +
   ylim(0, 960) +
@@ -92,6 +102,5 @@ ggplot(temp,aes(x,y)) +
 
 
 ```{r saving}
-dir.create(here("processed_data"), showWarnings = FALSE)
-save(data_with_aois, file = here("processed_data", "005-aoi-data.Rds"))
+save(data_with_aois, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 ```

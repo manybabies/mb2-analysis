@@ -1,29 +1,23 @@
 ---
-title: "Add metadata and validate"
+title: "MB2 Add trial orders and validate"
 format: html
 ---
 
 Load data from the cached datafile. 
 
 ```{r}
-load(here("processed_data", "002-merged-et-data.Rds"))
-load(here("processed_data", "001-demographic-data-adults.Rds"))
-load(here("processed_data", "001-demographic-data-toddlers.Rds"))
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
 ```
 
-
-## Processing tasks that we will do centrally
-
-Reconcile media names - Code done, renamings for new datasets still pending
-Create trial numbers - done
-Standardize media names - Code done, renamings for new datasets still pending
-Zero times within trials - done
-Resample times - done
-Clip XY outside of screen coordinates - done
-Flip coordinate origin - Done
-Create/process AOIs - Done
-
-Standardize pupil sizes
+```{r}
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
+```
 
 
 ```{r}
@@ -34,7 +28,9 @@ Standardize pupil sizes
 data <- data %>% 
   filter(!(lab_id %in% c(
   'babylabNijmegen', # various participants affected
-  'babylabAmsterdam' # UVA_127
+  'babylabAmsterdam', # UVA_127
+  'DevlabAU', # various participants affected
+  'mecdmpihcbs' # MPI_022
   )))
 
 data %>% group_by(lab_id, participant_id, media_name)
@@ -68,9 +64,11 @@ media_name_collisions <- trial_orders %>%
   group_by(lab_id, participant_id, media_name) %>% 
   filter(n() > 1)
 
+# temporary fix to push the data further through: go to the top and exclude specific labs 
+assert_that(nrow(media_name_collisions) == 0)
+
 data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
 
-# TODO: Save the adult/toddler demographic data in 001 and read it into this script
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
   select(labid, participant_id, test_order, pilot) %>% 
@@ -118,9 +116,5 @@ trial_order_mismatches <- combined_demo %>%
 Now save the trial order data locally.
 
 ```{r saving}
-dir.create(here("processed_data"), showWarnings = FALSE)
-save(data, file = here("processed_data", "003-traildata-added-data.Rds"))
+save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_003))
 ```
-
-
-
