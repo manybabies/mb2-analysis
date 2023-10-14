@@ -4,15 +4,23 @@ format: html
 editor: visual
 ---
 
-
 ```{r}
 library(tidyverse)
 library(here)
 library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+```
+
+
+```{r download, eval= FIRST_TIME}
+source(here('helper', 'osf_download.R'))
+gather_osf_data("qv5hb", DEMO_DATA_DIR)
 ```
 
 ```{r}
-files <- dir(here("demographic_data/"))
+  
+files <- dir(here(DEMO_DATA_DIR))
 adults <- files[str_detect(files, "adults")]
 toddlers <- files[str_detect(files, "toddlers")]
 
@@ -26,7 +34,7 @@ Note that despite validation we still didn't end up get perfectly valid data. BU
 adult_demo <- adults |>
   map_df(function(fname) {
     print(fname)
-    read_csv(here("demographic_data/",fname),
+    read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE)  |>
       mutate(education = as.character(education),
              testing_date = as.character(testing_date),
@@ -38,13 +46,14 @@ adult_demo <- adults |>
   }) 
 ```
 
-Fix our sadness. 
+Fix our sadness.
 
 ```{r}
 adult_demo <- adult_demo |>
   mutate(age_years = as.numeric(age_years))
 ```
-Toddlers next. 
+
+Toddlers next.
 
 ```{r}
 columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
@@ -61,20 +70,20 @@ columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
 toddler_demo <- toddlers |>
   map_df(function(fname) {
     print(fname)
-    read_csv(here("demographic_data/",fname),
+    read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE)  |>
       mutate(across(columns_to_character, as.character)) |>
       select(labid:anything_else)
   }) 
 ```
 
-We will need to fix these. 
+We will need to fix these.
 
 ## Demographics
 
-Age histogram. 
+Age histogram.
 
-Based on spot checks, it appears that these are real kids who just fall outside of age range. 
+Based on spot checks, it appears that these are real kids who just fall outside of age range.
 
 ```{r}
 days_in_month = 365.25/12
@@ -83,11 +92,11 @@ ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = labid)) +
   theme(legend.position = "bottom")
 ```
 
-
+```{r saving}
+save(adult_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
+save(toddler_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
+```
 
 # Exclusions
 
-Note to write out a table here. 
-
-
-
+Note to write out a table here.

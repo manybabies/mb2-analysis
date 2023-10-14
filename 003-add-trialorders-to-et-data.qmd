@@ -1,0 +1,120 @@
+---
+title: "MB2 Add trial orders and validate"
+format: html
+---
+
+Load data from the cached datafile. 
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+```
+
+```{r}
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
+```
+
+
+```{r}
+
+# TODO these labs are currently broken - investigate this
+# (lab_id, participant_id, media_name) does not uniquely identify a trial_number
+# (duplicate participant namings?)
+data <- data %>% 
+  filter(!(lab_id %in% c(
+  'babylabNijmegen', # various participants affected
+  'babylabAmsterdam', # UVA_127
+  'DevlabAU', # various participants affected
+  'mecdmpihcbs' # MPI_022
+  )))
+
+data %>% group_by(lab_id, participant_id, media_name)
+
+
+# We need to do the following two steps here, as trial_details depend on specific filenames, 
+# while trial ordering only cares about the canon media names
+data <- data %>%
+  # add point of disambiguation and target aoi to the data
+  left_join(
+    read.csv(here('metadata', 'trial_details.csv')) %>%
+      mutate(media_name = tools::file_path_sans_ext(trial_file_name)) %>%
+      rename(point_of_disambiguation = point_of_disambig_ms), 
+    by=join_by(media_name)) %>%
+  # Extract media version information from media version string
+  mutate( 
+    media_version = ifelse(grepl('_new', media_name),0,1),
+    media_name = gsub("_new", "", media_name)
+    )
+
+
+# Add trial numbers to the data
+trial_orders <- data %>% 
+  filter(media_name != 'star_calib') %>% # remove calibration from numbering
+  group_by(lab_id, participant_id) %>%
+  mutate(trial_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>%
+  distinct(lab_id, participant_id, media_name, trial_num)
+
+# validate trial_orders before joining them to the data
+media_name_collisions <- trial_orders %>% 
+  group_by(lab_id, participant_id, media_name) %>% 
+  filter(n() > 1)
+
+# temporary fix to push the data further through: go to the top and exclude specific labs 
+assert_that(nrow(media_name_collisions) == 0)
+
+data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
+
+# create a table containing some demographic data from both toddlers and adults to perform integrity checks
+combined_demo <- adult_demo %>%
+  select(labid, participant_id, test_order, pilot) %>% 
+  bind_rows(
+    toddler_demo %>%
+      select(labid, participant_id, test_order, pilot)
+    )
+
+# Validate that the (lab specific) participant ids in the data line up with the ids from the (lab specific) demographic files
+# This also triggers on mismatches in labid namings
+id_orphans <- trial_orders %>% 
+  distinct(lab_id, participant_id) %>% 
+  mutate(xy_exists = T) %>%
+  full_join(combined_demo, by=c('lab_id' = 'labid', 'participant_id')) %>%
+  # pilot and test order are used as a stand in to check if demographic data for this participant exists
+  mutate(demo_exists = !is.na(pilot) | !is.na(test_order)) %>%
+  select(-c('test_order','pilot')) %>% 
+  filter(is.na(xy_exists) | !demo_exists)
+
+#assert_that(nrow(id_orphans) == 0)
+# TODO Have a close look at this once all of the data was collected
+
+# Validate trial orders
+trial_orders_wide <- trial_orders %>%
+  pivot_wider(id_cols = c('lab_id', 'participant_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
+
+trial_orders_design <- read.csv(here('metadata', 'trial_order.csv')) %>% 
+  left_join(read.csv(here('metadata', 'fam_order.csv')), by=join_by(fam_order))
+
+invalid_trial_orders <- trial_orders_wide %>% 
+  anti_join(trial_orders_design, by=paste0('trial_',1:6))
+#assert_that(nrow(invalid_trial_orders) == 0)
+
+trial_order_mismatches <- combined_demo %>%
+  select(labid, participant_id, test_order) %>% 
+  inner_join(trial_orders_wide %>% 
+               inner_join(trial_orders_design, by=paste0('trial_',1:6)) # determine seen trials
+    , by=c('labid' = 'lab_id', 'participant_id')) %>% 
+  filter(test_order != trial_order)
+
+#assert_that(nrow(trial_order_mismatches) == 0)
+#rm(trial_orders, trial_orders_design)
+```
+
+Now save the trial order data locally.
+
+```{r saving}
+save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_003))
+```

@@ -1,7 +1,19 @@
 ---
-title: "Add metadata and validate"
+title: "Add aois-hits to the eyetracking data"
 format: html
 ---
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+```
+
+```{r}
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
+```
 
 
 ```{r}
@@ -67,6 +79,8 @@ draw_aoi <- function(aoi_name, color){
 
 temp <- filter(data_with_aois, lab_id=="careylabHarvard"&participant_id=="1810EmCh")
 
+# Todo: visualisations like this are still a bit accurate as the x/y coordinates are based on the screen, not the stimulus dimensions
+
 ggplot(temp,aes(x,y)) + 
   xlim(0, 1280) +
   ylim(0, 960) +
@@ -84,4 +98,32 @@ ggplot(temp,aes(x,y)) +
 #  xlim(0, administrations$monitor_size_x[1]) + 
 #  ylim(0, administrations$monitor_size_y[1]) 
 
+```
+```{r}
+# preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
+# needs some tweaking, just throwing the code into the repo for now
+
+create_and_save_linegraph <- function(data, info){
+  render <- data %>%
+    group_by(t_norm) %>%
+    summarise(ls = sum(hit)/n())
+  
+  png(filename=paste0('lookingscore_fam', info$lab_id[1], '_', info$age_cohort[1],'.png'))
+  plot(render$t_norm, render$ls, type = "l")
+  dev.off()
+}
+
+# uncomment this once I have decided where to put the images, they currently get dumped into the projects root
+#data_with_aois %>% 
+#  filter(media_name != 'star_calib') %>%
+#  filter(grepl('FAM', media_name)) %>% 
+#  filter(grepl('target|distractor', aoi)) %>% 
+#  mutate(hit = ifelse(grepl('target', aoi), 1, 0)) %>%
+#  group_by(lab_id, age_cohort) %>% 
+#  group_walk(create_and_save_linegraph)
+
+```
+
+```{r saving}
+save(data_with_aois, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 ```

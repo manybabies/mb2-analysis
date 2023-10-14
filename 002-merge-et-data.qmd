@@ -1,5 +1,5 @@
 ---
-title: "Merge eye-tracking data"
+title: "MB2 Merge eye-tracking data"
 format: html
 ---
 
@@ -7,29 +7,16 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
 FIRST_TIME = FALSE
 ```
 
 Download data locally
 
 ```{r download, eval= FIRST_TIME}
-mb2_data <- osfr::osf_retrieve_node("p3txj")
-files <- osfr::osf_ls_files(mb2_data, n_max = 1000)
-
-PROCESSED_DATA_DIR = "processed_xy_data"
-
-dir.create(here(PROCESSED_DATA_DIR), showWarnings = FALSE)
-
-files |>
-  mutate(idx = 1:n()) %>%
-  base::split(.$idx) |>
-  map(function(f) {
-    print(f$name[1])
-    osfr::osf_download(f, 
-                       path = here(PROCESSED_DATA_DIR), 
-                       conflicts = "skip", 
-                       progress = TRUE)
-  })
+source(here('helper', 'osf_download.R'))
+gather_osf_data("p3txj", XY_DATA_DIR)
 ```
 Before we load these data, let's quickly check for compliance with column naming conventions. 
 
@@ -46,12 +33,12 @@ col_types = list(lab_id = col_character(),
                  pupil_left = col_double(),
                  pupil_right = col_double())
 
-local_files <- dir(here("processed_xy_data"), pattern = "*.csv")
+local_files <- dir(here(XY_DATA_DIR), pattern = "*.csv")
 
 for (f in local_files) {
   print(f)
   
-  d <- read_csv(here("processed_xy_data",f), n_max = 100, 
+  d <- read_csv(here(XY_DATA_DIR,f), n_max = 100, 
                 col_types = col_types)
   
   # check that all columns are in the col list
@@ -66,7 +53,7 @@ Now, load local data.
 ```{r load data}
 xy <- local_files |>
   map_df(function(f) {
-    d <- read_csv(here("processed_xy_data",f),
+    d <- read_csv(here(XY_DATA_DIR,f),
                   col_types = col_types)
     
     
@@ -105,6 +92,10 @@ data <- xy |>
 Check that all media names fit the appropriate schema. 
 
 ```{r checking_names}
+
+# quick fix to push data further down the pipeline while excluding broken names
+#data <- data %>% filter(media_name %in% media_names_valid) 
+
 # this object helps to determine where invalid media names are coming from in cases where the fix is non-obvious
 invalid_media_names <- data %>% 
   distinct(lab_id, participant_id, media_name) %>% 
@@ -119,7 +110,6 @@ rm(invalid_media_names)
 Now save the merged xy data locally.
 
 ```{r saving}
-dir.create(here("processed_data"), showWarnings = FALSE)
-save(data, file = here("processed_data", "002-merged-et-data.Rds"))
+save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 ```
 
