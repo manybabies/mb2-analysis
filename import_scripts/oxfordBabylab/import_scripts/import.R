@@ -7,7 +7,7 @@ DATA_DIR = file.path('import_scripts', LAB_NAME)
 dir.create(here(DATA_DIR),"processed_data")
 
 ###Toddler data###
-oxf_toddlers <- read_tsv('oxfordBabylab_toddlers_eyetrackingdata.tsv')
+oxf_toddlers <- read_tsv(here(DATA_DIR, "raw_data","oxfordBabylab_toddlers_eyetrackingdata.tsv"))
 
 oxf_toddlers_clean <- oxf_toddlers %>% 
   rename(participant_id = `Participant name`,
