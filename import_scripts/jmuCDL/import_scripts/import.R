@@ -7,8 +7,8 @@ DATA_DIR = file.path('import_scripts', LAB_NAME)
 dir.create(here(DATA_DIR),"processed_data")
 
 ###Adult data###
-jmu_1 <- read_tsv('jmuCDL_adults_eyetrackingdata_bin3.tsv')
-jmu_2 <- read_tsv('jmuCDL_adults_eyetrackingdata_bin4.tsv')
+jmu_1 <- read_tsv(here(DATA_DIR,"raw_data","jmuCDL_adults_eyetrackingdata_bin3.tsv"))
+jmu_2 <- read_tsv(here(DATA_DIR,"raw_data","jmuCDL_adults_eyetrackingdata_bin4.tsv"))
 jmu_adults<-rbind(jmu_1,jmu_2)
 
 jmu_adults_clean <- jmu_adults %>% 
