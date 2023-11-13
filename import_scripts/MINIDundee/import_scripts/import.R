@@ -7,7 +7,7 @@ DATA_DIR = file.path('import_scripts', LAB_NAME)
 dir.create(here(DATA_DIR),"processed_data")
 
 ###Adult data###
-MIN_adults <- read_tsv('MINIDundee_adults_eyetrackingdata.tsv')
+MIN_adults <- read_tsv(here(DATA_DIR, "raw_data","MINIDundee_adults_eyetrackingdata.tsv"))
 
 MIN_adults_clean <- MIN_adults %>% 
   rename(participant_id = `Participant name`,
