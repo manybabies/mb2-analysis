@@ -19,6 +19,7 @@ Cor_toddlers_clean <- Cor_toddlers %>%
          pupil_right = `Pupil diameter right`
   ) %>% 
   mutate(lab_id = LAB_NAME,
+         t = t/1000, ## microseconds to milliseconds
          media_name=str_replace_all(media_name,"_new",""))%>%
   select(lab_id,participant_id,media_name,x,y,t,pupil_left,pupil_right)
 
@@ -37,6 +38,7 @@ Cor_adults_clean <- Cor_adults %>%
          pupil_right = `Pupil diameter right`
   ) %>% 
   mutate(lab_id = LAB_NAME,
+         t = t/1000, ## microseconds to milliseconds
          media_name=str_replace_all(media_name,"_new",""))%>%
   select(lab_id,participant_id,media_name,x,y,t,pupil_left,pupil_right)
 
