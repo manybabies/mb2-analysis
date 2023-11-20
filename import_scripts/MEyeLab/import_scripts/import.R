@@ -3,16 +3,16 @@ library(here)
 library(glue)
 library(eyelinkReader)
 
-LAB_NAME <- "unicph"
+LAB_NAME <- "MEyeLab"
 DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
-#### Toddler data ####
-data_path_toddlers <- here(DATA_DIR, "raw_data", "unicph_toddlers_eyetrackingdata")
-data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
+#### Adult data ####
+data_path_adults <- here(DATA_DIR, "raw_data", "MEyeLab_adults_eyetrackingdata")
+data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
 
-data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
-  data_edf <- read_edf(here(data_path_toddlers, fp),
+data_adults_cleaned <- lapply(data_files_adults, \(fp) {
+  data_edf <- read_edf(here(data_path_adults, fp),
                        import_samples = TRUE,
                        import_saccades = FALSE,
                        import_blinks = FALSE,
@@ -26,7 +26,7 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                 filter(variable == "trialtype") |> 
                 select(trial, media_name = value),
               by = "trial") |> 
-    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
+    mutate(participant_id = str_remove(fp, "/.*"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
@@ -39,6 +39,6 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
   samples
 }) |> bind_rows()
 
-write_csv(data_toddlers_cleaned,
-          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
+write_csv(data_adults_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
