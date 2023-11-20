@@ -1,38 +1,78 @@
-# kidsdevUniofNewcastle
-# Gal Raz import script
-# following data import guide:
-# https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit
-
 library(tidyverse)
 library(here)
-library(edfR)
-# ------------------------------------------------------------------------------
-# preliminaries 
-lab_dir <- "import_scripts/kidsdevUniofNewcastle/"
+library(glue)
+library(eyelinkReader)
 
-subjs = dir(here(lab_dir, "raw_data/Adult EDF Files/"))
+LAB_NAME <- "kidsdevUniofNewcastle"
+DATA_DIR <- here("import_scripts", LAB_NAME)
+dir.create(here(DATA_DIR, "processed_data"))
 
-d.pretrim <- subjs %>%
-  map_df(function(subj) {
-    xy = edf.samples(paste0(here(lab_dir, "raw_data/Adult EDF Files/"), subj, "/", subj, ".edf"), trials=T) %>%
-      mutate(lab_subject_id = subj)
-    msg = edf.messages(paste0(here(lab_dir, "raw_data/Adult EDF Files/"), subj, "/", subj, ".edf"))
-    
-    
-    
-    framestart =  filter(msg, grepl("Frame to be displayed 1$", msg)) %>%
-      mutate(eyetrial = 1:n(),
-             msg = str_replace_all(msg, "\\s", "|")) %>%
-      separate(msg, into=c("offset", "a", "b", "c", "d", "frame"), sep="\\|") %>%
-      mutate(first_frame_time = time + as.numeric(as.character(offset))) %>%
-      select(first_frame_time, eyetrial)
-    
-    dd = filter(msg, grepl("videofile", msg)) %>%
-      separate(msg, into=c("V", "VAR", "videofile", "video_name"), sep=" ") %>%
-      mutate(eyetrial=1:n()) %>%
-      select(eyetrial, video_name) %>%
-      left_join(framestart)
-    
-    left_join(xy, dd)
-  }
-  )
+#### Adult data ####
+data_path_adults <- here(DATA_DIR, "raw_data", "Adult EDF Files")
+data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
+
+data_adults_cleaned <- lapply(data_files_adults, \(fp) {
+  data_edf <- read_edf(here(data_path_adults, fp),
+                       import_samples = TRUE,
+                       import_saccades = FALSE,
+                       import_blinks = FALSE,
+                       import_fixations = FALSE,
+                       sample_attributes = c("time", # time
+                                             "px", "py", # pupil coords
+                                             "pa")) # pupil area
+  
+  samples <- data_edf$samples |> 
+    left_join(data_edf$variables |> 
+                filter(variable == "trialtype") |> 
+                select(trial, media_name = value),
+              by = "trial") |> 
+    mutate(participant_id = str_remove(fp, "/.*"),
+           x = mean(c(pxL, pxR), na.rm = TRUE),
+           y = mean(c(pyL, pyR), na.rm = TRUE),
+           lab_id = LAB_NAME) |> 
+    select(participant_id, 
+           x, y, 
+           t = time, media_name,
+           pupil_left = paL, pupil_right = paR,
+           lab_id)
+  
+  samples
+}) |> bind_rows()
+
+write_csv(data_adults_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
+
+#### Toddler data ####
+data_path_toddlers <- here(DATA_DIR, "raw_data", "Toddler EDF Files")
+data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
+
+data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
+  data_edf <- read_edf(here(data_path_toddlers, fp),
+                       import_samples = TRUE,
+                       import_saccades = FALSE,
+                       import_blinks = FALSE,
+                       import_fixations = FALSE,
+                       sample_attributes = c("time", # time
+                                             "px", "py", # pupil coords
+                                             "pa")) # pupil area
+  
+  samples <- data_edf$samples |> 
+    left_join(data_edf$variables |> 
+                filter(variable == "trialtype") |> 
+                select(trial, media_name = value),
+              by = "trial") |> 
+    mutate(participant_id = str_remove(fp, "/.*"),
+           x = mean(c(pxL, pxR), na.rm = TRUE),
+           y = mean(c(pyL, pyR), na.rm = TRUE),
+           lab_id = LAB_NAME) |> 
+    select(participant_id, 
+           x, y, 
+           t = time, media_name,
+           pupil_left = paL, pupil_right = paR,
+           lab_id)
+  
+  samples
+}) |> bind_rows()
+
+write_csv(data_toddlers_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
