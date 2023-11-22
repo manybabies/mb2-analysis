@@ -1,13 +1,13 @@
 ---
 title: "MB2 Demographic Data Processing"
 format: html
-editor: visual
 ---
 
 ```{r}
 library(tidyverse)
 library(here)
 library(assertthat)
+library(fuzzyjoin)
 
 source(here('helper','ensure_repo_structure.R'))
 ```
@@ -85,7 +85,6 @@ toddler_demo <- rename(toddler_demo, lab_id = labid)
 adult_demo <- rename(adult_demo, lab_id = labid)
 ```
 
-
 ## Demographics
 
 Age histogram.
@@ -94,10 +93,46 @@ Based on spot checks, it appears that these are real kids who just fall outside 
 
 ```{r}
 days_in_month = 365.25/12
-ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = labid)) + 
+ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = lab_id)) + 
   geom_histogram() + 
   theme(legend.position = "bottom")
 ```
+
+## Correct lab_ids
+
+Use website/airtable canonical lab IDs for correction
+
+```{r}
+lab_ids <- read_csv(here("metadata","labids.csv")) |>
+  rename(lab_id = LabID) 
+
+adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids, 
+                by = "lab_id", 
+                max_dist = 1, 
+                ignore_case = TRUE) |>
+  mutate(lab_id.y = case_when(lab_id.x == "BLT_Trento" ~ "babylabTrento",
+                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
+                              TRUE ~ lab_id.y)) |>
+  rename(lab_id = lab_id.y) |>
+  select(-lab_id.x)
+
+
+toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids, 
+                by = "lab_id", 
+                max_dist = 1, 
+                ignore_case = TRUE) |>
+  mutate(lab_id.y = case_when(lab_id.x == "BLT_Trento" ~ "babylabTrento",
+                              lab_id.x == "UHH" ~ "kokuHamburg",
+                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
+                              TRUE ~ lab_id.y)) |>
+  rename(lab_id = lab_id.y) |>
+  select(-lab_id.x)
+
+assert_that(!any(is.na(toddler_demo$lab_id)))
+assert_that(!any(is.na(adult_demo$lab_id)))
+```
+
+# Saving
 
 ```{r saving}
 save(adult_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))

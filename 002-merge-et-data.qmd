@@ -87,6 +87,12 @@ xy <- local_files |>
       d$t <- d$t / 1000
     }
     
+    # if in seconds
+    is_seconds <- median(diff(d$t)) < .1
+    if (is_seconds) {
+      d$t <- d$t * 1000
+    }
+    
     # resample time to 40 Hz
     d_resamp <- d |>
       resample_times(timepoint_col_name = "t", 
@@ -156,12 +162,36 @@ Let's go column by column.
 
 ## lab_id
 
+First, let's canonicalize the lab_ids, then check that they match demographics.
+
+```{r}
+lab_ids <- read_csv(here("metadata","labids.csv")) |>
+  rename(lab_id = LabID) 
+
+data_labfix <- fuzzyjoin::stringdist_left_join(data, lab_ids, 
+                by = "lab_id", 
+                max_dist = 1, 
+                distance_col = "distance",
+                ignore_case = TRUE) |>
+  mutate(lab_id.y = case_when(lab_id.x == "oxfordBabylab" ~ "babylabOxford",
+                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
+                              TRUE ~ lab_id.y)) |>
+  rename(lab_id = lab_id.y)  
+
+assert_that(!any(is.na(data_labfix$lab_id)))
+```
+
+Now check for match to demos. 
+
+
 ```{r}
 load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
 load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
 
-et_adult_labids <- unique(filter(data, age_cohort == "adults")$lab_id)
-et_toddler_labids <- unique(filter(data, age_cohort == "toddlers")$lab_id)
+et_adult_labids <- unique(filter(data_labfix, 
+                                 age_cohort == "adults")$lab_id)
+et_toddler_labids <- unique(filter(data_labfix, 
+                                   age_cohort == "toddlers")$lab_id)
 
 demo_adult_labids <- unique(adult_demo$lab_id)
 demo_toddler_labids <- unique(toddler_demo$lab_id)
@@ -170,21 +200,22 @@ demo_toddler_labids <- unique(toddler_demo$lab_id)
 Check overlap/non-overlap in IDs. First adults.
 
 ```{r}
-print(paste("ET IDs not in demo:", 
+print(paste("demo IDs not in ET:", 
             dplyr::setdiff(demo_adult_labids, et_adult_labids)))
 
-print(paste("demo IDs not in ET:", 
+print(paste("ET IDs not in demo:", 
             dplyr::setdiff(et_adult_labids, demo_adult_labids)))
 ```
 Now toddlers. 
 
 ```{r}
-print(paste("ET IDs not in demo:", 
+print(paste("demo IDs not in ET:", 
             dplyr::setdiff(demo_toddler_labids, et_toddler_labids)))
 
-print(paste("demo IDs not in ET:", 
+print(paste("ET IDs not in demo:", 
             dplyr::setdiff(et_toddler_labids, demo_toddler_labids)))
 ```
+
 Now the test.
 
 ```{r}
@@ -193,6 +224,10 @@ assert_that(is_empty(dplyr::setdiff(et_adult_labids, demo_adult_labids)))
 assert_that(is_empty(dplyr::setdiff(demo_toddler_labids, et_toddler_labids)))
 assert_that(is_empty(dplyr::setdiff(et_toddler_labids, demo_toddler_labids)))
 
+```
+```{r}
+data <- data_labfix |>
+  select(-lab_id.x, distance)
 ```
 
 ## participant_id
@@ -304,7 +339,7 @@ data |>
   group_by(lab_id) |>
   summarise(min_t = min(t_norm, na.rm=TRUE), 
             max_t = max(t_norm, na.rm=TRUE), 
-            mean_diff = round(mean(diff(t_norm), na.rm=TRUE))) 
+            mean_diff = median(diff(t_norm), na.rm=TRUE))
 
 ```
 
