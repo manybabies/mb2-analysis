@@ -11,6 +11,7 @@ library(here)
 library(assertthat)
 
 source(here('helper','ensure_repo_structure.R'))
+source(here("helper","resampling_helper.R")) # for make_media_nums
 ```
 
 ```{r}
@@ -56,7 +57,7 @@ data <- data %>%
 trial_orders <- data %>% 
   filter(media_name != 'star_calib') %>% # remove calibration from numbering
   group_by(lab_id, participant_id) %>%
-  mutate(trial_num = cumsum(c(1, na.omit(media_name != lag(media_name))))) %>%
+  mutate(trial_num = make_media_nums(media_name)) %>%
   distinct(lab_id, participant_id, media_name, trial_num)
 
 # validate trial_orders before joining them to the data
