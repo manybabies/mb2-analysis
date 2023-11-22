@@ -11,6 +11,7 @@ library(assertthat)
 source(here('helper','ensure_repo_structure.R'))
 FIRST_TIME = FALSE
 ```
+# Download and check columns
 
 Download data locally
 
@@ -48,6 +49,9 @@ for (f in local_files) {
   print(see_if(all(names(d) %in% cols)))
 }
 ```
+
+# Load local data
+
 Now, load local data.
 
 ```{r load data}
@@ -64,6 +68,7 @@ xy <- local_files |>
     return(d)
   })
 ```
+# Standardize media names
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
@@ -106,6 +111,221 @@ invalid_media_names$media_name
 assert_that(nrow(invalid_media_names) == 0)
 rm(invalid_media_names)
 ```
+
+
+# Column-wise validation
+
+
+
+We have: 
+
+```{r}
+names(data)
+```
+
+Let's go column by column. 
+
+## lab_id
+
+```{r}
+load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
+load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
+
+et_adult_labids <- unique(filter(data, age_cohort == "adults")$lab_id)
+et_toddler_labids <- unique(filter(data, age_cohort == "toddlers")$lab_id)
+
+demo_adult_labids <- unique(adult_demo$lab_id)
+demo_toddler_labids <- unique(toddler_demo$lab_id)
+```
+
+Check overlap/non-overlap in IDs. First adults.
+
+```{r}
+print(paste("ET IDs not in demo:", 
+            dplyr::setdiff(demo_adult_labids, et_adult_labids)))
+
+print(paste("demo IDs not in ET:", 
+            dplyr::setdiff(et_adult_labids, demo_adult_labids)))
+```
+Now toddlers. 
+
+```{r}
+print(paste("ET IDs not in demo:", 
+            dplyr::setdiff(demo_toddler_labids, et_toddler_labids)))
+
+print(paste("demo IDs not in ET:", 
+            dplyr::setdiff(et_toddler_labids, demo_toddler_labids)))
+```
+Now the test.
+
+```{r}
+assert_that(is_empty(dplyr::setdiff(demo_adult_labids, et_adult_labids)))
+assert_that(is_empty(dplyr::setdiff(et_adult_labids, demo_adult_labids)))
+assert_that(is_empty(dplyr::setdiff(demo_toddler_labids, et_toddler_labids)))
+assert_that(is_empty(dplyr::setdiff(et_toddler_labids, demo_toddler_labids)))
+
+```
+
+## participant_id
+
+
+```{r}
+et_adult_pids <- filter(data, age_cohort == "adults") |>
+  select(lab_id, participant_id) |>
+  distinct() 
+
+et_toddler_pids <- filter(data, age_cohort == "toddlers") |>
+  select(lab_id, participant_id) |>
+  distinct() 
+
+demo_adult_pids <- adult_demo |>
+  select(lab_id, participant_id) |>
+  distinct() 
+
+demo_toddler_pids <- toddler_demo |>
+  select(lab_id, participant_id) |>
+  distinct()
+```
+
+Check overlap/non-overlap in IDs. First adults.
+
+```{r}
+anti_join(et_adult_pids, demo_adult_pids)
+
+anti_join(demo_adult_pids, et_adult_pids)
+```
+
+Now toddlers. 
+
+```{r}
+anti_join(et_adult_pids, demo_adult_pids)
+
+anti_join(demo_adult_pids, et_adult_pids)
+```
+
+Now the test.
+
+```{r}
+assert_that(is_empty(anti_join(et_adult_pids, demo_adult_pids)))
+assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids)))
+assert_that(is_empty(anti_join(et_adult_pids, demo_adult_pids)))
+assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids)))
+```
+
+
+## x
+
+
+```{r}
+data |>
+  group_by(lab_id) |>
+  summarise(min_x = min(x, na.rm=TRUE), 
+            max_x = max(x, na.rm=TRUE))
+```
+Follow up on x distribution for outlier labs. 
+
+```{r}
+data |>
+  filter(lab_id == "oxfordBabylab") |>
+  ggplot(aes(x = x)) + 
+  geom_histogram()
+
+data |>
+  filter(lab_id == "babylabNijmegen") |>
+  ggplot(aes(x = x)) + 
+  geom_histogram()
+
+```
+
+Tests.
+
+```{r}
+assert_that(all(data$x > 0))
+assert_that(all(data$x < 5000))
+```
+
+
+## y
+
+Lots of very negative data. Not sure what to do with this. 
+
+```{r}
+data |>
+  group_by(lab_id) |>
+  summarise(min_x = min(x, na.rm=TRUE), 
+            max_x = max(x, na.rm=TRUE))
+```
+
+Tests.
+
+```{r}
+assert_that(all(data$y > 0))
+assert_that(all(data$y < 5000))
+```
+
+## t
+
+It's pretty clear that some datasets are in seconds and some are in milliseconds.
+
+```{r}
+data |>
+  group_by(lab_id, participant_id) |>
+  mutate(t_norm = t - t[1]) |>
+  group_by(lab_id) |>
+  summarise(min_t = min(t_norm, na.rm=TRUE), 
+            max_t = max(t_norm, na.rm=TRUE), 
+            mean_diff = round(mean(diff(t_norm), na.rm=TRUE))) 
+
+```
+
+
+## pupil_left & pupil_right
+
+```{r}
+data |>
+  group_by(lab_id) |>
+  summarise(min_pupil_left = min(pupil_left, na.rm=TRUE),
+            max_pupil_left = max(pupil_left, na.rm=TRUE), 
+            min_pupil_right = min(pupil_right, na.rm=TRUE),
+            max_pupil_rigth = max(pupil_right, na.rm=TRUE)) 
+
+```
+
+
+## age_cohort
+
+```{r}
+assert_that(all(data$age_cohort %in% c("adults","toddlers")))
+```
+
+
+## event_num
+
+Why are there some event numbers that go to 22?
+
+```{r}
+unique(data$event_num)
+```
+
+
+```{r}
+hist(data$event_num, breaks = 0:22)
+```
+
+
+Why are there so many instances of event 7?
+
+```{r}
+data |>
+  group_by(lab_id, age_cohort, event_num) |>
+  count()
+
+```
+
+
+
+
+# Saving 
 
 Now save the merged xy data locally.
 
