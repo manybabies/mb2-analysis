@@ -55,13 +55,12 @@ data_trimmed <- data_corrected_origin  %>%
 
 
 # add aois
+# NOTE: This changes the x and y coordinates to "relative to stimulus" as opposed to "relative to screen".
+# The original x and y values are now saved in x_screen and y_screen
 source(here('helper', 'aoi_helper.R'))
 data_with_aois <- data_trimmed %>%
   rename(target_side = target) %>% 
   create_aoi_timepoints()
-
-
-# TODO: Visualize this data to double check
 
 ```
 
@@ -123,17 +122,18 @@ data_with_aois %>%
     
     ggsave(
       here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
-      plot = ggplot(data,aes(x,y)) + 
-        xlim(0, 1280) +
-        ylim(0, 960) +
-        draw_aoi("lbig", "blue") +
-        draw_aoi("rbig", "blue") +
-        draw_aoi("l", "red") +
-        draw_aoi("r", "red") +
-        draw_aoi("lb", "yellow") +
-        draw_aoi("rb", "yellow") +
-        draw_aoi("w", "white")+
-        geom_point(alpha=0.5))
+      plot = 
+        ggplot(data,aes(x,y)) +
+          xlim(0, 1280) +
+          ylim(0, 960) +
+          draw_aoi("lbig", "blue") +
+          draw_aoi("rbig", "blue") +
+          draw_aoi("l", "red") +
+          draw_aoi("r", "red") +
+          draw_aoi("lb", "yellow") +
+          draw_aoi("rb", "yellow") +
+          draw_aoi("w", "white")+
+          geom_point(alpha=0.5))
     
   })
 
