@@ -82,7 +82,7 @@ xy <- local_files |>
       mutate(lab_event_num = make_media_nums(media_name))
 
     # need to know they are in milliseconds
-    is_microseconds <- max(d$t) > 1e7
+    is_microseconds <- median(diff(d$t)) > 500
     if (is_microseconds) {
       d$t <- d$t / 1000
     }
@@ -96,6 +96,7 @@ xy <- local_files |>
     return(d_resamp)
   })
 ```
+
 # Standardize media names
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
@@ -250,6 +251,7 @@ data |>
   summarise(min_x = min(x, na.rm=TRUE), 
             max_x = max(x, na.rm=TRUE))
 ```
+
 Follow up on x distribution for outlier labs. 
 
 ```{r}
