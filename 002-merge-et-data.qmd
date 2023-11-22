@@ -54,9 +54,15 @@ for (f in local_files) {
 
 Now, load local data.
 
+It is critical to downsample time to 40 Hz at this stage to ensure that we can load all the files effectively. Normally, this would go later in the pipeline but we can't load all the data without doing it. 
+
 ```{r load data}
+source(here("helper","resampling_helper.R"))
+
 xy <- local_files |>
   map_df(function(f) {
+    print(f)
+    
     d <- read_csv(here(XY_DATA_DIR,f),
                   col_types = col_types)
     
@@ -65,7 +71,29 @@ xy <- local_files |>
                               grepl('_toddlers_', f) ~ 'toddlers',
                               T ~ NA)
     
-    return(d)
+    # time resampling 
+    # filter timepoints with NAs
+    # we need to add numbers for media names so that we can preserve order
+    # lab_event_num is an unvalidated event number just for the purpose of 
+    # this resampling
+    d <- d |>
+      filter(!is.na(t), !is.na(media_name)) |>
+      group_by(participant_id, media_name) |>
+      mutate(lab_event_num = make_media_nums(media_name))
+
+    # need to know they are in milliseconds
+    is_microseconds <- max(d$t) > 1e7
+    if (is_microseconds) {
+      d$t <- d$t / 1000
+    }
+    
+    # resample time to 40 Hz
+    d_resamp <- d |>
+      resample_times(timepoint_col_name = "t", 
+                     trial_col_name = "lab_event_num") |>
+      select(-lab_event_num)
+    
+    return(d_resamp)
   })
 ```
 # Standardize media names
@@ -287,7 +315,7 @@ data |>
   summarise(min_pupil_left = min(pupil_left, na.rm=TRUE),
             max_pupil_left = max(pupil_left, na.rm=TRUE), 
             min_pupil_right = min(pupil_right, na.rm=TRUE),
-            max_pupil_rigth = max(pupil_right, na.rm=TRUE)) 
+            max_pupil_right = max(pupil_right, na.rm=TRUE)) 
 
 ```
 

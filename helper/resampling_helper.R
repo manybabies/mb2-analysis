@@ -1,3 +1,12 @@
+# helper function to number media transitions
+make_media_nums <- function (media_name) {
+  media_change <- media_name != lag(media_name)
+  media_change[1] <- FALSE
+  media_num <- cumsum(media_change) + 1
+  
+  return(media_num)
+}
+
 rezero_times <- function(df_table,trial_col_name = "event_num") {
   # first check if this data frame has all the correct columns required for
   # normalize
@@ -37,7 +46,9 @@ normalize_times <- function(df_table,trial_col_name = "event_num") {
   return(df_out)
 }
 
-resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm",trial_col_name = "event_num",resample_pupil_size=TRUE) {
+resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm", 
+                              trial_col_name = "event_num", resample_pupil_size = TRUE) {
+  
   MISSING_CONST <- -10000
   # set sample rates
   SAMPLE_RATE = 40 # Hz
@@ -115,7 +126,7 @@ resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm",trial_col_
     #first create a dataset with all constant columns and expand to the length of the resampled trial data frame
     df_trial_col_data_single_row <- df_trial %>%
       ungroup() %>%
-      select(-x,-y,-!!sym(timepoint_col_name),-!!sym(trial_col_name),-pupil_left,-pupil_right,-t,-t_zeroed) %>%
+      select(-x,-y,-!!sym(timepoint_col_name),-!!sym(trial_col_name),-pupil_left,-pupil_right,-t) %>%
       summarize(across(everything(), first))
     df_trial_col_data <- df_trial_col_data_single_row[rep(1, length(t_resampled)), ]
     #add the new resampled columns
@@ -133,7 +144,7 @@ resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm",trial_col_
     #first create a dataset with all constant columns and expand to the length of the resampled trial data frame
     df_trial_col_data_single_row <- df_trial %>%
       ungroup() %>%
-      select(-x,-y,-!!sym(timepoint_col_name),-!!sym(trial_col_name),-pupil_left,-pupil_right,-t,-t_zeroed) %>%
+      select(-x,-y,-!!sym(timepoint_col_name),-!!sym(trial_col_name),-pupil_left,-pupil_right,-t) %>%
       summarize(across(everything(), first))
     df_trial_col_data <- df_trial_col_data_single_row[rep(1, length(t_resampled)), ]
     #add the new resampled columns
@@ -149,7 +160,7 @@ resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm",trial_col_
   df_trial_new
 }
 
-resample_times <- function(df_table,timepoint_col_name = "t_norm",trial_col_name = "event_num") {
+resample_times <- function(df_table, timepoint_col_name = "t_norm", trial_col_name = "event_num") {
   
   # first check if this data frame has all the correct columns required for
   # re-sampling
@@ -170,8 +181,10 @@ resample_times <- function(df_table,timepoint_col_name = "t_norm",trial_col_name
       dplyr::mutate(participant_trial_id = paste(.data$participant_id,
                                            .data[[trial_col_name]], sep = "_")) %>%
       split(.$participant_trial_id) %>%
-      purrr::map_df(resample_xy_trial) %>%
-      dplyr::arrange(.data$participant_id, .data[[trial_col_name]]) #%>%
+      purrr::map_df(resample_xy_trial, timepoint_col_name = timepoint_col_name, 
+                    trial_col_name = trial_col_name) 
+    # %>%
+    #   dplyr::arrange(.data$participant_id, .data[[trial_col_name]]) #%>%
       #dplyr::mutate(xy_timepoint_id = 0:(dplyr::n() - 1)) # add IDs
   
   return(df_out)
