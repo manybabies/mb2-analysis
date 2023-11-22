@@ -15,7 +15,6 @@ source(here('helper','ensure_repo_structure.R'))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
 ```
 
-
 ```{r}
 
 # add information about screen size and eyetracker coordinate origin
@@ -53,6 +52,8 @@ data_trimmed <- data_corrected_origin  %>%
     mutate(x = ifelse(x >= 0 & x <= screen_width, x, NA),
            y = ifelse(y >= 0 & y <= screen_height, y, NA))
 
+
+
 # add aois
 source(here('helper', 'aoi_helper.R'))
 data_with_aois <- data_trimmed %>%
@@ -67,6 +68,7 @@ data_with_aois <- data_trimmed %>%
 ```{r visualize AOIs and data}
 source(here('helper', 'aoi_helper.R'))
 
+
 draw_aoi <- function(aoi_name, color){
   return(
     geom_rect(aes(xmin = aoi_region_sets[[1,paste(aoi_name,'_x_min',sep="")]],
@@ -77,28 +79,67 @@ draw_aoi <- function(aoi_name, color){
   )
 }
 
-temp <- filter(data_with_aois, lab_id=="careylabHarvard"&participant_id=="1810EmCh")
+CHECKING_DIR <- here('manual_data_checking')
+CHECKING_HEATMAP_DIR <- here(CHECKING_DIR, 'heatmaps')
 
-# Todo: visualisations like this are still a bit accurate as the x/y coordinates are based on the screen, not the stimulus dimensions
+# checklist to see what labs have already been checked and accepted
+CHECKING_HEATMAP_CSV <- here(CHECKING_DIR, 'heatmaps_checked.csv')
 
-ggplot(temp,aes(x,y)) + 
-  xlim(0, 1280) +
-  ylim(0, 960) +
-  draw_aoi("lbig", "blue") +
-  draw_aoi("rbig", "blue") +
-  draw_aoi("l", "red") +
-  draw_aoi("r", "red") +
-  draw_aoi("lb", "yellow") +
-  draw_aoi("rb", "yellow") +
-  draw_aoi("w", "white")+
-  geom_point(alpha=0.5)
+dir.create(CHECKING_DIR, showWarnings = FALSE)
+dir.create(CHECKING_HEATMAP_DIR, showWarnings = FALSE)
 
-#ggplot(xy_timepoints, aes(x = x, y = y)) + 
-#  geom_point(alpha = .05) + 
-#  xlim(0, administrations$monitor_size_x[1]) + 
-#  ylim(0, administrations$monitor_size_y[1]) 
+# if checklist already exists, laod it and look for potentially missing labs, else create a new one from the data
+if (file.exists(CHECKING_HEATMAP_CSV)){
+  checking_img_list <- read.csv(CHECKING_HEATMAP_CSV)
+  newly_added_labs <- data_with_aois %>% distinct(lab_id) %>% filter(!(lab_id %in% checking_img_list$lab_id)) %>% mutate(data_fine = NA)
+  checking_img_list <- checking_img_list %>% rbind(newly_added_labs)
+  rm(newly_added_labs)
+}else{
+  checking_img_list <- data_with_aois %>% distinct(lab_id) %>% mutate(data_fine = NA)
+}
+
+write.csv(checking_img_list, CHECKING_HEATMAP_CSV, row.names = FALSE)
+labs_to_check <- checking_img_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
+
+
+data_with_aois %>% 
+  filter(!(media_name %in% c('star_calib'))) %>% 
+  group_by(lab_id, media_name) %>%
+  group_walk(function(data, grouping){
+    
+    if(!(grouping$lab_id %in% labs_to_check)){
+      return(NA)
+    }
+    
+    labdir = here(CHECKING_HEATMAP_DIR, grouping$lab_id)
+    dir.create(labdir, showWarnings = FALSE)
+    
+    
+    # draw plot here
+    # TODO: Better function
+    
+    ## temp for testing
+    data = data %>% slice_head(n=100)
+    
+    ggsave(
+      here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
+      plot = ggplot(data,aes(x,y)) + 
+        xlim(0, 1280) +
+        ylim(0, 960) +
+        draw_aoi("lbig", "blue") +
+        draw_aoi("rbig", "blue") +
+        draw_aoi("l", "red") +
+        draw_aoi("r", "red") +
+        draw_aoi("lb", "yellow") +
+        draw_aoi("rb", "yellow") +
+        draw_aoi("w", "white")+
+        geom_point(alpha=0.5))
+    
+  })
 
 ```
+
+
 ```{r}
 # preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
 # needs some tweaking, just throwing the code into the repo for now

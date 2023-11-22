@@ -3,16 +3,17 @@ library(here)
 library(glue)
 library(eyelinkReader)
 
-LAB_NAME <- "kidsdevUniofNewcastle"
+LAB_NAME <- "tauccd"
 DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####
-data_path_adults <- here(DATA_DIR, "raw_data", "Adult EDF Files")
-data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
+data_path <- here(DATA_DIR, "raw_data", "EDF files")
+data_files <- list.files(data_path, pattern = ".edf", recursive = TRUE)
+data_files_adults <- data_files[17:32]
 
 data_adults_cleaned <- lapply(data_files_adults, \(fp) {
-  data_edf <- read_edf(here(data_path_adults, fp),
+  data_edf <- read_edf(here(data_path, fp),
                        import_samples = TRUE,
                        import_saccades = FALSE,
                        import_blinks = FALSE,
@@ -26,7 +27,7 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 filter(variable == "trialtype") |> 
                 select(trial, media_name = value),
               by = "trial") |> 
-    mutate(participant_id = str_remove(fp, "/.*"),
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
@@ -43,11 +44,10 @@ write_csv(data_adults_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
 #### Toddler data ####
-data_path_toddlers <- here(DATA_DIR, "raw_data", "Toddler EDF Files")
-data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
+data_files_toddlers <- data_files[1:16]
 
 data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
-  data_edf <- read_edf(here(data_path_toddlers, fp),
+  data_edf <- read_edf(here(data_path, fp),
                        import_samples = TRUE,
                        import_saccades = FALSE,
                        import_blinks = FALSE,
@@ -56,12 +56,23 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                                              "px", "py", # pupil coords
                                              "pa")) # pupil area
   
+  variables <- data_edf$variables |> 
+    filter(variable == "trialtype") |> 
+    select(trial, media_name = value)
+  # some variable dfs list both the current trial and all following trials;
+  # this removes the extraneous rows
+  if (nrow(variables) > 13) { 
+    variables <- variables |> 
+      group_by(trial) |> 
+      slice(1) |> 
+      ungroup()
+  }
+  
   samples <- data_edf$samples |> 
-    left_join(data_edf$variables |> 
-                filter(variable == "trialtype") |> 
-                select(trial, media_name = value),
-              by = "trial") |> 
-    mutate(participant_id = str_remove(fp, "/.*"),
+    left_join(variables,
+              by = "trial",
+              relationship = "many-to-one") |> 
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
@@ -76,3 +87,4 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
 
 write_csv(data_toddlers_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
+

@@ -3,12 +3,12 @@ library(here)
 library(glue)
 library(eyelinkReader)
 
-LAB_NAME <- "kidsdevUniofNewcastle"
+LAB_NAME <- "UIUCinfantlab"
 DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####
-data_path_adults <- here(DATA_DIR, "raw_data", "Adult EDF Files")
+data_path_adults <- here(DATA_DIR, "raw_data", "UIUCinfantlab_adults_eyetrackingdata")
 data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
 
 data_adults_cleaned <- lapply(data_files_adults, \(fp) {
@@ -26,7 +26,7 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 filter(variable == "trialtype") |> 
                 select(trial, media_name = value),
               by = "trial") |> 
-    mutate(participant_id = str_remove(fp, "/.*"),
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
@@ -43,7 +43,7 @@ write_csv(data_adults_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
 #### Toddler data ####
-data_path_toddlers <- here(DATA_DIR, "raw_data", "Toddler EDF Files")
+data_path_toddlers <- here(DATA_DIR, "raw_data", "UIUCinfantlab_toddlers_eyetrackingdata")
 data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
 
 data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
@@ -61,7 +61,7 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                 filter(variable == "trialtype") |> 
                 select(trial, media_name = value),
               by = "trial") |> 
-    mutate(participant_id = str_remove(fp, "/.*"),
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
@@ -76,3 +76,4 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
 
 write_csv(data_toddlers_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
+
