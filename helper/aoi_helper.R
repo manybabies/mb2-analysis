@@ -82,7 +82,9 @@ create_aoi_timepoints <- function(xy_timepoints){
   
   xy_timepoints |>
     cross_join(aoi_region_sets) |>
-    mutate(x = x - (screen_width-video_width)/2,
+    mutate(x_screen = x,
+           y_screen = y,
+           x = x - (screen_width-video_width)/2,
            y = y - (screen_height-video_height)/2,
            side = dplyr::case_when(x >  l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "left",
                                    x > r_x_min & x < r_x_max & y > r_y_min & y < r_y_max ~ "right",

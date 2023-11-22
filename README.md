@@ -32,11 +32,6 @@ Subdirectories explanations:
   * `03_preprocessed` - the result of the preprocessing steps - to be consumed by the analysis script
 
 
-Proposed changes to folder structure:
-* data ->  (as that's all that's being commited into that folder anyway)
-* create new folder `data` (gitignored), and move the following things there
-
-
 
 Issues to deal with:
 
@@ -54,6 +49,8 @@ Issues to deal with:
 - cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
 
 - how to preprocess exclusion data?
+
+- "Eyetracker Calibration" is a media to remove - could this be a misnamed star_calib for some labs (and should be renamed and kept) or is this a different calibration that does not interest us?
 
 ## column-wise validations to be implemented
 Basic columns need to be validated/tested before we pass them on. 

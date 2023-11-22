@@ -4,7 +4,6 @@ BlackScreen2
 BlackScreen3
 blackscreen
 UNDEFINED
-Pupil_Calibration
 Attentiongetter_3sec
 AG_1
 IG_LR_"
