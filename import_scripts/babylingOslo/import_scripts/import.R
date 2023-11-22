@@ -32,7 +32,6 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
     mutate(participant_id = str_remove(fp, "/.*"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
-           paR = paR / 1000,
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 
