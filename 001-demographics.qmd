@@ -78,6 +78,14 @@ toddler_demo <- toddlers |>
 
 We will need to fix these.
 
+Also: there is a mismatch of `labid` and `lab_id` that needs to be fixed.
+
+```{r}
+toddler_demo <- rename(toddler_demo, lab_id = labid)
+adult_demo <- rename(adult_demo, lab_id = labid)
+```
+
+
 ## Demographics
 
 Age histogram.
