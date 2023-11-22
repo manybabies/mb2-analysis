@@ -13,7 +13,7 @@ data_files <- list.files(data_path, pattern = ".edf", recursive = TRUE)
 data_files_adults <- data_files[17:32]
 
 data_adults_cleaned <- lapply(data_files_adults, \(fp) {
-  data_edf <- read_edf(here(data_path_adults, fp),
+  data_edf <- read_edf(here(data_path, fp),
                        import_samples = TRUE,
                        import_saccades = FALSE,
                        import_blinks = FALSE,
@@ -47,7 +47,7 @@ write_csv(data_adults_cleaned,
 data_files_toddlers <- data_files[1:16]
 
 data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
-  data_edf <- read_edf(here(data_path_toddlers, fp),
+  data_edf <- read_edf(here(data_path, fp),
                        import_samples = TRUE,
                        import_saccades = FALSE,
                        import_blinks = FALSE,
@@ -56,11 +56,22 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                                              "px", "py", # pupil coords
                                              "pa")) # pupil area
   
+  variables <- data_edf$variables |> 
+    filter(variable == "trialtype") |> 
+    select(trial, media_name = value)
+  # some variable dfs list both the current trial and all following trials;
+  # this removes the extraneous rows
+  if (nrow(variables) > 13) { 
+    variables <- variables |> 
+      group_by(trial) |> 
+      slice(1) |> 
+      ungroup()
+  }
+  
   samples <- data_edf$samples |> 
-    left_join(data_edf$variables |> 
-                filter(variable == "trialtype") |> 
-                select(trial, media_name = value),
-              by = "trial") |> 
+    left_join(variables,
+              by = "trial",
+              relationship = "many-to-one") |> 
     mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
            x = mean(c(pxL, pxR), na.rm = TRUE),
            y = mean(c(pyL, pyR), na.rm = TRUE),
