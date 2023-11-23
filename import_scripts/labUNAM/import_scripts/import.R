@@ -30,14 +30,15 @@ data_toddlers <- read_tsv(here(DATA_DIR, "raw_data", "labUNAM_toddlers_eyetracki
                           col_types = cols(`Event value` = col_character()))
 
 data_toddlers_cleaned <- data_toddlers |> 
-  select(participant_id = ParticipantName,
-         x = `GazePointX (ADCSpx)`,
-         y = `GazePointY (ADCSpx)`,
-         t = RecordingTimestamp,
-         media_name = MediaName,
-         pupil_left = PupilLeft,
-         pupil_right = PupilRight) |> 
-  mutate(t = t / 1000,
+  select(participant_id = `Participant name`,
+         x = `Gaze point X`,
+         y = `Gaze point Y`,
+         t = `Recording timestamp`,
+         media_name = `Presented Stimulus name`,
+         pupil_left = `Pupil diameter left`,
+         pupil_right = `Pupil diameter right`) |> 
+  mutate(media_name = str_replace_all(media_name, "_new", ""),
+         t = t / 1000,
          lab_id = LAB_NAME)
 
 write_csv(data_toddlers_cleaned,
