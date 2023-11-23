@@ -87,7 +87,7 @@ CHECKING_HEATMAP_CSV <- here(CHECKING_DIR, 'heatmaps_checked.csv')
 dir.create(CHECKING_DIR, showWarnings = FALSE)
 dir.create(CHECKING_HEATMAP_DIR, showWarnings = FALSE)
 
-# if checklist already exists, laod it and look for potentially missing labs, else create a new one from the data
+# if checklist already exists, load it and look for potentially missing labs, else create a new one from the data
 if (file.exists(CHECKING_HEATMAP_CSV)){
   checking_img_list <- read.csv(CHECKING_HEATMAP_CSV)
   newly_added_labs <- data_with_aois %>% distinct(lab_id) %>% filter(!(lab_id %in% checking_img_list$lab_id)) %>% mutate(data_fine = NA)
@@ -101,6 +101,9 @@ write.csv(checking_img_list, CHECKING_HEATMAP_CSV, row.names = FALSE)
 labs_to_check <- checking_img_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
 
 
+library(png)
+img.r <- as.raster(readPNG(here('helper', 'stim.png')),interpolate=F)
+
 data_with_aois %>% 
   filter(!(media_name %in% c('star_calib'))) %>% 
   group_by(lab_id, media_name) %>%
@@ -113,27 +116,18 @@ data_with_aois %>%
     labdir = here(CHECKING_HEATMAP_DIR, grouping$lab_id)
     dir.create(labdir, showWarnings = FALSE)
     
-    
-    # draw plot here
-    # TODO: Better function
-    
-    ## temp for testing
-    data = data %>% slice_head(n=100)
-    
     ggsave(
       here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
       plot = 
-        ggplot(data,aes(x,y)) +
-          xlim(0, 1280) +
-          ylim(0, 960) +
-          draw_aoi("lbig", "blue") +
-          draw_aoi("rbig", "blue") +
-          draw_aoi("l", "red") +
-          draw_aoi("r", "red") +
-          draw_aoi("lb", "yellow") +
-          draw_aoi("rb", "yellow") +
-          draw_aoi("w", "white")+
-          geom_point(alpha=0.5))
+        ggplot(data, aes(x,y)) + 
+          annotation_raster(img.r, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
+          stat_density2d(geom = "polygon", aes(fill=..level.., alpha = ..level..), size= 20, bins= 500) + 
+          scale_fill_gradient(low="blue",high="red") +
+          scale_alpha_continuous(range=c(0.01,1.0), guide = FALSE) +
+          scale_x_continuous(limits=c(0,dim(img.r)[2]),expand=c(0,0))+
+          scale_y_continuous(limits=c(0,dim(img.r)[1]),expand=c(0,0))+
+          coord_fixed()
+      )
     
   })
 
@@ -142,26 +136,58 @@ data_with_aois %>%
 
 ```{r}
 # preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
-# needs some tweaking, just throwing the code into the repo for now
 
-create_and_save_linegraph <- function(data, info){
-  render <- data %>%
-    group_by(t_norm) %>%
-    summarise(ls = sum(hit)/n())
-  
-  png(filename=paste0('lookingscore_fam', info$lab_id[1], '_', info$age_cohort[1],'.png'))
-  plot(render$t_norm, render$ls, type = "l")
-  dev.off()
+
+CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
+dir.create(CHECKING_LSGRAPH_DIR, showWarnings = FALSE)
+
+# checklist to see what labs have already been checked and accepted
+CHECKING_LSGRAPH_CSV <- here(CHECKING_DIR, 'lookingscore_graphs_checked.csv')
+
+# Same logic as above, maybe put into a function in the future
+# if checklist already exists, laod it and look for potentially missing labs, else create a new one from the data
+if (file.exists(CHECKING_LSGRAPH_CSV)){
+  checking_ls_list <- read.csv(CHECKING_LSGRAPH_CSV)
+  newly_added_labs <- data_with_aois %>% distinct(lab_id) %>% filter(!(lab_id %in% checking_ls_list$lab_id)) %>% mutate(data_fine = NA)
+  checking_ls_list <- checking_ls_list %>% rbind(newly_added_labs)
+  rm(newly_added_labs)
+}else{
+  checking_ls_list <- data_with_aois %>% distinct(lab_id) %>% mutate(data_fine = NA)
 }
 
-# uncomment this once I have decided where to put the images, they currently get dumped into the projects root
+write.csv(checking_ls_list, CHECKING_LSGRAPH_CSV, row.names = FALSE)
+labs_to_check <- checking_ls_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
+
+
+
+data_with_aois %>% 
+  filter(grepl('FAM', media_name)) %>% 
+  filter(grepl('target|distractor', aoi)) %>% 
+  mutate(hit = ifelse(grepl('target', aoi), 1, 0)) %>%
+  group_by(lab_id, age_cohort) %>% 
+  group_walk(
+    function(data, info){
+  
+      labdir = here(CHECKING_LSGRAPH_DIR, info$lab_id)
+        dir.create(labdir, showWarnings = FALSE)
+      
+      render <- data %>%
+        group_by(t_norm) %>%
+        summarise(ls = sum(hit)/n())
+      
+      png(filename=here(labdir, paste0('ls_fam_', info$lab_id, '_', info$age_cohort,'.png')))
+      plot(render$t_norm, render$ls, type = "l")
+      dev.off()
+})
+
+# Plot the ls over time for the entire sample (for fam trials) - data needs some cleanup right now
 #data_with_aois %>% 
-#  filter(media_name != 'star_calib') %>%
 #  filter(grepl('FAM', media_name)) %>% 
 #  filter(grepl('target|distractor', aoi)) %>% 
-#  mutate(hit = ifelse(grepl('target', aoi), 1, 0)) %>%
-#  group_by(lab_id, age_cohort) %>% 
-#  group_walk(create_and_save_linegraph)
+#  mutate(hit = ifelse(grepl('target', aoi), 1, 0)) %>% 
+#  group_by(t_norm) %>%
+#  summarise(ls = sum(hit)/n()) %>% 
+#  plot(.$t_norm, .$ls, type = "l")
 
 ```
 
