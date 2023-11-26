@@ -15,3 +15,16 @@ Black Screen
 Eyetracker Calibration
 Attention_getter_3sec
 None
+attention_getter1
+attention_getter2
+attention_getter3
+star_calib2
+black_screen1
+black_screen2
+black_screen3
+black_screen4
+att_getter
+attention-getter_0
+attention-getter_1
+attention-getter_2
+blackscreen1000ms
