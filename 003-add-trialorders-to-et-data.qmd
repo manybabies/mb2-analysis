@@ -72,18 +72,18 @@ data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, me
 
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
-  select(labid, participant_id, test_order, pilot) %>% 
+  select(lab_id, participant_id, test_order, pilot) %>% 
   bind_rows(
     toddler_demo %>%
-      select(labid, participant_id, test_order, pilot)
+      select(lab_id, participant_id, test_order, pilot)
     )
 
 # Validate that the (lab specific) participant ids in the data line up with the ids from the (lab specific) demographic files
-# This also triggers on mismatches in labid namings
+# This also triggers on mismatches in lab_id namings
 id_orphans <- trial_orders %>% 
   distinct(lab_id, participant_id) %>% 
   mutate(xy_exists = T) %>%
-  full_join(combined_demo, by=c('lab_id' = 'labid', 'participant_id')) %>%
+  full_join(combined_demo, by=c('lab_id' = 'lab_id', 'participant_id')) %>%
   # pilot and test order are used as a stand in to check if demographic data for this participant exists
   mutate(demo_exists = !is.na(pilot) | !is.na(test_order)) %>%
   select(-c('test_order','pilot')) %>% 
@@ -104,10 +104,10 @@ invalid_trial_orders <- trial_orders_wide %>%
 #assert_that(nrow(invalid_trial_orders) == 0)
 
 trial_order_mismatches <- combined_demo %>%
-  select(labid, participant_id, test_order) %>% 
+  select(lab_id, participant_id, test_order) %>% 
   inner_join(trial_orders_wide %>% 
                inner_join(trial_orders_design, by=paste0('trial_',1:6)) # determine seen trials
-    , by=c('labid' = 'lab_id', 'participant_id')) %>% 
+    , by=c('lab_id' = 'lab_id', 'participant_id')) %>% 
   filter(test_order != trial_order)
 
 #assert_that(nrow(trial_order_mismatches) == 0)
