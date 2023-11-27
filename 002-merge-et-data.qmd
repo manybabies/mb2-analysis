@@ -78,7 +78,7 @@ xy <- local_files |>
     # this resampling
     d <- d |>
       filter(!is.na(t), !is.na(media_name)) |>
-      group_by(participant_id, media_name) |>
+      group_by(participant_id) |>
       mutate(lab_event_num = make_media_nums(media_name))
 
     # need to know they are in milliseconds
