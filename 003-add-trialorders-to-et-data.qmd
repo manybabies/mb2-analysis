@@ -34,6 +34,15 @@ data <- data %>%
   'mecdmpihcbs' # MPI_022
   )))
 
+
+# TODO: temporary filter to filter out participants that have seen any media twice (according to the data, investigate this)
+data <- data %>% 
+  filter(!(lab_id %in% c(
+  'labUNAM' # various participants affected
+  ))) %>% 
+  filter(!(participant_id %in% c('UoO231', 'SkidLSDLab_009')))
+
+
 data %>% group_by(lab_id, participant_id, media_name)
 
 
@@ -64,6 +73,7 @@ trial_orders <- data %>%
 media_name_collisions <- trial_orders %>% 
   group_by(lab_id, participant_id, media_name) %>% 
   filter(n() > 1)
+
 
 # temporary fix to push the data further through: go to the top and exclude specific labs 
 assert_that(nrow(media_name_collisions) == 0)

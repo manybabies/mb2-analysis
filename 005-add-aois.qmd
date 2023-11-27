@@ -29,13 +29,13 @@ dataset_specs <- read.csv(here('metadata', 'dataset_sheet.csv')) %>%
 allowed_origins <- c('upper left','lower left','center')
 invalid_origins <- dataset_specs %>% filter(!(point_zero %in% allowed_origins))
 
-data_resampled_specs <- data_resampled %>% 
+data_normalized_specs <- data_normalized %>% 
   left_join(dataset_specs, by=join_by(lab_id, age_cohort)) %>% 
   filter(point_zero %in% allowed_origins)
 
 
 # Flip Coordinate Origin
-data_corrected_origin <- data_resampled_specs  %>% 
+data_corrected_origin <- data_normalized_specs  %>% 
   
     mutate(
       y = case_when(
@@ -66,6 +66,12 @@ data_with_aois <- data_trimmed %>%
 
 ```{r visualize AOIs and data}
 source(here('helper', 'aoi_helper.R'))
+data_with_aois <- data_with_aois %>% ungroup()
+
+
+# TODO: Investigate NAs for coords
+data_with_aois <- data_with_aois %>%
+  filter(!(lab_id %in% c("CorbitLab", "MEyeLab", "UIUCinfantlab", "babylabMPIB", "babylabPrinceton", "babylingOslo", "kidsdevUniofNewcastle", "sociocognitivelab", "tauccd", "unicph")))
 
 
 draw_aoi <- function(aoi_name, color){
@@ -99,8 +105,7 @@ if (file.exists(CHECKING_HEATMAP_CSV)){
 
 write.csv(checking_img_list, CHECKING_HEATMAP_CSV, row.names = FALSE)
 labs_to_check <- checking_img_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
-
-
+  
 library(png)
 img.r <- as.raster(readPNG(here('helper', 'stim.png')),interpolate=F)
 
@@ -115,7 +120,7 @@ data_with_aois %>%
     
     labdir = here(CHECKING_HEATMAP_DIR, grouping$lab_id)
     dir.create(labdir, showWarnings = FALSE)
-    
+
     ggsave(
       here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
       plot = 
@@ -128,7 +133,6 @@ data_with_aois %>%
           scale_y_continuous(limits=c(0,dim(img.r)[1]),expand=c(0,0))+
           coord_fixed()
       )
-    
   })
 
 ```
@@ -136,7 +140,11 @@ data_with_aois %>%
 
 ```{r}
 # preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
+data_with_aois <- data_with_aois %>% ungroup()
 
+# TODO: Investigate NAs for coords
+data_with_aois <- data_with_aois %>%
+  filter(!(lab_id %in% c("CorbitLab", "MEyeLab", "UIUCinfantlab", "babylabMPIB", "babylabPrinceton", "babylingOslo", "kidsdevUniofNewcastle", "sociocognitivelab", "tauccd", "unicph")))
 
 CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
 dir.create(CHECKING_LSGRAPH_DIR, showWarnings = FALSE)
@@ -157,7 +165,6 @@ if (file.exists(CHECKING_LSGRAPH_CSV)){
 
 write.csv(checking_ls_list, CHECKING_LSGRAPH_CSV, row.names = FALSE)
 labs_to_check <- checking_ls_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
-
 
 
 data_with_aois %>% 
@@ -191,6 +198,17 @@ data_with_aois %>%
 
 ```
 
+```{r }
+usable_labs <- intersect(
+  (read.csv(CHECKING_LSGRAPH_CSV) %>% filter(data_fine == "yes"))$lab_id,
+  (read.csv(CHECKING_HEATMAP_CSV) %>% filter(data_fine == "yes"))$lab_id
+)
+
+data_preprocessed <- data_with_aois %>% filter(lab_id %in% usable_labs)
+```
+
 ```{r saving}
-save(data_with_aois, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+
+#write.csv(data_preprocessed, here("data", "preprocessed.csv"), row.names = F)
 ```
