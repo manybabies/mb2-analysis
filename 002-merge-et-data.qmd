@@ -142,6 +142,7 @@ invalid_media_names <- data %>%
   filter(!media_name %in% media_names_valid)
 
 invalid_media_names$media_name
+unique(invalid_media_names$media_name)
 
 assert_that(nrow(invalid_media_names) == 0)
 rm(invalid_media_names)
@@ -366,7 +367,7 @@ assert_that(all(data$age_cohort %in% c("adults","toddlers")))
 
 ## event_num
 
-Why are there some event numbers that go to 22?
+Why are there some event numbers that go to 26?
 
 ```{r}
 unique(data$event_num)
@@ -374,7 +375,7 @@ unique(data$event_num)
 
 
 ```{r}
-hist(data$event_num, breaks = 0:22)
+hist(data$event_num, breaks = 0:26)
 ```
 
 

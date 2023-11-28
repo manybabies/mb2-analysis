@@ -1,0 +1,35 @@
+---
+title: "AOI-based analysis"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+```
+
+## Summarize AOI looking
+
+```{r}
+data_with_aois <- data_with_aois %>%
+  mutate(condition = case_when(
+    str_detect(media_name,"IG") ~ "ignorance",
+    str_detect(media_name,"KNOW") ~ "knowledge",
+    str_detect(media_name,"FAM") ~ "familiarization"
+  ))
+
+summarize_participant_test <- data_with_aois %>%
+  filter(condition %in% c("knowledge","ignorance")) %>%
+  group_by(lab_id,age_cohort,participant_id,condition,t_norm) %>%
+  summarize(
+    accuracy = case_when(
+      aoi=="target_general" ~ 1,
+      aoi=="distractor_general" ~ 0,
+      TRUE ~ NA)
+  )
+```
