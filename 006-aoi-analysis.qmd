@@ -7,29 +7,136 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
+library(ggbeeswarm)
+library(gghalves)
+library(cowplot)
+library(patchwork)
 
 source(here('helper','ensure_repo_structure.R'))
+plot_path <- here("plots")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+```
+
+```{r}
+trial_overview <- data_preprocessed %>%
+  group_by(lab_id,participant_id,media_name) %>%
+  count(
+  )
 ```
 
 ## Summarize AOI looking
 
 ```{r}
-data_with_aois <- data_with_aois %>%
-  mutate(condition = case_when(
-    str_detect(media_name,"IG") ~ "ignorance",
-    str_detect(media_name,"KNOW") ~ "knowledge",
-    str_detect(media_name,"FAM") ~ "familiarization"
-  ))
+test_data <- data_preprocessed %>%
+  filter(condition %in% c("knowledge","ignorance"))
+  
 
-summarize_participant_test <- data_with_aois %>%
-  filter(condition %in% c("knowledge","ignorance")) %>%
-  group_by(lab_id,age_cohort,participant_id,condition,t_norm) %>%
+summarize_participant_test_first_trial <- test_data %>%
+  #quick filter of the (extended duration) 2nd test trials
+  filter(video_duration_ms<37000) %>%
+  group_by(lab_id,age_cohort,participant_id,participant_trial_id,trial_file_name,
+    bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
+  #filter to relevant anticipatory window
+  # based on current format, t_norm == 0 is the point of disambiguation
+  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
+  #check this!!!
+  filter(t_norm<=120 & t_norm>=-3880) %>%
+  mutate(
+    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+  ) %>%
   summarize(
-    accuracy = case_when(
-      aoi=="target_general" ~ 1,
-      aoi=="distractor_general" ~ 0,
-      TRUE ~ NA)
+    t_min=min(t_norm),
+    t_max=max(t_norm),
+    sum_target_general = sum(aoi=="target_general",na.rm=T),
+    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
+    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
+    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
+    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
+    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
+    N_general = sum_target_general+sum_distractor_general,
+    N_exit = sum_target_exit+sum_distractor_exit
   )
+
+#add first look
+# first_look=aoi[aoi_diff!=0][1]
+#there's an issue with the definition of anticipatory window
+#requiring a change in gaze within the anticipatory window means taking out cases where infants were "already" looking to the right place, which maybe doesn't quite make sense
 ```
+
+```{r}
+#distribution of total looks
+ggplot(summarize_participant_test_first_trial,aes(N_exit))+
+  geom_histogram()+
+  facet_wrap(~age_cohort)
+```
+
+
+## Proportion Looking
+
+First look at the proportional looking measures, focusing on the target exit during the anticipatory window.
+
+```{r}
+#plot average proportion looking
+overall_p <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5), aes(x=condition, y=prop_exit,color=condition))+
+  #geom_violin()+
+  #geom_boxplot()+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_beeswarm(alpha=0.5)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  facet_wrap(~age_cohort)+
+  theme(legend.position="none")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+overall_p
+ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"))
+```
+
+Splitting plot by lab and age cohort
+
+```{r}
+adults_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="adults"), aes(x=condition, y=prop_exit,color=condition))+
+  #geom_violin()+
+  #geom_boxplot()+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"&age_cohort=="adults"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"&age_cohort=="adults"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"&age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"&age_cohort=="adults"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_beeswarm(alpha=0.5)+
+  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  facet_wrap(~age_cohort+lab_id)+
+  theme(legend.position="none")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+adults_prop
+ggsave(here(plot_path,"adults_proportion_first_trial_target_exit_looking.png"))
+
+kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"), aes(x=condition, y=prop_exit,color=condition))+
+  #geom_violin()+
+  #geom_boxplot()+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"&age_cohort=="toddlers"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"&age_cohort=="toddlers"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"&age_cohort=="toddlers"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"&age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_beeswarm(alpha=0.5)+
+  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  facet_wrap(~age_cohort+lab_id)+
+  theme(legend.position="none")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+kids_prop
+ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"))
+```
+
