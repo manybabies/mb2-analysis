@@ -30,13 +30,13 @@ trial_overview <- data_preprocessed %>%
 ```{r}
 test_data <- data_preprocessed %>%
   filter(condition %in% c("knowledge","ignorance"))
-  
+
 
 summarize_participant_test_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
   filter(video_duration_ms<37000) %>%
   group_by(lab_id,age_cohort,participant_id,participant_trial_id,trial_file_name,
-    bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
+           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
@@ -138,5 +138,112 @@ kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 kids_prop
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"))
+```
+
+
+
+## Timecourse extension
+
+```{r}
+mss_timecourse_test_first_trial <- test_data %>%
+  #quick filter of the (extended duration) 2nd test trials
+  group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
+           trial_file_name,
+           bear_not_visible_ms, point_of_disambiguation, 
+           video_duration_ms, condition) %>%
+  mutate(t_norm_downsampled = floor(t_norm / 250) * 250) |>
+  #filter to relevant anticipatory window
+  # based on current format, t_norm == 0 is the point of disambiguation
+  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
+  #check this!!!
+  filter(t_norm<=120 & t_norm>=-16880) %>%
+  group_by(lab_id, age_cohort, participant_id, participant_trial_id, 
+           trial_file_name, condition, t_norm_downsampled) |>
+  summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
+            on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
+
+ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
+  group_by(lab_id, age_cohort, trial_file_name, condition, t_norm_downsampled) |>
+  summarize(mean_target_general = mean(on_target, na.rm=TRUE),
+            mean_distractor_general = mean(on_dist, na.rm=TRUE),
+            sum_target_general = sum(on_target, na.rm=TRUE),
+            sum_distractor_general = sum(on_dist, na.rm=TRUE),
+            prop_general = sum_target_general / 
+              (sum_target_general+sum_distractor_general))
+
+```
+Check time-course lengths across videos. 
+
+```{r}
+test_data |>
+  group_by(trial_file_name) |>
+  summarise(min_t = min(t_norm), 
+            max_t = max(t_norm))
+```
+
+
+
+```{r}
+ggplot(ms_timecourse_test_first_trial |>
+         pivot_longer(mean_target_general:mean_distractor_general, 
+                      names_to = "trial_type", values_to = "mean_looking"),       
+         aes(x = t_norm_downsampled, y = mean_looking, col = trial_type)) + 
+  geom_point(alpha = .1) +
+  geom_smooth() + 
+  facet_grid(trial_file_name~age_cohort)
+```
+
+
+## Timecourse with all trials
+
+```{r}
+
+mss_timecourse_test_first_trial <- test_data %>%
+  #quick filter of the (extended duration) 2nd test trials
+  filter(!str_detect(trial_file_name, "_INC")) |>
+  mutate(first_trial = video_duration_ms<37000) %>%
+  group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
+           trial_file_name, first_trial, 
+           bear_not_visible_ms, point_of_disambiguation, 
+           video_duration_ms, condition) %>%
+  mutate(t_norm_downsampled = floor(t_norm / 500) * 500) |>
+  #filter to relevant anticipatory window
+  # based on current format, t_norm == 0 is the point of disambiguation
+  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
+  #check this!!!
+  filter(t_norm>=-16000, t_norm<=10000) %>%
+  group_by(age_cohort, participant_id, participant_trial_id, 
+           condition, first_trial, t_norm_downsampled) |>
+  summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
+            on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
+
+ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
+  group_by(age_cohort, first_trial, condition, t_norm_downsampled) |>
+  summarize(mean_target_general = mean(on_target, na.rm=TRUE),
+            mean_distractor_general = mean(on_dist, na.rm=TRUE),
+            sum_target_general = sum(on_target, na.rm=TRUE),
+            sum_distractor_general = sum(on_dist, na.rm=TRUE),
+            prop_general = sum_target_general / 
+              (sum_target_general+sum_distractor_general))
+
+```
+
+
+
+
+```{r}
+ggplot(ms_timecourse_test_first_trial |>
+         pivot_longer(mean_target_general:mean_distractor_general, 
+                      names_to = "trial_type", values_to = "mean_looking"),       
+         aes(x = t_norm_downsampled, y = mean_looking, 
+             col = trial_type, lty = first_trial)) + 
+  # geom_point(alpha = .1) +
+  geom_line() + 
+  facet_grid(condition~age_cohort) + 
+  geom_vline(xintercept = -3880, lty = 3, col = "black") + 
+  geom_vline(xintercept = 120, lty = 3, col = "black") + 
+  ggthemes::theme_few() + 
+  theme(legend.position = "bottom")
+```
 ```
 
