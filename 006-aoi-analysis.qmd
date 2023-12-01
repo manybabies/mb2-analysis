@@ -28,6 +28,9 @@ trial_overview <- data_preprocessed %>%
 ## Summarize AOI looking
 
 ```{r}
+fam_data <- data_preprocessed %>%
+  filter(condition %in% c("familiarization"))
+
 test_data <- data_preprocessed %>%
   filter(condition %in% c("knowledge","ignorance"))
 
@@ -95,7 +98,7 @@ overall_p <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5), ae
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"))
+ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white")
 ```
 
 Splitting plot by lab and age cohort
@@ -118,7 +121,7 @@ adults_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&ag
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 adults_prop
-ggsave(here(plot_path,"adults_proportion_first_trial_target_exit_looking.png"))
+ggsave(here(plot_path,"adults_proportion_first_trial_target_exit_looking.png"),bg="white")
 
 kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"), aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
@@ -137,7 +140,7 @@ kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 kids_prop
-ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"))
+ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white")
 ```
 
 
