@@ -97,6 +97,10 @@ ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = lab_id)) +
   geom_histogram() + 
   theme(legend.position = "bottom")
 ```
+```{r}
+toddler_demo
+```
+
 
 ## Correct lab_ids
 
@@ -131,6 +135,31 @@ toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids,
 assert_that(!any(is.na(toddler_demo$lab_id)))
 assert_that(!any(is.na(adult_demo$lab_id)))
 ```
+# Descriptives
+
+These are completely unfiltered. 
+
+```{r}
+print(paste0("num labs: ",length(unique(c(toddler_demo$lab_id, adult_demo$lab_id)))))
+
+
+print(paste0("num toddler participants: ", nrow(toddler_demo)))
+print(paste0("num adult participants: ", nrow(adult_demo)))
+
+
+unique(c(toddler_demo$`🌍 Country`, adult_demo$`🌍 Country`))
+
+```
+Ages. 
+
+```{r}
+age_mo <- (toddler_demo$age_days / 365)*12
+
+print(paste0("mean toddler age: ", mean(age_mo, na.rm=TRUE)))
+print(paste0("sd: ", sd(age_mo, na.rm=TRUE)))
+
+```
+
 
 # Saving
 
