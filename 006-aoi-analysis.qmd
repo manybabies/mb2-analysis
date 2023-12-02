@@ -35,9 +35,13 @@ trial_overview <- distinct_trials %>%
 table(trial_overview$condition,trial_overview$n)
 
 #look a little closer at the cases where we have fewer familiarization trials than expected
-trial_overview %>%
-  filter(condition)
+participants_w_missing_fam_trials <- trial_overview %>%
+  filter(condition=="familiarization",n<4) %>%
+  pull(participant_id)
 
+distinct_trials %>%
+  filter(participant_id %in% participants_w_missing_fam_trials) %>%
+  View()
   
 ```
 
