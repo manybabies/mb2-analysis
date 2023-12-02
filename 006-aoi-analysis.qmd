@@ -326,9 +326,9 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ```{r}
 #set the prior
 priors <-c(
-  prior(normal(0, 2), class = Intercept), #normal distribution for intercept
-  prior(normal(0, 2), class = b), # normal distribution for fixed-effect coefficients
-  prior(normal(0, .1), class = sd), # normal distribution for SD
+  prior(uniform(0, 1), lb=0,ub=1,class = Intercept), #uniform distribution for intercept
+  prior(normal(0, .1), class = b), # normal distribution for fixed-effect coefficients
+  prior(normal(0, .05), class = sd), #normal distribution for sd/ random effects
   prior(lkj(2), class = L)) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_aoi_toddlers <- brm(prop_exit ~ 1+condition+(1+condition|lab_id),
