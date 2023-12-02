@@ -13,6 +13,7 @@ library(cowplot)
 library(patchwork)
 library(brms)
 library(tidybayes)
+library(knitr)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
@@ -203,6 +204,9 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
     mean_target_looking=mean(prop_exit,na.rm=T),
     sd_target_looking=sd(prop_exit,na.rm=T)
   )
+
+summarize_test_aoi %>%
+  knitr::kable()
 ```
 
 ### Main Model
