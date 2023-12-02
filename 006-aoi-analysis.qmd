@@ -18,14 +18,30 @@ plot_path <- here("plots")
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 ```
 
+# Preliminaries
+
+Inspecting the structure of the unique trials in the data. Check to see if we have the expected number of familiarization (4 trials) and test trials (2, one ignorance, one knowledge).
+
 ```{r}
-trial_overview <- data_preprocessed %>%
-  group_by(lab_id,participant_id,media_name) %>%
-  count(
-  )
+distinct_trials <- data_preprocessed %>%
+  ungroup() %>%
+  distinct(lab_id,participant_id,participant_trial_id,trial_file_name,media_name,condition)
+
+trial_overview <- distinct_trials %>%
+  filter(condition %in% c("familiarization","knowledge","ignorance")) %>%
+  group_by(lab_id,participant_id,condition) %>%
+  count()
+#check distribution of trials
+table(trial_overview$condition,trial_overview$n)
+
+#look a little closer at the cases where we have fewer familiarization trials than expected
+trial_overview %>%
+  filter(condition)
+
+  
 ```
 
-## Summarize AOI looking
+Splitting the data into familiarization data and test data.
 
 ```{r}
 fam_data <- data_preprocessed %>%
@@ -33,8 +49,15 @@ fam_data <- data_preprocessed %>%
 
 test_data <- data_preprocessed %>%
   filter(condition %in% c("knowledge","ignorance"))
+```
 
+# Summarize AOI looking
 
+## Familiarization Data
+
+## Test Data
+
+```{r}
 summarize_participant_test_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
   filter(video_duration_ms<37000) %>%
