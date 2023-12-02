@@ -66,9 +66,29 @@ test_data <- data_preprocessed %>%
 ### Summarizing Data (First Trial)
 
 ```{r}
-summarize_participant_test_first_trial <- test_data %>%
+#filter to first trials
+test_data_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
-  filter(video_duration_ms<37000) %>%
+  filter(video_duration_ms<37000) 
+
+#check to make sure we are filtering correctly 
+# e.g., no participants contribute multiple first trials
+test_data_first_trial_overview <- test_data_first_trial %>%
+  ungroup() %>%
+  distinct(lab_id,participant_id,participant_trial_id,trial_num) 
+
+num_test_first_trials <- test_data_first_trial_overview %>%
+  group_by(lab_id,participant_id) %>%
+  count()
+#make sure we only have one trial per participant
+#the next two statements must both be true
+assert_that(num_test_first_trials$n[1]==1) # first element equals one
+assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
+```
+
+```{r}
+#now summarize all data
+summarize_participant_test_first_trial <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,participant_id,participant_trial_id,trial_file_name,
            bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
   #filter to relevant anticipatory window
@@ -179,12 +199,11 @@ Summary statistics
 summarize_test_aoi <- summarize_participant_test_first_trial %>%
   group_by(age_cohort,condition) %>%
   summarize(
-    participant_num=n(),
+    participant_num=sum(!is.na(prop_exit)),
     mean_target_looking=mean(prop_exit,na.rm=T),
     sd_target_looking=sd(prop_exit,na.rm=T)
   )
 ```
-
 
 ### Main Model
 
