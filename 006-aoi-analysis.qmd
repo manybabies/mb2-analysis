@@ -62,9 +62,117 @@ test_data <- data_preprocessed %>%
 
 ## Familiarization Data
 
+### Summarizing Familiarization Data
+
+```{r}
+summarize_participant_familiarization <- fam_data %>%
+  group_by(lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>%
+  mutate(
+    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+  ) %>%
+  summarize(
+    t_min=min(t_norm),
+    t_max=max(t_norm),
+    sum_target_general = sum(aoi=="target_general",na.rm=T),
+    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
+    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
+    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
+    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
+    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
+    N_general = sum_target_general+sum_distractor_general,
+    N_exit = sum_target_exit+sum_distractor_exit
+  ) %>%
+  group_by(lab_id,age_cohort,condition,participant_id) %>%
+  mutate(familiarization_trial_num = rank(trial_num, ties.method = "first"))
+```
+
+Some quick checks on the resulting data
+
+```{r}
+#distribution of total looks
+ggplot(summarize_participant_familiarization,aes(N_exit))+
+  geom_histogram()+
+  facet_wrap(~age_cohort)
+```
+
+### Overall Plots
+
+```{r}
+#plot average proportion looking
+overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes(x=as.factor(familiarization_trial_num), y=prop_exit,color=condition))+
+  #geom_violin()+
+  geom_boxplot()+
+  #geom_beeswarm(alpha=0.5)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  facet_wrap(~age_cohort)+
+  theme(legend.position="none")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+overall_p
+ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white")
+
+```
+
+### Summary Statistics
+
+```{r}
+summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
+  group_by(age_cohort,lab_id,participant_id,condition) %>%
+  summarize(
+    n=n(),
+    mean_subj_prop_exit=mean(prop_exit,na.rm=T)
+  ) %>%
+  group_by(age_cohort,condition) %>%
+  summarize(
+    participant_num=sum(!is.na( mean_subj_prop_exit)),
+    mean_target_looking=mean( mean_subj_prop_exit,na.rm=T),
+    sd_target_looking=sd( mean_subj_prop_exit,na.rm=T),
+    t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu=0.5)))) %>%
+  mutate(
+    se_target_looking = sd_target_looking/sqrt(participant_num),
+    lower_ci = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * se_target_looking,
+    upper_ci = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * se_target_looking,
+    p.value = purrr::map(t_test, ~select(.x, c('p.value', 'parameter','statistic')))
+  ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval=statistic,
+    df=parameter
+  )
+  
+summarize_fam_aoi_overall %>%
+  knitr::kable()
+```
+
+By individual trial
+
+```{r}
+summarize_fam_aoi_by_trial <- summarize_participant_familiarization %>%
+  group_by(age_cohort,condition,familiarization_trial_num) %>%
+  summarize(
+    participant_num=sum(!is.na(prop_exit)),
+    mean_target_looking=mean(prop_exit,na.rm=T),
+    sd_target_looking=sd(prop_exit,na.rm=T)
+  ) %>%
+  mutate(
+    se_target_looking = sd_target_looking/sqrt(participant_num),
+    lower_ci = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * se_target_looking,
+    upper_ci = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * se_target_looking
+    )
+
+summarize_fam_aoi_by_trial %>%
+  knitr::kable()
+```
+
+
 ## Test Data
 
-### Summarizing Data (First Trial)
+### Summarizing Test Data (First Trial)
 
 ```{r}
 #filter to first trials
@@ -126,7 +234,7 @@ ggplot(summarize_participant_test_first_trial,aes(N_exit))+
   facet_wrap(~age_cohort)
 ```
 
-### Proportion Looking (First Trial)
+### Overall Plots
 
 First look at the proportional looking measures, focusing on the target exit during the anticipatory window.
 
@@ -194,7 +302,7 @@ kids_prop
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white")
 ```
 
-Summary statistics
+### Summary Statistics
 
 ```{r}
 summarize_test_aoi <- summarize_participant_test_first_trial %>%
@@ -270,7 +378,10 @@ bm_aoi_adults %>%
   mean_hdi(.width = 0.95)
 ```
 
-## Timecourse extension
+
+
+
+# Timecourse extension
 
 ```{r}
 mss_timecourse_test_first_trial <- test_data %>%
@@ -380,10 +491,6 @@ ggplot(ms_timecourse_test_first_trial |>
 
 
 ```{r}
-
-fam_data <- data_preprocessed %>%
-  filter(condition == "familiarization")
-
 mss_fam <- fam_data %>%
   group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
            trial_file_name) %>%
