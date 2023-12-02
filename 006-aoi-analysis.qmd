@@ -11,6 +11,8 @@ library(ggbeeswarm)
 library(gghalves)
 library(cowplot)
 library(patchwork)
+library(brms)
+library(tidybayes)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
@@ -55,11 +57,13 @@ test_data <- data_preprocessed %>%
   filter(condition %in% c("knowledge","ignorance"))
 ```
 
-# Summarize AOI looking
+# AOI Proportion Looking
 
 ## Familiarization Data
 
 ## Test Data
+
+### Summarizing Data (First Trial)
 
 ```{r}
 summarize_participant_test_first_trial <- test_data %>%
@@ -101,8 +105,7 @@ ggplot(summarize_participant_test_first_trial,aes(N_exit))+
   facet_wrap(~age_cohort)
 ```
 
-
-## Proportion Looking
+### Proportion Looking (First Trial)
 
 First look at the proportional looking measures, focusing on the target exit during the anticipatory window.
 
@@ -170,7 +173,79 @@ kids_prop
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white")
 ```
 
+Summary statistics
 
+```{r}
+summarize_test_aoi <- summarize_participant_test_first_trial %>%
+  group_by(age_cohort,condition) %>%
+  summarize(
+    participant_num=n(),
+    mean_target_looking=mean(prop_exit,na.rm=T),
+    sd_target_looking=sd(prop_exit,na.rm=T)
+  )
+```
+
+
+### Main Model
+
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
+
+#### Toddlers
+
+```{r}
+#set the prior
+priors <-c(
+  prior(normal(0, 2), class = Intercept), #normal distribution for intercept
+  prior(normal(0, 2), class = b), # normal distribution for fixed-effect coefficients
+  prior(normal(0, .1), class = sd), # normal distribution for SD
+  prior(lkj(2), class = L)) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_aoi_toddlers <- brm(prop_exit ~ 1+condition+(1+condition|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_first_trial,age_cohort=="toddlers"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123)
+summary(bm_aoi_toddlers)
+```
+
+Summarize outcomes
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_aoi_toddlers %>%
+  spread_draws(b_conditionknowledge, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+
+#### Adults
+
+```{r}
+bm_aoi_adults <- brm(prop_exit ~ 1+condition+(1+condition|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_first_trial,age_cohort=="adults"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123)
+summary(bm_aoi_adults)
+```
+
+```{r}
+#get main coefficient estimate and HDI
+bm_aoi_adults %>%
+  spread_draws(b_conditionknowledge, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
 
 ## Timecourse extension
 
