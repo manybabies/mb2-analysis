@@ -366,6 +366,15 @@ plot(h_aoi_toddlers)
 1/h_aoi_toddlers$hypothesis$Evid.Ratio
 ```
 
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition)
+summary(null_aoi_toddlers)
+brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
+```
+
+
 #### Adults
 
 ```{r}
@@ -398,6 +407,14 @@ h_aoi_adults
 plot(h_aoi_adults)
 # evidence in favor of condition being different from zero
 1/h_aoi_adults$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_adults <-  update(bm_aoi_adults, formula = ~ .-condition)
+summary(null_aoi_adults)
+brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
 ```
 
 # Timecourse extension
