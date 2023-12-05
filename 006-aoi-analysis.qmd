@@ -84,7 +84,7 @@ summarize_participant_familiarization <- fam_data %>%
     N_exit = sum_target_exit+sum_distractor_exit
   ) %>%
   group_by(lab_id,age_cohort,condition,participant_id) %>%
-  mutate(familiarization_trial_num = rank(trial_num, ties.method = "first"))
+  mutate(familiarization_trial_num = rank(trial_num, ties.method = "first")) #check this
 ```
 
 Some quick checks on the resulting data
@@ -169,6 +169,118 @@ summarize_fam_aoi_by_trial %>%
   knitr::kable()
 ```
 
+### Main Model
+
+#### Toddlers
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+#shift trial number coding
+#From the RR:
+#Our key question ofinterest is whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we will code trial number so that the last trial before the test trials (trial 4) is set to the intercept
+summarize_participant_familiarization <- summarize_participant_familiarization %>%
+  mutate(familiarization_trial_num_4=familiarization_trial_num-4) %>%
+  unite(participant_lab_id,lab_id,participant_id,remove=F) %>% # making sure that participant ids are not accidentally combined across labs
+  mutate(prop_exit_adj = prop_exit-0.5) #adjusting for chance
+
+
+bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_familiarization,age_cohort=="toddlers"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_fam_aoi_toddlers)
+prior_summary(bm_fam_aoi_toddlers)
+```
+
+Summarize outcomes
+
+Intercept
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_aoi_toddlers %>%
+  spread_draws(b_Intercept, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Trial Number
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_aoi_toddlers %>%
+  spread_draws(b_familiarization_trial_num_4, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Compute Bayes factor approach
+
+```{r}
+null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1)
+summary(null_fam_aoi_toddlers)
+brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
+```
+
+#### Adults
+
+```{r}
+bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_familiarization,age_cohort=="adults"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_fam_aoi_adults)
+prior_summary(bm_fam_aoi_adults)
+```
+
+Summarize outcomes
+
+Intercept
+
+```{r}
+#get main coefficient estimate and HDI
+bm_fam_aoi_adults %>%
+  spread_draws(b_Intercept, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Trial Number
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_aoi_adults %>%
+  spread_draws(b_familiarization_trial_num_4, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Compute Bayes factor approach
+
+```{r}
+null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1)
+summary(null_fam_aoi_adults)
+brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
+```
 
 ## Test Data
 
