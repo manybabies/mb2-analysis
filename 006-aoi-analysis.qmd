@@ -176,7 +176,7 @@ summarize_fam_aoi_by_trial %>%
 ```{r}
 #set the prior
 priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
@@ -230,7 +230,7 @@ bm_fam_aoi_toddlers %>%
 Compute Bayes factor approach
 
 ```{r}
-null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1)
+null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_aoi_toddlers)
 brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
 ```
@@ -277,7 +277,7 @@ bm_fam_aoi_adults %>%
 Compute Bayes factor approach
 
 ```{r}
-null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1)
+null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_aoi_adults)
 brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
 ```
