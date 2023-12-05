@@ -581,7 +581,7 @@ ggplot(ms_timecourse_test_first_trial |>
 ```
 
 
-## Timecourse with all trials
+## Timecourse with all test trials
 
 ```{r}
 
@@ -634,7 +634,7 @@ ggplot(ms_timecourse_test_first_trial |>
 ```
 
 
-# Fam trials
+## Fam trials
 
 
 
