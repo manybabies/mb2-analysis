@@ -6,8 +6,6 @@ blackscreen
 UNDEFINED
 Attentiongetter_3sec
 AG_1
-IG_LR_"
-IG_LR_ExitLef"
 black
 Presented Media name
 No media
@@ -18,7 +16,6 @@ None
 attention_getter1
 attention_getter2
 attention_getter3
-star_calib2
 black_screen1
 black_screen2
 black_screen3
