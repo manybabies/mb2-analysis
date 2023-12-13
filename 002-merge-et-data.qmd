@@ -101,9 +101,30 @@ xy <- local_files |>
     
     return(d_resamp)
   })
+
+## TO DO: check on some residual warning messages generated during resampling
+
+#save the intermediate
+saveRDS(xy, here("data","02_intermediates","002-xy-resampled.Rds"))
 ```
 
 # Standardize media names
+
+Remove file media extensions
+
+```{r}
+xy <- xy %>% 
+  mutate(media_name = tools::file_path_sans_ext(media_name))
+```
+
+Get an overview over media names used by different labs
+
+```{r}
+media_names_by_lab <- xy |>
+  group_by(lab_id,media_name) |>
+  count()
+```
+
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
@@ -121,7 +142,6 @@ media_names_valid <- readLines(here('metadata',
                                     'media_names_validate.txt'))
 
 data <- xy |>
-  mutate(media_name = tools::file_path_sans_ext(media_name)) %>%
   filter(!is.na(media_name) & !(media_name %in% media_deletion)) %>% 
   mutate(media_name = ifelse(media_name %in% names(vec_renaming), vec_renaming[as.character(media_name)], media_name)) %>% 
   group_by(lab_id, participant_id) %>% 
