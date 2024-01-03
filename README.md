@@ -34,7 +34,7 @@ Issues to deal with:
 
 - cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
 
-- how to preprocess exclusion data?
+- how to preprocess exclusion data? (-> webcam have an additional exclusion step documented in files that appear in the demographics osf repo - webcam_exclusions folder)
 
 - "Eyetracker Calibration" is a media to remove - could this be a misnamed star_calib for some labs (and should be renamed and kept) or is this a different calibration that does not interest us?
 
