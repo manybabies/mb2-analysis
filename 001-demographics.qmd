@@ -37,6 +37,7 @@ adult_demo <- adults |>
              show_col_types = FALSE)  |>
       mutate(education = as.character(education),
              testing_date = as.character(testing_date),
+             test_order = as.character(test_order),
              test2_error_info = as.character(test2_error_info),
              ra_id = as.character(ra_id), 
              age_years = as.character(age_years),
