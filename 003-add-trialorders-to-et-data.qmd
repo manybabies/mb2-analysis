@@ -22,29 +22,18 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 
 
 ```{r}
-
-# TODO these labs are currently broken - investigate this
+# TODO these labs/participants are currently broken - investigate this
 # (lab_id, participant_id, media_name) does not uniquely identify a trial_number
-# (duplicate participant namings?)
 data <- data %>% 
   filter(!(lab_id %in% c(
-  'babylabNijmegen', # various participants affected
-  'babylabAmsterdam', # UVA_127
-  'DevlabAU', # various participants affected
-  'mecdmpihcbs' # MPI_022
-  )))
-
-
-# TODO: temporary filter to filter out participants that have seen any media twice (according to the data, investigate this)
-data <- data %>% 
-  filter(!(lab_id %in% c(
-  'labUNAM' # various participants affected
-  ))) %>% 
-  filter(!(participant_id %in% c('UoO231', 'SkidLSDLab_009')))
-
-
-data %>% group_by(lab_id, participant_id, media_name)
-
+  'babylabNijmegen', # TODO: participants are not unique within the lab - only unique within the age cohorts, at which point in the pipeline do we fix this?
+  'labUNAM' # TODO: same, participants are not unique within the lab - only unique within the age cohorts, at which point in the pipeline do we fix this?
+  ))) %>% filter(
+    !(participant_id == 'MPI_022' && lab_id == 'mecdmpihcbs') && # this participant has 6 fam trials (restarted testing and abandoned?)
+      !(participant_id == 'UVA_127' && lab_id == 'babylabAmsterdam'), # TODO: This participant appears twice, INVESTIGATE THIS
+    !(participant_id == 'UoO231' && lab_id == 'oxfordBabylab'), # TODO: This participant appears twice, INVESTIGATE THIS
+    !(participant_id == 'SkidLSDLab' && lab_id == 'SkidLSDLab_009') # TODO: This participant appears twice, INVESTIGATE THIS
+    ) 
 
 # We need to do the following two steps here, as trial_details depend on specific filenames, 
 # while trial ordering only cares about the canon media names
@@ -63,8 +52,8 @@ data <- data %>%
 
 
 # Add trial numbers to the data
-trial_orders <- data %>% 
-  filter(media_name != 'star_calib') %>% # remove calibration from numbering
+trial_orders <- data %>%
+  filter(!(media_name %in% c('star_calib', 'Pupil_Calibration'))) %>% # remove calibration from numbering
   group_by(lab_id, participant_id) %>%
   mutate(trial_num = make_media_nums(media_name)) %>%
   distinct(lab_id, participant_id, media_name, trial_num)
