@@ -599,6 +599,8 @@ mss_timecourse_test <- test_data %>%
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
   #check this!!!
   filter(t_norm>=-16000, t_norm<=10000) %>%
+  # filter out sections of first_trial that are too long
+  filter((first_trial&t_norm<=1500)| !first_trial) %>%
   group_by(age_cohort, participant_id, participant_trial_id, 
            condition, first_trial, t_norm_downsampled) |>
   summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
