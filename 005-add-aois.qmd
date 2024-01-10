@@ -19,7 +19,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
 
 # add information about screen size and eyetracker coordinate origin
 dataset_specs <- read.csv(here('metadata', 'dataset_sheet.csv')) %>%
-  select(data_id, screen_dimensions, point_zero) %>%
+  select(data_id, data_type, screen_dimensions, point_zero) %>%
   separate(data_id, c("lab_id", "age_cohort"), sep="_") %>% 
   separate(screen_dimensions, c("screen_width", "screen_height"), sep=" x ") %>% 
   mutate(screen_width = as.numeric(str_trim(screen_width)),

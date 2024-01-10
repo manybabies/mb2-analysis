@@ -19,12 +19,12 @@ gather_osf_data("qv5hb", DEMO_DATA_DIR)
 
 ```{r}
   
-files <- dir(here(DEMO_DATA_DIR))
-adults <- files[str_detect(files, "adults")]
-toddlers <- files[str_detect(files, "toddlers")]
+demo_files <- setdiff(dir(here(DEMO_DATA_DIR)), c('webcam_exclusions'))
+adults <- demo_files[str_detect(demo_files, "adults")]
+toddlers <- demo_files[str_detect(demo_files, "toddlers")]
 
-setdiff(files, c(adults, toddlers))
-assert_that(length(files) == length(adults) + length(toddlers))
+setdiff(demo_files, c(adults, toddlers))
+assert_that(length(demo_files) == length(adults) + length(toddlers))
 ```
 
 Note that despite validation we still didn't end up get perfectly valid data. BUT - better than MB1!!!
@@ -37,6 +37,7 @@ adult_demo <- adults |>
              show_col_types = FALSE)  |>
       mutate(education = as.character(education),
              testing_date = as.character(testing_date),
+             test_order = as.character(test_order),
              test2_error_info = as.character(test2_error_info),
              ra_id = as.character(ra_id), 
              age_years = as.character(age_years),

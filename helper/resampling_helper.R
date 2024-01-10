@@ -48,7 +48,6 @@ normalize_times <- function(df_table,trial_col_name = "event_num") {
 
 resample_xy_trial <- function(df_trial, timepoint_col_name = "t_norm", 
                               trial_col_name = "event_num", resample_pupil_size = TRUE) {
-  
   MISSING_CONST <- -10000
   # set sample rates
   SAMPLE_RATE = 40 # Hz
@@ -182,9 +181,8 @@ resample_times <- function(df_table, timepoint_col_name = "t_norm", trial_col_na
                                            .data[[trial_col_name]], sep = "_")) %>%
       split(.$participant_trial_id) %>%
       purrr::map_df(resample_xy_trial, timepoint_col_name = timepoint_col_name, 
-                    trial_col_name = trial_col_name) 
-    # %>%
-    #   dplyr::arrange(.data$participant_id, .data[[trial_col_name]]) #%>%
+                    trial_col_name = trial_col_name) %>%
+      dplyr::arrange(.data$participant_id, .data[[trial_col_name]]) #%>%
       #dplyr::mutate(xy_timepoint_id = 0:(dplyr::n() - 1)) # add IDs
   
   return(df_out)

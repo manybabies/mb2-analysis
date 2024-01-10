@@ -1,18 +1,3 @@
-## Repo restructuring notice 2023/10/14 (leave this up for the next few meetings until all contributors have updated their setup)
-
-For the importers:
-
-* The prior 'data' folder has been renamed to 'import_scripts'
-  * if you were currently working on a specific input when pulling, be sure to move over your 'raw_data' subfolder(s) over
-  * be sure to create all new import scripts under the new folder (the import guide has already been updated)
-
-For the pipeline (affected: Martin, Mike, and Adrian):
-
-* `demographic_data`, `processed_data`, `xy_processed_data` have all been renamed and moved to the (now gitignored) `data` folder
-* this folder will be automatically populated with subfolders and data through the .qmd files - both demo and et data are downloaded through osf
-* To migrate, simply delete the 3 folders and run both 001 and 002 again (applying some temporary fixes when specific integrity checks fail - these are explained at the specific checks)
-
-
 # mb2-analysis
 
 Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, [Schuwerk, Kampis et al. (accepted pending data collection)](https://psyarxiv.com/x4jbm/). 
@@ -25,6 +10,7 @@ Subdirectories explanations:
 * `metadata` stores functions that create metadata for preprocessing/analysis
 * `import_scripts` contains import scripts for the main dataset.
   * Important notes on how to do this task are in the [MB2 data import guide](https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit).
+  * the webcam data was imported by a seperate script, found and explained in the [mb2 webcam eye-tracking repository](https://github.com/adriansteffan/mb2-browser-version?tab=readme-ov-file#data-processing-pipeline)
 * `data` (will be created while running the pipeline is gitignored )
   * `01_xy_data` - xy data will be downloaded from osf into this
   * `01_demographic_data` - demographic data will be downloaded from osf into this
@@ -48,7 +34,7 @@ Issues to deal with:
 
 - cleanup the pipline (a lot of intermediate steps can be combined to make this more compact)
 
-- how to preprocess exclusion data?
+- how to preprocess exclusion data? (-> webcam have an additional exclusion step documented in files that appear in the demographics osf repo - webcam_exclusions folder)
 
 - "Eyetracker Calibration" is a media to remove - could this be a misnamed star_calib for some labs (and should be renamed and kept) or is this a different calibration that does not interest us?
 

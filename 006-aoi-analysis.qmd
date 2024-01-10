@@ -113,7 +113,7 @@ overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white")
+ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white")
 
 ```
 
@@ -355,11 +355,11 @@ First look at the proportional looking measures, focusing on the target exit dur
 overall_p <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5), aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
+  geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
   geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_beeswarm(alpha=0.5)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -369,7 +369,7 @@ overall_p <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5), ae
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white")
+ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white",width=9,height=6)
 ```
 
 Splitting plot by lab and age cohort
@@ -585,7 +585,7 @@ ggplot(ms_timecourse_test_first_trial |>
 
 ```{r}
 
-mss_timecourse_test_first_trial <- test_data %>%
+mss_timecourse_test <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
   filter(!str_detect(trial_file_name, "_INC")) |>
   mutate(first_trial = video_duration_ms<37000) %>%
@@ -599,12 +599,14 @@ mss_timecourse_test_first_trial <- test_data %>%
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
   #check this!!!
   filter(t_norm>=-16000, t_norm<=10000) %>%
+  # filter out sections of first_trial that are too long
+  filter((first_trial&t_norm<=1500)| !first_trial) %>%
   group_by(age_cohort, participant_id, participant_trial_id, 
            condition, first_trial, t_norm_downsampled) |>
   summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
             on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
 
-ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
+ms_timecourse_test <- mss_timecourse_test |>
   group_by(age_cohort, first_trial, condition, t_norm_downsampled) |>
   summarize(mean_target_general = mean(on_target, na.rm=TRUE),
             mean_distractor_general = mean(on_dist, na.rm=TRUE),
@@ -619,7 +621,7 @@ ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
 
 
 ```{r}
-ggplot(ms_timecourse_test_first_trial |>
+ggplot(ms_timecourse_test |>
          pivot_longer(mean_target_general:mean_distractor_general, 
                       names_to = "trial_type", values_to = "mean_looking"),       
          aes(x = t_norm_downsampled, y = mean_looking, 
@@ -630,13 +632,14 @@ ggplot(ms_timecourse_test_first_trial |>
   geom_vline(xintercept = -3880, lty = 3, col = "black") + 
   geom_vline(xintercept = 120, lty = 3, col = "black") + 
   ggthemes::theme_few() + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom")+
+  xlab("Time")+
+  ylab("Mean Proportion Looking")
+ggsave(here(plot_path,"test_timecourse_plot.png"),bg="white",width=12,height=6)
 ```
 
 
 ## Fam trials
-
-
 
 ```{r}
 mss_fam <- fam_data %>%
@@ -678,5 +681,9 @@ ggplot(mss_fam |>
   geom_vline(xintercept = -3880, lty = 3, col = "black") + 
   geom_vline(xintercept = 120, lty = 3, col = "black") + 
   ggthemes::theme_few() + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom")+
+  xlab("Time")+
+  ylab("Mean Proportion Looking")
+ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12,height=6)
+
 ```
