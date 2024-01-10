@@ -71,6 +71,9 @@ xy <- local_files |>
                               grepl('_toddlers_', f) ~ 'toddlers',
                               T ~ NA)
     
+    d$participant_id <- paste(d$participant_id, d$age_cohort, sep = "_")
+    
+    
     # time resampling 
     # filter timepoints with NAs
     # we need to add numbers for media names so that we can preserve order
