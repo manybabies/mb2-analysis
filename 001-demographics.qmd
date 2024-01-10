@@ -8,7 +8,7 @@ library(tidyverse)
 library(here)
 library(assertthat)
 library(fuzzyjoin)
-
+ 
 source(here('helper','ensure_repo_structure.R'))
 ```
 
@@ -40,7 +40,8 @@ adult_demo <- adults |>
              test2_error_info = as.character(test2_error_info),
              ra_id = as.character(ra_id), 
              age_years = as.character(age_years),
-             participant_id = as.character(participant_id)) |>
+             participant_id = as.character(participant_id),
+             test_order = as.character(test_order)) |>
       select(labid:bear_knowledge_info)
   }) 
 ```

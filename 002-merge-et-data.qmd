@@ -101,9 +101,16 @@ xy <- local_files |>
     
     return(d_resamp)
   })
+
+save(xy, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002A))
 ```
 
 # Standardize media names
+
+```{r reload_resamps}
+load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002A))
+```
+
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
@@ -150,8 +157,6 @@ rm(invalid_media_names)
 
 
 # Column-wise validation
-
-
 
 We have: 
 
