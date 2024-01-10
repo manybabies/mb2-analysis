@@ -108,14 +108,16 @@ xy <- local_files |>
 ## TO DO: check on some residual warning messages generated during resampling
 
 #save the intermediate
-saveRDS(xy, here("data","02_intermediates","002-xy-resampled.Rds"))
+save(xy, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002A))
 ```
 
 # Standardize media names
 
 Remove file media extensions
 
-```{r}
+```{r reload_resamps}
+load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002A))
+
 xy <- xy %>% 
   mutate(media_name = tools::file_path_sans_ext(media_name))
 ```
@@ -173,8 +175,6 @@ rm(invalid_media_names)
 
 
 # Column-wise validation
-
-
 
 We have: 
 

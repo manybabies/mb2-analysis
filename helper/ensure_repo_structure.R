@@ -17,6 +17,7 @@ for(dir in c(DATA_DIR,
 
 INTERMEDIATE_001_ADULT <- "001-demographic-data-adults.Rds"
 INTERMEDIATE_001_TODDLER <- "001-demographic-data-toddlers.Rds"
+INTERMEDIATE_002A <- "002-resampled-et-data.Rds"
 INTERMEDIATE_002 <- "002-merged-et-data.Rds"
 INTERMEDIATE_003 <- "003-traildata-added-data.Rds"
 INTERMEDIATE_004 <- "004-resampled-data.Rds"
