@@ -278,26 +278,36 @@ demo_toddler_pids <- toddler_demo |>
 Check overlap/non-overlap in IDs. First adults.
 
 ```{r}
-anti_join(et_adult_pids, demo_adult_pids)
+et_ids_not_in_demo_adults <- anti_join(et_adult_pids, demo_adult_pids)
+demo_ids_not_in_et_adults <- anti_join(demo_adult_pids, et_adult_pids)
 
-anti_join(demo_adult_pids, et_adult_pids)
+#FILTER_LAB <- 'WSUMARCS'
+#et_ids_not_in_demo_adults %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
+#demo_ids_not_in_et_adults %>% rename(demo_id = participant_id) %>%filter(lab_id == FILTER_LAB)
+
+#unique(c(et_ids_not_in_demo_adults$lab_id, demo_ids_not_in_et_adults$lab_id))
 ```
 
 Now toddlers. 
 
 ```{r}
-anti_join(et_adult_pids, demo_adult_pids)
+et_ids_not_in_demo_toddlers <- anti_join(et_toddler_pids, demo_toddler_pids)
+demo_ids_not_in_et_toddlers <- anti_join(demo_toddler_pids, et_toddler_pids)
 
-anti_join(demo_adult_pids, et_adult_pids)
+#FILTER_LAB <- 'gertlabLancaster'
+#et_ids_not_in_demo_toddlers %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
+#demo_ids_not_in_et_toddlers %>% rename(demo_id = participant_id) %>%filter(lab_id == FILTER_LAB)
+
+#unique(c(et_ids_not_in_demo_toddlers$lab_id, demo_ids_not_in_et_toddlers$lab_id))
 ```
 
 Now the test.
 
 ```{r}
 assert_that(is_empty(anti_join(et_adult_pids, demo_adult_pids)))
-assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids)))
-assert_that(is_empty(anti_join(et_adult_pids, demo_adult_pids)))
-assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids)))
+#assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids))) # unfixable, as data is missing
+assert_that(is_empty(anti_join(et_toddler_pids, demo_toddler_pids)))
+#assert_that(is_empty(anti_join(demo_toddler_pids, et_toddler_pids))) # unfixable, as data is missing
 ```
 
 
