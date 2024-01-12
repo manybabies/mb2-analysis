@@ -43,7 +43,8 @@ adult_demo <- adults |>
              age_years = as.character(age_years),
              participant_id = as.character(participant_id),
              test_order = as.character(test_order)) |>
-      select(labid:bear_knowledge_info)
+      select(labid:bear_knowledge_info) |>
+    mutate(participant_id = paste0(participant_id, "_adults"))
   }) 
 ```
 
@@ -51,7 +52,8 @@ Fix our sadness.
 
 ```{r}
 adult_demo <- adult_demo |>
-  mutate(age_years = as.numeric(age_years))
+  mutate(age_years_n = as.numeric(age_years))
+bla <- adult_demo %>% filter(is.na(age_years_n))
 ```
 
 Toddlers next.
@@ -59,23 +61,25 @@ Toddlers next.
 ```{r}
 columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
                           "fam1_error_info","fam2_error_info","fam3_error_info",
-                          "ra_id","hours_other","hours_children",
+                          "ra_id","hours_children",
                           "testing_date","sibling3_age","hours_daycare",
                           "hours_parentA","hours_parentB","hours_siblings",
                           "hours_adults", "sibling1_age", "sibling2_age", 
                           "parentB_education", "sibling4_age", "sibling5_age", 
                           "lang4_exposure", "parentA_education", 
                           "test2_error_info", "participant_id", 
-                          "lang1_exposure","fam4_error_info","test1_error_info")
+                         "hours_other",
+                         "lang1_exposure","fam4_error_info","test1_error_info")
                           
 toddler_demo <- toddlers |>
   map_df(function(fname) {
     print(fname)
     read_csv(here(DEMO_DATA_DIR, fname),
-             show_col_types = FALSE)  |>
-      mutate(across(columns_to_character, as.character)) |>
+             show_col_types = FALSE) %>% 
+      mutate(hours_other = {if("hours_other" %in% names(.)) hours_other else 0}) %>% # REMOVE THIS ONCE beinghumanWroclaw has provided the hours_other column
+       mutate(across(columns_to_character, as.character)) |>
       select(labid:anything_else)
-  }) 
+  }) |> mutate(participant_id = paste0(participant_id, "_toddlers"))
 ```
 
 We will need to fix these.
