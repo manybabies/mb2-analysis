@@ -1,0 +1,16 @@
+---
+title: "MB2 exclusions"
+format: html
+---
+
+
+```{r}
+library(tidyverse)
+library(here)
+library(assertthat)
+
+source(here('helper','ensure_repo_structure.R'))
+source(here('helper','exclusion_helper.R'))
+
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+```
