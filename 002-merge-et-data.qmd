@@ -71,7 +71,7 @@ xy <- local_files |>
                               grepl('_toddlers_', f) ~ 'toddlers',
                               T ~ NA)
     
-    d$participant_id <- paste(d$participant_id, d$age_cohort, sep = "_")
+    d$participant_id <- paste(d$participant_id, d$age_cohort, sep = "-")
     
     
     # time resampling 

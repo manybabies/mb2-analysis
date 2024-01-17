@@ -103,6 +103,8 @@ ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = lab_id)) +
   geom_histogram() + 
   theme(legend.position = "bottom")
 ```
+
+
 ```{r}
 toddler_demo
 ```
@@ -141,6 +143,7 @@ toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids,
 assert_that(!any(is.na(toddler_demo$lab_id)))
 assert_that(!any(is.na(adult_demo$lab_id)))
 ```
+
 # Descriptives
 
 These are completely unfiltered. 
@@ -173,7 +176,3 @@ print(paste0("sd: ", sd(age_mo, na.rm=TRUE)))
 save(adult_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
 save(toddler_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
 ```
-
-# Exclusions
-
-Note to write out a table here.

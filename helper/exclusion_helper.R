@@ -2,9 +2,15 @@
 # excludes on a column and outputs the percentages for exclusion
 # - flag return_pcts means you get a list with the data and other exclusion stats
 # - flag action flips the column polarity
+# file is the CSV for writing exclusions
 
-exclude_by <- function(d, col, setting = "all", action = "exclude", 
-                       return_pcts = FALSE, quiet = TRUE) {
+# columns for logfile:
+# analysis_stage, exclusion_criterion, original_n, n_excluded, prop_excluded, n_remaining, timestamp
+
+exclude_by <- function(d, col, logfile, analysis_stage, exclusion_criterion,
+                       action = "exclude") {
+  
+  log <- read_csv(logfile)
   
   # if this is an include-by variable, flip polarity
   if (action == "include") {
@@ -12,15 +18,14 @@ exclude_by <- function(d, col, setting = "all", action = "exclude",
       mutate(!! quo_name(col) := ! (!! col))
   }
   
-  if (!quiet) print(paste("filtering by", quo_name(col)))
-  
-  percent_trial <- d %>%
-    ungroup %>%
-    summarise(trial_sum = sum(!! col, na.rm=TRUE),
-              trial_mean = mean(!! col, na.rm=TRUE)) 
-  
+  print(paste("filtering by", quo_name(col)))
+
+  # original_n, n_excluded, prop_excluded, n_remaining, timestamp
+  original_n <- length(unique(d$unique_participant_id))
+    
+    
   percent_sub <- d %>%
-    group_by(lab, subid) %>%
+    group_by(unique_participant_id) %>%
     summarise(any = any(!! col), 
               all = all(!! col)) %>%
     ungroup %>%
@@ -29,35 +34,20 @@ exclude_by <- function(d, col, setting = "all", action = "exclude",
               all_sum = sum(all, na.rm=TRUE), 
               all_mean = mean(all, na.rm=TRUE))
   
-  if (!quiet) {
-    print(paste("This variable excludes", percent_trial$trial_sum, "trials, which is ", 
-                round(percent_trial$trial_mean*100, digits = 1), "% of all trials."))
+  
     
-    if (setting == "any") {
-      print(paste(percent_sub$any_sum, " subjects,", 
-                  round(percent_sub$any_mean*100, digits = 1),
-                  "%, have any trials where", quo_name(col), "is true."))
-    } else if (setting == "all") {
-      print(paste(percent_sub$all_sum, " subjects,", 
-                  round(percent_sub$all_mean*100, digits = 1),
-                  "%, have all trials where", quo_name(col), "is",
-                  ifelse(action == "include", "true:", "false:"), 
-                  action))
-    }
-  }
+    
+    print(paste(percent_sub$all_sum, " subjects,", 
+                round(percent_sub$all_mean*100, digits = 1),
+                "%, have all trials where", quo_name(col), "is",
+                ifelse(action == "include", "true:", "false:"), 
+                action)
+    )
   
+  # return the data frame
   if (action=="NA out") {
-    d <- mutate(d, 
-                looking_time = ifelse(!! col, NA, looking_time))
+    mutate(d, looking_time = ifelse(!! col, NA, looking_time))
   } else {
-    d <- filter(d, !( !! col))
-  }
-  
-  if (return_pcts) {
-    return(list(data = d, 
-                percents = percent_sub, 
-                percent_trials = percent_trial))
-  } else {
-    return(d)
+    filter(d, !( !! col))
   }
 }
