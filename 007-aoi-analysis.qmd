@@ -18,7 +18,7 @@ library(knitr)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
 # Preliminaries
