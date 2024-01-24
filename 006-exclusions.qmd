@@ -26,7 +26,12 @@ data_preprocessed <- data_preprocessed |>
 ```
 
 
-First trim toddlers 
+First trim toddlers that are outside of age range. 
+
+```{r}
+# this needs to be filled in after we have age in the preprocessed file.
+```
+
 
 
 
@@ -34,11 +39,39 @@ First trim toddlers
 
 > (1) they did not complete the full experiment, 
 
+```{r}
+data_after_exclusions <- exclude_by(d = data_preprocessed, 
+                                    col = 
+```
+
+
+
 > (2) the toddler participants’ caregivers interfered with the procedure, e.g. by pointing at stimuli or talking to their child, 
+
+
+```{r}
+data_after_exclusions <- exclude_by(d = data_preprocessed, 
+                                    col = 
+```
+
 
 > (3) the experimenter made an error during testing that was relevant to the procedure, 
 
+
+```{r}
+data_after_exclusions <- exclude_by(d = data_preprocessed, 
+                                    col = 
+```
+
+
 > (4) technical problems occurred. The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. 
+
+```{r}
+data_after_exclusions <- exclude_by(d = data_preprocessed, 
+                                    col = 
+```
+
+
 
 > Of these, participants will be excluded sequentially if 
 
