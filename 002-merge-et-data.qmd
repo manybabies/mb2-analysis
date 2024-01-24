@@ -212,6 +212,10 @@ Now check for match to demos.
 load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_ADULT))
 load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
 
+```
+
+```{r}
+
 et_adult_labids <- unique(filter(data_labfix, 
                                  age_cohort == "adults")$lab_id)
 et_toddler_labids <- unique(filter(data_labfix, 
@@ -256,6 +260,35 @@ data <- data_labfix |>
 
 ## participant_id
 
+```{r}
+correct_ids <- function(df) {
+  renaming <- read.csv2(here('metadata','participant_id_renaming.csv'))
+  
+  # Merge the input dataframe with the renaming dataframe
+  df <- df %>%
+    left_join(renaming, by = c("lab_id" = "lab", "age_cohort" = "sample", "participant_id" = "old"))
+  
+  # Replace the participant_id with the correct id
+  df <- df %>%
+    mutate(participant_id = ifelse(is.na(new), participant_id, new)) %>%
+    select(-new)
+  
+  # Additional cleanup
+  df <- df %>%
+    mutate(participant_id = case_when(
+      age_cohort == 'adult' & lab_id == 'careylabHarvard' ~ paste0('careylabHarvard_', participant_id),
+      age_cohort == 'adult' & lab_id == 'MEyeLab' ~ sub("\\.edf$", "", participant_id),
+      age_cohort == 'toddler' & lab_id == 'careylabHarvard' ~ sub("careylabharard", "careylabHarvard", participant_id),
+      age_cohort == 'toddler' & lab_id == 'UIUCinfantlab' ~ paste0(substr(participant_id, 1, 2), "0"),
+      TRUE ~ participant_id
+    ))
+
+  return(df)
+}
+
+data <- correct_ids(data)
+
+```
 
 ```{r}
 et_adult_pids <- filter(data, age_cohort == "adults") |>
