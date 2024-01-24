@@ -27,8 +27,8 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 select(trial, media_name = value),
               by = "trial") |> 
     mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
-           x = mean(c(pxL, pxR), na.rm = TRUE),
-           y = mean(c(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
+           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 

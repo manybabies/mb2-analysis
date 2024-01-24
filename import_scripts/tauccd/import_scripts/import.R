@@ -8,7 +8,7 @@ DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####
-data_path <- here(DATA_DIR, "raw_data", "EDF files")
+data_path <- here(DATA_DIR, "raw_data", "EDF files ")
 data_files <- list.files(data_path, pattern = ".edf", recursive = TRUE)
 data_files_adults <- data_files[17:32]
 
@@ -28,8 +28,8 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 select(trial, media_name = value),
               by = "trial") |> 
     mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
-           x = mean(c(pxL, pxR), na.rm = TRUE),
-           y = mean(c(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
+           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 
@@ -73,8 +73,8 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
               by = "trial",
               relationship = "many-to-one") |> 
     mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
-           x = mean(c(pxL, pxR), na.rm = TRUE),
-           y = mean(c(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
+           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 
