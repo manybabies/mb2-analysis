@@ -1,13 +1,16 @@
 ################################ exclude_by ################################
 # excludes on a column and outputs the percentages for exclusion
-# - flag return_pcts means you get a list with the data and other exclusion stats
 # - flag action flips the column polarity
-# file is the CSV for writing exclusions
+# - logfile is the CSV for writing exclusions
+# - analysis stage and exclusion criterion are book keeping on the exclusiosn
+# 
+# note the "any" vs. "all" distinction is 
 
 # columns for logfile:
 # analysis_stage, exclusion_criterion, original_n, n_excluded, prop_excluded, n_remaining, timestamp
 
-exclude_by <- function(d, col, logfile, analysis_stage, exclusion_criterion,
+exclude_by <- function(d, col, logfile, analysis_stage = "exclusions", 
+                       exclusion_criterion = "unspecified",
                        action = "exclude") {
   
   log <- read_csv(logfile)

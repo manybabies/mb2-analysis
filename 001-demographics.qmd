@@ -18,7 +18,6 @@ gather_osf_data("qv5hb", DEMO_DATA_DIR)
 ```
 
 ```{r}
-  
 demo_files <- setdiff(dir(here(DEMO_DATA_DIR)), c('webcam_exclusions'))
 adults <- demo_files[str_detect(demo_files, "adults")]
 toddlers <- demo_files[str_detect(demo_files, "toddlers")]
@@ -52,8 +51,14 @@ Fix our sadness.
 
 ```{r}
 adult_demo <- adult_demo |>
-  mutate(age_years_n = as.numeric(age_years))
-bla <- adult_demo %>% filter(is.na(age_years_n))
+  mutate(age_years_n = as.numeric(age_years)) |>
+  mutate(session_error_notes = coalesce(session_error_notes, 
+                                  session_error_notes...11,
+                                  session_error_notes...13),
+         second_session = coalesce(second_session, 
+                                   second_session...12,
+                                   second_session...14)) |>
+  select(-contains("..."))
 ```
 
 Toddlers next.
@@ -83,6 +88,12 @@ toddler_demo <- toddlers |>
 ```
 
 We will need to fix these.
+
+
+```{r}
+toddler_demo <- toddler_demo |>
+  select(-c(80:96)) # get rid of junk columns that the validator missed
+```
 
 Also: there is a mismatch of `labid` and `lab_id` that needs to be fixed.
 
@@ -143,6 +154,24 @@ toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids,
 assert_that(!any(is.na(toddler_demo$lab_id)))
 assert_that(!any(is.na(adult_demo$lab_id)))
 ```
+Clean up this merge. 
+
+```{r}
+adult_demo <- adult_demo |>
+  rename(institution = `🏫 Institution`,
+         country = `🌍 Country`) |>
+  select(-`Lab Name`, -`PI(s)`, -`Additional Members`, -`Lab website`, 
+         -`📚 Projects (collecting data)`)
+
+toddler_demo <- toddler_demo |>
+    rename(institution = `🏫 Institution`,
+         country = `🌍 Country`) |>
+  select(-`Lab Name`, -`PI(s)`, -`Additional Members`, -`Lab website`, 
+         -`📚 Projects (collecting data)`)
+
+  
+```
+
 
 # Descriptives
 
@@ -156,7 +185,7 @@ print(paste0("num toddler participants: ", nrow(toddler_demo)))
 print(paste0("num adult participants: ", nrow(adult_demo)))
 
 
-unique(c(toddler_demo$`🌍 Country`, adult_demo$`🌍 Country`))
+unique(c(toddler_demo$country, adult_demo$country))
 
 ```
 Ages. 

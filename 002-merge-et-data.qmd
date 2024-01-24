@@ -83,7 +83,7 @@ xy <- local_files |>
       filter(!is.na(t), !is.na(media_name)) |>
       group_by(participant_id) |>
       mutate(lab_event_num = make_media_nums(media_name))
-
+    
     # need to know they are in milliseconds
     is_microseconds <- median(diff(d$t)) > 500
     if (is_microseconds) {
@@ -193,10 +193,10 @@ lab_ids <- read_csv(here("metadata","labids.csv")) |>
   rename(lab_id = LabID) 
 
 data_labfix <- fuzzyjoin::stringdist_left_join(data, lab_ids, 
-                by = "lab_id", 
-                max_dist = 1, 
-                distance_col = "distance",
-                ignore_case = TRUE) |>
+                                               by = "lab_id", 
+                                               max_dist = 1, 
+                                               distance_col = "distance",
+                                               ignore_case = TRUE) |>
   mutate(lab_id.y = case_when(lab_id.x == "oxfordBabylab" ~ "babylabOxford",
                               lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
                               TRUE ~ lab_id.y)) |>
@@ -421,7 +421,48 @@ data |>
 
 ```
 
+# Merge code
 
+Clean up demographics. 
+
+```{r}
+adult_demo_minimal <- adult_demo |>
+  mutate(age_cohort = "adults") |>
+  select(participant_id, lab_id, age_cohort, method, pilot, 
+         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+         test1_error, test2_error, 
+         participant_gender, 
+         hearing, vision, medical_issues, 
+         contains("native_lang"), second_session, age_years_n, country)
+
+toddler_demo_minimal <- toddler_demo |>
+  mutate(age_cohort = "toddlers") |>
+  select(participant_id, lab_id, age_cohort, method, pilot, 
+         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+         test1_error, test2_error, 
+         participant_gender, 
+         hearing, vision, medical_issues, 
+         contains("native_lang"), second_session, age_days, country)
+                         
+```
+
+
+```{r}
+
+data_merged <- left_join(data, adult_demo_minimal, 
+                         by = c("age_cohort","lab_id","participant_id")) |>
+  left_join(toddler_demo_minimal, 
+            by = c("age_cohort","lab_id","participant_id"))
+```
+
+Remove columns that we don't think we're going to need - just for sanity.
+
+START HERE - THIS MERGE IS CREATING MULTIPLE FAM_ERROR COLUMNS SO SOMETHING IS WRONG
+
+```{r}
+data_merged |>
+  select(-
+```
 
 
 # Saving 
