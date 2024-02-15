@@ -35,30 +35,32 @@ adult_demo <- adults |>
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE)  |>
       mutate(education = as.character(education),
-             testing_date = as.character(testing_date),
              test_order = as.character(test_order),
              test2_error_info = as.character(test2_error_info),
              ra_id = as.character(ra_id), 
              age_years = as.character(age_years),
              participant_id = as.character(participant_id),
-             test_order = as.character(test_order)) |>
+             test_order = as.character(test_order),
+             residence_city = as.character(residence_city),
+             anything_else = as.character(anything_else),
+             trial_error_notes = as.character(trial_error_notes)) |>
       select(labid:bear_knowledge_info) |>
     mutate(participant_id = paste0(participant_id, "_adults"))
   }) 
 ```
 
-Fix our sadness.
+Fix our sadness (sadness maybe fixed?).
 
 ```{r}
 adult_demo <- adult_demo |>
-  mutate(age_years_n = as.numeric(age_years)) |>
-  mutate(session_error_notes = coalesce(session_error_notes, 
-                                  session_error_notes...11,
-                                  session_error_notes...13),
-         second_session = coalesce(second_session, 
-                                   second_session...12,
-                                   second_session...14)) |>
-  select(-contains("..."))
+  mutate(age_years_n = as.numeric(age_years)) #|>
+  # mutate(session_error_notes = coalesce(session_error_notes, 
+  #                                 session_error_notes...11,
+  #                                 session_error_notes...13),
+  #        second_session = coalesce(second_session, 
+  #                                  second_session...12,
+  #                                  second_session...14)) |>
+  #select(-contains("..."))
 ```
 
 Toddlers next.
@@ -67,14 +69,14 @@ Toddlers next.
 columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
                           "fam1_error_info","fam2_error_info","fam3_error_info",
                           "ra_id","hours_children",
-                          "testing_date","sibling3_age","hours_daycare",
+                          "sibling3_age","hours_daycare",
                           "hours_parentA","hours_parentB","hours_siblings",
                           "hours_adults", "sibling1_age", "sibling2_age", 
-                          "parentB_education", "sibling4_age", "sibling5_age", 
-                          "lang4_exposure", "parentA_education", 
-                          "test2_error_info", "participant_id", 
-                         "hours_other",
-                         "lang1_exposure","fam4_error_info","test1_error_info")
+                          "parentB_education","sibling1_gender","sibling2_gender", "sibling4_age", "sibling5_age", 
+                          "lang2","lang3","lang4","lang4_exposure", "parentA_education",
+                          "test2_error_info", "participant_id", "nationality",
+                         "hours_other","age_days","test_order","session_error_info",
+                         "lang1_exposure","fam4_error_info","test1_error_info","parentB_native_lang1","hearing_info")
                           
 toddler_demo <- toddlers |>
   map_df(function(fname) {
@@ -82,17 +84,16 @@ toddler_demo <- toddlers |>
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE) %>% 
       mutate(hours_other = {if("hours_other" %in% names(.)) hours_other else 0}) %>% # REMOVE THIS ONCE beinghumanWroclaw has provided the hours_other column
-       mutate(across(columns_to_character, as.character)) |>
-      select(labid:anything_else)
+       mutate(across(columns_to_character, as.character)) #|>
+      #select(labid:anything_else)
   }) |> mutate(participant_id = paste0(participant_id, "_toddlers"))
 ```
 
 We will need to fix these.
 
-
 ```{r}
-toddler_demo <- toddler_demo |>
-  select(-c(80:96)) # get rid of junk columns that the validator missed
+toddler_demo <- toddler_demo #|>
+  #select(-c(80:96)) # get rid of junk columns that the validator missed
 ```
 
 Also: there is a mismatch of `labid` and `lab_id` that needs to be fixed.
@@ -110,16 +111,18 @@ Based on spot checks, it appears that these are real kids who just fall outside 
 
 ```{r}
 days_in_month = 365.25/12
-ggplot(toddler_demo, aes(x = age_days/days_in_month, fill = lab_id)) + 
+
+toddler_demo <- toddler_demo |>
+  mutate(age_days_num=as.numeric(age_days))
+
+ggplot(toddler_demo, aes(x = age_days_num/days_in_month, fill = lab_id)) + 
   geom_histogram() + 
   theme(legend.position = "bottom")
 ```
 
-
 ```{r}
 toddler_demo
 ```
-
 
 ## Correct lab_ids
 
@@ -154,7 +157,8 @@ toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids,
 assert_that(!any(is.na(toddler_demo$lab_id)))
 assert_that(!any(is.na(adult_demo$lab_id)))
 ```
-Clean up this merge. 
+
+Clean up this merge.
 
 ```{r}
 adult_demo <- adult_demo |>
@@ -172,10 +176,9 @@ toddler_demo <- toddler_demo |>
   
 ```
 
-
 # Descriptives
 
-These are completely unfiltered. 
+These are completely unfiltered.
 
 ```{r}
 print(paste0("num labs: ",length(unique(c(toddler_demo$lab_id, adult_demo$lab_id)))))
@@ -188,16 +191,16 @@ print(paste0("num adult participants: ", nrow(adult_demo)))
 unique(c(toddler_demo$country, adult_demo$country))
 
 ```
-Ages. 
+
+Ages.
 
 ```{r}
-age_mo <- (toddler_demo$age_days / 365)*12
+age_mo <- (toddler_demo$age_days_num / 365)*12
 
 print(paste0("mean toddler age: ", mean(age_mo, na.rm=TRUE)))
 print(paste0("sd: ", sd(age_mo, na.rm=TRUE)))
 
 ```
-
 
 # Saving
 
