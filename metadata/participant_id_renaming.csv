@@ -1,4 +1,4 @@
-﻿lab;sample;old;new
+lab;sample;old;new
 babylabBrookes;adult;OBB_64;OBB_064
 babylabBrookes;adult;OBB_66;OBB_066
 babylabBrookes;adult;OBB_69;OBB_069
@@ -11,7 +11,6 @@ collabUIOWA;adult;COLLAB_test_02_11723JAZ;COLLAB_test_02_71123JAZ
 jmuCDL;adult;jmuCDL_28022;jmuCDL_58022
 kidsdevUniofNewcastle;adult;uona030b;uona30b
 babylabAmsterdam;toddler;UVA_001;UVA_011
-babylabINCC;toddler;BLI_159;BLI_259
 babylabNijmegen;toddler;RU004;RU_004
 babylabNijmegen;toddler;R_003;RU_003
 babylabNijmegen;toddler;R_011;RU_011
@@ -21,7 +20,13 @@ childdevlabAshoka;toddler;64B;64A
 CorbitLab;toddler;Pilot1;Pilot1_Baby
 babylabOxford;toddler;UoU545;UoO543
 SkidLSDLab;toddler;skidlsdlab_013;SkidLSDLab_013
-babylabNijmegen;adult;RU_001;Pilot1
-babylabNijmegen;adult;RU_002;Pilot2
-babylabNijmegen;adult;RU_003;Pilot3
-babylabNijmegen;toddler;RU_001;Pilot1
+babylabNijmegen;adult;Pilot1;RU_001
+babylabNijmegen;adult;Pilot2;RU_002
+babylabNijmegen;adult;Pilot3;RU_003
+babylabNijmegen;toddler;Pilot1;RU_001
+careylabHarvard;adult;1812MaFe;1812MaLu
+careylabHarvard;adult;1911IvLi;1910IvLi
+careylabHarvard;adult;2217TwKa;217TwKa
+careylabHarvard;toddler;careylabHarvard_17ErMa;careylabHarvard_27ErMa
+babylingOslo;toddler;PUIO_113;PUIO_013
+babylabINCC;toddler;BLI_259;BLI_159

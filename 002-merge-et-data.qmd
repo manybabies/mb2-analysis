@@ -262,7 +262,12 @@ data <- data_labfix |>
 
 ```{r}
 correct_ids <- function(df) {
-  renaming <- read.csv2(here('metadata','participant_id_renaming.csv'))
+  renaming <- read.csv2(here('metadata','participant_id_renaming.csv')) %>% 
+    mutate(
+      sample = paste0(sample,'s'),
+      old = paste0(old,'-',sample),
+      new = paste0(new,'-',sample)
+      )
   
   # Merge the input dataframe with the renaming dataframe
   df <- df %>%
@@ -276,10 +281,12 @@ correct_ids <- function(df) {
   # Additional cleanup
   df <- df %>%
     mutate(participant_id = case_when(
-      age_cohort == 'adult' & lab_id == 'careylabHarvard' ~ paste0('careylabHarvard_', participant_id),
-      age_cohort == 'adult' & lab_id == 'MEyeLab' ~ sub("\\.edf$", "", participant_id),
-      age_cohort == 'toddler' & lab_id == 'careylabHarvard' ~ sub("careylabharard", "careylabHarvard", participant_id),
-      age_cohort == 'toddler' & lab_id == 'UIUCinfantlab' ~ paste0(substr(participant_id, 1, 2), "0"),
+      lab_id == 'gertlabLancaster' ~ paste0("LU_", participant_id),
+      age_cohort == 'toddlers' & lab_id == 'irlConcordia' ~ sub("MB2_", "", participant_id),
+      age_cohort == 'adults' & lab_id == 'careylabHarvard' ~ paste0('careylabHarvard_', participant_id),
+      age_cohort == 'adults' & lab_id == 'MEyeLab' ~ sub("\\.edf", "", participant_id),
+      age_cohort == 'toddlers' & lab_id == 'careylabHarvard' ~ sub("careylabHarvard", "careylabharard", participant_id),
+      lab_id == 'UIUCinfantlab' ~ paste0("0", substr(participant_id, 1, 2), "-", age_cohort),
       TRUE ~ participant_id
     ))
 
@@ -287,6 +294,10 @@ correct_ids <- function(df) {
 }
 
 data <- correct_ids(data)
+
+# remove ghost ids that are not found in the demographic data
+data <- data %>%
+  filter(!(lab_id == 'beinghumanWroclaw' & participant_id %in% c('ADULT_006-adults', 'BABY_010-toddlers')))
 
 ```
 
@@ -311,21 +322,40 @@ demo_toddler_pids <- toddler_demo |>
 Check overlap/non-overlap in IDs. First adults.
 
 ```{r}
-et_ids_not_in_demo_adults <- anti_join(et_adult_pids, demo_adult_pids)
-demo_ids_not_in_et_adults <- anti_join(demo_adult_pids, et_adult_pids)
+metadata <- read.csv(here("metadata","known_missing.csv"))
+
+# Filter for adults
+metadata_adults <- metadata %>% filter(age_cohort == "adult") %>% mutate(participant_id = paste0(participant_id,'-adults'))
+
+# Remove matches from et_adult_pids
+et_ids_not_in_demo_adults <- anti_join(et_adult_pids, demo_adult_pids) %>% 
+  anti_join(metadata_adults, by = c("lab_id", "participant_id"))
+
+# Remove matches from demo_adult_pids
+demo_ids_not_in_et_adults <- anti_join(demo_adult_pids, et_adult_pids) %>% 
+  anti_join(metadata_adults, by = c("lab_id", "participant_id"))
 
 #FILTER_LAB <- 'WSUMARCS'
 #et_ids_not_in_demo_adults %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
 #demo_ids_not_in_et_adults %>% rename(demo_id = participant_id) %>%filter(lab_id == FILTER_LAB)
 
-#unique(c(et_ids_not_in_demo_adults$lab_id, demo_ids_not_in_et_adults$lab_id))
+unique(c(et_ids_not_in_demo_adults$lab_id, demo_ids_not_in_et_adults$lab_id))
 ```
 
 Now toddlers. 
 
 ```{r}
-et_ids_not_in_demo_toddlers <- anti_join(et_toddler_pids, demo_toddler_pids)
-demo_ids_not_in_et_toddlers <- anti_join(demo_toddler_pids, et_toddler_pids)
+metadata <- read.csv(here("metadata","known_missing.csv"))
+
+metadata_toddlers <- metadata %>% filter(age_cohort == "toddler") %>% mutate(participant_id = paste0(participant_id,'-toddlers'))
+
+# Remove matches from et_toddler_pids
+et_ids_not_in_demo_toddlers <- anti_join(et_toddler_pids, demo_toddler_pids) %>%
+  anti_join(metadata_toddlers, by = c("lab_id", "participant_id"))
+
+# Remove matches from demo_toddler_pids
+demo_ids_not_in_et_toddlers <- anti_join(demo_toddler_pids, et_toddler_pids) %>%
+  anti_join(metadata_toddlers, by = c("lab_id", "participant_id"))
 
 #FILTER_LAB <- 'gertlabLancaster'
 #et_ids_not_in_demo_toddlers %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
@@ -505,4 +535,3 @@ Now save the merged xy data locally.
 ```{r saving}
 save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 ```
-

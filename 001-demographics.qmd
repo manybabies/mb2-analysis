@@ -45,7 +45,7 @@ adult_demo <- adults |>
              anything_else = as.character(anything_else),
              trial_error_notes = as.character(trial_error_notes)) |>
       select(labid:bear_knowledge_info) |>
-    mutate(participant_id = paste0(participant_id, "_adults"))
+    mutate(participant_id = paste0(participant_id, "-adults"))
   }) 
 ```
 
@@ -86,7 +86,7 @@ toddler_demo <- toddlers |>
       mutate(hours_other = {if("hours_other" %in% names(.)) hours_other else 0}) %>% # REMOVE THIS ONCE beinghumanWroclaw has provided the hours_other column
        mutate(across(columns_to_character, as.character)) #|>
       #select(labid:anything_else)
-  }) |> mutate(participant_id = paste0(participant_id, "_toddlers"))
+  }) |> mutate(participant_id = paste0(participant_id, "-toddlers"))
 ```
 
 We will need to fix these.
