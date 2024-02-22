@@ -27,7 +27,6 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 data <- data %>% 
   filter(!(lab_id %in% c(
   'mpievaCCP', # TODO: for some reasons, all participants appear twice?
-  'gertlabLancaster' # TODO: the media names are broken for some reason
   ))) %>% filter(
     !(participant_id == 'MPI_022-toddlers' & lab_id == 'mecdmpihcbs') & # this participant has 6 fam trials (remove?)
       !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
