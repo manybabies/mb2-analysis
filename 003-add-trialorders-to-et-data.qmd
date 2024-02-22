@@ -26,13 +26,13 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 # (lab_id, participant_id, media_name) does not uniquely identify a trial_number
 data <- data %>% 
   filter(!(lab_id %in% c(
-  'babylabNijmegen', # TODO: participants are not unique within the lab - only unique within the age cohorts, at which point in the pipeline do we fix this?
-  'labUNAM' # TODO: same, participants are not unique within the lab - only unique within the age cohorts, at which point in the pipeline do we fix this?
+  'mpievaCCP', # TODO: for some reasons, all participants appear twice?
+  'gertlabLancaster' # TODO: the media names are broken for some reason
   ))) %>% filter(
-    !(participant_id == 'MPI_022' && lab_id == 'mecdmpihcbs') && # this participant has 6 fam trials (restarted testing and abandoned?)
-      !(participant_id == 'UVA_127' && lab_id == 'babylabAmsterdam'), # TODO: This participant appears twice, INVESTIGATE THIS
-    !(participant_id == 'UoO231' && lab_id == 'oxfordBabylab'), # TODO: This participant appears twice, INVESTIGATE THIS
-    !(participant_id == 'SkidLSDLab' && lab_id == 'SkidLSDLab_009') # TODO: This participant appears twice, INVESTIGATE THIS
+    !(participant_id == 'MPI_022-toddlers' & lab_id == 'mecdmpihcbs') & # this participant has 6 fam trials (remove?)
+      !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
+    !(participant_id == 'RU_017-toddlers' & lab_id == 'babylabNijmegen') & # duplicate
+      !(participant_id == 'SkidLSDLab_009-adults' & lab_id == 'SkidLSDLab'), # has 10 trials?
     ) 
 
 # We need to do the following two steps here, as trial_details depend on specific filenames, 
