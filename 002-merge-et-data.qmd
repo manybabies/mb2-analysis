@@ -373,6 +373,63 @@ assert_that(is_empty(anti_join(et_toddler_pids, demo_toddler_pids)))
 #assert_that(is_empty(anti_join(demo_toddler_pids, et_toddler_pids))) # unfixable, as data is missing
 ```
 
+# Merge code
+
+Clean up demographics. 
+
+```{r}
+adult_demo_minimal <- adult_demo |>
+  mutate(age_cohort = "adults") |>
+  select(participant_id, lab_id, age_cohort, method, pilot, 
+         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+         test1_error, test2_error, 
+         participant_gender, 
+         hearing, vision, medical_issues, 
+         contains("native_lang"), second_session, age_years_n, country)
+
+toddler_demo_minimal <- toddler_demo |>
+  mutate(age_cohort = "toddlers") |>
+  select(participant_id, lab_id, age_cohort, method, pilot, 
+         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+         test1_error, test2_error, 
+         participant_gender, 
+         hearing, vision, medical_issues, 
+         contains("native_lang"), second_session, age_days, country)
+                         
+```
+
+
+```{r}
+
+data_merged <- left_join(data, adult_demo_minimal, 
+                         by = c("age_cohort","lab_id","participant_id")) |>
+  left_join(toddler_demo_minimal, 
+            by = c("age_cohort","lab_id","participant_id"))
+```
+
+Remove columns that we don't think we're going to need - just for sanity.
+
+START HERE - THIS MERGE IS CREATING MULTIPLE FAM_ERROR COLUMNS SO SOMETHING IS WRONG
+
+```{r}
+data_merged |>
+  select(-
+```
+
+
+## Remove the participants with session errors from the et data 
+
+```{r}
+error_ids_adults <- adult_demo_minimal %>%
+  filter(session_error == 'error') %>%
+  select(participant_id, lab_id)
+
+error_ids_toddlers <- toddler_demo_minimal %>%
+  filter(session_error == 'error') %>%
+  select(participant_id, lab_id)
+
+data <- data %>% anti_join(error_ids_adults, by = c('lab_id', 'participant_id')) %>% anti_join(error_ids_toddlers, by = c('lab_id', 'participant_id'))
+```
 
 ## x
 
@@ -484,48 +541,6 @@ data |>
 
 ```
 
-# Merge code
-
-Clean up demographics. 
-
-```{r}
-adult_demo_minimal <- adult_demo |>
-  mutate(age_cohort = "adults") |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender, 
-         hearing, vision, medical_issues, 
-         contains("native_lang"), second_session, age_years_n, country)
-
-toddler_demo_minimal <- toddler_demo |>
-  mutate(age_cohort = "toddlers") |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender, 
-         hearing, vision, medical_issues, 
-         contains("native_lang"), second_session, age_days, country)
-                         
-```
-
-
-```{r}
-
-data_merged <- left_join(data, adult_demo_minimal, 
-                         by = c("age_cohort","lab_id","participant_id")) |>
-  left_join(toddler_demo_minimal, 
-            by = c("age_cohort","lab_id","participant_id"))
-```
-
-Remove columns that we don't think we're going to need - just for sanity.
-
-START HERE - THIS MERGE IS CREATING MULTIPLE FAM_ERROR COLUMNS SO SOMETHING IS WRONG
-
-```{r}
-data_merged |>
-  select(-
-```
 
 
 # Saving 
