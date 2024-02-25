@@ -26,25 +26,20 @@ setdiff(demo_files, c(adults, toddlers))
 assert_that(length(demo_files) == length(adults) + length(toddlers))
 ```
 
-Note that despite validation we still didn't end up get perfectly valid data. BUT - better than MB1!!!
+Note that we iterated through several steps of processing the processed data (even after validation) due to various issues with unifying the processed data. This resulted in correcting many demographics files by hand, mostly fixing parsing errors in how commas were handled in converting all files to .csvs.
+
+We also convert several columns to character vectors, due to inconsistencies in how some numeric and character columns were handled
 
 ```{r}
+adult_columns_to_character <- c("age_years","education","test2_error_info","test_order","ra_id"
+)
+
 adult_demo <- adults |>
   map_df(function(fname) {
     print(fname)
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE)  |>
-      mutate(education = as.character(education),
-             test_order = as.character(test_order),
-             test2_error_info = as.character(test2_error_info),
-             ra_id = as.character(ra_id), 
-             age_years = as.character(age_years),
-             participant_id = as.character(participant_id),
-             test_order = as.character(test_order),
-             residence_city = as.character(residence_city),
-             anything_else = as.character(anything_else),
-             trial_error_notes = as.character(trial_error_notes)) |>
-      select(labid:bear_knowledge_info) |>
+      mutate(across(all_of(adult_columns_to_character), as.character)) |>
     mutate(participant_id = paste0(participant_id, "-adults"))
   }) 
 ```
@@ -53,47 +48,22 @@ Fix our sadness (sadness maybe fixed?).
 
 ```{r}
 adult_demo <- adult_demo |>
-  mutate(age_years_n = as.numeric(age_years)) #|>
-  # mutate(session_error_notes = coalesce(session_error_notes, 
-  #                                 session_error_notes...11,
-  #                                 session_error_notes...13),
-  #        second_session = coalesce(second_session, 
-  #                                  second_session...12,
-  #                                  second_session...14)) |>
-  #select(-contains("..."))
+  mutate(age_years_n = as.numeric(age_years))
 ```
 
 Toddlers next.
 
 ```{r}
-columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
-                          "fam1_error_info","fam2_error_info","fam3_error_info",
-                          "ra_id","hours_children",
-                          "sibling3_age","hours_daycare",
-                          "hours_parentA","hours_parentB","hours_siblings",
-                          "hours_adults", "sibling1_age", "sibling2_age", 
-                          "parentB_education","sibling1_gender","sibling2_gender", "sibling4_age", "sibling5_age", 
-                          "lang2","lang3","lang4","lang4_exposure", "parentA_education",
-                          "test2_error_info", "participant_id", "nationality",
-                         "hours_other","age_days","test_order","session_error_info",
-                         "lang1_exposure","fam4_error_info","test1_error_info","parentB_native_lang1","hearing_info")
+toddler_columns_to_character <- c("gestation_week","lang1_exposure","lang2_exposure","lang3_exposure","lang4_exposure","sibling1_age","sibling2_age","sibling3_age","fam1_error_info","fam2_error_info","fam3_error_info","fam4_error_info","ra_id","hours_children","hours_daycare","hours_other","hours_parentA","hours_parentB","hours_siblings","hours_adults","sibling4_age","sibling5_age","parentA_education","parentB_education","age_days","test1_error_info","test2_error_info","participant_id")
                           
 toddler_demo <- toddlers |>
   map_df(function(fname) {
     print(fname)
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE) %>% 
-      mutate(hours_other = {if("hours_other" %in% names(.)) hours_other else 0}) %>% # REMOVE THIS ONCE beinghumanWroclaw has provided the hours_other column
-       mutate(across(columns_to_character, as.character)) #|>
+       mutate(across(all_of(toddler_columns_to_character), as.character)) #|>
       #select(labid:anything_else)
   }) |> mutate(participant_id = paste0(participant_id, "-toddlers"))
-```
-
-We will need to fix these.
-
-```{r}
-toddler_demo <- toddler_demo #|>
-  #select(-c(80:96)) # get rid of junk columns that the validator missed
 ```
 
 Also: there is a mismatch of `labid` and `lab_id` that needs to be fixed.
@@ -118,10 +88,6 @@ toddler_demo <- toddler_demo |>
 ggplot(toddler_demo, aes(x = age_days_num/days_in_month, fill = lab_id)) + 
   geom_histogram() + 
   theme(legend.position = "bottom")
-```
-
-```{r}
-toddler_demo
 ```
 
 ## Correct lab_ids
