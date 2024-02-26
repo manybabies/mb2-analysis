@@ -46,9 +46,34 @@ adult_demo <- adults |>
 
 Fix our sadness (sadness maybe fixed?).
 
+There are two NAs. Do we exclude the two participants whose age is NA? 10 adults are outside of the age range specified in the RR.
+
 ```{r}
 adult_demo <- adult_demo |>
   mutate(age_years_n = as.numeric(age_years))
+
+agegroups <- adult_demo %>%
+  group_by(age_years_n) %>%
+  summarise(n = length(unique(participant_id)))
+
+age_stat <- adult_demo %>%
+  filter(!is.na(age_years_n)) %>%
+  group_by(labid, participant_id) %>%
+  summarise(age_years_n = age_years_n[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_years_n), 
+            min = min(age_years_n), 
+            max = max(age_years_n))
+
+ggplot(adult_demo, aes(x = age_years_n, fill = labid)) + 
+  geom_histogram() + 
+  theme(legend.position = "bottom")+
+  xlab("age (years)")
+
+adult_age_exclusion <- adult_demo %>%
+  group_by(labid, participant_id, age_years_n) %>%
+  filter(age_years_n<18 | age_years_n>55)  %>%
+  summarise()
 ```
 
 Toddlers next.
@@ -79,6 +104,10 @@ Age histogram.
 
 Based on spot checks, it appears that these are real kids who just fall outside of age range.
 
+There's also a toddler with no age.
+
+38 toddlers are outside of the age range specified in the RR.
+
 ```{r}
 days_in_month = 365.25/12
 
@@ -88,6 +117,25 @@ toddler_demo <- toddler_demo |>
 ggplot(toddler_demo, aes(x = age_days_num/days_in_month, fill = lab_id)) + 
   geom_histogram() + 
   theme(legend.position = "bottom")
+
+agegroups_toddlers <- toddler_demo %>%
+  group_by(age_days_num) %>%
+  summarise(n = length(unique(participant_id)))
+
+age_stat_toddler <- toddler_demo %>%
+  filter(!is.na(age_days_num)) %>%
+  group_by(lab_id, participant_id) %>%
+  summarise(age_days_num = age_days_num[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_days_num), 
+            min = min(age_days_num), 
+            max = max(age_days_num))
+
+toddler_age_exclusion <- toddler_demo %>%
+  group_by(lab_id, participant_id,age_days_num/days_in_month) %>%
+  filter(age_days_num/days_in_month<18 | age_days_num/days_in_month>27)  %>%
+  summarise()
+
 ```
 
 ## Correct lab_ids
@@ -96,7 +144,7 @@ Use website/airtable canonical lab IDs for correction
 
 ```{r}
 lab_ids <- read_csv(here("metadata","labids.csv")) |>
-  rename(lab_id = LabID) 
+  rename(lab_id = LabID)
 
 adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids, 
                 by = "lab_id", 
@@ -107,7 +155,6 @@ adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids,
                               TRUE ~ lab_id.y)) |>
   rename(lab_id = lab_id.y) |>
   select(-lab_id.x)
-
 
 toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids, 
                 by = "lab_id", 
@@ -138,13 +185,17 @@ toddler_demo <- toddler_demo |>
          country = `🌍 Country`) |>
   select(-`Lab Name`, -`PI(s)`, -`Additional Members`, -`Lab website`, 
          -`📚 Projects (collecting data)`)
-
   
+
 ```
 
 # Descriptives
 
 These are completely unfiltered.
+	
+babylabINCC has France,France as country through website/airtable canonical lab IDs merge. Same issue with WSUMARCS and sociocognitivelab. Should this be fixed in labids.csv or during merge?
+
+Merge doesn't work for babylabTrento yet, even though different lab_ids are matched.
 
 ```{r}
 print(paste0("num labs: ",length(unique(c(toddler_demo$lab_id, adult_demo$lab_id)))))
