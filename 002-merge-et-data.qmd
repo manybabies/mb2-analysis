@@ -484,49 +484,105 @@ data |>
 
 ```
 
-# Merge code
+# Clean demographics
 
 Clean up demographics. 
 
 ```{r}
-adult_demo_minimal <- adult_demo |>
-  mutate(age_cohort = "adults") |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender, 
-         hearing, vision, medical_issues, 
-         contains("native_lang"), second_session, age_years_n, country)
+# remove this for now but can bring it back if we need to simplify the demographic information that is retained
 
-toddler_demo_minimal <- toddler_demo |>
-  mutate(age_cohort = "toddlers") |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender, 
-         hearing, vision, medical_issues, 
-         contains("native_lang"), second_session, age_days, country)
+# adult_demo_minimal <- adult_demo |>
+#   mutate(age_cohort = "adults") |>
+#   select(participant_id, lab_id, age_cohort, method, pilot, 
+#          session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+#          test1_error, test2_error, 
+#          participant_gender, 
+#          hearing, vision, medical_issues, 
+#          contains("native_lang"), second_session, age_years_n, country)
+# 
+# toddler_demo_minimal <- toddler_demo |>
+#   mutate(age_cohort = "toddlers") |>
+#   select(participant_id, lab_id, age_cohort, method, pilot, 
+#          session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
+#          test1_error, test2_error, 
+#          participant_gender, 
+#          hearing, vision, medical_issues, 
+#          contains("native_lang"), second_session, age_days, country)
+
+#bind together adult and toddler demographics
+#necessary in order to avoid issues with the merge
+combined_demo <- adult_demo |>
+  mutate(test_order = as.character(test_order)) |>
+  mutate(age_cohort="adults") %>% #just to make sure that nothing goes wrong with the merge
+  bind_rows(
+    toddler_demo |>
+      mutate(test_order = as.character(test_order)) |>
+      mutate(age_cohort="toddlers")
+    )
                          
 ```
 
+# Exclusions
 
+## Age Exclusions
+
+First, process age information in the demographic file
 ```{r}
+hist(combined_demo$age_days_num)
 
-data_merged <- left_join(data, adult_demo_minimal, 
-                         by = c("age_cohort","lab_id","participant_id")) |>
-  left_join(toddler_demo_minimal, 
-            by = c("age_cohort","lab_id","participant_id"))
+combined_demo <- combined_demo |>
+  mutate(age_mo = case_when(
+    #check age conversion we want to use here
+    age_cohort=="toddlers" ~ age_days_num / 365.25*12,
+    TRUE ~ NA_real_))
+
+#quick checks
+hist(combined_demo$age_mo)
+hist(combined_demo$age_years_n)
+table(filter(combined_demo,age_cohort=="adults")$age_years_n)
 ```
 
-Remove columns that we don't think we're going to need - just for sanity.
-
-START HERE - THIS MERGE IS CREATING MULTIPLE FAM_ERROR COLUMNS SO SOMETHING IS WRONG
+Now add columns tracking exclusions based on age. 
 
 ```{r}
-data_merged |>
-  select(-
+combined_demo <- combined_demo |>
+  mutate(
+    age_exclusion = case_when(
+      age_cohort == "adults" & age_years_n < 18 ~ "yes",
+      age_cohort == "adults" & age_years_n > 55 ~ "yes",
+      age_cohort == "adults" & is.na(age_years_n) ~ NA_character_,
+      age_cohort == "toddlers" & age_mo < 18 ~ "yes",
+      age_cohort == "toddlers" & age_mo >= 28 ~ "yes",
+      age_cohort == "toddlers" & is.na(age_mo) ~ NA_character_,
+      TRUE ~ "no"
+    )
+  )
+View(select(combined_demo,age_cohort,age_years_n,age_mo,age_exclusion))
 ```
 
+# Session Exclusions
+
+Breakdown of session errors.
+
+```{r}
+#interim breakdown to see intersection of both session errors and age exlusion
+exclusion_summary <- combined_demo |> 
+  filter(session_error=="error"|age_exclusion=="yes") |> 
+  select(age_cohort,participant_id,lab_id,session_error,session_error_info,age_exclusion) |>
+  group_by(age_exclusion,session_error,session_error_info) |> 
+  summarize(
+    n=n(),
+    )
+```
+
+# Merge
+
+Merge all the data with the demographics.
+
+```{r}
+data_merged <- left_join(data, combined_demo, 
+                         by = c("age_cohort","lab_id","participant_id"))
+```
 
 # Saving 
 
@@ -534,4 +590,5 @@ Now save the merged xy data locally.
 
 ```{r saving}
 save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
+save(data_merged, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 ```

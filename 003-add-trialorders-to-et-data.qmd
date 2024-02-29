@@ -26,7 +26,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 # (lab_id, participant_id, media_name) does not uniquely identify a trial_number
 data <- data %>% 
   filter(!(lab_id %in% c(
-  'mpievaCCP', # TODO: for some reasons, all participants appear twice?
+  'mpievaCCP' # TODO: for some reasons, all participants appear twice?
   ))) %>% filter(
     !(participant_id == 'MPI_022-toddlers' & lab_id == 'mecdmpihcbs') & # this participant has 6 fam trials (remove?)
       !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
@@ -70,9 +70,11 @@ data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, me
 
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
+  mutate(test_order = as.character(test_order)) %>%
   select(lab_id, participant_id, test_order, pilot) %>% 
   bind_rows(
     toddler_demo %>%
+      mutate(test_order = as.character(test_order)) %>%
       select(lab_id, participant_id, test_order, pilot)
     )
 
