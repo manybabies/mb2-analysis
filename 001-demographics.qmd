@@ -26,74 +26,69 @@ setdiff(demo_files, c(adults, toddlers))
 assert_that(length(demo_files) == length(adults) + length(toddlers))
 ```
 
-Note that despite validation we still didn't end up get perfectly valid data. BUT - better than MB1!!!
+Note that we iterated through several steps of processing the processed data (even after validation) due to various issues with unifying the processed data. This resulted in correcting many demographics files by hand, mostly fixing parsing errors in how commas were handled in converting all files to .csvs.
+
+We also convert several columns to character vectors, due to inconsistencies in how some numeric and character columns were handled
 
 ```{r}
+adult_columns_to_character <- c("age_years","education","test2_error_info","test_order","ra_id"
+)
+
 adult_demo <- adults |>
   map_df(function(fname) {
     print(fname)
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE)  |>
-      mutate(education = as.character(education),
-             test_order = as.character(test_order),
-             test2_error_info = as.character(test2_error_info),
-             ra_id = as.character(ra_id), 
-             age_years = as.character(age_years),
-             participant_id = as.character(participant_id),
-             test_order = as.character(test_order),
-             residence_city = as.character(residence_city),
-             anything_else = as.character(anything_else),
-             trial_error_notes = as.character(trial_error_notes)) |>
-      select(labid:bear_knowledge_info) |>
+      mutate(across(all_of(adult_columns_to_character), as.character)) |>
     mutate(participant_id = paste0(participant_id, "-adults"))
   }) 
 ```
 
 Fix our sadness (sadness maybe fixed?).
 
+There are two NAs. Do we exclude the two participants whose age is NA? 10 adults are outside of the age range specified in the RR.
+
 ```{r}
 adult_demo <- adult_demo |>
-  mutate(age_years_n = as.numeric(age_years)) #|>
-  # mutate(session_error_notes = coalesce(session_error_notes, 
-  #                                 session_error_notes...11,
-  #                                 session_error_notes...13),
-  #        second_session = coalesce(second_session, 
-  #                                  second_session...12,
-  #                                  second_session...14)) |>
-  #select(-contains("..."))
+  mutate(age_years_n = as.numeric(age_years))
+
+agegroups <- adult_demo %>%
+  group_by(age_years_n) %>%
+  summarise(n = length(unique(participant_id)))
+
+age_stat <- adult_demo %>%
+  filter(!is.na(age_years_n)) %>%
+  group_by(labid, participant_id) %>%
+  summarise(age_years_n = age_years_n[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_years_n), 
+            min = min(age_years_n), 
+            max = max(age_years_n))
+
+ggplot(adult_demo, aes(x = age_years_n, fill = labid)) + 
+  geom_histogram() + 
+  theme(legend.position = "bottom")+
+  xlab("age (years)")
+
+adult_age_exclusion <- adult_demo %>%
+  group_by(labid, participant_id, age_years_n) %>%
+  filter(age_years_n<18 | age_years_n>55)  %>%
+  summarise()
 ```
 
 Toddlers next.
 
 ```{r}
-columns_to_character <- c("gestation_week", "lang2_exposure","lang3_exposure",
-                          "fam1_error_info","fam2_error_info","fam3_error_info",
-                          "ra_id","hours_children",
-                          "sibling3_age","hours_daycare",
-                          "hours_parentA","hours_parentB","hours_siblings",
-                          "hours_adults", "sibling1_age", "sibling2_age", 
-                          "parentB_education","sibling1_gender","sibling2_gender", "sibling4_age", "sibling5_age", 
-                          "lang2","lang3","lang4","lang4_exposure", "parentA_education",
-                          "test2_error_info", "participant_id", "nationality",
-                         "hours_other","age_days","test_order","session_error_info",
-                         "lang1_exposure","fam4_error_info","test1_error_info","parentB_native_lang1","hearing_info")
+toddler_columns_to_character <- c("gestation_week","lang1_exposure","lang2_exposure","lang3_exposure","lang4_exposure","sibling1_age","sibling2_age","sibling3_age","fam1_error_info","fam2_error_info","fam3_error_info","fam4_error_info","ra_id","hours_children","hours_daycare","hours_other","hours_parentA","hours_parentB","hours_siblings","hours_adults","sibling4_age","sibling5_age","parentA_education","parentB_education","age_days","test1_error_info","test2_error_info","participant_id")
                           
 toddler_demo <- toddlers |>
   map_df(function(fname) {
     print(fname)
     read_csv(here(DEMO_DATA_DIR, fname),
              show_col_types = FALSE) %>% 
-      mutate(hours_other = {if("hours_other" %in% names(.)) hours_other else 0}) %>% # REMOVE THIS ONCE beinghumanWroclaw has provided the hours_other column
-       mutate(across(columns_to_character, as.character)) #|>
+       mutate(across(all_of(toddler_columns_to_character), as.character)) #|>
       #select(labid:anything_else)
   }) |> mutate(participant_id = paste0(participant_id, "-toddlers"))
-```
-
-We will need to fix these.
-
-```{r}
-toddler_demo <- toddler_demo #|>
-  #select(-c(80:96)) # get rid of junk columns that the validator missed
 ```
 
 Also: there is a mismatch of `labid` and `lab_id` that needs to be fixed.
@@ -109,6 +104,10 @@ Age histogram.
 
 Based on spot checks, it appears that these are real kids who just fall outside of age range.
 
+There's also a toddler with no age.
+
+38 toddlers are outside of the age range specified in the RR.
+
 ```{r}
 days_in_month = 365.25/12
 
@@ -118,10 +117,25 @@ toddler_demo <- toddler_demo |>
 ggplot(toddler_demo, aes(x = age_days_num/days_in_month, fill = lab_id)) + 
   geom_histogram() + 
   theme(legend.position = "bottom")
-```
 
-```{r}
-toddler_demo
+agegroups_toddlers <- toddler_demo %>%
+  group_by(age_days_num) %>%
+  summarise(n = length(unique(participant_id)))
+
+age_stat_toddler <- toddler_demo %>%
+  filter(!is.na(age_days_num)) %>%
+  group_by(lab_id, participant_id) %>%
+  summarise(age_days_num = age_days_num[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_days_num), 
+            min = min(age_days_num), 
+            max = max(age_days_num))
+
+toddler_age_exclusion <- toddler_demo %>%
+  group_by(lab_id, participant_id,age_days_num/days_in_month) %>%
+  filter(age_days_num/days_in_month<18 | age_days_num/days_in_month>27)  %>%
+  summarise()
+
 ```
 
 ## Correct lab_ids
@@ -130,7 +144,7 @@ Use website/airtable canonical lab IDs for correction
 
 ```{r}
 lab_ids <- read_csv(here("metadata","labids.csv")) |>
-  rename(lab_id = LabID) 
+  rename(lab_id = LabID)
 
 adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids, 
                 by = "lab_id", 
@@ -141,7 +155,6 @@ adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids,
                               TRUE ~ lab_id.y)) |>
   rename(lab_id = lab_id.y) |>
   select(-lab_id.x)
-
 
 toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids, 
                 by = "lab_id", 
@@ -172,13 +185,17 @@ toddler_demo <- toddler_demo |>
          country = `🌍 Country`) |>
   select(-`Lab Name`, -`PI(s)`, -`Additional Members`, -`Lab website`, 
          -`📚 Projects (collecting data)`)
-
   
+
 ```
 
 # Descriptives
 
 These are completely unfiltered.
+	
+babylabINCC has France,France as country through website/airtable canonical lab IDs merge. Same issue with WSUMARCS and sociocognitivelab. Should this be fixed in labids.csv or during merge?
+
+Merge doesn't work for babylabTrento yet, even though different lab_ids are matched.
 
 ```{r}
 print(paste0("num labs: ",length(unique(c(toddler_demo$lab_id, adult_demo$lab_id)))))
