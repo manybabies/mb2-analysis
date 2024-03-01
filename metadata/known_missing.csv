@@ -8,6 +8,8 @@ adult,babylabUmassb,UMB006
 adult,beinghumanWroclaw,ADULT_001
 adult,beinghumanWroclaw,ADULT_003
 adult,beinghumanWroclaw,ADULT_006
+adult,kidsdevUniofNewcastle,uon017
+adult,kidsdevUniofNewcastle,uon018
 adult,kidsdevUniofNewcastle,uona017
 adult,kidsdevUniofNewcastle,uona018
 adult,MiniDundee,DUN_113
@@ -22,8 +24,8 @@ adult,babyLeidenEdu,LUMB2_PilotA02
 adult,babyLeidenEdu,LUMB2_PilotA03
 adult,babyLeidenEdu,LUMB2_PilotA04
 adult,babyLeidenEdu,LUMB2_A05
-adult,gaugGöttingen,GAUG_124
-adult,gaugGöttingen,GAUG_130
+adult,gaugG?ttingen,GAUG_124
+adult,gaugG?ttingen,GAUG_130
 adult,labUNAM,UNAM_017
 adult,labUNAM,UNAM_018
 adult,labUNAM,UNAM_019
@@ -49,6 +51,7 @@ toddler,beinghumanWroclaw,BABY_006
 toddler,beinghumanWroclaw,BABY_024
 toddler,beinghumanWroclaw,BABY_025
 toddler,beinghumanWroclaw,BABY_010
+toddler,beinghumanWroclaw,BABY_026
 toddler,babylabOxford,UoO611
 toddler,CogConcordia,Child24
 toddler,kidsdevUniofNewcastle,uon001
@@ -98,3 +101,4 @@ toddler,socallabUCSD,participant44
 toddler,socallabUCSD,participant45
 toddler,socallabUCSD,participant49
 toddler,socallabUCSD,participant50
+toddler,gertlabLancaster,LU_3955
