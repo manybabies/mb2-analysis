@@ -69,9 +69,11 @@ data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, me
 
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
+  mutate(test_order = as.character(test_order)) %>%
   select(lab_id, participant_id, test_order, pilot) %>% 
   bind_rows(
     toddler_demo %>%
+      mutate(test_order = as.character(test_order)) %>%
       select(lab_id, participant_id, test_order, pilot)
     )
 
