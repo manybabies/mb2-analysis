@@ -319,25 +319,6 @@ assert_that(is_empty(anti_join(et_toddler_pids, demo_toddler_pids)))
 #assert_that(is_empty(anti_join(demo_toddler_pids, et_toddler_pids))) # unfixable, as data is missing
 ```
 
-
-```{r}
-
-data_merged <- left_join(data, adult_demo_minimal, 
-                         by = c("age_cohort","lab_id","participant_id")) |>
-  left_join(toddler_demo_minimal, 
-            by = c("age_cohort","lab_id","participant_id"))
-```
-
-Remove columns that we don't think we're going to need - just for sanity.
-
-START HERE - THIS MERGE IS CREATING MULTIPLE FAM_ERROR COLUMNS SO SOMETHING IS WRONG
-
-```{r}
-data_merged |>
-  select(-
-```
-
-
 ## x
 
 
