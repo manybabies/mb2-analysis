@@ -146,26 +146,43 @@ Use website/airtable canonical lab IDs for correction
 lab_ids <- read_csv(here("metadata","labids.csv")) |>
   rename(lab_id = LabID)
 
-adult_demo <- fuzzyjoin::stringdist_left_join(adult_demo, lab_ids, 
-                by = "lab_id", 
-                max_dist = 1, 
-                ignore_case = TRUE) |>
-  mutate(lab_id.y = case_when(lab_id.x == "BLT_Trento" ~ "babylabTrento",
-                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
-                              TRUE ~ lab_id.y)) |>
-  rename(lab_id = lab_id.y) |>
-  select(-lab_id.x)
+#harmonize lab ids
+adult_demo <- adult_demo %>%
+  mutate(
+    lab_id = case_when(
+      lab_id == "BLT_Trento" ~ "babylabTrento",
+      lab_id == "TAUCCD" ~ "tauccd",
+      lab_id == "Corbitlab" ~ "CorbitLab",
+      lab_id == "MEyelab" ~ "MEyeLab",
+      lab_id == "minidundee" ~ "MiniDundee",
+      lab_id == "WSU_MARCS" ~ "WSUMARCS",
+      TRUE ~ lab_id)
+  )
 
-toddler_demo <- fuzzyjoin::stringdist_left_join(toddler_demo, lab_ids, 
-                by = "lab_id", 
-                max_dist = 1, 
-                ignore_case = TRUE) |>
-  mutate(lab_id.y = case_when(lab_id.x == "BLT_Trento" ~ "babylabTrento",
-                              lab_id.x == "UHH" ~ "kokuHamburg",
-                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
-                              TRUE ~ lab_id.y)) |>
-  rename(lab_id = lab_id.y) |>
-  select(-lab_id.x)
+#check to make sure all adult demo lab ids are now in the meta data
+setdiff(adult_demo$lab_id, lab_ids$lab_id)
+
+#now merge with lab metadata
+adult_demo <- adult_demo %>%
+  left_join(lab_ids)
+
+#harmonize lab ids
+toddler_demo <- toddler_demo %>%
+  mutate(
+    lab_id = case_when(
+      lab_id == "BLT_Trento" ~ "babylabTrento",
+      lab_id == "TAUCCD" ~ "tauccd",
+      lab_id == "Corbitlab" ~ "CorbitLab",
+      lab_id == "UHH" ~ "kokuHamburg",
+      TRUE ~ lab_id)
+  )
+
+#check to make sure all adult demo lab ids are now in the meta data
+setdiff(toddler_demo$lab_id, lab_ids$lab_id)
+
+#now merge with lab metadata
+toddler_demo <- toddler_demo %>%
+  left_join(lab_ids)
 
 assert_that(!any(is.na(toddler_demo$lab_id)))
 assert_that(!any(is.na(adult_demo$lab_id)))
@@ -192,10 +209,6 @@ toddler_demo <- toddler_demo |>
 # Descriptives
 
 These are completely unfiltered.
-	
-babylabINCC has France,France as country through website/airtable canonical lab IDs merge. Same issue with WSUMARCS and sociocognitivelab. Should this be fixed in labids.csv or during merge?
-
-Merge doesn't work for babylabTrento yet, even though different lab_ids are matched.
 
 ```{r}
 print(paste0("num labs: ",length(unique(c(toddler_demo$lab_id, adult_demo$lab_id)))))
