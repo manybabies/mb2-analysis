@@ -228,18 +228,54 @@ toddler_demo_minimal <- toddler_demo |>
 ```
 
 ```{r}
+
+# could use some cleanup to eliminate redundancy
+
+pilot_ids_adults <- adult_demo_minimal %>%
+  filter(pilot == "yes") %>%
+  select(participant_id, lab_id) %>%
+  mutate(age_cohort = "adults")
+
+pilot_ids_toddlers <- toddler_demo_minimal %>%
+  filter(pilot == "yes") %>%
+  select(participant_id, lab_id) %>%
+  mutate(age_cohort = "toddlers")
+
+pilot_ids_all <- pilot_ids_toddlers %>%
+  rbind(pilot_ids_adults)
+
 error_ids_adults <- adult_demo_minimal %>%
-  filter(session_error == 'error') %>%
-  select(participant_id, lab_id, session_error, session_error_info, session_error_notes)
+  filter(session_error == 'error' & pilot != "yes") %>%
+  select(participant_id, lab_id, session_error, session_error_info, session_error_notes) %>% 
+  mutate(age_cohort = "adults")
 
 error_ids_toddlers <- toddler_demo_minimal %>%
-  filter(session_error == 'error') %>%
-  select(participant_id, lab_id, session_error, session_error_info, session_error_notes)
+  filter(session_error == 'error' & pilot != "yes") %>%
+  select(participant_id, lab_id, session_error, session_error_info, session_error_notes) %>%
+  mutate(age_cohort = "toddlers")
 
-data <- data %>% anti_join(error_ids_adults, by = c('lab_id', 'participant_id')) %>% anti_join(error_ids_toddlers, by = c('lab_id', 'participant_id'))
+error_ids_all <- error_ids_toddlers %>%
+  rbind(error_ids_adults)
 
-# TODO we need to spin the error ids out into a file that gets passed through to the exclusion pipeline
-# TODO get the know missings read.csv(here("metadata","known_missing.csv")) and see what data is missing beyond the session errors
+data <- data %>%
+  anti_join(error_ids_all, by=join_by(participant_id, lab_id, age_cohort)) %>%
+  anti_join(pilot_ids_all, by=join_by(participant_id, lab_id, age_cohort))
+
+# remove the id-cohort suffixes for matching with metadatafiles and better readability in the output
+error_ids_all <- error_ids_all %>%
+  mutate(participant_id = str_replace(participant_id, "-[^-]*$", ""))
+pilot_ids_all <- pilot_ids_all %>%
+  mutate(participant_id = str_replace(participant_id, "-[^-]*$", ""))
+
+known_missings <- read.csv(here("metadata","known_missing.csv"))
+still_missings <- known_missings %>%
+  anti_join(error_ids_all, by=join_by(participant_id, lab_id, age_cohort)) %>% 
+  anti_join(pilot_ids_all, by=join_by(participant_id, lab_id, age_cohort))
+
+write.csv(error_ids_all,
+          here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_SESSION))
+
+write.csv(still_missings, here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_TEMP))
 
 ```
 
@@ -255,12 +291,12 @@ et_toddler_pids <- filter(data, age_cohort == "toddlers") |>
   distinct() 
 
 demo_adult_pids <- adult_demo |>
-  filter(session_error == "noerror") |>
+  filter(session_error == "noerror" & pilot != "yes") |>
   select(lab_id, participant_id) |>
   distinct() 
 
 demo_toddler_pids <- toddler_demo |>
-  filter(session_error == "noerror") |>
+  filter(session_error == "noerror" & pilot != "yes") |>
   select(lab_id, participant_id) |>
   distinct()
 ```
@@ -271,7 +307,7 @@ Check overlap/non-overlap in IDs. First adults.
 metadata <- read.csv(here("metadata","known_missing.csv"))
 
 # Filter for adults
-metadata_adults <- metadata %>% filter(age_cohort == "adult") %>% mutate(participant_id = paste0(participant_id,'-adults'))
+metadata_adults <- metadata %>% filter(age_cohort == "adults") %>% mutate(participant_id = paste0(participant_id,'-adults'))
 
 # Remove matches from et_adult_pids
 et_ids_not_in_demo_adults <- anti_join(et_adult_pids, demo_adult_pids) %>%
@@ -293,7 +329,7 @@ Now toddlers.
 ```{r}
 metadata <- read.csv(here("metadata","known_missing.csv"))
 
-metadata_toddlers <- metadata %>% filter(age_cohort == "toddler") %>% mutate(participant_id = paste0(participant_id,'-toddlers'))
+metadata_toddlers <- metadata %>% filter(age_cohort == "toddlers") %>% mutate(participant_id = paste0(participant_id,'-toddlers'))
 
 # Remove matches from et_toddler_pids
 et_ids_not_in_demo_toddlers <- anti_join(et_toddler_pids, demo_toddler_pids) %>%
@@ -303,11 +339,7 @@ et_ids_not_in_demo_toddlers <- anti_join(et_toddler_pids, demo_toddler_pids) %>%
 demo_ids_not_in_et_toddlers <- anti_join(demo_toddler_pids, et_toddler_pids) %>%
   anti_join(metadata_toddlers, by = c("lab_id", "participant_id"))
 
-#FILTER_LAB <- 'gertlabLancaster'
-#et_ids_not_in_demo_toddlers %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
-#demo_ids_not_in_et_toddlers %>% rename(demo_id = participant_id) %>%filter(lab_id == FILTER_LAB)
-
-#unique(c(et_ids_not_in_demo_toddlers$lab_id, demo_ids_not_in_et_toddlers$lab_id))
+unique(c(et_ids_not_in_demo_toddlers$lab_id, demo_ids_not_in_et_toddlers$lab_id))
 ```
 
 Now the test.

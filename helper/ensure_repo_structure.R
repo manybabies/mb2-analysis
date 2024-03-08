@@ -15,6 +15,9 @@ for(dir in c(DATA_DIR,
   dir.create(here(dir), showWarnings = FALSE)
 }
 
+INTERMEDIATE_000_EXCL_SESSION <- "000-exclusion-session-errors.csv"
+INTERMEDIATE_000_EXCL_TEMP <- "000-exclusion-open-missings-all.csv"
+
 INTERMEDIATE_001_ADULT <- "001-demographic-data-adults.Rds"
 INTERMEDIATE_001_TODDLER <- "001-demographic-data-toddlers.Rds"
 INTERMEDIATE_002A <- "002-resampled-et-data.Rds"
