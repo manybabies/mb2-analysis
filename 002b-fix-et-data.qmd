@@ -200,61 +200,49 @@ data <- data %>%
 
 ```
 
-## Remove the participants with session errors from the et data 
+## Clean demographics
 
-Clean up demographics. 
+Create combined demographics files and prep for joining with eye-tracking data.
 
 ```{r}
-adult_demo_minimal <- adult_demo |>
-  mutate(age_cohort = "adults") |>
+#bind together adult and toddler demographics
+#necessary in order to avoid issues with the merge
+combined_demo <- adult_demo |>
+  mutate(test_order = as.character(test_order)) |>
+  mutate(age_cohort="adults") %>% #just to make sure that nothing goes wrong with the merge
+  bind_rows(
+    toddler_demo |>
+      mutate(test_order = as.character(test_order)) |>
+      mutate(age_cohort="toddlers")
+    )
+
+# select a subset of columns from the demographics data
+# MZ: Do we still need this? It reduces the overall size of the resulting data but I think this was originally
+# just to deal with messiness in the demographics columns
+demo_minimal <- combined_demo |>
   select(participant_id, lab_id, age_cohort, method, pilot, 
          session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
          test1_error, test2_error, 
          participant_gender, 
          hearing, vision, medical_issues, session_error, session_error_info, session_error_notes,
-         contains("native_lang"), second_session, age_years_n, country)
-
-toddler_demo_minimal <- toddler_demo |>
-  mutate(age_cohort = "toddlers") |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender,
-         hearing, vision, medical_issues, session_error, session_error_info, session_error_notes,
-         contains("native_lang"), second_session, age_days, country)
-                         
+         contains("native_lang"), second_session, age_days,age_years_n, country)
 ```
 
+## Remove the participants with session errors from the et data 
+
+
 ```{r}
-
-# could use some cleanup to eliminate redundancy
-
-pilot_ids_adults <- adult_demo_minimal %>%
+# extract pilot ids
+pilot_ids_all <- demo_minimal %>%
   filter(pilot == "yes") %>%
-  select(participant_id, lab_id) %>%
-  mutate(age_cohort = "adults")
+  select(participant_id, lab_id,age_cohort)
 
-pilot_ids_toddlers <- toddler_demo_minimal %>%
-  filter(pilot == "yes") %>%
-  select(participant_id, lab_id) %>%
-  mutate(age_cohort = "toddlers")
-
-pilot_ids_all <- pilot_ids_toddlers %>%
-  rbind(pilot_ids_adults)
-
-error_ids_adults <- adult_demo_minimal %>%
+#extract ids for participants with session errors
+error_ids_all <- demo_minimal %>%
   filter(session_error == 'error' & pilot != "yes") %>%
-  select(participant_id, lab_id, session_error, session_error_info, session_error_notes) %>% 
-  mutate(age_cohort = "adults")
+  select(participant_id, lab_id, session_error, session_error_info, session_error_notes,age_cohort)
 
-error_ids_toddlers <- toddler_demo_minimal %>%
-  filter(session_error == 'error' & pilot != "yes") %>%
-  select(participant_id, lab_id, session_error, session_error_info, session_error_notes) %>%
-  mutate(age_cohort = "toddlers")
-
-error_ids_all <- error_ids_toddlers %>%
-  rbind(error_ids_adults)
-
+#filter session error and pilot participants from the data
 data <- data %>%
   anti_join(error_ids_all, by=join_by(participant_id, lab_id, age_cohort)) %>%
   anti_join(pilot_ids_all, by=join_by(participant_id, lab_id, age_cohort))
@@ -276,7 +264,6 @@ write.csv(error_ids_all,
 write.csv(still_missings, here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_TEMP))
 
 ```
-
 
 
 ```{r}
@@ -459,24 +446,6 @@ data |>
 
 ```
 
-# Clean demographics
-
-Clean up demographics. 
-
-```{r}
-#bind together adult and toddler demographics
-#necessary in order to avoid issues with the merge
-combined_demo <- adult_demo |>
-  mutate(test_order = as.character(test_order)) |>
-  mutate(age_cohort="adults") %>% #just to make sure that nothing goes wrong with the merge
-  bind_rows(
-    toddler_demo |>
-      mutate(test_order = as.character(test_order)) |>
-      mutate(age_cohort="toddlers")
-    )
-                         
-```
-
 # Exclusions
 
 ## Age Exclusions
@@ -520,7 +489,8 @@ View(select(combined_demo,age_cohort,age_years_n,age_mo,age_exclusion))
 Breakdown of session errors.
 
 ```{r}
-#interim breakdown to see intersection of both session errors and age exlusion
+#interim breakdown to see intersection of both session errors and age exclusion
+#MZ: possibly now redundant; TO DO: integrate with other session exclusion work?
 exclusion_summary <- combined_demo |> 
   filter(session_error=="error"|age_exclusion=="yes") |> 
   select(age_cohort,participant_id,lab_id,session_error,session_error_info,age_exclusion) |>
