@@ -87,23 +87,26 @@ Let's go column by column.
 
 ## lab_id
 
-First, let's canonicalize the lab_ids, then check that they match demographics.
+First, let's unify the lab_ids, then check that they match demographics.
 
 ```{r}
 lab_ids <- read_csv(here("metadata","labids.csv")) |>
   rename(lab_id = LabID) 
 
-data_labfix <- fuzzyjoin::stringdist_left_join(data, lab_ids, 
-                                               by = "lab_id", 
-                                               max_dist = 1, 
-                                               distance_col = "distance",
-                                               ignore_case = TRUE) |>
-  mutate(lab_id.y = case_when(lab_id.x == "oxfordBabylab" ~ "babylabOxford",
-                              lab_id.x == "PLUS" ~ "ToMcdlSalzburg",
-                              TRUE ~ lab_id.y)) |>
-  rename(lab_id = lab_id.y)  
+#harmonize lab ids
+data <- data %>%
+  mutate(
+    lab_id = case_when(
+      lab_id == "PLUS" ~ "ToMcdlSalzburg",
+      lab_id == "Corbitlab" ~ "CorbitLab",
+      lab_id == "BabylabNijmegen" ~ "babylabNijmegen",
+      lab_id == "MINIDundee" ~ "MiniDundee",
+      lab_id == "ccluniri" ~ "cclUNIRI",
+      lab_id == "oxfordBabylab" ~ "babylabOxford",
+      TRUE ~ lab_id)
+  )
 
-assert_that(!any(is.na(data_labfix$lab_id)))
+assert_that(!any(is.na(data$lab_id)))
 ```
 
 Now check for match to demos. 
@@ -116,10 +119,9 @@ load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_001_TODDLER))
 ```
 
 ```{r}
-
-et_adult_labids <- unique(filter(data_labfix, 
+et_adult_labids <- unique(filter(data, 
                                  age_cohort == "adults")$lab_id)
-et_toddler_labids <- unique(filter(data_labfix, 
+et_toddler_labids <- unique(filter(data, 
                                    age_cohort == "toddlers")$lab_id)
 
 demo_adult_labids <- unique(adult_demo$lab_id)
@@ -153,10 +155,6 @@ assert_that(is_empty(dplyr::setdiff(et_adult_labids, demo_adult_labids)))
 assert_that(is_empty(dplyr::setdiff(demo_toddler_labids, et_toddler_labids)))
 assert_that(is_empty(dplyr::setdiff(et_toddler_labids, demo_toddler_labids)))
 
-```
-```{r}
-data <- data_labfix |>
-  select(-lab_id.x, distance)
 ```
 
 ## participant_id
