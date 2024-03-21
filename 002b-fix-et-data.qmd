@@ -336,8 +336,35 @@ assert_that(nrow(anti_join(et_adult_pids, demo_adult_pids))==0)
 #assert_that(is_empty(anti_join(demo_toddler_pids, et_toddler_pids))) # unfixable, as data is missing
 ```
 
-## x
+Test for uniqueness: first, uniqueness across labs.
+```{r}
+ppt_id_per_lab <- data |> 
+  select(participant_id, lab_id) |> 
+  distinct() |> 
+  group_by(participant_id) |> 
+  summarise(n = n())
+assert_that(all(ppt_id_per_lab$n == 1)) 
+# Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
+```
 
+Then, uniqueness within labs. 
+Our strategy is to detect instances at which (a) t resets, or (b) participant_id changes; given the assumptions about the data structure, these should uniquely capture the rows at which the data switch to a new participant.
+```{r}
+ppt_id_unique <- data |> 
+  mutate(t_lag = lag(t),
+         ppt_lag = lag(participant_id)) |> 
+# This DOESN'T work: - some labs have weirdnesses about overlapping times (babylabPrinceton)
+#                    - some labs restart t every trial
+# hence the removal of `t < t_lag`
+  filter(# t < t_lag | 
+           participant_id != ppt_lag)
+
+assert_that(nrow(ppt_id_unique) == n_distinct(data$participant_id))
+# Same problem as before.
+```
+
+
+## x
 
 ```{r}
 data |>
