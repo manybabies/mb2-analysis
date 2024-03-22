@@ -364,6 +364,19 @@ assert_that(nrow(ppt_id_unique) == n_distinct(data$participant_id))
 ```
 
 
+## media_name
+Check for uniqueness within participants.
+```{r}
+media_unique <- data |> 
+  mutate(med_lag = lag(media_name)) |> 
+  filter(media_name != med_lag) |> 
+  group_by(participant_id, media_name) |> 
+  summarise(n_media = n())
+assert_that(all(media_unique$n_media == 1)) 
+# Same problem with MPI.
+```
+
+
 ## x
 
 ```{r}
