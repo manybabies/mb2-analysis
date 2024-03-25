@@ -345,6 +345,18 @@ ppt_id_per_lab <- data |>
   summarise(n = n())
 assert_that(all(ppt_id_per_lab$n == 1)) 
 # Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
+
+#joining participant and lab id to create a unique participant id
+data <- data 
+unite(participant_lab_id,lab_id,participant_id,remove=F)
+
+ppt_id_per_lab <- data |> 
+  select(participant_id, lab_id) |> 
+  distinct() |> 
+  group_by(participant_id) |> 
+  summarise(n = n())
+assert_that(all(ppt_id_per_lab$n == 1)) 
+# Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
 ```
 
 Then, uniqueness within labs. 
@@ -352,14 +364,14 @@ Our strategy is to detect instances at which (a) t resets, or (b) participant_id
 ```{r}
 ppt_id_unique <- data |> 
   mutate(t_lag = lag(t),
-         ppt_lag = lag(participant_id)) |> 
+         ppt_lag = lag(participant_lab_id)) |> 
 # This DOESN'T work: - some labs have weirdnesses about overlapping times (babylabPrinceton)
 #                    - some labs restart t every trial
 # hence the removal of `t < t_lag`
   filter(# t < t_lag | 
-           participant_id != ppt_lag)
+           participant_lab_id != ppt_lag)
 
-assert_that(nrow(ppt_id_unique) == n_distinct(data$participant_id))
+assert_that(nrow(ppt_id_unique) == n_distinct(data$participant_lab_id))
 # Same problem as before.
 ```
 
@@ -370,10 +382,11 @@ Check for uniqueness within participants.
 media_unique <- data |> 
   mutate(med_lag = lag(media_name)) |> 
   filter(media_name != med_lag) |> 
-  group_by(participant_id, media_name) |> 
+  group_by(participant_lab_id, media_name) |> 
   summarise(n_media = n())
 assert_that(all(media_unique$n_media == 1)) 
-# Same problem with MPI.
+# babylabAmsterdam participant UVA_127-toddlers has two datasets included
+# starcalib and Pupil Calibration occurs twice for some participants
 ```
 
 
@@ -515,7 +528,7 @@ combined_demo <- combined_demo |>
       age_cohort == "adults" & age_years_n < 18 ~ "yes",
       age_cohort == "adults" & age_years_n > 55 ~ "yes",
       age_cohort == "adults" & is.na(age_years_n) ~ NA_character_,
-      age_cohort == "toddlers" & age_mo < 18 ~ "yes",
+      age_cohort == "toddlers" & age_mo <= 18 ~ "yes",
       age_cohort == "toddlers" & age_mo >= 28 ~ "yes",
       age_cohort == "toddlers" & is.na(age_mo) ~ NA_character_,
       TRUE ~ "no"
