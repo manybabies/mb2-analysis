@@ -24,14 +24,15 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 ```{r}
 # TODO these labs/participants are currently broken - investigate this
 # (lab_id, participant_id, media_name) does not uniquely identify a trial_number
-data <- data %>% 
-  filter(!(lab_id %in% c(
-  'mpievaCCP' # TODO: for some reasons, all participants appear twice?
-  ))) %>% filter(
-      !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
-    !(participant_id == 'RU_017-toddlers' & lab_id == 'babylabNijmegen') # duplicate
+# data <- data %>% 
+ # filter(!(lab_id %in% c(
+ # 'mpievaCCP' # TODO: for some reasons, all participants appear twice? This is due to mpievaccp and mecdmpihcbs using the same prefix in their participant id --> fixed through unique participants_lab-id!
+ # ))) %>% 
+ # filter(
+ #     !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') # & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
+    #!(participant_id == 'RU_017-toddlers' & lab_id == 'babylabNijmegen') # duplicate - fixed
      
-    ) 
+ #   )  --> should all be fixed!
 
 # We need to do the following two steps here, as trial_details depend on specific filenames, 
 # while trial ordering only cares about the canon media names
@@ -52,37 +53,39 @@ data <- data %>%
 # Add trial numbers to the data
 trial_orders <- data %>%
   filter(!(media_name %in% c('star_calib', 'Pupil_Calibration'))) %>% # remove calibration from numbering
-  group_by(lab_id, participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   mutate(trial_num = make_media_nums(media_name)) %>%
-  distinct(lab_id, participant_id, media_name, trial_num)
+  distinct(lab_id, participant_lab_id, media_name, trial_num)
 
 # validate trial_orders before joining them to the data
 media_name_collisions <- trial_orders %>% 
-  group_by(lab_id, participant_id, media_name) %>% 
+  group_by(lab_id, participant_lab_id, media_name) %>% 
   filter(n() > 1)
 
 
 # temporary fix to push the data further through: go to the top and exclude specific labs 
 assert_that(nrow(media_name_collisions) == 0)
 
-data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_id, media_name))
+data <- data %>% left_join(trial_orders, by = join_by(lab_id, participant_lab_id, media_name))
 
 # create a table containing some demographic data from both toddlers and adults to perform integrity checks
 combined_demo <- adult_demo %>%
+  unite(participant_lab_id,lab_id,participant_id,remove=F) %>%
   mutate(test_order = as.character(test_order)) %>%
-  select(lab_id, participant_id, test_order, pilot) %>% 
+  select(lab_id, participant_lab_id, test_order, pilot) %>% 
   bind_rows(
     toddler_demo %>%
+      unite(participant_lab_id,lab_id,participant_id,remove=F) %>%
       mutate(test_order = as.character(test_order)) %>%
-      select(lab_id, participant_id, test_order, pilot)
+      select(lab_id, participant_lab_id, test_order, pilot)
     )
 
 # Validate that the (lab specific) participant ids in the data line up with the ids from the (lab specific) demographic files
 # This also triggers on mismatches in lab_id namings
 id_orphans <- trial_orders %>% 
-  distinct(lab_id, participant_id) %>% 
+  distinct(lab_id, participant_lab_id) %>% 
   mutate(xy_exists = T) %>%
-  full_join(combined_demo, by=c('lab_id' = 'lab_id', 'participant_id')) %>%
+  full_join(combined_demo, by=c('lab_id' = 'lab_id', 'participant_lab_id')) %>%
   # pilot and test order are used as a stand in to check if demographic data for this participant exists
   mutate(demo_exists = !is.na(pilot) | !is.na(test_order)) %>%
   select(-c('test_order','pilot')) %>% 
@@ -93,7 +96,7 @@ id_orphans <- trial_orders %>%
 
 # Validate trial orders
 trial_orders_wide <- trial_orders %>%
-  pivot_wider(id_cols = c('lab_id', 'participant_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
+  pivot_wider(id_cols = c('lab_id', 'participant_lab_id'), values_from=media_name, names_from=trial_num, names_prefix='trial_')
 
 trial_orders_design <- read.csv(here('metadata', 'trial_order.csv')) %>% 
   left_join(read.csv(here('metadata', 'fam_order.csv')), by=join_by(fam_order))
@@ -103,10 +106,10 @@ invalid_trial_orders <- trial_orders_wide %>%
 #assert_that(nrow(invalid_trial_orders) == 0)
 
 trial_order_mismatches <- combined_demo %>%
-  select(lab_id, participant_id, test_order) %>% 
+  select(lab_id, participant_lab_id, test_order) %>% 
   inner_join(trial_orders_wide %>% 
                inner_join(trial_orders_design, by=paste0('trial_',1:6)) # determine seen trials
-    , by=c('lab_id' = 'lab_id', 'participant_id')) %>% 
+    , by=c('lab_id' = 'lab_id', 'participant_lab_id')) %>% 
   filter(test_order != trial_order)
 
 #assert_that(nrow(trial_order_mismatches) == 0)

@@ -332,7 +332,7 @@ Now the test.
 ```{r}
 assert_that(nrow(anti_join(et_adult_pids, demo_adult_pids))==0)
 #assert_that(is_empty(anti_join(demo_adult_pids, et_adult_pids))) # unfixable, as data is missing
-assert_that(nrow(anti_join(et_adult_pids, demo_adult_pids))==0)
+assert_that(nrow(anti_join(et_toddler_pids, demo_toddler_pids))==0)
 #assert_that(is_empty(anti_join(demo_toddler_pids, et_toddler_pids))) # unfixable, as data is missing
 ```
 
@@ -347,16 +347,15 @@ assert_that(all(ppt_id_per_lab$n == 1))
 # Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
 
 #joining participant and lab id to create a unique participant id
-data <- data 
+data <- data |> 
 unite(participant_lab_id,lab_id,participant_id,remove=F)
 
 ppt_id_per_lab <- data |> 
-  select(participant_id, lab_id) |> 
+  select(participant_lab_id, lab_id) |> 
   distinct() |> 
-  group_by(participant_id) |> 
+  group_by(participant_lab_id) |> 
   summarise(n = n())
 assert_that(all(ppt_id_per_lab$n == 1)) 
-# Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
 ```
 
 Then, uniqueness within labs. 
@@ -446,7 +445,7 @@ It's pretty clear that some datasets are in seconds and some are in milliseconds
 
 ```{r}
 data |>
-  group_by(lab_id, participant_id) |>
+  group_by(lab_id, participant_lab_id) |>
   mutate(t_norm = t - t[1]) |>
   group_by(lab_id) |>
   summarise(min_t = min(t_norm, na.rm=TRUE), 
@@ -478,15 +477,16 @@ assert_that(all(data$age_cohort %in% c("adults","toddlers")))
 
 ## event_num
 
-Why are there some event numbers that go to 26?
+Why are there some event numbers that go to 17?
 
+Only for babylabOxford. Other labs go up to 9 event numbers which is due to calibration taking up an event number.
 ```{r}
 unique(data$event_num)
 ```
 
 
 ```{r}
-hist(data$event_num, breaks = 0:26)
+hist(data$event_num, breaks = 0:17)
 ```
 
 
@@ -526,9 +526,9 @@ combined_demo <- combined_demo |>
   mutate(
     age_exclusion = case_when(
       age_cohort == "adults" & age_years_n < 18 ~ "yes",
-      age_cohort == "adults" & age_years_n > 55 ~ "yes",
+      age_cohort == "adults" & age_years_n >= 56 ~ "yes",
       age_cohort == "adults" & is.na(age_years_n) ~ NA_character_,
-      age_cohort == "toddlers" & age_mo <= 18 ~ "yes",
+      age_cohort == "toddlers" & age_mo < 18 ~ "yes",
       age_cohort == "toddlers" & age_mo >= 28 ~ "yes",
       age_cohort == "toddlers" & is.na(age_mo) ~ NA_character_,
       TRUE ~ "no"

@@ -32,6 +32,7 @@ data_rezeroed <- data %>%
 
 # TODO: Check this table to see how big of an issue the timing offset is
 overly_long_trials <- data_rezeroed %>% filter(t_zeroed > video_duration_ms)
+overly_long_trials_summary <- overly_long_trials %>% group_by(participant_lab_id, trial_num) %>% summarise(diff=t_zeroed - video_duration_ms) %>% group_by(participant_lab_id, trial_num) %>% summarise(diff=max(diff))
 
 #"normalize" time according to a point of disambiguation
 data_normalized <- data_rezeroed %>%
