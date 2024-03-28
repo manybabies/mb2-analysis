@@ -9,6 +9,7 @@ Goal: implement exclusions, document numbers for exclusions in a separate CSV, a
 library(tidyverse)
 library(here)
 library(assertthat)
+library(knitr)
 
 source(here('helper','ensure_repo_structure.R'))
 source(here('helper','exclusion_helper.R'))
@@ -19,6 +20,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 This process will be much easier if we create a field `unique_participant_id`.
 
 ```{r}
+#this should be present once the pipeline is fully updated
 data_preprocessed <- data_preprocessed |>
   unite(col = "unique_participant_id",
         lab_id, participant_id, 
@@ -40,8 +42,8 @@ First trim toddlers that are outside of age range.
 > (1) they did not complete the full experiment, 
 
 ```{r}
-data_after_exclusions <- exclude_by(d = data_preprocessed, 
-                                    col = 
+# data_after_exclusions <- exclude_by(d = data_preprocessed, 
+#                                     col = 
 ```
 
 
@@ -50,8 +52,8 @@ data_after_exclusions <- exclude_by(d = data_preprocessed,
 
 
 ```{r}
-data_after_exclusions <- exclude_by(d = data_preprocessed, 
-                                    col = 
+# data_after_exclusions <- exclude_by(d = data_preprocessed, 
+#                                     col = 
 ```
 
 
@@ -59,25 +61,200 @@ data_after_exclusions <- exclude_by(d = data_preprocessed,
 
 
 ```{r}
-data_after_exclusions <- exclude_by(d = data_preprocessed, 
-                                    col = 
+# data_after_exclusions <- exclude_by(d = data_preprocessed, 
+#                                     col = 
 ```
 
 
 > (4) technical problems occurred. The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. 
 
 ```{r}
-data_after_exclusions <- exclude_by(d = data_preprocessed, 
-                                    col = 
+# data_after_exclusions <- exclude_by(d = data_preprocessed, 
+#                                     col = 
 ```
 
+# Individual Trial Exclusions
 
+## Sufficient Looking Data per Trial
 
-> Of these, participants will be excluded sequentially if 
+"We will exclude individual trials if more than 50% of the gaze data is missing (defined as off-screen or unavailable point of gaze during the whole trial, not just the anticipatory period)." (p. 33 Stage 1 Registered Report)
 
-> (5) their data is missing on more than one familiarization trial, or 
+```{r}
+# summarize by participant, trial and condition
+summarized_valid_looks <- data_preprocessed %>%
+  #define a valid point of gaze
+  #we define a valid point of gaze as requiring both a valid x-coordinate and a valid y-coordinate
+  mutate(
+    valid_xy_look_type = case_when(
+      !is.na(x_screen) & !is.na(y_screen) ~ "both x and y are valid",
+      !is.na(x_screen) & is.na(y_screen) ~ "x is valid but not y",
+      is.na(x_screen) & !is.na(y_screen) ~ "y is valid but not x",
+      is.na(x_screen) & is.na(y_screen) ~ "neither x nor y are valid",
+      TRUE ~ "check for error"
+    )
+  ) %>%
+  mutate(
+    valid_xy_look = ifelse(valid_xy_look_type == "both x and y are valid",1,0)
+  ) %>%
+  #only focus on familiarization and test trials
+  filter(condition %in% c("familiarization", "ignorance", "knowledge")) %>%
+  group_by(unique_participant_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num) %>%
+  summarize(
+    total_frames=n(),
+    total_valid_looks = sum(valid_xy_look),
+    prop_valid_looks = total_valid_looks / total_frames
+  )
+```
+
+Inspect the resulting valid looking data
+
+```{r}
+hist(summarized_valid_looks$prop_valid_looks)
+
+ggplot(summarized_valid_looks, aes(prop_valid_looks,fill=age_cohort))+
+  geom_histogram()+
+  facet_wrap(~age_cohort+condition)
+```
+
+Exclude trials that do not meet the 50% valid looking criterion
+
+```{r}
+summarized_valid_looks <- summarized_valid_looks %>%
+  mutate(
+    valid_looking_trial = case_when(
+      prop_valid_looks >= 0.5 ~ 1,
+      TRUE ~ 0
+    )) %>%
+  mutate(
+    trial_error = case_when(
+      valid_looking_trial == 0 ~ "yes",
+      TRUE ~ "no"
+    ),
+    trial_error_type = case_when(
+      valid_looking_trial == 0 ~ "insufficient valid looking data",
+      TRUE ~ NA
+    )
+  )
+
+# inspect trial errors by age cohort and condition
+summarized_valid_looks %>%
+  group_by(age_cohort,condition,trial_num) %>%
+  summarize(
+    total_trials = n(),
+    valid_trials = sum(valid_looking_trial),
+    prop_valid_trials = valid_trials/total_trials
+  )
+```
+
+Join back in the information about trial errors into the overall data
+
+```{r}
+data_preprocessed <- data_preprocessed %>%
+  left_join(summarized_valid_looks)
+```
+
+# Trial-based Exclusions
+
+## Sufficient Valid Familiarization Trials
+
+> Of these, participants will be excluded sequentially if (5) their data is missing on more than one familiarization trial, or 
+
+Summarize the number of valid familiarization trials by participant.
+
+```{r}
+summarized_valid_familiarization_trials <- data_preprocessed %>%
+  filter(condition == "familiarization") %>%
+  filter(trial_error == "no") %>%
+  distinct(unique_participant_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
+  group_by(unique_participant_id,lab_id,age_cohort,participant_id) %>%
+  summarize(
+    total_valid_fam_trials = n()
+  )
+
+#inspect
+ggplot(summarized_valid_familiarization_trials, aes(total_valid_fam_trials,fill=age_cohort))+
+  geom_histogram()+
+  facet_wrap(~age_cohort)
+
+#participants are excluded if insufficient valid familiarization trials are available
+summarized_valid_familiarization_trials <- summarized_valid_familiarization_trials %>%
+  mutate(
+    sufficient_fam_trials = ifelse(total_valid_fam_trials>=3,1,0)
+  )
+
+#join back in to main data
+data_preprocessed <- data_preprocessed %>%
+  left_join(summarized_valid_familiarization_trials)
+```
+
+## Valid First Test Trial
 
 > (6) their data is missing on the first test trial. If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above (for details on exclusions, see Supplemental Material).
+
+Identify participants without the first test trial
+
+```{r}
+# identify valid and invalid first test trials
+summarized_valid_first_test_trials <- data_preprocessed %>%
+  filter(condition %in% c("ignorance","knowledge")) %>%
+  # check this, need to make sure this is a robust way of identifying the first test trial
+  filter(trial_num==5) %>%
+  distinct(unique_participant_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error) %>%
+  mutate(
+    valid_first_test_trial = case_when(
+      trial_error == "yes" ~ 0,
+      trial_error == "no" ~ 1,
+      TRUE ~ NA
+    )
+  ) %>%
+  #remove columns that vary within participants, to make joining at the participant level possible
+  select(-condition, -participant_trial_id,-trial_num)
+
+#join back in to main data
+data_preprocessed <- data_preprocessed %>%
+  left_join(summarized_valid_first_test_trials)
+```
+
+## Overall Trial-based Exclusions
+
+```{r}
+participant_trial_errors <- data_preprocessed %>%
+  mutate(
+    trial_based_error = case_when(
+      #step 5 (familiarization)
+      sufficient_fam_trials == 0 ~ "yes",
+      #step 6 (first test trial)
+      valid_first_test_trial == 0 ~ "yes",
+      TRUE ~ "no"
+    ),
+    trial_based_error_type = case_when(
+      sufficient_fam_trials == 0 ~ "5",
+      valid_first_test_trial == 0 ~ "6",
+      TRUE ~ NA
+    )
+  )
+  
+```
+
+## Overview
+
+```{r}
+overview_trial_based_errors <- data_preprocessed %>%
+  distinct(unique_participant_id,lab_id,age_cohort,participant_id,trial_based_error,trial_based_error_type) %>%
+  group_by(age_cohort) %>%
+  summarize(
+    total_N = n(),
+    trial_error_exclusions = sum(trial_based_error=="yes"),
+    prop_excluded = trial_error_exclusions / total_N
+  )
+
+overview_trial_based_errors %>%
+  knitr::kable()
+
+```
+
+> TO DO: spit out overview of trial-based exclusions and pass a dataset with trial-based exclusions incorporated on to the next processing step
+
 
 > Our final dataset will consist of XYZ participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of XYZ toddlers (XX% female) that will have been tested in XYZ labs (mean lab sample size = XYZ, SD = XYZ, range: XYZ) will be analyzed. The average age of toddlers in the final sample will be XYZ months (SD: XYZ, range: XYZ). The final sample size of included adults will be N = XYZ (XX% female), tested in XYZ labs (mean lab sample size = XYZ, SD = XYZ, range: XYZ). Their mean age will be XYZ years (SD: XYZ, range: XYZ).
 
