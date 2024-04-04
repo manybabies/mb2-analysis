@@ -384,19 +384,18 @@ assert_that(all(media_unique |>
 data |>
   group_by(lab_id) |>
   summarise(min_x = min(x, na.rm=TRUE), 
-            max_x = max(x, na.rm=TRUE))
-```
+            max_x = max(x, na.rm=TRUE),
+            median_x=median(x,na.rm=TRUE),
+            zero_count = sum(x==0,na.rm=T)) 
 
-Follow up on x distribution for outlier labs. 
+#visualize distribution of x coordinates for all labs
+ggplot(data,aes(x))+
+  geom_histogram()+
+  facet_wrap(~lab_id, scales="free")
 
-```{r}
+#Follow up on x distribution for outlier labs. 
 data |>
   filter(lab_id == "babylabINCC") |>
-  ggplot(aes(x = x)) + 
-  geom_histogram()
-
-data |>
-  filter(lab_id == "babylabNijmegen") |>
   ggplot(aes(x = x)) + 
   geom_histogram()
 
@@ -419,7 +418,14 @@ Lots of very negative data. Not sure what to do with this.
 data |>
   group_by(lab_id) |>
   summarise(min_y = min(y, na.rm=TRUE), 
-            max_y = max(y, na.rm=TRUE))
+            max_y = max(y, na.rm=TRUE),
+            median_x=median(x,na.rm=TRUE),
+            zero_count = sum(x==0,na.rm=T))
+
+#visualize distribution of y coordinates for all labs
+ggplot(data,aes(y))+
+  geom_histogram()+
+  facet_wrap(~lab_id, scales="free")
 ```
 
 Tests.
