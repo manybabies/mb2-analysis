@@ -337,15 +337,8 @@ assert_that(nrow(anti_join(et_toddler_pids, demo_toddler_pids))==0)
 ```
 
 Test for uniqueness: first, uniqueness across labs.
-```{r}
-ppt_id_per_lab <- data |> 
-  select(participant_id, lab_id) |> 
-  distinct() |> 
-  group_by(participant_id) |> 
-  summarise(n = n())
-assert_that(all(ppt_id_per_lab$n == 1)) 
-# Problem: both mecdmpihcbs and mpievaCCP prefix their participants with "MPI_"
 
+```{r}
 #joining participant and lab id to create a unique participant id
 data <- data |> 
 unite(participant_lab_id,lab_id,participant_id,remove=F)
