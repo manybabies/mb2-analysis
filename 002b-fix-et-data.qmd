@@ -379,9 +379,9 @@ media_unique <- data |>
   filter(media_name != med_lag) |> 
   group_by(participant_lab_id, media_name) |> 
   summarise(n_media = n())
-assert_that(all(media_unique$n_media == 1)) 
-# babylabAmsterdam participant UVA_127-toddlers has two datasets included
-# starcalib and Pupil Calibration occurs twice for some participants
+
+# starcalib occurs twice for some participants
+assert_that(all(filter(media_unique, media_name!="star_calib")$n_media == 1)) 
 ```
 
 
