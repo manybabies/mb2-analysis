@@ -209,11 +209,11 @@ Create combined demographics files and prep for joining with eye-tracking data.
 #necessary in order to avoid issues with the merge
 combined_demo <- adult_demo |>
   mutate(test_order = as.character(test_order)) |>
-  mutate(age_cohort="adults") %>% #just to make sure that nothing goes wrong with the merge
+  mutate(age_cohort = "adults") |> #just to make sure that nothing goes wrong with the merge
   bind_rows(
     toddler_demo |>
       mutate(test_order = as.character(test_order)) |>
-      mutate(age_cohort="toddlers")
+      mutate(age_cohort = "toddlers")
     )
 
 # select a subset of columns from the demographics data
@@ -224,7 +224,8 @@ demo_minimal <- combined_demo |>
          session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
          test1_error, test2_error, 
          participant_gender, 
-         hearing, vision, medical_issues, session_error, session_error_info, session_error_notes,
+         hearing, vision, medical_issues, session_error, 
+         session_error_info, session_error_notes,
          contains("native_lang"), second_session, age_days,age_years_n, country)
 ```
 
@@ -337,11 +338,10 @@ assert_that(nrow(anti_join(et_toddler_pids, demo_toddler_pids))==0)
 ```
 
 Test for uniqueness: first, uniqueness across labs.
-
 ```{r}
 #joining participant and lab id to create a unique participant id
 data <- data |> 
-unite(participant_lab_id,lab_id,participant_id,remove=F)
+  unite(participant_lab_id, lab_id, participant_id, remove = F)
 
 ppt_id_per_lab <- data |> 
   select(participant_lab_id, lab_id) |> 
@@ -352,20 +352,12 @@ assert_that(all(ppt_id_per_lab$n == 1))
 ```
 
 Then, uniqueness within labs. 
-Our strategy is to detect instances at which (a) t resets, or (b) participant_id changes; given the assumptions about the data structure, these should uniquely capture the rows at which the data switch to a new participant.
-
-MZ comment: I'm confused about idea (a). t should "reset" every trial based on our resampling strategy. I think this might be outdated?
+Our strategy is to detect instances at which participant_id changes; given the assumptions about the data structure, these should uniquely capture the rows at which the data switch to a new participant.
 ```{r}
 ppt_id_unique <- data |> 
   mutate(t_lag = lag(t),
          ppt_lag = lag(participant_lab_id)) |> 
-# This DOESN'T work: - some labs have weirdnesses about overlapping times (babylabPrinceton)
-#                    - some labs restart t every trial
-# hence the removal of `t < t_lag`
-  filter(# t < t_lag | 
-           participant_lab_id != ppt_lag)
-
-# this misses the very first participant! So need to add 1 in the assert call
+  filter(participant_lab_id != ppt_lag)
 
 assert_that(nrow(ppt_id_unique) + 1 == n_distinct(data$participant_lab_id))
 ```
@@ -379,9 +371,10 @@ media_unique <- data |>
   filter(media_name != med_lag) |> 
   group_by(participant_lab_id, media_name) |> 
   summarise(n_media = n())
-
-# starcalib occurs twice for some participants
-assert_that(all(filter(media_unique, media_name!="star_calib")$n_media == 1)) 
+assert_that(all(media_unique |> 
+                  filter(media_name != "star_calib") |> 
+                  pull(n_media) == 1))
+# some participants viewed star_calib twice, which is okay
 ```
 
 
@@ -398,7 +391,7 @@ Follow up on x distribution for outlier labs.
 
 ```{r}
 data |>
-  filter(lab_id == "oxfordBabylab") |>
+  filter(lab_id == "babylabINCC") |>
   ggplot(aes(x = x)) + 
   geom_histogram()
 
@@ -411,7 +404,8 @@ data |>
 
 Tests.
 
-```{r}
+```{r, eval=F}
+# doesn't work---there are negative values and values on the order of 1e5
 assert_that(all(data$x > 0))
 assert_that(all(data$x < 5000))
 ```
@@ -424,13 +418,14 @@ Lots of very negative data. Not sure what to do with this.
 ```{r}
 data |>
   group_by(lab_id) |>
-  summarise(min_x = min(x, na.rm=TRUE), 
-            max_x = max(x, na.rm=TRUE))
+  summarise(min_y = min(y, na.rm=TRUE), 
+            max_y = max(y, na.rm=TRUE))
 ```
 
 Tests.
 
-```{r}
+```{r, eval=F}
+# doesn't work---there are negative values and values on the order of 1e5
 assert_that(all(data$y > 0))
 assert_that(all(data$y < 5000))
 ```
