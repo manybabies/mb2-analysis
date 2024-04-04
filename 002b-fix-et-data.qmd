@@ -353,6 +353,8 @@ assert_that(all(ppt_id_per_lab$n == 1))
 
 Then, uniqueness within labs. 
 Our strategy is to detect instances at which (a) t resets, or (b) participant_id changes; given the assumptions about the data structure, these should uniquely capture the rows at which the data switch to a new participant.
+
+MZ comment: I'm confused about idea (a). t should "reset" every trial based on our resampling strategy. I think this might be outdated?
 ```{r}
 ppt_id_unique <- data |> 
   mutate(t_lag = lag(t),
@@ -363,8 +365,9 @@ ppt_id_unique <- data |>
   filter(# t < t_lag | 
            participant_lab_id != ppt_lag)
 
-assert_that(nrow(ppt_id_unique) == n_distinct(data$participant_lab_id))
-# Same problem as before.
+# this misses the very first participant! So need to add 1 in the assert call
+
+assert_that(nrow(ppt_id_unique) + 1 == n_distinct(data$participant_lab_id))
 ```
 
 
