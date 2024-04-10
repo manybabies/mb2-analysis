@@ -193,11 +193,6 @@ correct_ids <- function(df) {
 }
 
 data <- correct_ids(data)
-
-# remove ghost ids that are not found in the demographic data
-data <- data %>%
-  filter(!(lab_id == 'beinghumanWroclaw' & participant_id %in% c('ADULT_006-adults', 'BABY_010-toddlers')))
-
 ```
 
 ## Clean demographics
