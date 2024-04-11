@@ -9,8 +9,6 @@ adults,beinghumanWroclaw,ADULT_001
 adults,beinghumanWroclaw,ADULT_003
 adults,kidsdevUniofNewcastle,uon017
 adults,kidsdevUniofNewcastle,uon018
-adults,kidsdevUniofNewcastle,uona017
-adults,kidsdevUniofNewcastle,uona018
 adults,MiniDundee,DUN_113
 adults,affcogUTSC,UTSC_014
 adults,affcogUTSC,UTSC_020
@@ -23,8 +21,8 @@ adults,babyLeidenEdu,LUMB2_PilotA02
 adults,babyLeidenEdu,LUMB2_PilotA03
 adults,babyLeidenEdu,LUMB2_PilotA04
 adults,babyLeidenEdu,LUMB2_A05
-adults,gaugG?ttingen,GAUG_124
-adults,gaugG?ttingen,GAUG_130
+adults,gaugGöttingen,GAUG_124
+adults,gaugGöttingen,GAUG_130
 adults,labUNAM,UNAM_017
 adults,labUNAM,UNAM_018
 adults,labUNAM,UNAM_019
@@ -41,7 +39,6 @@ adults,WSUMARCS,MARCS_45
 toddlers,babylabAmsterdam,UVA_012
 toddlers,babylabAmsterdam,UVA_114
 toddlers,babylabAmsterdam,UVA_122
-toddlers,babylabAmsterdam,UVA_126
 toddlers,babylabINCC,BLI_217
 toddlers,beinghumanWroclaw,BABY_001
 toddlers,beinghumanWroclaw,BABY_002
@@ -50,7 +47,6 @@ toddlers,beinghumanWroclaw,BABY_006
 toddlers,beinghumanWroclaw,BABY_024
 toddlers,beinghumanWroclaw,BABY_025
 toddlers,beinghumanWroclaw,BABY_026
-toddlers,babylabOxford,UoO611
 toddlers,CogConcordia,Child24
 toddlers,kidsdevUniofNewcastle,uon001
 toddlers,kokuHamburg,UHH_002

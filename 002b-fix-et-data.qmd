@@ -257,7 +257,9 @@ still_missings <- known_missings %>%
 write.csv(error_ids_all,
           here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_SESSION))
 
-write.csv(still_missings, here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_TEMP))
+if(nrow(still_missings) > 0){
+  write.csv(still_missings, here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_TEMP))
+}
 
 ```
 
