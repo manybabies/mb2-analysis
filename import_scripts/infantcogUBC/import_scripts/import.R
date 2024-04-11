@@ -10,13 +10,22 @@ dir.create(here(DATA_DIR),"processed_data")
 UBC_toddlers <- read_csv(here(DATA_DIR, "raw_data","infantcogUBC_toddlers_eyetrackingdata.csv"))
 
 UBC_toddlers[UBC_toddlers=="-"]<-NA
-UBC_toddlers$Point.of.Regard.Right.X..px.<-as.numeric(UBC_toddlers$Point.of.Regard.Right.X..px.)
-UBC_toddlers$Point.of.Regard.Left.X..px.<-as.numeric(UBC_toddlers$Point.of.Regard.Left.X..px.)
-UBC_toddlers$Point.of.Regard.Right.Y..px.<-as.numeric(UBC_toddlers$Point.of.Regard.Right.Y..px.)
-UBC_toddlers$Point.of.Regard.Left.Y..px.<-as.numeric(UBC_toddlers$Point.of.Regard.Left.Y..px.)
+UBC_toddlers$'Point of Regard Right X [px]'[UBC_toddlers$'Point of Regard Right X [px]'==0]<-NA
+UBC_toddlers$'Point of Regard Right Y [px]'[UBC_toddlers$'Point of Regard Right Y [px]'==0]<-NA
+UBC_toddlers$'Point of Regard Left X [px]'[UBC_toddlers$'Point of Regard Left X [px]'==0]<-NA
+UBC_toddlers$'Point of Regard Left Y [px]'[UBC_toddlers$'Point of Regard Left Y [px]'==0]<-NA
+UBC_toddlers$'Point of Regard Right X [px]'<-as.numeric(UBC_toddlers$'Point of Regard Right X [px]')
+UBC_toddlers$'Point of Regard Right Y [px]'<-as.numeric(UBC_toddlers$'Point of Regard Right Y [px]')
+UBC_toddlers$'Point of Regard Left X [px]'<-as.numeric(UBC_toddlers$'Point of Regard Left X [px]')
+UBC_toddlers$'Point of Regard Left Y [px]'<-as.numeric(UBC_toddlers$'Point of Regard Left Y [px]')
 
-UBC_toddlers<-transform(UBC_toddlers,x = (Point.of.Regard.Right.X..px.+Point.of.Regard.Left.X..px.)/2,
-                        y = (UBC_toddlers$Point.of.Regard.Right.Y..px.+UBC_toddlers$Point.of.Regard.Left.Y..px.)/2)
+UBC_toddlers<-transform(UBC_toddlers,x = (UBC_toddlers$'Point of Regard Right X [px]'+UBC_toddlers$'Point of Regard Left X [px]')/2,
+                        y = (UBC_toddlers$'Point of Regard Right Y [px]'+UBC_toddlers$'Point of Regard Left Y [px]')/2)
+
+UBC_toddlers$'Pupil.Diameter.Left..mm.'[UBC_toddlers$'Pupil.Diameter.Left..mm.'==0]<-NA
+UBC_toddlers$'Pupil.Diameter.Right..mm.'[UBC_toddlers$'Pupil.Diameter.Right..mm.'==0]<-NA
+UBC_toddlers$'Pupil.Diameter.Left..mm.'<-as.numeric(UBC_toddlers$'Pupil.Diameter.Left..mm.')
+UBC_toddlers$'Pupil.Diameter.Right..mm.'<-as.numeric(UBC_toddlers$'Pupil.Diameter.Right..mm.')
 
 UBC_toddlers_clean <- UBC_toddlers %>% 
   rename(participant_id = Participant,
