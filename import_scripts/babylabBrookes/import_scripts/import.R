@@ -11,8 +11,8 @@ Bro_toddlers <- read_tsv(here(DATA_DIR,"raw_data","babylabBrookes_toddlers_eyetr
 
 Bro_toddlers_clean <- Bro_toddlers %>% 
   rename(participant_id = `Participant name`,
-         x = `Gaze point X (MCSnorm)`,
-         y = `Gaze point Y (MCSnorm)`, 
+         x = `Gaze point X`,
+         y = `Gaze point Y`, 
          t = `Recording timestamp`,
          media_name = `Presented Media name`,
          pupil_left = `Pupil diameter left`,

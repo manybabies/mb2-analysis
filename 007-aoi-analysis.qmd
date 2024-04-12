@@ -18,6 +18,9 @@ library(knitr)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
+#temporary hacky thing
+INTERMEDIATE_006 <- "005-aoi-data.Rds"
+
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
@@ -52,10 +55,12 @@ Splitting the data into familiarization data and test data.
 
 ```{r}
 fam_data <- data_preprocessed %>%
-  filter(condition %in% c("familiarization"))
+  filter(condition %in% c("familiarization")) %>%
+  unite(participant_lab_id,lab_id,participant_id,remove=F) # making sure that participant ids are not accidentally combined across labs
 
 test_data <- data_preprocessed %>%
-  filter(condition %in% c("knowledge","ignorance"))
+  filter(condition %in% c("knowledge","ignorance")) %>%
+  unite(participant_lab_id,lab_id,participant_id,remove=F) # making sure that participant ids are not accidentally combined across labs
 ```
 
 # AOI Proportion Looking
@@ -667,9 +672,6 @@ mss_fam <- mss_fam |>
 
 ```
 
-
-
-
 ```{r}
 ggplot(mss_fam |>
          pivot_longer(mean_target_general:mean_distractor_general, 
@@ -687,3 +689,104 @@ ggplot(mss_fam |>
 ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12,height=6)
 
 ```
+
+
+# First Look Analysis
+
+ <!-- First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner et al. (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins. -->
+
+## Compute first looks
+
+### Convert to run-length encoding format
+
+```{r}
+#convert to rle data
+rle_test_data <- test_data %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
+  group_by(participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num) %>%
+  summarise(lengths = rle(aoi)$lengths, 
+            values = rle(aoi)$values)
+```
+
+
+### Compute the first looks/ anticipatory looking
+
+Function for computing first look and RT
+MZ: LOTS TO DISCUSS HERE!!!!
+
+```{r}
+# takes rle_data dataframe (already rle'd)
+get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_LOOK_MS = 150) {
+  
+  # end if no data
+  if (is.null(rle_data$values) | is.null(rle_data$lengths)) {
+    return(tibble(
+      first_look = NA,
+      rt = NA,
+      shift_type = NA))
+  }
+  
+  if (sum(rle_data$values!="NA_NA") == 0) {
+    return(tibble(
+      first_look = NA,
+      rt = NA,
+      shift_type = NA))
+  }
+  
+  onset_aoi <- rle_data$values[1] # zero point AOI
+  
+  #any requirements for the first look location?
+  #add those requirements here
+  
+  #minimum look duration
+  #look must be a specific duration to count (e.g. 150 ms)
+  min_look_length = ceiling(MINIMUM_ANTICIPATORY_LOOK_MS / (1000/SAMPLING_RATE))
+  
+  #remove the starting look location
+  #i.e. remove the first row
+  rle_data_post_first_look <- rle_data[-1,]
+  
+  #first landing has to be post the initial look location
+  first_landing <- rle_data_post_first_look$values[
+                                     rle_data_post_first_look$values %in% c("target_exit","distractor_exit") &
+                                     rle_data_post_first_look$lengths >= min_look_length][1]
+  
+  # end if no anticipatory look to the AOIs
+  if (is.na(first_landing)) {
+    return(tibble(
+      first_look = NA,
+      rt = NA, 
+      shift_type = "no anticipatory look"))
+  }
+  
+  first_landing_idx <- which(rle_data_post_first_look$values == first_landing & rle_data_post_first_look$lengths >= min_look_length)[1]+1
+  
+  values_before_first_landing <- rle_data$lengths[1:(first_landing_idx-1)]
+  
+  shift_type <- paste0(onset_aoi,"_TO_",first_landing)
+  shift_type_all <- paste(rle_data$values[1:first_landing_idx],collapse="_TO_")
+  
+  # rt is the number of samples happening before arrival + 1 
+  # (first sample of arrival)
+  # times the length of a sample
+  landing_time_rt <- (sum(values_before_first_landing) + 1) * (1000/SAMPLING_RATE)
+    
+  return(tibble(
+    first_look = first_landing,
+    rt = landing_time_rt,
+    shift_type = shift_type,
+    shift_type_all = shift_type_all))
+}
+```
+
+Now compute anticipatory looking/ first looks for every trial
+
+```{r}
+# compute RTs
+d_anticipatory_test <- rle_test_data %>%
+  group_by(participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num) %>%
+  nest() %>%
+  mutate(data = lapply(data, get_first_look)) %>%
+  unnest(cols = c(data))
+```
+
