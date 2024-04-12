@@ -435,11 +435,11 @@ assert_that(all(data$y < 5000))
 
 ## t
 
-It's pretty clear that some datasets are in seconds and some are in milliseconds.
+t looks good (difference between web-based and in-person is due to not running the long trials online).
 
 ```{r}
 data |>
-  group_by(lab_id, participant_lab_id) |>
+  group_by(lab_id, participant_trial_id) |>
   mutate(t_norm = t - t[1]) |>
   group_by(lab_id) |>
   summarise(min_t = min(t_norm, na.rm=TRUE), 
