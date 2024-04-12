@@ -15,6 +15,7 @@ source(here('helper','ensure_repo_structure.R'))
 source(here('helper','exclusion_helper.R'))
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 ```
 
 This process will be much easier if we create a field `unique_participant_id`.
@@ -25,6 +26,10 @@ data_preprocessed <- data_preprocessed |>
   unite(col = "unique_participant_id",
         lab_id, participant_id, 
         remove = FALSE, sep = "-")
+
+combined_demo <- combined_demo %>% unite(col = "unique_participant_id",
+        lab_id, participant_id,
+        remove = FALSE, sep = "-")
 ```
 
 
@@ -32,48 +37,53 @@ First trim toddlers that are outside of age range.
 
 ```{r}
 # this needs to be filled in after we have age in the preprocessed file.
+data_preprocessed <- data_preprocessed %>%
+  left_join(combined_demo, by=join_by(unique_participant_id))
 ```
 
-
-
-
-> Of the initial sample (toddlers: N = XYZ, adults: N = XYZ), participants will be excluded from the main confirmatory analyses if 
-
-> (1) they did not complete the full experiment, 
-
-```{r}
-# data_after_exclusions <- exclude_by(d = data_preprocessed, 
-#                                     col = 
-```
-
-
-
-> (2) the toddler participants’ caregivers interfered with the procedure, e.g. by pointing at stimuli or talking to their child, 
-
-
-```{r}
-# data_after_exclusions <- exclude_by(d = data_preprocessed, 
-#                                     col = 
-```
-
-
-> (3) the experimenter made an error during testing that was relevant to the procedure, 
-
-
-```{r}
-# data_after_exclusions <- exclude_by(d = data_preprocessed, 
-#                                     col = 
-```
-
-
-> (4) technical problems occurred. The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. 
-
-```{r}
-# data_after_exclusions <- exclude_by(d = data_preprocessed, 
-#                                     col = 
-```
 
 # Individual Trial Exclusions
+
+## Webcam specific: exclude after manual checking of dataquality
+
+```{r}
+
+mew <- bind_rows(lapply(
+  list.files(
+    here(DEMO_DATA_DIR, "webcam_exclusions"),
+    pattern = "\\.csv$", full.names = TRUE
+  ),
+  function(file) {
+    df <- read.csv(file)
+    df$filename <- basename(file)
+    return(df)
+  }
+))
+
+fn_pattern <- "^(\\w+?)_(\\w+?)_(\\w+?)_(\\w+)\\.csv$"
+
+# the poor man's pivot longer
+manual_exclusions <- bind_rows(
+  mew %>% select(1, 15, trial = 2, ok = 3),
+  mew %>% select(1, 15, trial = 4, ok = 5),
+  mew %>% select(1, 15, trial = 6, ok = 7),
+  mew %>% select(1, 15, trial = 8, ok = 9),
+  mew %>% select(1, 15, trial = 10, ok = 11),
+  mew %>% select(1, 15, trial = 12, ok = 13),
+) %>% mutate(man_exclude = tolower(ok) != "yes") %>%
+  mutate(unique_participant_id =
+           paste(
+             sub(fn_pattern, "\\1", filename),
+             id,
+             sub(fn_pattern, "\\2", filename),
+             sep="-"
+             )) %>% 
+  select(unique_participant_id, media_name = trial, man_exclude)
+
+data_preprocessed <- data_preprocessed %>%
+  left_join(manual_exclusions, by=c("media_name", "unique_participant_id"))
+
+```
 
 ## Sufficient Looking Data per Trial
 

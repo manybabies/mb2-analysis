@@ -23,14 +23,6 @@ xy <- xy %>%
   mutate(media_name = tools::file_path_sans_ext(media_name))
 ```
 
-Get an overview over media names used by different labs
-
-```{r}
-media_names_by_lab <- xy |>
-  group_by(lab_id,media_name) |>
-  count()
-```
-
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
@@ -59,9 +51,6 @@ Check that all media names fit the appropriate schema.
 
 ```{r checking_names}
 
-# quick fix to push data further down the pipeline while excluding broken names
-#data <- data %>% filter(media_name %in% media_names_valid) 
-
 # this object helps to determine where invalid media names are coming from in cases where the fix is non-obvious
 invalid_media_names <- data %>% 
   distinct(lab_id, participant_id, media_name) %>% 
@@ -76,12 +65,6 @@ rm(invalid_media_names)
 
 
 # Column-wise validation
-
-We have: 
-
-```{r}
-names(data)
-```
 
 Let's go column by column. 
 
@@ -210,18 +193,6 @@ combined_demo <- adult_demo |>
       mutate(test_order = as.character(test_order)) |>
       mutate(age_cohort = "toddlers")
     )
-
-# select a subset of columns from the demographics data
-# MZ: Do we still need this? It reduces the overall size of the resulting data but I think this was originally
-# just to deal with messiness in the demographics columns
-demo_minimal <- combined_demo |>
-  select(participant_id, lab_id, age_cohort, method, pilot, 
-         session_error, fam1_error, fam2_error, fam3_error, fam4_error, 
-         test1_error, test2_error, 
-         participant_gender, 
-         hearing, vision, medical_issues, session_error, 
-         session_error_info, session_error_notes,
-         contains("native_lang"), second_session, age_days,age_years_n, country)
 ```
 
 ## Remove the participants with session errors from the et data 
@@ -229,12 +200,12 @@ demo_minimal <- combined_demo |>
 
 ```{r}
 # extract pilot ids
-pilot_ids_all <- demo_minimal %>%
+pilot_ids_all <- combined_demo %>%
   filter(pilot == "yes") %>%
   select(participant_id, lab_id,age_cohort)
 
 #extract ids for participants with session errors
-error_ids_all <- demo_minimal %>%
+error_ids_all <- combined_demo %>%
   filter(session_error == 'error' & pilot != "yes") %>%
   select(participant_id, lab_id, session_error, session_error_info, session_error_notes,age_cohort)
 
@@ -299,10 +270,6 @@ et_ids_not_in_demo_adults <- anti_join(et_adult_pids, demo_adult_pids) %>%
 # Remove matches from demo_adult_pids
 demo_ids_not_in_et_adults <- anti_join(demo_adult_pids, et_adult_pids) %>%
   anti_join(metadata_adults, by = c("lab_id", "participant_id"))
-
-#FILTER_LAB <- 'WSUMARCS'
-#et_ids_not_in_demo_adults %>% rename(et_id = participant_id) %>% filter(lab_id == FILTER_LAB)
-#demo_ids_not_in_et_adults %>% rename(demo_id = participant_id) %>%filter(lab_id == FILTER_LAB)
 
 unique(c(et_ids_not_in_demo_adults$lab_id, demo_ids_not_in_et_adults$lab_id))
 ```
@@ -484,7 +451,7 @@ hist(data$event_num, breaks = 0:17)
 ```
 
 
-Why are there so many instances of event 7?
+Event 7 is overrepresented as it refers to calibration
 
 ```{r}
 data |>
@@ -531,30 +498,6 @@ combined_demo <- combined_demo |>
 View(select(combined_demo,age_cohort,age_years_n,age_mo,age_exclusion))
 ```
 
-# Session Exclusions
-
-Breakdown of session errors.
-
-```{r}
-#interim breakdown to see intersection of both session errors and age exclusion
-#MZ: possibly now redundant; TO DO: integrate with other session exclusion work?
-exclusion_summary <- combined_demo |> 
-  filter(session_error=="error"|age_exclusion=="yes") |> 
-  select(age_cohort,participant_id,lab_id,session_error,session_error_info,age_exclusion) |>
-  group_by(age_exclusion,session_error,session_error_info) |> 
-  summarize(
-    n=n(),
-    )
-```
-
-# Merge
-
-Merge all the data with the demographics.
-
-```{r}
-data_merged <- left_join(data, combined_demo, 
-                         by = c("age_cohort","lab_id","participant_id"))
-```
 
 # Saving 
 
@@ -562,5 +505,5 @@ Now save the merged xy data locally.
 
 ```{r saving}
 save(data, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
-save(data_merged, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
+save(combined_demo, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 ```
