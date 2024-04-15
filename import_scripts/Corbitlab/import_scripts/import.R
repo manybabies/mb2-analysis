@@ -7,12 +7,12 @@ DATA_DIR = file.path('import_scripts', LAB_NAME)
 dir.create(here(DATA_DIR),"processed_data")
 
 ###Toddler data###
-Cor_toddlers <- read_tsv(here(DATA_DIR,"raw_data","Corbitlab_toddlers_eyetrackingdata.tsv"))
+Cor_toddlers <- read_tsv(here(DATA_DIR,"raw_data","Corbitlab_toddlers_eyetrackingrevised.tsv"))
 
 Cor_toddlers_clean <- Cor_toddlers %>% 
   rename(participant_id = `Participant name`,
-         x = `Gaze point X (MCSnorm)`,
-         y = `Gaze point Y (MCSnorm)`,## the file misses Gaze point X(Y) nor Gaze point left(right) X(Y) 
+         x = `Gaze point X`,
+         y = `Gaze point Y`,
          t = `Recording timestamp`,
          media_name = `Presented Media name`,
          pupil_left = `Pupil diameter left`,
