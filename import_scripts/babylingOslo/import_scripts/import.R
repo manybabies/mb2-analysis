@@ -18,7 +18,7 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                        import_blinks = FALSE,
                        import_fixations = FALSE,
                        sample_attributes = c("time", # time
-                                             "px", "py", # pupil coords
+                                             "gx", "gy", # gaze coords
                                              "pa")) # pupil area
   
   variables <- data_edf$variables |> 
@@ -30,8 +30,8 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
               by = "trial",
               relationship = "many-to-one") |> 
     mutate(participant_id = str_remove(fp, "/.*"),
-           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
-           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 

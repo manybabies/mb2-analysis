@@ -8,7 +8,7 @@ DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####
-data_path_adults <- here(DATA_DIR, "raw_data", "Adult EDF Files")
+data_path_adults <- here(DATA_DIR, "raw_data", "kidsdevUniofNewcastle_eyetrackingdata", "Adult EDF Files")
 data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
 
 data_adults_cleaned <- lapply(data_files_adults, \(fp) {
@@ -18,7 +18,7 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                        import_blinks = FALSE,
                        import_fixations = FALSE,
                        sample_attributes = c("time", # time
-                                             "px", "py", # pupil coords
+                                             "gx", "gy", # gaze coords
                                              "pa")) # pupil area
   
   samples <- data_edf$samples |> 
@@ -27,8 +27,8 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 select(trial, media_name = value),
               by = "trial") |> 
     mutate(participant_id = str_remove(fp, "/.*"),
-           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
-           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 
@@ -43,7 +43,7 @@ write_csv(data_adults_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
 #### Toddler data ####
-data_path_toddlers <- here(DATA_DIR, "raw_data", "Toddler EDF Files")
+data_path_toddlers <- here(DATA_DIR, "raw_data", "kidsdevUniofNewcastle_eyetrackingdata", "Toddler EDF Files")
 data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
 
 data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
@@ -53,7 +53,7 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                        import_blinks = FALSE,
                        import_fixations = FALSE,
                        sample_attributes = c("time", # time
-                                             "px", "py", # pupil coords
+                                             "gx", "gy", # gaze coords
                                              "pa")) # pupil area
   
   samples <- data_edf$samples |> 
@@ -62,8 +62,8 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
                 select(trial, media_name = value),
               by = "trial") |> 
     mutate(participant_id = str_remove(fp, "/.*"),
-           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
-           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 

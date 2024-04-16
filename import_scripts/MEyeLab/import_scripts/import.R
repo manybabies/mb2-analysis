@@ -18,7 +18,7 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                        import_blinks = FALSE,
                        import_fixations = FALSE,
                        sample_attributes = c("time", # time
-                                             "px", "py", # pupil coords
+                                             "gx", "gy", # gaze coords
                                              "pa")) # pupil area
   
   samples <- data_edf$samples |> 
@@ -27,8 +27,8 @@ data_adults_cleaned <- lapply(data_files_adults, \(fp) {
                 select(trial, media_name = value),
               by = "trial") |> 
     mutate(participant_id = str_remove(fp, "/.*"),
-           x = rowMeans(cbind(pxL, pxR), na.rm = TRUE),
-           y = rowMeans(cbind(pyL, pyR), na.rm = TRUE),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
            lab_id = LAB_NAME) |> 
     select(participant_id, 
            x, y, 
