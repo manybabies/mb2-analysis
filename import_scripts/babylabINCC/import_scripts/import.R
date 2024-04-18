@@ -13,8 +13,8 @@ data_adults <- list.files(data_path_adults) |>
   bind_rows()
 
 data_adults_cleaned <- data_adults |> 
-  mutate(x = (left_gaze_x + right_gaze_x) / 2,
-         y = (left_gaze_y + right_gaze_y) / 2,
+  mutate(x = (left_gaze_x_px + right_gaze_x_px) / 2,
+         y = (left_gaze_y_px + right_gaze_y_px) / 2,
          event = str_replace(event, "_(start|end)", ""),
          time = time * 1000) |> 
   select(participant_id = subject_ID,
@@ -36,8 +36,8 @@ data_toddlers <- list.files(data_path_toddlers) |>
   bind_rows()
 
 data_toddlers_cleaned <- data_toddlers |> 
-  mutate(x = (left_gaze_x + right_gaze_x) / 2,
-         y = (left_gaze_y + right_gaze_y) / 2,
+  mutate(x = (left_gaze_x_px + right_gaze_x_px) / 2,
+         y = (left_gaze_y_px + right_gaze_y_px) / 2,
          event = str_replace(event, "_(start|end)", ""),
          time = time * 1000) |> 
   select(participant_id = subject_ID,
