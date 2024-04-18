@@ -781,13 +781,14 @@ get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_L
   #determine first look
   first_look <- first_look_rle$values
   
-  # rt is the number of samples happening before arrival + 1 
+  # rt is the number of samples happening before arrival
   # (first sample of arrival)
   # times the length of a sample
   #need to keep NAs here for valid looking times
+  #MZ: we used to add 1 here but I think that might be wrong? because the first sample is 0 ms, i.e. right at the start of the window
   first_look_rt <- ((rle_data_idx |> 
     filter(idx < first_look_rle$idx) |> 
-    pull(lengths) |> sum()) + 1) * (1000/SAMPLING_RATE)
+    pull(lengths) |> sum())) * (1000/SAMPLING_RATE)
   
   # if there are valid shifts, add them
   if (nrow(first_shift_landing_rle) == 0) {
@@ -806,7 +807,7 @@ get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_L
     #compute RT
     landing_time_rt <- ((rle_data_idx |> 
                            filter(idx < first_shift_landing_rle$idx) |> 
-                           pull(lengths) |> sum()) + 1) * (1000/SAMPLING_RATE)
+                           pull(lengths) |> sum())) * (1000/SAMPLING_RATE)
   }
     
   return(tibble(
