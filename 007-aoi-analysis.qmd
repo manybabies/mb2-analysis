@@ -337,11 +337,6 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
     N_general = sum_target_general+sum_distractor_general,
     N_exit = sum_target_exit+sum_distractor_exit
   )
-
-#add first look
-# first_look=aoi[aoi_diff!=0][1]
-#there's an issue with the definition of anticipatory window
-#requiring a change in gaze within the anticipatory window means taking out cases where infants were "already" looking to the right place, which maybe doesn't quite make sense
 ```
 
 ```{r}
@@ -703,7 +698,7 @@ ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12
 #convert to rle data
 rle_test_data <- test_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
-  group_by(participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num) %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   summarise(lengths = rle(aoi)$lengths, 
             values = rle(aoi)$values)
 ```
@@ -826,9 +821,50 @@ Now compute anticipatory looking/ first looks for every trial
 ```{r}
 # compute RTs
 d_anticipatory_test <- rle_test_data %>%
-  group_by(participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num) %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data))
+```
+
+quick and dirty averaging of the first look proportions
+
+```{r}
+summarize_participant_test_first_look <- d_anticipatory_test %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
+  summarize(
+    N = n(),
+    prop_correct_first_look = mean(first_look =="target_exit"),
+    average_rt = mean(first_look_rt),
+    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
+  ) 
+
+#check N, SEs, CIs, might not be quite right yet
+summarize_overall_test_first_look <- summarize_participant_test_first_look %>%
+  group_by(age_cohort,condition) %>%
+  summarize(
+    N = sum(!is.na(prop_correct_first_look)),
+    prop_target_first_look = mean(prop_correct_first_look,na.rm=T),
+    sd_target_first_look=sd(prop_correct_first_look,na.rm=T),
+    se_target_first_look = sd_target_first_look/sqrt(N),
+    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
+    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
+  ) 
+
+ggplot(filter(d_anticipatory_test,!is.na(first_look)),aes(condition,fill=first_look))+
+  geom_bar(position="fill")+
+  facet_wrap(~age_cohort)
+
+ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,color=condition))+
+  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
+  geom_point(size = 3) +
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylim(0,1)+
+  ylab("Proportion First Look to Target Exit")
 ```
 
