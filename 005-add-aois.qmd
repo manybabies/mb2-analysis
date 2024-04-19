@@ -41,7 +41,7 @@ data_corrected_origin <- data_normalized_specs  %>%
       y = case_when(
         point_zero == 'upper left' ~ screen_height - y, #TODO: at least some point zeros are "upper left"
         point_zero == 'center' ~ y + screen_height/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
-        T ~ x),
+        T ~ y),
       x = case_when(
         point_zero == 'center' ~ x + screen_width/2, # TODO: this assumes that up and right are "+" for the eyetracker - check this!
         T ~ x),
@@ -70,8 +70,7 @@ data_with_aois <- data_with_aois %>% ungroup()
 
 
 # TODO: Investigate NAs for coords
-data_with_aois <- data_with_aois %>%
-  filter(!(lab_id %in% c("CorbitLab", "MEyeLab", "UIUCinfantlab", "babylabMPIB", "babylabPrinceton", "babylingOslo", "kidsdevUniofNewcastle", "sociocognitivelab", "tauccd", "unicph")))
+# data_with_aois <- data_with_aois
 
 
 draw_aoi <- function(aoi_name, color){
@@ -104,7 +103,9 @@ if (file.exists(CHECKING_HEATMAP_CSV)){
 }
 
 write.csv(checking_img_list, CHECKING_HEATMAP_CSV, row.names = FALSE)
-labs_to_check <- checking_img_list %>% filter(is.na(data_fine) | data_fine == 'no') %>% pull(lab_id)
+labs_to_check <- checking_img_list %>% 
+  # filter(is.na(data_fine) | data_fine == 'no') %>% 
+  pull(lab_id)
   
 library(png)
 img.r <- as.raster(readPNG(here('helper', 'stim.png')),interpolate=F)
@@ -113,6 +114,7 @@ data_with_aois %>%
   filter(!(media_name %in% c('star_calib'))) %>% 
   group_by(lab_id, media_name) %>%
   group_walk(function(data, grouping){
+    print(grouping$lab_id)
     
     if(!(grouping$lab_id %in% labs_to_check)){
       return(NA)
@@ -120,7 +122,7 @@ data_with_aois %>%
     
     labdir = here(CHECKING_HEATMAP_DIR, grouping$lab_id)
     dir.create(labdir, showWarnings = FALSE)
-
+    tryCatch(
     ggsave(
       here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
       plot = 
@@ -131,8 +133,11 @@ data_with_aois %>%
           scale_alpha_continuous(range=c(0.01,1.0), guide = FALSE) +
           scale_x_continuous(limits=c(0,dim(img.r)[2]),expand=c(0,0))+
           scale_y_continuous(limits=c(0,dim(img.r)[1]),expand=c(0,0))+
-          coord_fixed()
-      )
+          coord_fixed(),
+      width = 7,
+      height = 5,
+      units = "in"
+      ), error = function(e) print(e))
   })
 
 ```
@@ -143,8 +148,7 @@ data_with_aois %>%
 data_with_aois <- data_with_aois %>% ungroup()
 
 # TODO: Investigate NAs for coords
-data_with_aois <- data_with_aois %>%
-  filter(!(lab_id %in% c("CorbitLab", "MEyeLab", "UIUCinfantlab", "babylabMPIB", "babylabPrinceton", "babylingOslo", "kidsdevUniofNewcastle", "sociocognitivelab", "tauccd", "unicph")))
+data_with_aois <- data_with_aois
 
 CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
 dir.create(CHECKING_LSGRAPH_DIR, showWarnings = FALSE)

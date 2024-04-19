@@ -8,7 +8,7 @@ library(here)
 
 # ------------------------------------------------------------------------------
 # preliminaries 
-lab_dir <- "data/childdevlabAshoka"
+lab_dir <- "import_scripts/childdevlabAshoka/"
 
 # ------------------------------------------------------------------------------
 # xy_timepoints
