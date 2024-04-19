@@ -15,8 +15,8 @@ X_DIM = 1920
 Y_DIM = 1080
 
 data_adults_cleaned <- data_adults |> 
-  mutate(x = `x_mean_top-left00` * X_DIM,
-         y = `y_mean_top-left00` * Y_DIM) |> 
+  mutate(x = rowMeans(cbind(`left_eye_x_top-left00`, `right_eye_x_top-left00`), na.rm = TRUE) * X_DIM,
+         y = rowMeans(cbind(`left_eye_y_top-left00`, `right_eye_y_top-left00`), na.rm = TRUE) * Y_DIM) |> 
   select(participant_id = participant_id,
          x,
          y,
