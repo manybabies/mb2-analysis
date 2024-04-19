@@ -707,7 +707,11 @@ rle_test_data <- test_data %>%
 ### Compute the first looks/ anticipatory looking
 
 Function for computing first look and RT
-MZ: LOTS TO DISCUSS HERE!!!!
+
+Summarizing a few key decisions:
+- We compute both a first look (first valid look to the target or distractor AOIs during the anticipatory window) and a first shift (consistent with the Registered Report: starting on the AOIs does not count, there must be evidence of a shift to the AOI during the anticipatory window)
+- We ignore NAs altogether in defining shifts (this also means that if there are a lot of NAs at the beginning of the window and then the infants' first look is to the target/ distractor AOI, this is counted the same (i.e., ignored - we still need to see a shift to the AOI) as if the infant started on the target/distractor AOI.
+- For RT computation, we compute all samples up to landing on the target/ distractor AOI look and multiply by the sampling rate.
 
 ```{r}
 # takes rle_data dataframe (already rle'd)
@@ -757,7 +761,7 @@ get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_L
   
   #finds the first valid "shift" within the rle data
   first_shift_landing_rle <- rle_data_idx |> 
-    filter(idx_skip_nas != 1, # first shift landing is post the initial look location, not counting NAs (or do we count NAs here?)
+    filter(idx_skip_nas != 1, # first shift landing is post the initial look location, not counting NAs
            values %in% c("target_exit", "distractor_exit"),
            lengths >= min_look_length) |> 
     slice(1)
