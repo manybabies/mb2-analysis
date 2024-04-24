@@ -831,6 +831,8 @@ d_anticipatory_test <- rle_test_data %>%
   unnest(cols = c(data))
 ```
 
+## Plot
+
 quick and dirty averaging of the first look proportions
 
 ```{r}
@@ -872,3 +874,120 @@ ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,co
   ylab("Proportion First Look to Target Exit")
 ```
 
+## Main Model
+
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial first looks during the anticipatory window.
+
+```{r}
+#select first test trial
+test_first_look_first_trial <- d_anticipatory_test %>%
+  filter(trial_num==5) %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
+  summarize(
+    N = n(),
+    correct_first_look = mean(first_look =="target_exit")
+  )
+```
+
+
+### Toddlers
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, 2)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .1)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_first_look_toddlers <- brm(
+  correct_first_look ~ 1+condition+(1+condition|lab_id),
+  family=bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial,age_cohort=="toddlers"),
+  warmup = 1000,
+  iter = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior=TRUE)
+summary(bm_first_look_toddlers)
+prior_summary(bm_first_look_toddlers)
+```
+
+Summarize outcomes
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_first_look_toddlers %>%
+  spread_draws(b_conditionknowledge) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_first_look_toddlers <- hypothesis(bm_first_look_toddlers, "conditionknowledge = 0", class="b")
+h_first_look_toddlers
+plot(h_first_look_toddlers)
+# evidence in favor of condition being different from zero
+1/h_first_look_toddlers$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_first_look_toddlers <-  update(bm_first_look_toddlers, formula = ~ .-condition)
+summary(null_first_look_toddlers)
+brms::bayes_factor(bm_first_look_toddlers, null_first_look_toddlers)
+```
+
+
+#### Adults
+
+```{r}
+bm_first_look_adults <- brm(
+  correct_first_look ~ 1+condition+(1+condition|lab_id),
+  family=bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial,age_cohort=="adults"),
+  warmup = 1000,
+  iter = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior=TRUE)
+summary(bm_first_look_adults)
+prior_summary(bm_first_look_adults)
+```
+
+Summarize outcomes
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_first_look_adults %>%
+  spread_draws(b_conditionknowledge) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_first_look_adults <- hypothesis(bm_first_look_adults, "conditionknowledge = 0", class="b")
+h_first_look_adults
+plot(h_first_look_adults)
+# evidence in favor of condition being different from zero
+1/h_first_look_adults$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_first_look_adults <-  update(bm_first_look_adults, formula = ~ .-condition)
+summary(null_first_look_adults)
+brms::bayes_factor(bm_first_look_adults, null_first_look_adults)
+```
