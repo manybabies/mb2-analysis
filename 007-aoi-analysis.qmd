@@ -887,6 +887,10 @@ test_first_look_first_trial <- d_anticipatory_test %>%
     N = n(),
     correct_first_look = mean(first_look =="target_exit")
   )
+
+#both test trials
+d_anticipatory_test <- d_anticipatory_test %>%
+  mutate(correct_first_look = mean(first_look =="target_exit"))
 ```
 
 
