@@ -18,9 +18,6 @@ library(knitr)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-#temporary hacky thing
-INTERMEDIATE_006 <- "005-aoi-data.Rds"
-
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 

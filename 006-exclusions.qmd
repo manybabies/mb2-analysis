@@ -341,6 +341,7 @@ papaja::apa_table(lab_stats_adults,
                   align=c("l","c","c","c","c","l"),
                   col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (years)","Method"))
 ```
+
 ```{r}
 #toddlers
 lab_stats_toddlers <- data_preprocessed %>%
