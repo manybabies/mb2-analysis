@@ -716,11 +716,19 @@ ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12
 
 ```{r}
 #convert to rle data
+rle_fam_data <- fam_data %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  summarise(lengths = rle(aoi)$lengths, 
+            values = rle(aoi)$values)
+
 rle_test_data <- test_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   summarise(lengths = rle(aoi)$lengths, 
             values = rle(aoi)$values)
+
+
 ```
 
 
@@ -844,6 +852,11 @@ Now compute anticipatory looking/ first looks for every trial
 
 ```{r}
 # compute RTs
+d_anticipatory_fam <- rle_fam_data %>%
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  nest() %>%
+  mutate(data = lapply(data, get_first_look)) %>%
+  unnest(cols = c(data))
 d_anticipatory_test <- rle_test_data %>%
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   nest() %>%
@@ -854,6 +867,11 @@ d_anticipatory_test <- rle_test_data %>%
 ## Plot
 
 quick and dirty averaging of the first look proportions
+
+### Familiarization Data
+
+
+### Test Data
 
 ```{r}
 summarize_participant_test_first_look <- d_anticipatory_test %>%
@@ -896,6 +914,116 @@ ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,co
 
 ## Main Model
 
+### Familiarization Data
+
+#### Toddlers
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, 2)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .1)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+d_anticipatory_fam <- d_anticipatory_fam %>%
+  mutate(familiarization_trial_num_4=trial_num-4)
+
+
+bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+         family=bernoulli(link = "logit"),
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(d_anticipatory_fam,age_cohort=="toddlers"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_fam_first_look_toddlers)
+prior_summary(bm_fam_first_look_toddlers)
+```
+
+Summarize outcomes
+
+Intercept
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_first_look_toddlers %>%
+  spread_draws(b_Intercept) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Trial Number
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_first_look_toddlers %>%
+  spread_draws(b_familiarization_trial_num_4) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Compute Bayes factor approach
+
+```{r}
+null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
+summary(null_fam_first_look_toddlers)
+brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
+```
+
+#### Adults
+
+```{r}
+bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+         family=bernoulli(link = "logit"),
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(d_anticipatory_fam,age_cohort=="adults"),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_fam_first_look_adults)
+prior_summary(bm_fam_first_look_adults)
+```
+
+Summarize outcomes
+
+Intercept
+
+```{r}
+#get main coefficient estimate and HDI
+bm_fam_first_look_adults %>%
+  spread_draws(b_Intercept) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Trial Number
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_fam_first_look_adults %>%
+  spread_draws(b_familiarization_trial_num_4) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Compute Bayes factor approach
+
+```{r}
+null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
+summary(null_fam_first_look_adults)
+brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
+```
+
+### Test Data
+
 Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial first looks during the anticipatory window.
 
 ```{r}
@@ -932,7 +1060,7 @@ d_anticipatory_test <- d_anticipatory_test %>%
 ```
 
 
-### Toddlers
+#### Toddlers
 
 ```{r}
 #set the prior
