@@ -32,7 +32,7 @@ distinct_trials <- data_preprocessed %>%
 
 trial_overview <- distinct_trials %>%
   filter(condition %in% c("familiarization","knowledge","ignorance")) %>%
-  group_by(lab_id,participant_id,condition) %>%
+  group_by(lab_id,participant_id,participant_lab_id,condition) %>%
   count()
 #check distribution of trials
 table(trial_overview$condition,trial_overview$n)
@@ -40,10 +40,10 @@ table(trial_overview$condition,trial_overview$n)
 #look a little closer at the cases where we have fewer familiarization trials than expected
 participants_w_missing_fam_trials <- trial_overview %>%
   filter(condition=="familiarization",n<4) %>%
-  pull(participant_id)
+  pull(participant_lab_id)
 
 distinct_trials %>%
-  filter(participant_id %in% participants_w_missing_fam_trials) %>%
+  filter(participant_lab_id %in% participants_w_missing_fam_trials) %>%
   View()
   
 ```
@@ -66,7 +66,7 @@ test_data <- data_preprocessed %>%
 
 ```{r}
 summarize_participant_familiarization <- fam_data %>%
-  group_by(lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
+  group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
   filter(t_norm<=120 & t_norm>=-3880) %>%
   mutate(
     aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
@@ -121,7 +121,7 @@ ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.pn
 
 ```{r}
 summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
-  group_by(age_cohort,lab_id,participant_id,condition) %>%
+  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
     n=n(),
     mean_subj_prop_exit=mean(prop_exit,na.rm=T)
@@ -296,10 +296,10 @@ test_data_first_trial <- test_data %>%
 # e.g., no participants contribute multiple first trials
 test_data_first_trial_overview <- test_data_first_trial %>%
   ungroup() %>%
-  distinct(lab_id,participant_id,participant_trial_id,trial_num) 
+  distinct(lab_id,participant_lab_id,participant_id,participant_trial_id,trial_num) 
 
 num_test_first_trials <- test_data_first_trial_overview %>%
-  group_by(lab_id,participant_id) %>%
+  group_by(lab_id,participant_lab_id,participant_id) %>%
   count()
 #make sure we only have one trial per participant
 #the next two statements must both be true
@@ -310,7 +310,7 @@ assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
 ```{r}
 #now summarize all data
 summarize_participant_test_first_trial <- test_data_first_trial %>%
-  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_id,participant_trial_id,trial_file_name,
+  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
            bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
@@ -438,7 +438,9 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
   summarize(
     participant_num=sum(!is.na(prop_exit)),
     mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T)
+    sd_target_looking=sd(prop_exit,na.rm=T),
+    mean_target_looking_general = mean(prop_general, na.rm=T),
+    sd_target_looking_general=sd(prop_general,na.rm=T),
   )
 
 summarize_test_aoi %>%
@@ -554,7 +556,7 @@ brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
 ```{r}
 mss_timecourse_test_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
-  group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
+  group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name,
            bear_not_visible_ms, point_of_disambiguation, 
            video_duration_ms, condition) %>%
@@ -604,20 +606,16 @@ ggplot(ms_timecourse_test_first_trial |>
 ## Timecourse with all test trials
 
 ```{r}
-
 mss_timecourse_test <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
-  filter(!str_detect(trial_file_name, "_INC")) |>
-  mutate(first_trial = video_duration_ms<37000) %>%
-  group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
+  mutate(first_trial = (trial_num==5)) %>%
+  group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name, first_trial, 
            bear_not_visible_ms, point_of_disambiguation, 
            video_duration_ms, condition) %>%
   mutate(t_norm_downsampled = floor(t_norm / 500) * 500) |>
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
-  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
-  #check this!!!
   filter(t_norm>=-16000, t_norm<=10000) %>%
   # filter out sections of first_trial that are too long
   filter((first_trial&t_norm<=1500)| !first_trial) %>%
@@ -627,13 +625,25 @@ mss_timecourse_test <- test_data %>%
             on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
 
 ms_timecourse_test <- mss_timecourse_test |>
+  ungroup() |>
   group_by(age_cohort, first_trial, condition, t_norm_downsampled) |>
-  summarize(mean_target_general = mean(on_target, na.rm=TRUE),
-            mean_distractor_general = mean(on_dist, na.rm=TRUE),
-            sum_target_general = sum(on_target, na.rm=TRUE),
-            sum_distractor_general = sum(on_dist, na.rm=TRUE),
-            prop_general = sum_target_general / 
-              (sum_target_general+sum_distractor_general))
+  summarize(
+    participant_num=n(),
+    mean_target = mean(on_target, na.rm=TRUE),
+    sd_target = sd(on_target,na.rm=TRUE),
+    se_target = sd_target/sqrt(participant_num),
+    ci_target=qt(1 - (0.05 / 2), participant_num - 1) * se_target,
+    ci_targetLOW = mean_target - ci_target,
+    ci_targetHI = mean_target + ci_target,
+    mean_distractor = mean(on_dist, na.rm=TRUE),
+    sd_distractor = sd(on_dist,na.rm=TRUE),
+    se_distractor = sd_distractor/sqrt(participant_num),
+    ci_distractor=qt(1 - (0.05 / 2), participant_num - 1) * se_distractor,
+    ci_distractorLOW = mean_distractor - ci_distractor,
+    ci_distractorHI = mean_distractor + ci_distractor,
+    sum_target = sum(on_target, na.rm=TRUE),
+    sum_distractor = sum(on_dist, na.rm=TRUE),
+    prop = sum_target / (sum_target+sum_distractor))
 
 ```
 
@@ -641,17 +651,24 @@ ms_timecourse_test <- mss_timecourse_test |>
 
 
 ```{r}
-ggplot(ms_timecourse_test |>
-         pivot_longer(mean_target_general:mean_distractor_general, 
-                      names_to = "trial_type", values_to = "mean_looking"),       
-         aes(x = t_norm_downsampled, y = mean_looking, 
-             col = trial_type, lty = first_trial)) + 
+ms_timecourse_test_long <- ms_timecourse_test |>
+  #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
+  pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_") |> 
+  mutate(trial_number_name=if_else(first_trial,"First Trial","Second Trial"))
+
+ggplot(filter(ms_timecourse_test_long,t_norm_downsampled<=0),       
+         aes(x = t_norm_downsampled, y = mean, 
+             col = aoi_type, lty = trial_number_name)) + 
   # geom_point(alpha = .1) +
   geom_line() + 
+  geom_ribbon(aes(ymin = mean-se, ymax = mean+se, fill = aoi_type), alpha = .2,color=NA) +
   facet_grid(condition~age_cohort) + 
   geom_vline(xintercept = -3880, lty = 3, col = "black") + 
   geom_vline(xintercept = 120, lty = 3, col = "black") + 
   ggthemes::theme_few() + 
+  scale_fill_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_color_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_linetype(name="Trial Number")+
   theme(legend.position = "bottom")+
   xlab("Time")+
   ylab("Mean Proportion Looking")
@@ -663,7 +680,7 @@ ggsave(here(plot_path,"test_timecourse_plot.png"),bg="white",width=12,height=6)
 
 ```{r}
 mss_fam <- fam_data %>%
-  group_by(lab_id,age_cohort, participant_id, participant_trial_id, 
+  group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name) %>%
   mutate(t_norm_downsampled = floor(t_norm / 500) * 500) |>
   #filter to relevant anticipatory window
@@ -719,16 +736,14 @@ ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12
 rle_fam_data <- fam_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  summarise(lengths = rle(aoi)$lengths, 
+  reframe(lengths = rle(aoi)$lengths, 
             values = rle(aoi)$values)
 
 rle_test_data <- test_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  summarise(lengths = rle(aoi)$lengths, 
+  reframe(lengths = rle(aoi)$lengths, 
             values = rle(aoi)$values)
-
-
 ```
 
 
@@ -870,6 +885,7 @@ quick and dirty averaging of the first look proportions
 
 ### Familiarization Data
 
+TO DO: familiarization plot
 
 ### Test Data
 
@@ -970,6 +986,7 @@ bm_fam_first_look_toddlers %>%
 Compute Bayes factor approach
 
 ```{r}
+#this seems broken at the moment
 null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_first_look_toddlers)
 brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
@@ -1017,6 +1034,7 @@ bm_fam_first_look_adults %>%
 Compute Bayes factor approach
 
 ```{r}
+#this seems broken at the moment
 null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_first_look_adults)
 brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
