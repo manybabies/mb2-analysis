@@ -28,7 +28,7 @@ Inspecting the structure of the unique trials in the data. Check to see if we ha
 ```{r}
 distinct_trials <- data_preprocessed %>%
   ungroup() %>%
-  distinct(lab_id,participant_id,participant_trial_id,trial_file_name,media_name,condition)
+  distinct(lab_id,participant_id,participant_lab_id,participant_trial_id,trial_file_name,media_name,condition)
 
 trial_overview <- distinct_trials %>%
   filter(condition %in% c("familiarization","knowledge","ignorance")) %>%
