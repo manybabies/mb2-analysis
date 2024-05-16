@@ -53,6 +53,8 @@ demographic_data
 data/
 data
 
+helper/stimuli
+
 heatmaps/
 
 lookingscore_graphs/
