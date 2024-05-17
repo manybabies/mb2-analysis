@@ -225,7 +225,7 @@ unique(c(toddler_demo$country, adult_demo$country))
 Ages.
 
 ```{r}
-age_mo <- (toddler_demo$age_days_num / 365)*12
+age_mo <- (toddler_demo$age_days_num / 365.25)*12
 
 print(paste0("mean toddler age: ", mean(age_mo, na.rm=TRUE)))
 print(paste0("sd: ", sd(age_mo, na.rm=TRUE)))
