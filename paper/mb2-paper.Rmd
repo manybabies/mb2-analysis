@@ -20,7 +20,7 @@ abstract: |
  Do toddlers and adults engage in spontaneous Theory of Mind (ToM)? Evidence from anticipatory looking (AL) studies suggests they do. But a growing body of failed replication studies raised questions about the paradigm’s suitability, urging the need to test the robustness of AL as a spontaneous measure of ToM. In a multi-lab collaboration we examine whether 18- to 27-month- olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In toddlers [ANTICIPATED n = 520 50% FEMALE] and adults [ANTICIPATED n = 408, 50% FEMALE], we found [SUPPORT/NO SUPPORT] for epistemic state-based action anticipation. Future research can probe whether this conclusion extends to more complex kinds of epistemic states, such as true and false beliefs.
 
 keywords          : "anticipatory looking; spontaneous Theory of Mind;  replication"
-wordcount         : "10143"
+wordcount         : "10243"
 
 bibliography      : ["r-references.bib"]
 
@@ -57,24 +57,24 @@ library(knitr)
 
 ```
 
-The capacity to represent epistemic states, known as Theory of Mind (ToM) or mentalizing, plays a central role in human cognition [@premack1978does; @frith2006neural; @dennett1989intentional]. Although ToM has been under intense scrutiny in the past decades, its nature and ontogeny are still the subjects of much controversy. At the heart of these debates are questions about the reliability of the tools used to measure ToM (e.g., Poulin-Dubois et al., 2018; Baillargeon et al., 2018), among others, anticipatory looking (AL) paradigms. To address this issue, in a collaborative long-term project we assess the robustness of infants’ and adults’ tendency to spontaneously take into account different kinds of epistemic states  — what they perceive, know, think, or believe — when predicting others’ behaviors. This paper reports the first foundational step of this project, which focuses on the most basic epistemic state ascription: the capacity to distinguish between knowledgeable and ignorant individuals. Simple forms of knowledge attribution (such as tracking what other individuals have seen or experienced) are typically assumed to develop early and to operate spontaneously throughout the lifespan (e.g., Luo & Baillargeon, 2007; Liszkowski et al., 2007; O’Neill, 1996; Phillips et al., 2020). Thus, evaluating whether ToM measures are sensitive to the knowledge-ignorance distinction is a crucial test case to assess their robustness. The present paper investigates this question in an AL paradigm including 18-27-month-old infants and adults.
+The capacity to represent epistemic states, known as Theory of Mind (ToM) or mentalizing, plays a central role in human cognition [@premack1978does; @frith2006neural; @dennett1989intentional]. Although ToM has been under intense scrutiny in the past decades, its nature and ontogeny are still the subjects of much controversy. At the heart of these debates are questions about the reliability of the tools used to measure ToM [e.g., @poulin2018infants; @baillargeon2018invited], among others, anticipatory looking (AL) paradigms. To address this issue, in a collaborative long-term project we assess the robustness of infants’ and adults’ tendency to spontaneously take into account different kinds of epistemic states  — what they perceive, know, think, or believe — when predicting others’ behaviors. This paper reports the first foundational step of this project, which focuses on the most basic epistemic state ascription: the capacity to distinguish between knowledgeable and ignorant individuals. Simple forms of knowledge attribution (such as tracking what other individuals have seen or experienced) are typically assumed to develop early and to operate spontaneously throughout the lifespan [e.g., @luo200712; @liszkowski2007pointing; @o1996two; @phillips2021knowledge]. Thus, evaluating whether ToM measures are sensitive to the knowledge-ignorance distinction is a crucial test case to assess their robustness. The present paper investigates this question in an AL paradigm including 18-27-month-old infants and adults.
 
 In the following sections we first establish the background and scientific context of this study, namely the reliability and replicability of spontaneous ToM measures. We then introduce a novel way to approach these issues: a large-scale collaborative project targeting the replicability of ToM findings. Finally, we outline the rationale of the present study which uses an AL paradigm to test whether infants and adults distinguish between two basic forms of an agent’s epistemic state: knowledge and ignorance.
 
 ## Spontaneous Theory of Mind tasks
 
-Humans are proficient at interpreting and predicting others’ intentional actions. Adults as well as infants expect agents to act persistently towards the goal they pursue (Csibra & Gergely, 2007; Gergely & Csibra, 2003; Gergely et al., 1995, Woodward & Sommerville, 2000), and anticipate others’ actions based on their goals even before goals are achieved - that is, humans engage in goal-based action anticipation (for review, see Elsner & Adam, 2020; but see Ganglmayer et al., 2019). To predict others’ actions, however, it is essential to consider their epistemic state: what they perceive, know, or believe. A number of seminal studies using non-verbal spontaneous measures have suggested that infants, toddlers, older children, and adults show action anticipation and action understanding not only based on other agents’ goals (what they want) but also on the basis of their epistemic status (what they perceive, know, or believe). These studies suggest that from infancy onwards, humans spontaneously engage in ToM or mentalizing. For example, studies using violation of expectation methods have demonstrated that infants look longer in response to events in which an agent acts in ways that are incompatible with their (true or false) beliefs, compared to events in which they act in belief-congruent ways (Onishi & Baillargeon, 2005; Surian et al., 2007; Träuble et al., 2010). Other studies have employed more interactive tasks requiring the child to play, communicate, or cooperate with experimenters and, for example, give an experimenter one of several objects as a function of their epistemic status. Such studies have shown that toddlers spontaneously adjust their behavior to the experimenter’s beliefs (Buttelmann et al., 2009; Király et al., 2018; Knudsen & Liszkowski, 2012; Southgate et al., 2010).
+Humans are proficient at interpreting and predicting others’ intentional actions. Adults as well as infants expect agents to act persistently towards the goal they pursue [@csibra2007obsessed; @gergely2003teleological; @gergely1995taking, @woodward2000twelve], and anticipate others’ actions based on their goals even before goals are achieved - that is, humans engage in goal-based action anticipation [for review, see @elsner2021infants; but see @ganglmayer2019infants]. To predict others’ actions, however, it is essential to consider their epistemic state: what they perceive, know, or believe. A number of seminal studies using non-verbal spontaneous measures have suggested that infants, toddlers, older children, and adults show action anticipation and action understanding not only based on other agents’ goals (what they want) but also on the basis of their epistemic status (what they perceive, know, or believe). These studies suggest that from infancy onwards, humans spontaneously engage in ToM or mentalizing. For example, studies using violation of expectation methods have demonstrated that infants look longer in response to events in which an agent acts in ways that are incompatible with their (true or false) beliefs, compared to events in which they act in belief-congruent ways [@onishi200515; @surian2007attribution; @trauble2010early]. Other studies have employed more interactive tasks requiring the child to play, communicate, or cooperate with experimenters and, for example, give an experimenter one of several objects as a function of their epistemic status. Such studies have shown that toddlers spontaneously adjust their behavior to the experimenter’s beliefs [@buttelmann2009eighteen; @kiraly2018retrospective; @knudsen201218; @southgate2010motor].
 
-The largest body of evidence for spontaneous ToM comes from studies using AL tasks. In such tasks, participants see an agent who acts in pursuit of some goal (typically, to collect a certain object) and has either a true or a false belief (for example, regarding the location of the target object). A number of studies have shown that infants, toddlers, older children, neurotypical adults, and even non-human primates anticipate (indicated by looks to the location in question) that an agent will go where it (truly or falsely) believes the object to be rather than, irrespective of the actual location of the object (Gliga et al. 2014; Grosse Wiesmann et al., 2017; Hayashi et al., 2020; Kano et al., 2019; Krupenye et al., 2016; Meristo et al., 2012; Schneider et al., 2012; Schneider et al., 2013; Senju et al., 2009; Senju et al., 2010; Senju et al., 2011; Surian & Franchin, 2020; Thoermer et al., 2012). These studies have revealed converging evidence for spontaneous ToM across the human lifespan and even in other primate species.
+The largest body of evidence for spontaneous ToM comes from studies using AL tasks. In such tasks, participants see an agent who acts in pursuit of some goal (typically, to collect a certain object) and has either a true or a false belief (for example, regarding the location of the target object). A number of studies have shown that infants, toddlers, older children, neurotypical adults, and even non-human primates anticipate (indicated by looks to the location in question) that an agent will go where it (truly or falsely) believes the object to be rather than, irrespective of the actual location of the object [@gliga2014early; @grosse2017implicit; @hayashi2020macaques; @kano2019great; @krupenye2016great; @meristo2012belief; @schneider2012cognitive; @schneider2013temporally; @senju2009mindblind; @senju2010absence; @senju201118; @surian2020domain; @thoermer2012continuity]. These studies have revealed converging evidence for spontaneous ToM across the human lifespan and even in other primate species.
 
-Across the different measures, the majority of early works on spontaneous ToM in infants and toddlers have reported positive results in the second year of life, and a few studies even within the first year (Kovács et al., 2010; Luo & Baillargeon, 2011; Southgate & Vernetti, 2014), yielding a rich body of coherent and convergent evidence (for reviews see e.g., Barone et al., 2019; Kampis et al., 2020; Scott & Baillargeon, 2017). This growing body of literature has led to a theoretical transformation of the field. In particular, findings with young infants have paved the way for novel accounts of the development and cognitive foundations of ToM. The previous consensus was that full-fledged ToM emerges only at around age 4, potentially as the result of developing executive functions, complex language skills and other factors (e.g., Perner, 1991; Wellman & Cross, 2001). In contrast, the newer accounts proposed that some basic forms of ToM may be phylogenetically more ancient and may develop much earlier in ontogeny (e.g., Baillargeon et al., 2010; Carruthers, 2013; Kovács, 2016; Leslie, 2005).
+Across the different measures, the majority of early works on spontaneous ToM in infants and toddlers have reported positive results in the second year of life, and a few studies even within the first year [@kovacs2010social; @luo2010toward; @southgate2014belief], yielding a rich body of coherent and convergent evidence [for reviews see e.g., @barone2019infants; @kampis2020altercentric; @scott2017early]. This growing body of literature has led to a theoretical transformation of the field. In particular, findings with young infants have paved the way for novel accounts of the development and cognitive foundations of ToM. The previous consensus was that full-fledged ToM emerges only at around age 4, potentially as the result of developing executive functions, complex language skills and other factors [e.g., @perner1991understanding; @wellman2001theory]. In contrast, the newer accounts proposed that some basic forms of ToM may be phylogenetically more ancient and may develop much earlier in ontogeny [e.g., @baillargeon2010false; @carruthers2013mindreading; @kovacs2016belief; @leslie2005developmental].
 
 Recently, however, a number of studies have raised uncertainty regarding the empirical foundations of the early-emergence theories, as we review below. In the following sections, we present an overview of the current empirical picture of early understanding of epistemic states and then introduce ManyBabies2 (MB2), a large-scale collaborative project exploring the replicability of ToM in infancy, of which the current study constitutes the first step.
 
 
 ## Replicability of Spontaneous Theory of Mind Tasks
 
-A number of failures to replicate findings from spontaneous ToM tasks have recently been published with infants, toddlers, and adults (e.g., Burnside et al., 2018; Dörrenberg at al., 2018; Grosse Wiesmann et al., 2017; Grosse Wiesmann et al., 2018; Kampis et al., 2021; Kulke, von Duhn, et al., 2018; Kulke et al., 2019; Kulke & Rakoczy, 2017, 2018, 2019; Kulke, Reiß, et al., 2018; Kulke et al., 2019; Kulke & Hinrichs, 2021; Powell et al., 2018; Priewasser et al., 2018; Priewasser et al., 2020; Schuwerk et al., 2018; for overviews, see Barone et al., 2019; Kulke & Rakoczy, 2018). Besides conceptual replications, many of these studies involve more direct replication attempts with the original stimuli and procedures. One of these was a two-lab replication attempt of one of the most influential AL studies (Southgate et al., 2007). This failure to replicate is especially notable not only because of the influence of the original finding of the field, but also because of the large sample size and the involvement of some of the original authors (Kampis et al., 2021). Additional unpublished replication failures have also been reported. Kulke and Rakoczy (2018) examined 65 published and non-published studies including 36 AL studies (replications of Schneider et al., 2012; Southgate et al., 2007; Surian & Geraci, 2012; and Low & Watts, 2013), as well as studies using other paradigms, and classified them as a successful, partial, or non-replication, depending on whether all, some, or none of the original main effects were found. Although no formal analysis of effect size was carried out, overall, non-replications and partial replications outnumbered successful replications, regardless of the method used.
+A number of failures to replicate findings from spontaneous ToM tasks have recently been published with infants, toddlers, and adults [e.g., @burnside2018implicit; @dorrenberg2018not; @grosse2017implicit; @wiesmann2018longitudinal; @kampis2021two; @kulke2018implicit; @kulke2019can; Kulke & Rakoczy, 2017 (symposium), @kulke2018implicitdata, @kulke2019testing; @kulke2018robust; @kulke2019implicit; @kulke2021implicit; @powell2018replications; @priewasser2018helping; @priewasser2020mistaken; @schuwerk2018robustness; for overviews, see @barone2019infants; @kulke2018implicitdata]. Besides conceptual replications, many of these studies involve more direct replication attempts with the original stimuli and procedures. One of these was a two-lab replication attempt of one of the most influential AL studies [@southgate2007action]. This failure to replicate is especially notable not only because of the influence of the original finding of the field, but also because of the large sample size and the involvement of some of the original authors [@kampis2021two]. Additional unpublished replication failures have also been reported. @kulke2018implicitdata examined 65 published and non-published studies including 36 AL studies [replications of @schneider2012eye; @southgate2007action; Surian & Geraci, 2012; and Low & Watts, 2013], as well as studies using other paradigms, and classified them as a successful, partial, or non-replication, depending on whether all, some, or none of the original main effects were found. Although no formal analysis of effect size was carried out, overall, non-replications and partial replications outnumbered successful replications, regardless of the method used.
 In addition to the failure to replicate spontaneous anticipation of agents’ behaviors based on their beliefs, many of the replication studies revealed an even more fundamental problem of spontaneous AL procedures:  a failure to adequately anticipate an agent’s action in the absence of a belief. That is, researchers did not find evidence for spontaneous anticipation of agents’ behaviors based on their goals, even in the initial familiarization trials of the experiments, where the agent’s beliefs do not play any role yet (e.g., Kampis et al., 2020; Kulke, Reiß, et al., 2018; Schuwerk et al., 2018). The familiarization trials are designed to convey the goal of the agent, as well as the general timing and structure of events, to set up participants’ expectations in the test trials where the agent’s epistemic state is then manipulated. Typically, the last familiarization trial can also be used to probe participants’ spontaneous action anticipation; and test trials can only be meaningfully interpreted if there is evidence of above-chance anticipation in the familiarization trials. In several AL studies many participants had to be excluded from the main analyses for failing to demonstrate robust action anticipation during the familiarization trials (e.g., Kampis et al., 2020; Kulke, Reiß, et al., 2018; Schuwerk et al., 2018; Southgate et al., 2007). This raises the possibility that these paradigms may not be suitable for reliably eliciting spontaneous action prediction in the first place (for discussion see Baillargeon et al., 2018). 
 In sum, in light of the complex and mixed state of the evidence, it currently remains unclear whether infants, toddlers, and adults engage in spontaneous ToM. This calls for systematic, large-scale, a priori designed multi-lab study that stringently tests for the robustness, reliability, and replicability of spontaneous measures of ToM.
 
@@ -154,10 +154,146 @@ The participating labs were recruited from the MB2 consortium. In July 2020, we 
 All labs will be responsible for obtaining ethics approval from their appropriate institutional review board. The labs will contribute de-identified data for central data analysis (i.e., eye-tracking raw data/coded gaze behavior, demographic information). Video recordings of the participants will be stored at each lab according to the approved local data handling protocol. If allowed by the local institutional review board, video recordings will be made available to other researchers via the video library DataBrary (https://nyu.databrary.org/).
 
 ### Participants
+
 In a preliminary expression of interest, 26 labs signed up to contribute a minimal sample size of 16 toddlers and/or adults. Based on this information, we expect to recruit a total sample of 520 toddlers (ages 18-27 months) and 408 adults (ages 18-55 years). To avoid an unbalanced age distribution in the toddlers sample, labs will sign up for testing at least one of two age bins (bin 1: 18-22 months, bin 2: 23-27 months), and will be asked to ensure approximately equal distribution of participants’ age in their collected sample if possible. They will be asked to try to ensure that the mean age of their sample lies in the middle of the range of the chosen bin and that participant ages are distributed across their whole bin. Both for adults and toddlers, basic demographic data will be collected on a voluntary basis with a brief questionnaire (see Supplemental Material for details). The requested demographic information that is not used in the registered confirmatory and/or exploratory analyses of this study will be collected for further potential follow-up analyses in spin-off projects within the MB framework.
 After completing the task, adult participants will be asked to fill a funneled debriefing questionnaire. This questionnaire asks what the participant thinks the purpose of the experiment was, whether the participant had any particular goal or strategy while watching the videos, and whether the participant consciously tracked the chaser’s epistemic state. Additionally, we collect details regarding each testing session (see Supplemental Material). 
-Of the initial sample (toddlers: N = XYZ, adults: N = XYZ), participants will be excluded from the main confirmatory analyses if (1) they did not complete the full experiment, (2) the toddler participants’ caregivers interfered with the procedure, e.g. by pointing at stimuli or talking to their child, (3) the experimenter made an error during testing that was relevant to the procedure, (4) technical problems occurred. The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. Of these, participants will be excluded sequentially if (5) their data is missing on more than one familiarization trial, or (6) their data is missing on the first test trial. If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above (for details on exclusions, see Supplemental Material). 
-Our final dataset will consist of XYZ participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of XYZ toddlers (XX% female) that will have been tested in XYZ labs (mean lab sample size = XYZ, SD = XYZ, range: XYZ) will be analyzed. The average age of toddlers in the final sample will be XYZ months (SD: XYZ, range: XYZ). The final sample size of included adults will be N = XYZ (XX% female), tested in XYZ labs (mean lab sample size = XYZ, SD = XYZ, range: XYZ). Their mean age will be XYZ years (SD: XYZ, range: XYZ).
+
+```{r Lab and participant information, echo=FALSE, message=FALSE}
+#MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
+
+source(here('helper','ensure_repo_structure.R'))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
+
+combined_demo <- combined_demo %>% unite(col = "unique_participant_id",
+        lab_id, participant_id,
+        remove = FALSE, sep = "-")
+
+n_before_exclusion <- combined_demo %>% summarise(n = length(unique(unique_participant_id)))
+n_before_exclusion_adults <- combined_demo %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
+n_before_exclusion_toddlers <- combined_demo %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
+
+n_adults_included <- data_preprocessed %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
+n_toddlers_included <- data_preprocessed %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
+
+n_labs_adults <- combined_demo %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(lab_id)))
+
+n_labs_toddlers <- combined_demo %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(lab_id)))
+
+age_stat_adults <- data_preprocessed %>% 
+  filter(age_cohort=="adults") %>% 
+  group_by(lab_id, unique_participant_id) %>%
+  summarise(age_years = (as.numeric(age_years))[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_years, na.rm = TRUE), 
+            min = min(age_years, na.rm = TRUE), 
+            max = max(age_years, na.rm = TRUE),
+            sd = sd(age_years, na.rm = TRUE))
+
+age_stat_toddlers <- data_preprocessed %>% 
+  filter(age_cohort=="toddlers") %>% 
+  group_by(lab_id, unique_participant_id) %>%
+  summarise(age_mo = age_mo[1]) %>%
+  ungroup %>%
+  summarise(mean = mean(age_mo), 
+            min = min(age_mo), 
+            max = max(age_mo),
+            sd = sd(age_mo))
+```
+
+```{r adults}
+#adults
+lab_stats_adults <- data_preprocessed %>%
+  filter(age_cohort=="adults") %>% 
+  group_by(lab_id, unique_participant_id) %>%
+  summarise(age_years = (as.numeric(age_years))[1], 
+            method = method[1]) %>%
+  group_by(lab_id) %>%
+  summarise(Mean_Age = round(mean(age_years, na.rm = TRUE), 2),
+            Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+
+n_adults_collected <- combined_demo %>% 
+  filter(age_cohort=="adults") %>% 
+  group_by(lab_id) %>% 
+  summarise(N_collected = length(unique(unique_participant_id)))
+
+lab_stats_adults_included <- data_preprocessed %>%  filter(age_cohort=="adults") %>%   mutate(trial_based_error = case_when(
+      sufficient_fam_trials == 0 ~ "yes",
+      valid_first_test_trial == 0 ~ "yes",
+      TRUE ~ "no")) %>% 
+  filter(trial_based_error=="no") 
+
+lab_stats_adults_female <- lab_stats_adults_included %>% group_by (lab_id, participant_gender) %>%
+  summarise(N_female = length(unique(unique_participant_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
+  
+lab_stats_adults_included <- lab_stats_adults_included %>% 
+  group_by (lab_id) %>%
+  summarise(N_included = length(unique(unique_participant_id)))
+
+lab_stats_adults <- lab_stats_adults %>% left_join(lab_stats_adults_included) %>%      left_join(lab_stats_adults_female) %>% left_join(n_adults_collected) %>% 
+  select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
+  arrange(lab_id, Method)
+
+papaja::apa_table(lab_stats_adults,
+                  caption = "Lab and participant information.",
+                  format.args = list(digits = 0),
+                  longtable = TRUE,font_size="footnotesize",
+                  align=c("l","c","c","c","c","l"),
+                  col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (years)","Method"))
+```
+
+```{r toddlers}
+#toddlers
+lab_stats_toddlers <- data_preprocessed %>%
+  filter(age_cohort=="toddlers") %>% 
+  group_by(lab_id, unique_participant_id) %>%
+  summarise(age_mo = (as.numeric(age_mo))[1], 
+            method = method[1]) %>%
+  group_by(lab_id) %>%
+  summarise(Mean_Age = round(mean(age_mo, na.rm = TRUE), 2),
+            Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+
+n_toddlers_collected <- combined_demo %>% 
+  filter(age_cohort=="toddlers") %>% 
+  group_by(lab_id) %>% 
+  summarise(N_collected = length(unique(unique_participant_id)))
+
+lab_stats_toddlers_included <- data_preprocessed %>%
+  filter(age_cohort=="toddlers") %>% 
+  mutate(trial_based_error = case_when(
+      #step 5 (familiarization)
+      sufficient_fam_trials == 0 ~ "yes",
+      #step 6 (first test trial)
+      valid_first_test_trial == 0 ~ "yes",
+      TRUE ~ "no")) %>% 
+  filter(trial_based_error=="no") 
+
+lab_stats_toddlers_female <- lab_stats_toddlers_included %>%
+  group_by (lab_id, participant_gender) %>%
+  summarise(N_female = length(unique(unique_participant_id))) %>%
+  filter(participant_gender=="girl") %>%
+  select(-participant_gender)
+  
+lab_stats_toddlers_included <- lab_stats_toddlers_included %>% 
+  group_by (lab_id) %>%
+  summarise(N_included = length(unique(unique_participant_id)))
+
+lab_stats_toddlers <- lab_stats_toddlers %>%
+  left_join(lab_stats_toddlers_included) %>%
+  left_join(lab_stats_toddlers_female) %>%
+  left_join(n_toddlers_collected) %>% 
+  select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
+  arrange(lab_id, Method)
+
+papaja::apa_table(lab_stats_toddlers,
+                  caption = "Lab and participant information.",
+                  format.args = list(digits = 0),
+                  longtable = TRUE,font_size="footnotesize",
+                  align=c("l","c","c","c","c","l"),
+                  col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (months)","Method"))
+```
+Of the initial sample (toddlers: *N* = `r n_before_exclusion_toddlers`, adults: *N* = `r n_before_exclusion_adults`), participants will be excluded from the main confirmatory analyses if (1) they did not complete the full experiment, (2) the toddler participants’ caregivers interfered with the procedure, e.g. by pointing at stimuli or talking to their child, (3) the experimenter made an error during testing that was relevant to the procedure, (4) technical problems occurred. The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. Of these, participants will be excluded sequentially if (5) their data is missing on more than one familiarization trial, or (6) their data is missing on the first test trial. If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above (for details on exclusions, see Supplemental Material). 
+Our final dataset will consist of `r n_toddlers_included + n_adults_included` participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (XX% female) that will have been tested in `r n_labs_toddlers` labs (mean lab sample size = `r mean(lab_stats_toddlers_included$N_included)`, SD =`r sd(lab_stats_toddlers_included$N_included)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) will be analyzed. The average age of toddlers in the final sample will be `r round(age_stat_toddlers$mean, 2)` months (SD: `r round(age_stat_toddlers$sd, 2)`, range: `r round(age_stat_toddlers$min, 2)` - `r round(age_stat_toddlers$max, 2)`). The final sample size of included adults will be N = `r n_adults_included` (XX% female), tested in `r sum(lab_stats_adults_included$N_included)` labs (mean lab sample size = `r mean(lab_stats_adults_included$N_included)`, SD = `r sd(lab_stats_adults_included$N_included)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). Their mean age will be `r round(age_stat_adults$mean, 2)` years (SD: `r round(age_stat_adults$sd, 2)`, range: `r round(age_stat_adults$min, 2)` - `r round(age_stat_adults$max, 2)`).
 
 ## Apparatus and Procedure
 
