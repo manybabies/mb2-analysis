@@ -36,15 +36,6 @@ trial_overview <- distinct_trials %>%
   count()
 #check distribution of trials
 table(trial_overview$condition,trial_overview$n)
-
-#look a little closer at the cases where we have fewer familiarization trials than expected
-participants_w_missing_fam_trials <- trial_overview %>%
-  filter(condition=="familiarization",n<4) %>%
-  pull(participant_lab_id)
-
-distinct_trials %>%
-  filter(participant_lab_id %in% participants_w_missing_fam_trials) %>%
-  View()
   
 ```
 
@@ -111,7 +102,8 @@ overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes
   scale_fill_brewer(palette="Set1")+
   facet_wrap(~age_cohort)+
   theme(legend.position="none")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  xlab("Trial Number")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window)")
 overall_p
 ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white")
 
@@ -446,6 +438,10 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
 summarize_test_aoi %>%
   knitr::kable()
 ```
+
+
+d <- summarize_participant_test_first_trial %>% group_by(condition) %>% count(sum_distractor_exit)
+t <- summarize_participant_test_first_trial %>% group_by(condition) %>% count(sum_target_exit)
 
 ### Main Model
 

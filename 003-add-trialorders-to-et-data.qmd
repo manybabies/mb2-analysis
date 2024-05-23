@@ -22,18 +22,6 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002))
 
 
 ```{r}
-# TODO these labs/participants are currently broken - investigate this
-# (lab_id, participant_id, media_name) does not uniquely identify a trial_number
-# data <- data %>% 
- # filter(!(lab_id %in% c(
- # 'mpievaCCP' # TODO: for some reasons, all participants appear twice? This is due to mpievaccp and mecdmpihcbs using the same prefix in their participant id --> fixed through unique participants_lab-id!
- # ))) %>% 
- # filter(
- #     !(participant_id == 'UVA_127-toddlers' & lab_id == 'babylabAmsterdam') # & # TODO: This participant appears twice, (wait, didn't we try to fix this?)
-    #!(participant_id == 'RU_017-toddlers' & lab_id == 'babylabNijmegen') # duplicate - fixed
-     
- #   )  --> should all be fixed!
-
 # We need to do the following two steps here, as trial_details depend on specific filenames, 
 # while trial ordering only cares about the canon media names
 data <- data %>%

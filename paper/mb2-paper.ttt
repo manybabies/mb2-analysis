@@ -3,7 +3,7 @@
 \footnotesize{
 
 \begin{longtable}{lccccl}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
-\caption{\label{tab:adults}Lab and participant information.}\\
+\caption{\label{tab:adults}Lab and participant information of adult sample.}\\
 \toprule
 Lab & N collected & N included & Sex (N   Female) & Mean Age (years) & Method\\
 \midrule
@@ -16,9 +16,11 @@ Lab & N collected & N included & Sex (N   Female) & Mean Age (years) & Method\\
 CorbitLab & 18 & 15 & 14 & 20 & In-lab\\
 DevlabAU & 20 & 20 & 15 & 25 & In-lab\\
 MEyeLab & 56 & 53 & 39 & 24 & In-lab\\
+MiniDundee & 17 & 15 & 12 & 32 & In-lab\\
 SkidLSDLab & 11 & 8 & 3 & 22 & In-lab\\
 ToMcdlSalzburg & 33 & 32 & 23 & 27 & In-lab\\
 UIUCinfantlab & 39 & 33 & 25 & 19 & In-lab\\
+WSUMARCS & 18 & 16 & 10 & 28 & In-lab\\
 affcogUTSC & 23 & 16 & 7 & 21 & web-based\\
 babyLeidenEdu & 24 & 16 & 12 & 23 & In-lab\\
 babylabBrookes & 69 & 65 & 49 & 22 & In-lab\\
@@ -30,7 +32,7 @@ babylabUmassb & 34 & 15 & 12 & 20 & In-lab\\
 babyuniHeidelberg & 16 & 16 & 14 & 22 & In-lab\\
 beinghumanWroclaw & 19 & 16 & 9 & 33 & web-based\\
 careylabHarvard & 18 & 16 & 12 & 20 & In-lab\\
-childdevlabAshoka & NA & 16 & NA & NA & \\
+childdevlabAshoka & 16 & 16 & 8 & 31 & In-lab\\
 collabUIOWA & 16 & 16 & 10 & 19 & In-lab\\
 gaugGöttingen & 34 & 32 & 21 & 34 & In-lab\\
 jmuCDL & 32 & 32 & 22 & 19 & In-lab\\
@@ -40,6 +42,7 @@ lmuMunich & 31 & 30 & 23 & 22 & In-lab\\
 mecdmpihcbs & 19 & 19 & 10 & 28 & In-lab\\
 socialcogUmiami & 20 & 16 & 10 & 19 & In-lab\\
 sociocognitivelab & 20 & 17 & 11 & 32 & In-lab\\
+Total & 717 & 625 & 434 & 25 & \\
 \bottomrule
 \end{longtable}
 
@@ -53,7 +56,7 @@ sociocognitivelab & 20 & 17 & 11 & 32 & In-lab\\
 \footnotesize{
 
 \begin{longtable}{lccccl}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
-\caption{\label{tab:toddlers}Lab and participant information.}\\
+\caption{\label{tab:toddlers}Lab and participant information of toddler sample.}\\
 \toprule
 Lab & N collected & N included & Sex (N   Female) & Mean Age (months) & Method\\
 \midrule
@@ -84,7 +87,7 @@ cecBYU & 16 & 15 & 5 & 22 & In-lab\\
 childdevlabAshoka & 16 & 10 & 6 & 23 & In-lab\\
 gaugGöttingen & 29 & 23 & 11 & 23 & In-lab\\
 gertlabLancaster & 24 & 20 & 10 & 23 & In-lab\\
-infantcogUBC & NA & 22 & NA & NA & \\
+infantcogUBC & 26 & 20 & 9 & 25 & In-lab\\
 irlConcordia & 19 & 14 & 6 & 22 & In-lab\\
 kidsdevUniofNewcastle & 17 & 16 & 10 & 23 & In-lab\\
 kokuHamburg & 22 & 16 & 8 & 26 & In-lab\\
@@ -93,6 +96,7 @@ lmuMunich & 49 & 34 & 23 & 22 & In-lab\\
 mecdmpihcbs & 29 & 17 & 10 & 23 & In-lab\\
 saxelab & 36 & 21 & 5 & 23 & web-based\\
 unicph & 47 & 32 & 19 & 22 & In-lab\\
+Total & 659 & 507 & 259 & 23 & \\
 \bottomrule
 \end{longtable}
 
