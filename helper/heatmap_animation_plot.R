@@ -2,18 +2,21 @@
 
 library(tidyverse)
 library(png)
-trials = c('IG_LL',
-           'IG_RL',
-           'IG_LR',
-           'IG_RR',
-           'KNOW_LL',
-           'KNOW_RL',
-           'KNOW_LR',
-           'KNOW_RR',
-           'FAM_LL',
-           'FAM_RL',
-           'FAM_LR',
-           'FAM_RR',
+library(ggdensity)
+library(here)
+trials = c(
+          'IG_LL',
+          'IG_RL',
+          'IG_LR',
+          'IG_RR',
+          'KNOW_LL',
+          'KNOW_RL',
+          'KNOW_LR',
+          'KNOW_RR',
+          'FAM_LL',
+          'FAM_RL',
+          'FAM_LR',
+          'FAM_RR'
            )
 
 source(here('helper','ensure_repo_structure.R'))
@@ -49,7 +52,8 @@ animate_trial <- function(trial, cohort){
   system(paste0('ffmpeg -i ',stimuli_path, '/' , trial,'.mp4 -vf "fps=40" ',frame_split_path,'/',trial,'_%04d.png'))
  
   data_used <- data_preprocessed %>%
-    filter(media_name == trial & cohort == age_cohort & data_type != 'web-based') %>%
+    #match media name based on beginning elements (ignore different endings)
+    filter(str_detect(media_name,trial) & cohort == age_cohort & data_type != 'web-based') %>%
     select(unique_participant_id, media_name, t_zeroed, x, y) %>% 
     group_by(unique_participant_id, media_name) %>%
     mutate(frame = row_number()) %>% 
@@ -73,9 +77,15 @@ animate_trial <- function(trial, cohort){
                    ggplot(data, aes(x,y)) +
                    theme(legend.position = "none") + 
                    annotation_raster(img.r, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-                   stat_density2d(geom = "polygon", aes(fill=..level.., alpha = ..level..), size= 20, bins= 500) + 
-                   scale_fill_gradient(low="blue",high="red") +
-                   scale_alpha_continuous(range=c(0.01,1.0), guide = FALSE) +
+                   #stat_density2d(geom = "polygon", aes(fill=..level.., alpha = ..level..), size= 20, bins= 500) + 
+                   #stat_density2d(geom = "polygon", aes(fill = after_stat(level), alpha=after_stat(level)), bins = 20) + 
+                   #geom_density_2d_filled(alpha=0.5)+
+                   #scale_fill_manual(values = c("#44015400","#48287800","#3E4A8900","#31688EFF","#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF","#FDE725FF")) +
+                   #scale_alpha_continuous(range=c(0.5,0.01)) +
+                   geom_hdr(aes(fill = after_stat(probs)), alpha=0.5)+
+                   #scale_fill_viridis_c() +
+                   #scale_fill_viridis_d() +
+                   #scale_fill_gradient(low="#edf8fb00",high="red")+
                    scale_x_continuous(limits=c(0,dim(img.r)[2]),expand=c(0,0))+
                    scale_y_continuous(limits=c(0,dim(img.r)[1]),expand=c(0,0))+
                    coord_fixed(),

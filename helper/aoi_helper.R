@@ -36,8 +36,8 @@ ratios_of_bounding_box <- function() {
 }
 
 ratios <- ratios_of_bounding_box()
-video_width <- 1280
-video_height <- 960
+video_width <- 1920
+video_height <- 1080
 
 aoi_region_sets = tibble(
   
