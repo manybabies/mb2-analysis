@@ -42,7 +42,7 @@ mecdmpihcbs,yes
 saxelab,yes
 babylabINCC,yes
 babyuniHeidelberg,yes
-cclUNIRI,no
+cclUNIRI,yes
 gertlabLancaster,yes
 babylabOxford,yes
 socallabUCSD,yes

@@ -17,7 +17,8 @@ Y_DIM = 1080
 
 
 data_adults_cleaned <- data_adults |> 
-  mutate(x = rowMeans(cbind(left_gaze_x, right_gaze_x), na.rm = TRUE) * X_DIM,
+  # x-axis dimensions are scaled based on the screen height, i.e. the y-dimension!!
+  mutate(x = rowMeans(cbind(left_gaze_x, right_gaze_x), na.rm = TRUE) * Y_DIM,
          y = rowMeans(cbind(left_gaze_y, right_gaze_y), na.rm = TRUE) * Y_DIM) |> 
   select(participant_id = participant_id,
          x,
