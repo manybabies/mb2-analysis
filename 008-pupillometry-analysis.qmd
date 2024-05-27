@@ -1,0 +1,16 @@
+---
+title: "MB2 Pupillometry Analysis"
+format: html
+editor: visual
+---
+
+
+```{r}
+library(tidyverse)
+library(here)
+
+source(here('helper','ensure_repo_structure.R'))
+plot_path <- here("plots")
+
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+```
