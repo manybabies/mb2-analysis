@@ -1,56 +1,85 @@
-# BABYLAB AMSTERDAM
-# Gal Raz import script
-# following data import guide:
-# https://docs.google.com/document/d/1MEEQicPc1baABDHFasbWoujvj2GwfBGarwrzyS2JQtM/edit
-
 library(tidyverse)
 library(here)
+library(glue)
+library(eyelinkReader)
 
-# ------------------------------------------------------------------------------
-# preliminaries 
-lab_dir <- "import_scripts/babylabAmsterdam/"
+LAB_NAME <- "babylabAmsterdam"
+DATA_DIR <- here("import_scripts", LAB_NAME)
+dir.create(here(DATA_DIR, "processed_data"))
 
-# ------------------------------------------------------------------------------
-# xy_timepoints
+#### Adult data ####
+data_path_adults <- here(DATA_DIR, "raw_data", "babylabAmsterdam_adults_eyetrackingdata_edf")
+data_files_adults <- list.files(data_path_adults, pattern = ".edf", recursive = TRUE)
 
-# lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right
+data_adults_cleaned <- lapply(data_files_adults, \(fp) {
+  data_edf <- read_edf(here(data_path_adults, fp),
+                       import_samples = TRUE,
+                       import_saccades = FALSE,
+                       import_blinks = FALSE,
+                       import_fixations = FALSE,
+                       sample_attributes = c("time", # time
+                                             "gx", "gy", # gaze coords
+                                             "pa")) # pupil area
+  
+  variables <- data_edf$variables |> 
+    filter(variable == "trialtype") |> 
+    select(trial, media_name = value)
+  
+  samples <- data_edf$samples |> 
+    left_join(variables,
+              by = "trial",
+              relationship = "many-to-one") |> 
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
+           lab_id = LAB_NAME) |> 
+    select(participant_id, 
+           x, y, 
+           t = time, media_name,
+           pupil_left = paL, pupil_right = paR,
+           lab_id)
+  
+  samples
+}) |> bind_rows()
 
-# eye-tracking data
-d_adults <- read_csv(here(lab_dir, "raw_data/babylabAmsterdam_adults_eyetrackingdata.csv"))
+write_csv(data_adults_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
-xy_timepoints <- d_adults |>
-  rename(x = RIGHT_GAZE_X, 
-         y = RIGHT_GAZE_Y,
-         t = TIMESTAMP,
-         media_name  = videofile, 
-         participant_id = Session_Name_,
-         pupil_left = LEFT_PUPIL_SIZE,
-         pupil_right = RIGHT_PUPIL_SIZE) |>
-  mutate_at(c("x", "y", "t", "pupil_left", "pupil_right"), as.numeric) |>
-  mutate(lab_id = "babylabAmsterdam") |> 
-  select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right) |>
-  filter(!is.na(media_name)) 
+#### Toddler data ####
+data_path_toddlers <- here(DATA_DIR, "raw_data", "babylabAmsterdam_toddlers_eyetrackingdata_edf")
+data_files_toddlers <- list.files(data_path_toddlers, pattern = ".edf", recursive = TRUE)
 
-write_csv(xy_timepoints, here(lab_dir, "processed_data/babylabAmsterdam_adults_xy_timepoints.csv"))
+data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
+  data_edf <- read_edf(here(data_path_toddlers, fp),
+                       import_samples = TRUE,
+                       import_saccades = FALSE,
+                       import_blinks = FALSE,
+                       import_fixations = FALSE,
+                       sample_attributes = c("time", # time
+                                             "gx", "gy", # gaze coords
+                                             "pa")) # pupil area
+  
+  variables <- data_edf$variables |> 
+    filter(variable == "trialtype") |> 
+    select(trial, media_name = value)
 
+  samples <- data_edf$samples |> 
+    left_join(variables,
+              by = "trial",
+              relationship = "many-to-one") |> 
+    mutate(participant_id = str_remove(fp, ".*/") |> str_remove("\\.edf"),
+           x = rowMeans(cbind(gxL, gxR), na.rm = TRUE),
+           y = rowMeans(cbind(gyL, gyR), na.rm = TRUE),
+           lab_id = LAB_NAME) |> 
+    select(participant_id, 
+           x, y, 
+           t = time, media_name,
+           pupil_left = paL, pupil_right = paR,
+           lab_id)
+  
+  samples
+}) |> bind_rows()
 
-# eye-tracking data
-d_toddlers <- read_csv(here(lab_dir, "raw_data/babylabAmsterdam_toddlers_eyetrackingdata.csv"))
-
-xy_timepoints <- d_toddlers |>
-  rename(x = RIGHT_GAZE_X, 
-         y = RIGHT_GAZE_Y,
-         t = TIMESTAMP,
-         media_name  = videofile, 
-         participant_id = Session_Name_,
-         pupil_left = LEFT_PUPIL_SIZE,
-         pupil_right = RIGHT_PUPIL_SIZE)  |>
-  mutate_at(c("x", "y", "t", "pupil_left", "pupil_right"), as.numeric) |>
-  mutate(lab_id = "babylabAmsterdam") |> 
-  select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right) |>
-  filter(!is.na(media_name)) 
-
-write_csv(xy_timepoints, here(lab_dir, "processed_data/babylabAmsterdam_toddlers_xy_timepoints.csv"))
-
-
+write_csv(data_toddlers_cleaned,
+          here(DATA_DIR, "processed_data", glue("{LAB_NAME}_toddlers_xy_timepoints.csv")))
 
