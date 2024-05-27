@@ -2,7 +2,7 @@
 
 Analysis scripts for ManyBabies 2, corresponding to the Child Development registered report, [Schuwerk, Kampis et al. (accepted pending data collection)](https://psyarxiv.com/x4jbm/). 
 
-For the analysis files of the pilot, look towards the 'Pilot analysis' release or the 'pilot_final' branch.
+The 'main' branch contains all analysis scripts necessary to reproduce the results from the registered report. For the analysis files of the pilot, look towards the 'Pilot analysis' release or the 'pilot_final' branch.
 
 Subdirectories explanations:
 
