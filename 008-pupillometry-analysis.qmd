@@ -1,7 +1,6 @@
 ---
 title: "MB2 Pupillometry Analysis"
 format: html
-editor: visual
 ---
 
 
