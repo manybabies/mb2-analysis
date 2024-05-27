@@ -426,6 +426,22 @@ data |>
             min_pupil_right = min(pupil_right, na.rm=TRUE),
             max_pupil_right = max(pupil_right, na.rm=TRUE)) 
 
+# filter out web-based labs
+data.pupil <- data |> filter(lab_id!="affcogUTSC" & lab_id!="beinghumanWroclaw" & lab_id!="CogConcordia" & lab_id!="collabUIOWA" & lab_id!="saxelab" & lab_id!="socallabUCSD")
+
+# visualize distribution of pupil left for all labs
+ggplot(data.pupil,aes(pupil_left))+
+  geom_histogram()+
+  facet_wrap(~lab_id, scales="free")+
+  ylab("Left Pupil Size")
+
+# visualize distribution of pupil right for all labs
+ggplot(data.pupil,aes(pupil_right))+
+  geom_histogram()+
+  facet_wrap(~lab_id, scales="free")+
+  ylab("Right Pupil Size")
+
+
 ```
 
 
