@@ -36,6 +36,15 @@ trial_overview <- distinct_trials %>%
   count()
 #check distribution of trials
 table(trial_overview$condition,trial_overview$n)
+
+#look a little closer at the cases where we have more than one test trial
+participants_w_additional_test_trials <- trial_overview %>%
+  filter(condition=="knowledge",n>1) %>%
+  pull(participant_lab_id)
+
+distinct_trials %>%
+  filter(participant_lab_id %in% participants_w_additional_test_trials) %>%
+  View()
   
 ```
 
@@ -388,7 +397,7 @@ adults_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&ag
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 adults_prop
-ggsave(here(plot_path,"adults_proportion_first_trial_target_exit_looking.png"),bg="white")
+ggsave(here(plot_path,"adults_proportion_first_trial_target_exit_looking.png"),bg="white", width = 16, height = 10)
 
 kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"), aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
@@ -407,7 +416,7 @@ kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_
   theme(legend.position="none")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 kids_prop
-ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white")
+ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white", width = 16, height = 10)
 ```
 
 Plot the effect by age

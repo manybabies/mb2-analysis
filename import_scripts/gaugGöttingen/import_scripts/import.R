@@ -14,8 +14,8 @@ lab_name <- "gaugGöttingen"
 lab_dir <- paste0("import_scripts/", lab_name)
 
 # eye-tracking data
-d_a <- read_tsv(here(lab_dir, "raw_data/gaugGöttingen_adults_eyetrackingdata.tsv") )
-d_t <- read_tsv(here(lab_dir, "raw_data/gaugGöttingen_toddlers_eyetrackingdata.tsv") )
+d_a <- read_delim(here(lab_dir, "raw_data/gaugGöttingen_adults_eyetrackingdata.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE)
+d_t <- read_delim(here(lab_dir, "raw_data/gaugGöttingen_toddlers_eyetrackingdata.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE)
 d_a <- janitor::clean_names(d_a)
 d_t <- janitor::clean_names(d_t)
 
