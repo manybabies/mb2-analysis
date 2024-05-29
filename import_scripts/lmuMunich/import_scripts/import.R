@@ -12,7 +12,7 @@ lab_dir <- paste0("import_scripts/", lab_name, "/")
 
 # eye-tracking data
 # hard to merge so just processing both separately. 
-d_a1 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_adults_eyetrackingdata_Bin1.tsv")) |> 
+d_a1 <- read_delim(here(lab_dir, "raw_data/lmuMunich_adults_eyetrackingdata_Bin1.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) |> 
   clean_names() |>
   mutate(lab_id = lab_name) |>
   rename(t = recording_timestamp, 
@@ -24,7 +24,7 @@ d_a1 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_adults_eyetrackingdata_Bin1.t
          pupil_right = pupil_diameter_right) |>
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right)
 
-d_a2 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_adults_eyetrackingdata_Bin4_new.tsv")) |> 
+d_a2 <- read_delim(here(lab_dir, "raw_data/lmuMunich_adults_eyetrackingdata_Bin4_new.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) |>
   clean_names() |>
   mutate(lab_id = lab_name) |>
   rename(t = recording_timestamp, 
@@ -47,7 +47,7 @@ write_csv(d_a, here(lab_dir, "processed_data", paste0(lab_name, "_adults_xy_time
 # kids
 
 
-d_t1 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin1_new.tsv")) |> 
+d_t1 <- read_delim(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin1_new.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) |>
   clean_names() |>
   mutate(lab_id = lab_name) |>
   rename(t = recording_timestamp, 
@@ -59,7 +59,7 @@ d_t1 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin1
          pupil_right = pupil_diameter_right) |>
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right)
 
-d_t2 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin2.tsv")) |> 
+d_t2 <- read_delim(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin2.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) |>
   clean_names() |>
   mutate(lab_id = lab_name) |>
   rename(t = recording_timestamp, 
@@ -71,7 +71,7 @@ d_t2 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin2
          pupil_right = pupil_diameter_right) |>
   select(lab_id, participant_id, media_name, x, y, t, pupil_left, pupil_right)
 
-d_t3 <- read_tsv(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin3.tsv")) |> 
+d_t3 <- read_delim(here(lab_dir, "raw_data/lmuMunich_toddlers_eyetrackingdata_Bin3.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) |>
   clean_names() |>
   mutate(lab_id = lab_name) |>
   rename(t = recording_timestamp, 

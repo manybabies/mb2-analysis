@@ -8,8 +8,8 @@ DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Toddler data ####
-data_toddlers <- vroom(here(DATA_DIR, "raw_data", "kokuHamburg_toddlers_eyetrackingdata.tsv"),
-                       delim = "\t")
+data_toddlers <- read_delim(here(DATA_DIR, "raw_data/kokuHamburg_toddlers_eyetrackingdata.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE)
+
 
 data_toddlers_cleaned <- data_toddlers |> 
   select(participant_id = `Participant name`,

@@ -8,8 +8,7 @@ DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Adult data ####
-data_adults <- vroom(here(DATA_DIR, "raw_data", "babyuniHeidelberg_adults_eyetrackingdata.tsv"),
-                     delim = "\t")
+data_adults <- read_delim(here(DATA_DIR, "raw_data/babyuniHeidelberg_adults_eyetrackingdata.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE)
 
 data_adults_cleaned <- data_adults |>
   select(participant_id = `Participant name`,
@@ -26,8 +25,7 @@ write_csv(data_adults_cleaned,
           here(DATA_DIR, "processed_data", glue("{LAB_NAME}_adults_xy_timepoints.csv")))
 
 #### Toddler data ####
-data_toddlers <- vroom(here(DATA_DIR, "raw_data", "babyuniHeidelberg_toddlers_eyetrackingdata.tsv"),
-                       delim = "\t")
+data_toddlers <- read_delim(here(DATA_DIR, "raw_data/babyuniHeidelberg_toddlers_eyetrackingdata.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE)
 
 data_toddlers_cleaned <- data_toddlers |> 
   select(participant_id = `Participant name`,

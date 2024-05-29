@@ -7,8 +7,10 @@ DATA_DIR <- here("import_scripts", LAB_NAME)
 dir.create(here(DATA_DIR, "processed_data"))
 
 #### Toddler data ####
-data_toddlers1 <- read_tsv(here(DATA_DIR, "raw_data", "mpievaCCP_toddlers_eyetrackingdata_TrialBin3.tsv"))
-data_toddlers2 <- read_tsv(here(DATA_DIR, "raw_data", "mpievaCCP_toddlers_eyetrackingdata_TrialBin4.tsv"))
+data_toddlers1 <- read_delim(here(DATA_DIR, "raw_data/mpievaCCP_toddlers_eyetrackingdata_TrialBin3.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) 
+  read_tsv(here(DATA_DIR, "raw_data", "mpievaCCP_toddlers_eyetrackingdata_TrialBin3.tsv"))
+data_toddlers2 <- read_delim(here(DATA_DIR, "raw_data/mpievaCCP_toddlers_eyetrackingdata_TrialBin4.tsv"), delim = "\t", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = ""), trim_ws = TRUE) 
+  read_tsv(here(DATA_DIR, "raw_data", "mpievaCCP_toddlers_eyetrackingdata_TrialBin4.tsv"))
 
 data_toddlers1_cleaned <- data_toddlers1 |> 
   select(participant_id = `Recording name`,

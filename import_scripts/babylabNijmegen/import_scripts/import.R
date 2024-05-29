@@ -11,14 +11,17 @@ data_adults1 <- read_delim(here(DATA_DIR, "raw_data", "BabylabNijmegen_adults_ey
                            delim = ";", 
                            col_types = cols(StudioEventIndex = col_integer(),
                                             StudioEvent = col_character(),
-                                            StudioEventData = col_character()))
+                                            StudioEventData = col_character()),
+                           locale = locale(decimal_mark = ",", grouping_mark = ""))
 
 # Note: manually edited end of file to correct for wrong number of delimiters
 data_adults2 <- read_delim(here(DATA_DIR, "raw_data", "BabylabNijmegen_adults_eyetrackingdata_Bin1_new.csv"),
                            delim = ";", 
                            col_types = cols(StudioEventIndex = col_integer(),
                                             StudioEvent = col_character(),
-                                            StudioEventData = col_character()))
+                                            StudioEventData = col_character()),
+                           trim_ws = TRUE,
+                           locale = locale(decimal_mark = ",", grouping_mark = ""))
 
 data_adults <- bind_rows(data_adults1, data_adults2)
 
@@ -40,12 +43,14 @@ data_toddler1 <- read_delim(here(DATA_DIR, "raw_data", "BabylabNijmegen_toddlers
                             delim = ";", 
                             col_types = cols(StudioEventIndex = col_integer(),
                                              StudioEvent = col_character(),
-                                             StudioEventData = col_character()))
+                                             StudioEventData = col_character()),
+                            locale = locale(decimal_mark = ",", grouping_mark = ""))
 data_toddler2 <- read_delim(here(DATA_DIR, "raw_data", "BabylabNijmegen_toddlers_eyetrackingdata_Bin4_new.csv"),
                             delim = ";", 
                             col_types = cols(StudioEventIndex = col_integer(),
                                              StudioEvent = col_character(),
-                                             StudioEventData = col_character()))
+                                             StudioEventData = col_character()),
+                            locale = locale(decimal_mark = ",", grouping_mark = ""))
 data_toddlers <- bind_rows(data_toddler1, data_toddler2)
 
 data_toddlers_cleaned <- data_toddlers |> 
