@@ -13,16 +13,19 @@ Lab & N collected & N included & Sex (N   Female) & Mean Age (years) & Method\\
 Lab & N collected & N included & Sex (N   Female) & Mean Age (years) & Method\\
 \midrule
 \endhead
-CorbitLab & 18 & 15 & 14 & 20 & In-lab\\
+CogConcordia & 21 & NA & NA & 23 & In-lab\\
+CorbitLab & 18 & 15 & 14 & 21 & In-lab\\
 DevlabAU & 20 & 20 & 15 & 25 & In-lab\\
-MEyeLab & 56 & 53 & 39 & 24 & In-lab\\
-MiniDundee & 17 & 15 & 12 & 32 & In-lab\\
-SkidLSDLab & 11 & 8 & 3 & 22 & In-lab\\
+MEyeLab & 56 & 53 & 39 & 25 & In-lab\\
+MiniDundee & 17 & 15 & 12 & 31 & In-lab\\
+PKUSu & 42 & NA & NA & 22 & In-lab\\
+SkidLSDLab & 11 & 8 & 3 & 21 & In-lab\\
 ToMcdlSalzburg & 33 & 32 & 23 & 27 & In-lab\\
 UIUCinfantlab & 39 & 33 & 25 & 19 & In-lab\\
-WSUMARCS & 18 & 16 & 10 & 28 & In-lab\\
+WSUMARCS & 18 & 14 & 8 & 28 & In-lab\\
 affcogUTSC & 23 & 16 & 7 & 21 & web-based\\
-babyLeidenEdu & 24 & 16 & 12 & 23 & In-lab\\
+babyLeidenEdu & 24 & 16 & 12 & 24 & In-lab\\
+babylabAmsterdam & 17 & 16 & 13 & 24 & In-lab\\
 babylabBrookes & 69 & 65 & 49 & 22 & In-lab\\
 babylabINCC & 20 & 18 & 12 & 31 & In-lab\\
 babylabMPIB & 16 & 16 & 11 & 27 & In-lab\\
@@ -30,19 +33,21 @@ babylabNijmegen & 22 & 16 & 14 & 24 & In-lab\\
 babylabTrento & 16 & 16 & 9 & 22 & In-lab\\
 babylabUmassb & 34 & 15 & 12 & 20 & In-lab\\
 babyuniHeidelberg & 16 & 16 & 14 & 22 & In-lab\\
-beinghumanWroclaw & 19 & 16 & 9 & 33 & web-based\\
-careylabHarvard & 18 & 16 & 12 & 20 & In-lab\\
+beinghumanWroclaw & 19 & 16 & 9 & 34 & web-based\\
+careylabHarvard & 18 & 15 & 12 & 21 & In-lab\\
+cclUNIRI & 32 & NA & NA & 31 & In-lab\\
 childdevlabAshoka & 16 & 16 & 8 & 31 & In-lab\\
 collabUIOWA & 16 & 16 & 10 & 19 & In-lab\\
 gaugGöttingen & 34 & 32 & 21 & 34 & In-lab\\
 jmuCDL & 32 & 32 & 22 & 19 & In-lab\\
-kidsdevUniofNewcastle & 20 & 16 & 8 & 38 & In-lab\\
-labUNAM & 20 & 13 & 9 & 22 & In-lab\\
+kidsdevUniofNewcastle & 20 & 16 & 8 & 41 & In-lab\\
+labUNAM & 20 & 13 & 9 & 23 & In-lab\\
 lmuMunich & 31 & 30 & 23 & 22 & In-lab\\
 mecdmpihcbs & 19 & 19 & 10 & 28 & In-lab\\
 socialcogUmiami & 20 & 16 & 10 & 19 & In-lab\\
 sociocognitivelab & 20 & 17 & 11 & 32 & In-lab\\
-Total & 717 & 625 & 434 & 25 & \\
+tauccd & 16 & NA & NA & 27 & In-lab\\
+Total & 845 & 638 & 445 & 25 & \\
 \bottomrule
 \end{longtable}
 
@@ -66,37 +71,44 @@ Lab & N collected & N included & Sex (N   Female) & Mean Age (months) & Method\\
 Lab & N collected & N included & Sex (N   Female) & Mean Age (months) & Method\\
 \midrule
 \endhead
+CogConcordia & 21 & NA & NA & 23 & web-based\\
 CorbitLab & 14 & 10 & 5 & 22 & In-lab\\
 DevlabAU & 18 & 17 & 8 & 19 & In-lab\\
-SkidLSDLab & 10 & 8 & 4 & 24 & In-lab\\
+PKUSu & 55 & NA & NA & 21 & In-lab\\
+SkidLSDLab & 10 & 8 & 4 & 22 & In-lab\\
 ToMcdlSalzburg & 20 & 15 & 9 & 22 & In-lab\\
 UIUCinfantlab & 22 & 16 & 9 & 22 & In-lab\\
 babyLeidenEdu & 18 & 15 & 9 & 23 & In-lab\\
+babylabAmsterdam & 32 & 20 & 10 & 23 & In-lab\\
 babylabBrookes & 19 & 18 & 11 & 22 & In-lab\\
 babylabChicago & 18 & 15 & 6 & 20 & In-lab\\
-babylabINCC & 17 & 16 & 10 & 22 & In-lab\\
+babylabINCC & 17 & 16 & 10 & 23 & In-lab\\
 babylabNijmegen & 23 & 18 & 8 & 23 & In-lab\\
 babylabOxford & 27 & 22 & 9 & 24 & In-lab\\
+babylabPrinceton & 17 & NA & NA & 22 & In-lab\\
 babylabTrento & 18 & 17 & 10 & 23 & In-lab\\
 babylabUmassb & 7 & 6 & 2 & 20 & In-lab\\
-babylingOslo & 20 & 17 & 8 & 23 & In-lab\\
-babyuniHeidelberg & 17 & 15 & 6 & 24 & In-lab\\
-beinghumanWroclaw & 24 & 15 & 8 & 24 & web-based\\
+babylingOslo & 20 & 16 & 8 & 23 & In-lab\\
+babyuniHeidelberg & 17 & 15 & 6 & 23 & In-lab\\
+beinghumanWroclaw & 24 & 15 & 8 & 23 & web-based\\
 careylabHarvard & 17 & 15 & 7 & 22 & In-lab\\
 cecBYU & 16 & 15 & 5 & 22 & In-lab\\
 childdevlabAshoka & 16 & 10 & 6 & 23 & In-lab\\
-gaugGöttingen & 29 & 23 & 11 & 23 & In-lab\\
+gaugGöttingen & 29 & 23 & 11 & 22 & In-lab\\
 gertlabLancaster & 24 & 20 & 10 & 23 & In-lab\\
 infantcogUBC & 26 & 20 & 9 & 25 & In-lab\\
-irlConcordia & 19 & 14 & 6 & 22 & In-lab\\
-kidsdevUniofNewcastle & 17 & 16 & 10 & 23 & In-lab\\
+irlConcordia & 19 & 14 & 6 & 23 & In-lab\\
+kidsdevUniofNewcastle & 17 & 16 & 10 & 22 & In-lab\\
 kokuHamburg & 22 & 16 & 8 & 26 & In-lab\\
 labUNAM & 20 & 14 & 8 & 22 & In-lab\\
 lmuMunich & 49 & 34 & 23 & 22 & In-lab\\
 mecdmpihcbs & 29 & 17 & 10 & 23 & In-lab\\
-saxelab & 36 & 21 & 5 & 23 & web-based\\
-unicph & 47 & 32 & 19 & 22 & In-lab\\
-Total & 659 & 507 & 259 & 23 & \\
+mpievaCCP & 27 & NA & NA & 24 & In-lab\\
+saxelab & 36 & 21 & 5 & 24 & web-based\\
+socallabUCSD & 51 & NA & NA & 23 & web-based\\
+tauccd & 16 & NA & NA & 23 & In-lab\\
+unicph & 47 & 32 & 19 & 21 & In-lab\\
+Total & 878 & 526 & 269 & 23 & \\
 \bottomrule
 \end{longtable}
 

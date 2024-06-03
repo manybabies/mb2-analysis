@@ -21,7 +21,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 
 This process will be much easier if we create a field `unique_participant_id`.
 
-```{r}
+```{r} 
 #this should be present once the pipeline is fully updated
 data_preprocessed <- data_preprocessed |>
   unite(col = "unique_participant_id",
@@ -270,15 +270,25 @@ overview_trial_based_errors %>%
 ```{r}
 #MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
 
-n_before_exclusion <- combined_demo %>%
+d_participants <- participant_trial_errors %>% distinct(unique_participant_id, trial_based_error, trial_based_error_type)
+  
+d_participants <- combined_demo %>%
+  left_join(d_participants)
+
+write_csv(d_participants,
+          here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
+
+n_before_exclusion <- d_participants %>%
   summarise(n = length(unique(unique_participant_id)))
 
-n_adults_included <- data_preprocessed %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
-n_toddlers_included <- data_preprocessed %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
+# check if this overlaps with eye-tracking data. If no eyetracking data available, check session info. If equipment error, participant should still be included in initial sample.
 
-n_labs_adults <- combined_demo %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(lab_id)))
+n_adults_included <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
+n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
 
-n_labs_toddlers <- combined_demo %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(lab_id)))
+n_labs_adults <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(lab_id)))
+
+n_labs_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(lab_id)))
 
 age_stat_adults <- data_preprocessed %>% 
   filter(age_cohort=="adults") %>% 
