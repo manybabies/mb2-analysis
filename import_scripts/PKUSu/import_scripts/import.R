@@ -19,6 +19,26 @@ PKU_toddlers_clean <- PKU_toddlers %>%
          pupil_left = Pupil.diameter.left,
          pupil_right = Pupil.diameter.right
   ) %>% 
+  ## scaling procedure
+  ## we rescale and shift x-y values here to account for an atypical video positioning
+  ## see https://github.com/manybabies/mb2-analysis/issues/115 for details
+  #scale screen
+  mutate(
+    x_old = x,
+    y_old= y,
+    x = x_old * 1920 / 2560,
+    y = y_old * 1080 / 1440
+  ) %>%
+  # account for placement of video in the center of the screen (1440x1080)
+  #y stays the same
+  mutate(
+    x = x - (1920-1440)/2
+  ) %>%
+  #now scale to 1280x960
+  mutate(
+    x = x * 1280 / 1440,
+    y = y * 960 / 1080
+  ) %>%
   mutate(media_name=str_replace_all(media_name,"_new",""),
          lab_id = LAB_NAME)%>%
   select(lab_id,participant_id,media_name,x,y,t,pupil_left,pupil_right)
@@ -38,6 +58,26 @@ PKU_adults_clean <- PKU_adults %>%
          pupil_left = Pupil.diameter.left,
          pupil_right = Pupil.diameter.right
   )%>% 
+  ## scaling procedure
+  ## we rescale and shift x-y values here to account for an atypical video positioning
+  ## see https://github.com/manybabies/mb2-analysis/issues/115 for details
+  #scale screen
+  mutate(
+    x_old = x,
+    y_old= y,
+    x = x_old * 1920 / 2560,
+    y = y_old * 1080 / 1440
+  ) %>%
+  # account for placement of video in the center of the screen (1440x1080)
+  #y stays the same
+  mutate(
+    x = x - (1920-1440)/2
+  ) %>%
+  #now scale to 1280x960
+  mutate(
+    x = x * 1280 / 1440,
+    y = y * 960 / 1080
+  ) %>%
   mutate(media_name=str_replace_all(media_name,"_new",""),
          lab_id = LAB_NAME)%>%
   select(lab_id,participant_id,media_name,x,y,t,pupil_left,pupil_right)

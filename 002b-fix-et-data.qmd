@@ -197,7 +197,6 @@ combined_demo <- adult_demo |>
 
 ## Remove the participants with session errors from the et data 
 
-
 ```{r}
 # extract pilot ids
 pilot_ids_all <- combined_demo %>%

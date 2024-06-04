@@ -78,8 +78,8 @@ draw_aoi <- function(aoi_name, color){
     geom_rect(aes(xmin = aoi_region_sets[[1,paste(aoi_name,'_x_min',sep="")]],
                   xmax = aoi_region_sets[[1,paste(aoi_name,'_x_max',sep="")]],
                   ymin = aoi_region_sets[[1,paste(aoi_name,'_y_min',sep="")]],
-                  ymax = aoi_region_sets[[1,paste(aoi_name,'_y_max',sep="")]], 
-            fill = color, alpha = 0.7, color = color))
+                  ymax = aoi_region_sets[[1,paste(aoi_name,'_y_max',sep="")]] 
+            ),fill = color, alpha = 0.7, color = color)
   )
 }
 
