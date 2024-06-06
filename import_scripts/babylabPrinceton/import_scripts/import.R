@@ -34,6 +34,10 @@ data_toddlers_cleaned <- lapply(data_files_toddlers, \(fp) {
   }
   
   samples <- data_edf$samples |> 
+    arrange(desc(trial)) |> 
+    group_by(time) |> 
+    slice(1) |> 
+    arrange(trial) |> 
     left_join(variables,
               by = "trial",
               relationship = "many-to-one") |> 
