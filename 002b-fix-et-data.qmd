@@ -498,19 +498,22 @@ table(filter(combined_demo,age_cohort=="adults")$age_years_n)
 Now add columns tracking exclusions based on age. 
 
 ```{r}
+# applying exclusions from the registered report and lab manual
+# toddlers: 548 - 822 days
+# adults: 18 - 55 years
 combined_demo <- combined_demo |>
   mutate(
     age_exclusion = case_when(
       age_cohort == "adults" & age_years_n < 18 ~ "yes",
       age_cohort == "adults" & age_years_n >= 56 ~ "yes",
-      age_cohort == "adults" & is.na(age_years_n) ~ NA_character_,
-      age_cohort == "toddlers" & age_mo < 18 ~ "yes",
-      age_cohort == "toddlers" & age_mo >= 28 ~ "yes",
-      age_cohort == "toddlers" & is.na(age_mo) ~ NA_character_,
+      age_cohort == "adults" & is.na(age_years_n) ~ "yes",
+      age_cohort == "toddlers" & age_days_num < 548 ~ "yes",
+      age_cohort == "toddlers" & age_days_num > 822 ~ "yes",
+      age_cohort == "toddlers" & is.na(age_days_num) ~ "yes",
       TRUE ~ "no"
     )
   )
-View(select(combined_demo,age_cohort,age_years_n,age_mo,age_exclusion))
+View(select(combined_demo,age_cohort,age_years_n,age_mo,age_days_num,age_exclusion))
 ```
 
 
