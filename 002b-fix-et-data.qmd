@@ -224,7 +224,7 @@ still_missings <- known_missings %>%
   anti_join(error_ids_all, by=join_by(participant_id, lab_id, age_cohort)) %>% 
   anti_join(pilot_ids_all, by=join_by(participant_id, lab_id, age_cohort))
 
-write.csv(error_ids_all,
+write_csv(error_ids_all,
           here(INTERMEDIATE_FOLDER, INTERMEDIATE_000_EXCL_SESSION))
 
 if(nrow(still_missings) > 0){

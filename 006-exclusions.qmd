@@ -19,16 +19,11 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 ```
 
-This process will be much easier if we create a field `unique_participant_id`.
+Add a column `participant_lab_id` to the demographics data.
 
 ```{r} 
 #this should be present once the pipeline is fully updated
-data_preprocessed <- data_preprocessed |>
-  unite(col = "unique_participant_id",
-        lab_id, participant_id, 
-        remove = FALSE, sep = "-")
-
-combined_demo <- combined_demo %>% unite(col = "unique_participant_id",
+combined_demo <- combined_demo %>% unite(col = "participant_lab_id",
         lab_id, participant_id,
         remove = FALSE, sep = "-")
 ```
@@ -39,7 +34,7 @@ First trim toddlers that are outside of age range.
 ```{r}
 # this needs to be filled in after we have age in the preprocessed file.
 data_preprocessed <- data_preprocessed %>%
-  left_join(combined_demo) #by=join_by(unique_participant_id, lab_id, participant_id, age_cohort))
+  left_join(combined_demo) #by=join_by(participant_lab_id, lab_id, participant_id, age_cohort))
 ```
 
 
@@ -72,19 +67,68 @@ manual_exclusions <- bind_rows(
   mew %>% select(1, 15, trial = 10, ok = 11),
   mew %>% select(1, 15, trial = 12, ok = 13),
 ) %>% mutate(man_exclude = tolower(ok) != "yes") %>%
-  mutate(unique_participant_id =
+  mutate(participant_lab_id =
            paste(
              sub(fn_pattern, "\\1", filename),
              id,
              sub(fn_pattern, "\\2", filename),
              sep="-"
              )) %>% 
-  select(unique_participant_id, media_name = trial, man_exclude)
+  select(participant_lab_id, media_name = trial, man_exclude)
 
 data_preprocessed <- data_preprocessed %>%
-  left_join(manual_exclusions, by=c("media_name", "unique_participant_id"))
+  left_join(manual_exclusions, by=c("media_name", "participant_lab_id"))
 
 ```
+
+## Apply trial-level errors reported by labs
+
+```{r}
+#rename error info columns
+combined_demo <- combined_demo %>%
+  rename(fam1_errorinfo = fam1_error_info,
+         fam2_errorinfo = fam2_error_info,
+         fam3_errorinfo = fam3_error_info,
+         fam4_errorinfo = fam4_error_info,
+         test1_errorinfo = test1_error_info,
+         test2_errorinfo = test2_error_info)
+
+#trial error names
+trial_error_demo_cols <- c("fam1_error","fam2_error","fam3_error","fam4_error","test1_error","test2_error",
+                           "fam1_errorinfo","fam2_errorinfo","fam3_errorinfo","fam4_errorinfo","test1_errorinfo","test2_errorinfo")
+
+# extract trial-level errors from the demographic information
+trial_level_errors_demographics <- combined_demo %>%
+  select(lab_id,participant_lab_id,participant_id,trial_error_demo_cols) %>%
+  group_by(lab_id,participant_lab_id,participant_id) %>%
+  pivot_longer(
+    cols = starts_with("fam") | starts_with("test"),
+    names_to = c("trial_identifier",".value"),
+    names_sep = "_"
+  ) %>%
+  separate(trial_identifier,c("trial_type","trial_num"),"(?<=[a-z])(?=[0-9])") %>%
+  mutate(trial_num=as.numeric(trial_num)) %>%
+  mutate(
+    trial_num = case_when(
+      trial_type == "test" & trial_num == 1 ~ 5,
+      trial_type == "test" & trial_num == 2 ~ 6,
+      TRUE ~ trial_num)
+  ) %>%
+  mutate(
+    trial_error = case_when(
+      error == "noerror" ~ "no",
+      error == "error" ~ "yes"
+    ),
+    trial_error_type = case_when(
+      error == "noerror" ~ NA,
+      error == "error" ~ "lab reported trial error"
+    )
+  )
+
+# TO-DO: integrate with sufficient looking data error
+# lab-reported error takes precedence
+```
+
 
 ## Sufficient Looking Data per Trial
 
@@ -109,7 +153,7 @@ summarized_valid_looks <- data_preprocessed %>%
   ) %>%
   #only focus on familiarization and test trials
   filter(condition %in% c("familiarization", "ignorance", "knowledge")) %>%
-  group_by(unique_participant_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num) %>%
+  group_by(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num) %>%
   summarize(
     total_frames=n(),
     total_valid_looks = sum(valid_xy_look),
@@ -176,8 +220,8 @@ Summarize the number of valid familiarization trials by participant.
 summarized_valid_familiarization_trials <- data_preprocessed %>%
   filter(condition == "familiarization") %>%
   filter(trial_error == "no") %>%
-  distinct(unique_participant_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
-  group_by(unique_participant_id,lab_id,age_cohort,participant_id) %>%
+  distinct(participant_lab_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
+  group_by(participant_lab_id,lab_id,age_cohort,participant_id) %>%
   summarize(
     total_valid_fam_trials = n()
   )
@@ -210,7 +254,7 @@ summarized_valid_first_test_trials <- data_preprocessed %>%
   filter(condition %in% c("ignorance","knowledge")) %>%
   # check this, need to make sure this is a robust way of identifying the first test trial
   filter(trial_num==5) %>%
-  distinct(unique_participant_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error) %>%
+  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error) %>%
   mutate(
     valid_first_test_trial = case_when(
       trial_error == "yes" ~ 0,
@@ -251,7 +295,7 @@ participant_trial_errors <- data_preprocessed %>%
 
 ```{r}
 overview_trial_based_errors <- participant_trial_errors %>%
-  distinct(unique_participant_id,lab_id,age_cohort,participant_id,trial_based_error,trial_based_error_type) %>%
+  distinct(participant_lab_id,lab_id,age_cohort,participant_id,trial_based_error,trial_based_error_type) %>%
   group_by(age_cohort) %>%
   summarize(
     total_N = n(),
@@ -270,7 +314,7 @@ overview_trial_based_errors %>%
 ```{r}
 #MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
 
-d_participants <- participant_trial_errors %>% distinct(unique_participant_id, trial_based_error, trial_based_error_type)
+d_participants <- participant_trial_errors %>% distinct(participant_lab_id, trial_based_error, trial_based_error_type)
   
 d_participants <- combined_demo %>%
   left_join(d_participants)
@@ -279,12 +323,12 @@ write_csv(d_participants,
           here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
 
 n_before_exclusion <- d_participants %>%
-  summarise(n = length(unique(unique_participant_id)))
+  summarise(n = length(unique(participant_lab_id)))
 
 # check if this overlaps with eye-tracking data. If no eyetracking data available, check session info. If equipment error, participant should still be included in initial sample.
 
-n_adults_included <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
-n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
+n_adults_included <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(participant_lab_id)))
+n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(participant_lab_id)))
 
 n_labs_adults <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(lab_id)))
 
@@ -292,7 +336,7 @@ n_labs_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summari
 
 age_stat_adults <- data_preprocessed %>% 
   filter(age_cohort=="adults") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_years = (as.numeric(age_years))[1]) %>%
   ungroup %>%
   summarise(mean = mean(age_years, na.rm = TRUE), 
@@ -302,7 +346,7 @@ age_stat_adults <- data_preprocessed %>%
 
 age_stat_toddlers <- data_preprocessed %>% 
   filter(age_cohort=="toddlers") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_mo = age_mo[1]) %>%
   ungroup %>%
   summarise(mean = mean(age_mo), 
@@ -315,7 +359,7 @@ age_stat_toddlers <- data_preprocessed %>%
 #adults
 lab_stats_adults <- data_preprocessed %>%
   filter(age_cohort=="adults") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_years = (as.numeric(age_years))[1], 
             method = method[1]) %>%
   group_by(lab_id) %>%
@@ -325,7 +369,7 @@ lab_stats_adults <- data_preprocessed %>%
 n_adults_collected <- combined_demo %>% 
   filter(age_cohort=="adults") %>% 
   group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(unique_participant_id)))
+  summarise(N_collected = length(unique(participant_lab_id)))
 
 lab_stats_adults_included <- data_preprocessed %>%  filter(age_cohort=="adults") %>%   mutate(trial_based_error = case_when(
       sufficient_fam_trials == 0 ~ "yes",
@@ -334,11 +378,11 @@ lab_stats_adults_included <- data_preprocessed %>%  filter(age_cohort=="adults")
   filter(trial_based_error=="no") 
 
 lab_stats_adults_female <- lab_stats_adults_included %>% group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(unique_participant_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
+  summarise(N_female = length(unique(participant_lab_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
   
 lab_stats_adults_included <- lab_stats_adults_included %>% 
   group_by (lab_id) %>%
-  summarise(N_included = length(unique(unique_participant_id)))
+  summarise(N_included = length(unique(participant_lab_id)))
 
 lab_stats_adults <- lab_stats_adults %>% left_join(lab_stats_adults_included) %>%      left_join(lab_stats_adults_female) %>% left_join(n_adults_collected) %>% 
   select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
@@ -356,7 +400,7 @@ papaja::apa_table(lab_stats_adults,
 #toddlers
 lab_stats_toddlers <- data_preprocessed %>%
   filter(age_cohort=="toddlers") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_mo = (as.numeric(age_mo))[1], 
             method = method[1]) %>%
   group_by(lab_id) %>%
@@ -366,7 +410,7 @@ lab_stats_toddlers <- data_preprocessed %>%
 n_toddlers_collected <- combined_demo %>% 
   filter(age_cohort=="toddlers") %>% 
   group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(unique_participant_id)))
+  summarise(N_collected = length(unique(participant_lab_id)))
 
 lab_stats_toddlers_included <- data_preprocessed %>%
   filter(age_cohort=="toddlers") %>% 
@@ -380,13 +424,13 @@ lab_stats_toddlers_included <- data_preprocessed %>%
 
 lab_stats_toddlers_female <- lab_stats_toddlers_included %>%
   group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(unique_participant_id))) %>%
+  summarise(N_female = length(unique(participant_lab_id))) %>%
   filter(participant_gender=="girl") %>%
   select(-participant_gender)
   
 lab_stats_toddlers_included <- lab_stats_toddlers_included %>% 
   group_by (lab_id) %>%
-  summarise(N_included = length(unique(unique_participant_id)))
+  summarise(N_included = length(unique(participant_lab_id)))
 
 lab_stats_toddlers <- lab_stats_toddlers %>%
   left_join(lab_stats_toddlers_included) %>%
