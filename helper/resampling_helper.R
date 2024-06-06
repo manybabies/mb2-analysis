@@ -10,7 +10,7 @@ make_media_nums <- function (media_name) {
 rezero_times <- function(df_table,trial_col_name = "event_num") {
   # first check if this data frame has all the correct columns required for
   # normalize
-  required_columns <- c(trial_col_name, "participant_id", "t")
+  required_columns <- c(trial_col_name, "participant_lab_id", "t")
   
   if (!all(required_columns %in% colnames(df_table))) {
     stop(.msg("Rezero times function requires the following columns to be
@@ -20,7 +20,7 @@ rezero_times <- function(df_table,trial_col_name = "event_num") {
   }
   # center timestamp (0 POD)
   df_out <- df_table %>%
-    dplyr::group_by(.data$participant_id, .data[[trial_col_name]]) %>%
+    dplyr::group_by(.data$participant_lab_id, .data[[trial_col_name]]) %>%
     dplyr::mutate(t_zeroed = (.data$t - .data$t[1])) #%>%
     #dplyr::select(-.data$t) #keep old timepoint info
   return(df_out)
@@ -29,7 +29,7 @@ rezero_times <- function(df_table,trial_col_name = "event_num") {
 normalize_times <- function(df_table,trial_col_name = "event_num") {
   # first check if this data frame has all the correct columns required for
   # normalize
-  required_columns <- c(trial_col_name, "participant_id", "t_zeroed","point_of_disambiguation")
+  required_columns <- c(trial_col_name, "participant_lab_id", "t_zeroed","point_of_disambiguation")
   
   if (!all(required_columns %in% colnames(df_table))) {
     stop(.msg("Normalize times function requires the following columns to be
@@ -40,7 +40,7 @@ normalize_times <- function(df_table,trial_col_name = "event_num") {
   }
   # center timestamp (0 POD)
   df_out <- df_table %>%
-    dplyr::group_by(.data$participant_id, .data[[trial_col_name]]) %>%
+    dplyr::group_by(.data$participant_lab_id, .data[[trial_col_name]]) %>%
     dplyr::mutate(t_norm = .data$t_zeroed - .data$point_of_disambiguation) #%>%
     #dplyr::select(-.data$t_zeroed)
   return(df_out)
