@@ -25,7 +25,7 @@ Add a column `participant_lab_id` to the demographics data.
 #this should be present once the pipeline is fully updated
 combined_demo <- combined_demo %>% unite(col = "participant_lab_id",
         lab_id, participant_id,
-        remove = FALSE, sep = "-")
+        remove = FALSE, sep = "_")
 ```
 
 
@@ -68,12 +68,11 @@ manual_exclusions <- bind_rows(
   mew %>% select(1, 15, trial = 12, ok = 13),
 ) %>% mutate(man_exclude = tolower(ok) != "yes") %>%
   mutate(participant_lab_id =
-           paste(
+           paste(paste(
              sub(fn_pattern, "\\1", filename),
-             id,
-             sub(fn_pattern, "\\2", filename),
-             sep="-"
-             )) %>% 
+             id, sep="_"),
+             sub(fn_pattern, "\\2", filename), sep="-"),
+             ) %>% 
   select(participant_lab_id, media_name = trial, man_exclude)
 
 data_preprocessed <- data_preprocessed %>%
@@ -98,8 +97,8 @@ trial_error_demo_cols <- c("fam1_error","fam2_error","fam3_error","fam4_error","
                            "fam1_errorinfo","fam2_errorinfo","fam3_errorinfo","fam4_errorinfo","test1_errorinfo","test2_errorinfo")
 
 # extract trial-level errors from the demographic information
-trial_level_errors_demographics <- combined_demo %>%
-  select(lab_id,participant_lab_id,participant_id,trial_error_demo_cols) %>%
+trial_level_errors_demographics_lab_reported <- combined_demo %>%
+  select(lab_id,participant_lab_id,participant_id, age_cohort, trial_error_demo_cols) %>%
   group_by(lab_id,participant_lab_id,participant_id) %>%
   pivot_longer(
     cols = starts_with("fam") | starts_with("test"),
@@ -115,15 +114,25 @@ trial_level_errors_demographics <- combined_demo %>%
       TRUE ~ trial_num)
   ) %>%
   mutate(
-    trial_error = case_when(
+    trial_error_lab_reported = case_when(
       error == "noerror" ~ "no",
-      error == "error" ~ "yes"
-    ),
-    trial_error_type = case_when(
-      error == "noerror" ~ NA,
-      error == "error" ~ "lab reported trial error"
-    )
+      error == "error" ~ "yes")
+    ) %>% 
+    #remove columns that vary within participants, to make joining at the participant level possible
+  select(-trial_type, -error,-errorinfo)
+
+# inspect lab_reported trial errors by age cohort
+trial_level_errors_demographics_lab_reported %>%
+  group_by(age_cohort,trial_num) %>%
+  summarize(
+    total_trials = n(),
+    valid_trials = sum(trial_error_lab_reported=="no"),
+    prop_valid_trials = valid_trials/total_trials
   )
+
+
+data_preprocessed <- left_join(data_preprocessed, trial_level_errors_demographics_lab_reported)
+
 
 # TO-DO: integrate with sufficient looking data error
 # lab-reported error takes precedence
@@ -181,16 +190,15 @@ summarized_valid_looks <- summarized_valid_looks %>%
       TRUE ~ 0
     )) %>%
   mutate(
-    trial_error = case_when(
+    trial_error_valid_looking = case_when(
       valid_looking_trial == 0 ~ "yes",
       TRUE ~ "no"
-    ),
-    trial_error_type = case_when(
-      valid_looking_trial == 0 ~ "insufficient valid looking data",
-      TRUE ~ NA
     )
   )
-
+names(data_preprocessed)[names(data_preprocessed) == 'trial_error'] <- 'trial_error_valid_looking'
+data_preprocessed <- data_preprocessed %>%
+  select(-trial_error_type)
+  
 # inspect trial errors by age cohort and condition
 summarized_valid_looks %>%
   group_by(age_cohort,condition,trial_num) %>%
@@ -219,7 +227,7 @@ Summarize the number of valid familiarization trials by participant.
 ```{r}
 summarized_valid_familiarization_trials <- data_preprocessed %>%
   filter(condition == "familiarization") %>%
-  filter(trial_error == "no") %>%
+  filter(trial_error_valid_looking == "no") %>%
   distinct(participant_lab_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
   group_by(participant_lab_id,lab_id,age_cohort,participant_id) %>%
   summarize(
@@ -254,11 +262,11 @@ summarized_valid_first_test_trials <- data_preprocessed %>%
   filter(condition %in% c("ignorance","knowledge")) %>%
   # check this, need to make sure this is a robust way of identifying the first test trial
   filter(trial_num==5) %>%
-  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error) %>%
+  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error_valid_looking) %>%
   mutate(
     valid_first_test_trial = case_when(
-      trial_error == "yes" ~ 0,
-      trial_error == "no" ~ 1,
+      trial_error_valid_looking == "yes" ~ 0,
+      trial_error_valid_looking == "no" ~ 1,
       TRUE ~ NA
     )
   ) %>%
@@ -276,6 +284,8 @@ data_preprocessed <- data_preprocessed %>%
 participant_trial_errors <- data_preprocessed %>%
   mutate(
     trial_based_error = case_when(
+      #step 0 (lab-reported)
+      trial_error_lab_reported == "yes" ~ "yes",
       #step 5 (familiarization)
       sufficient_fam_trials == 0 ~ "yes",
       #step 6 (first test trial)
@@ -283,6 +293,7 @@ participant_trial_errors <- data_preprocessed %>%
       TRUE ~ "no"
     ),
     trial_based_error_type = case_when(
+      trial_error_lab_reported == "yes" ~ "0",
       sufficient_fam_trials == 0 ~ "5",
       valid_first_test_trial == 0 ~ "6",
       TRUE ~ NA
@@ -305,6 +316,14 @@ overview_trial_based_errors <- participant_trial_errors %>%
 
 overview_trial_based_errors %>%
   knitr::kable()
+
+```
+
+## Filtering trial-based errors
+
+```{r}
+data_preprocessed <- participant_trial_errors %>% 
+  filter(participant_trial_errors$trial_based_error=="no")
 
 ```
 

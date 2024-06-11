@@ -38,12 +38,12 @@ trial_overview <- distinct_trials %>%
 table(trial_overview$condition,trial_overview$n)
 
 #look a little closer at the cases where we have more than one test trial
-participants_w_additional_test_trials <- trial_overview %>%
-  filter(condition=="knowledge",n>1) %>%
+participants_w_fewer_familiarization_trials <- trial_overview %>%
+  filter(condition=="familiarization",n<3) %>%
   pull(participant_lab_id)
 
 distinct_trials %>%
-  filter(participant_lab_id %in% participants_w_additional_test_trials) %>%
+  filter(participant_lab_id %in% participants_w_fewer_familiarization_trials) %>%
   View()
   
 ```
