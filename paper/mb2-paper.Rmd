@@ -164,17 +164,20 @@ After completing the task, adult participants will be asked to fill a funneled d
 source(here('helper','ensure_repo_structure.R'))
 d_participants <- read_csv(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
 
-n_before_exclusion <- d_participants %>% summarise(n = length(unique(unique_participant_id)))
-n_before_exclusion_adults <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(unique_participant_id)))
-n_before_exclusion_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(unique_participant_id)))
+#remove all pilot participants
+d_participants <- d_participants %>% filter(pilot=="no")
 
-n_toddlers_no_session_error <- d_participants %>% filter(age_cohort=="toddlers" & session_error=="noerror") %>% summarise(n = length(unique(unique_participant_id)))
+n_before_exclusion <- d_participants %>% summarise(n = length(unique(participant_lab_id)))
+n_before_exclusion_adults <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(participant_lab_id)))
+n_before_exclusion_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(participant_lab_id)))
 
-n_adults_no_session_error <- d_participants %>% filter(age_cohort=="adults" & session_error=="noerror") %>% summarise(n = length(unique(unique_participant_id)))
+n_toddlers_no_session_error <- d_participants %>% filter(age_cohort=="toddlers" & session_error=="noerror") %>% summarise(n = length(unique(participant_lab_id)))
 
-n_adults_included <- d_participants %>% filter(age_cohort=="adults" & session_error=="noerror" & trial_based_error=="no") %>% summarise(n = length(unique(unique_participant_id)))
+n_adults_no_session_error <- d_participants %>% filter(age_cohort=="adults" & session_error=="noerror") %>% summarise(n = length(unique(participant_lab_id)))
 
-n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers" & session_error=="noerror" & trial_based_error=="no") %>% summarise(n = length(unique(unique_participant_id)))
+n_adults_included <- d_participants %>% filter(age_cohort=="adults" & session_error=="noerror" & trial_based_error=="no") %>% summarise(n = length(unique(participant_lab_id)))
+
+n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers" & session_error=="noerror" & trial_based_error=="no") %>% summarise(n = length(unique(participant_lab_id)))
 
 n_labs <- d_participants %>% summarise(n = length(unique(lab_id)))
 
@@ -184,7 +187,7 @@ n_labs_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summari
 
 age_stat_adults <- d_participants %>% 
   filter(age_cohort=="adults") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_years = (as.numeric(age_years))[1]) %>%
   ungroup %>%
   summarise(mean = mean(age_years, na.rm = TRUE), 
@@ -194,7 +197,7 @@ age_stat_adults <- d_participants %>%
 
 age_stat_toddlers <- d_participants %>% 
   filter(age_cohort=="toddlers") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_mo = age_mo[1]) %>%
   ungroup %>%
   summarise(mean = mean(age_mo), 
@@ -207,7 +210,7 @@ age_stat_toddlers <- d_participants %>%
 #adults
 lab_stats_adults <- d_participants %>%
   filter(age_cohort=="adults") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_years = (as.numeric(age_years))[1], 
             method = method[1]) %>%
   group_by(lab_id) %>%
@@ -217,17 +220,17 @@ lab_stats_adults <- d_participants %>%
 n_adults_collected <- d_participants %>% 
   filter(age_cohort=="adults") %>% 
   group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(unique_participant_id)))
+  summarise(N_collected = length(unique(participant_lab_id)))
 
 lab_stats_adults_included <- d_participants %>%  filter(age_cohort=="adults") %>%
   filter(trial_based_error=="no") 
 
 lab_stats_adults_female <- lab_stats_adults_included %>% group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(unique_participant_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
+  summarise(N_female = length(unique(participant_lab_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
   
 lab_stats_adults_included <- lab_stats_adults_included %>% 
   group_by (lab_id) %>%
-  summarise(N_included = length(unique(unique_participant_id)))
+  summarise(N_included = length(unique(participant_lab_id)))
 
 lab_stats_adults <- lab_stats_adults %>% left_join(lab_stats_adults_included) %>%  left_join(lab_stats_adults_female) %>% left_join(n_adults_collected) %>% 
   select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
@@ -256,7 +259,7 @@ papaja::apa_table(lab_stats_adults_incl_sum,
 #toddlers
 lab_stats_toddlers <- d_participants %>%
   filter(age_cohort=="toddlers") %>% 
-  group_by(lab_id, unique_participant_id) %>%
+  group_by(lab_id, participant_lab_id) %>%
   summarise(age_mo = (as.numeric(age_mo))[1], 
             method = method[1]) %>%
   group_by(lab_id) %>%
@@ -266,7 +269,7 @@ lab_stats_toddlers <- d_participants %>%
 n_toddlers_collected <- d_participants %>% 
   filter(age_cohort=="toddlers") %>% 
   group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(unique_participant_id)))
+  summarise(N_collected = length(unique(participant_lab_id)))
 
 lab_stats_toddlers_included <- d_participants %>%
   filter(age_cohort=="toddlers") %>%
@@ -274,13 +277,13 @@ lab_stats_toddlers_included <- d_participants %>%
 
 lab_stats_toddlers_female <- lab_stats_toddlers_included %>%
   group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(unique_participant_id))) %>%
+  summarise(N_female = length(unique(participant_lab_id))) %>%
   filter(participant_gender=="girl") %>%
   select(-participant_gender)
   
 lab_stats_toddlers_included <- lab_stats_toddlers_included %>% 
   group_by (lab_id) %>%
-  summarise(N_included = length(unique(unique_participant_id)))
+  summarise(N_included = length(unique(participant_lab_id)))
 
 lab_stats_toddlers <- lab_stats_toddlers %>%
   left_join(lab_stats_toddlers_included) %>%

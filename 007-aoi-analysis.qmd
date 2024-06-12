@@ -599,12 +599,22 @@ test_data |>
 
 ```{r}
 ggplot(ms_timecourse_test_first_trial |>
+         filter(age_cohort=="adults") |>
          pivot_longer(mean_target_general:mean_distractor_general, 
                       names_to = "trial_type", values_to = "mean_looking"),       
          aes(x = t_norm_downsampled, y = mean_looking, col = trial_type)) + 
   geom_point(alpha = .1) +
   geom_smooth() + 
-  facet_grid(trial_file_name~age_cohort)
+  facet_wrap(~trial_file_name, ncol=4)
+
+ggplot(ms_timecourse_test_first_trial |>
+         filter(age_cohort=="toddlers") |>
+         pivot_longer(mean_target_general:mean_distractor_general, 
+                      names_to = "trial_type", values_to = "mean_looking"),       
+         aes(x = t_norm_downsampled, y = mean_looking, col = trial_type)) + 
+  geom_point(alpha = .1) +
+  geom_smooth() + 
+  facet_wrap(trial_file_name~age_cohort, ncol=4)
 ```
 
 

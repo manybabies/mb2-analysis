@@ -35,6 +35,10 @@ First trim toddlers that are outside of age range.
 # this needs to be filled in after we have age in the preprocessed file.
 data_preprocessed <- data_preprocessed %>%
   left_join(combined_demo) #by=join_by(participant_lab_id, lab_id, participant_id, age_cohort))
+
+#filter out participants that fall outside of the age range
+data_preprocessed <- data_preprocessed %>%
+  filter(age_exclusion=="no")
 ```
 
 
@@ -78,6 +82,8 @@ manual_exclusions <- bind_rows(
 data_preprocessed <- data_preprocessed %>%
   left_join(manual_exclusions, by=c("media_name", "participant_lab_id"))
 
+data_preprocessed <- data_preprocessed %>%
+    filter(is.na(man_exclude)|man_exclude==FALSE)
 ```
 
 ## Apply trial-level errors reported by labs
@@ -130,12 +136,8 @@ trial_level_errors_demographics_lab_reported %>%
     prop_valid_trials = valid_trials/total_trials
   )
 
-
 data_preprocessed <- left_join(data_preprocessed, trial_level_errors_demographics_lab_reported)
 
-
-# TO-DO: integrate with sufficient looking data error
-# lab-reported error takes precedence
 ```
 
 
@@ -193,11 +195,7 @@ summarized_valid_looks <- summarized_valid_looks %>%
     trial_error_valid_looking = case_when(
       valid_looking_trial == 0 ~ "yes",
       TRUE ~ "no"
-    )
-  )
-names(data_preprocessed)[names(data_preprocessed) == 'trial_error'] <- 'trial_error_valid_looking'
-data_preprocessed <- data_preprocessed %>%
-  select(-trial_error_type)
+    ))
   
 # inspect trial errors by age cohort and condition
 summarized_valid_looks %>%
@@ -227,7 +225,7 @@ Summarize the number of valid familiarization trials by participant.
 ```{r}
 summarized_valid_familiarization_trials <- data_preprocessed %>%
   filter(condition == "familiarization") %>%
-  filter(trial_error_valid_looking == "no") %>%
+  filter(trial_error_valid_looking == "no" & trial_error_lab_reported == "no") %>%
   distinct(participant_lab_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
   group_by(participant_lab_id,lab_id,age_cohort,participant_id) %>%
   summarize(
@@ -262,11 +260,11 @@ summarized_valid_first_test_trials <- data_preprocessed %>%
   filter(condition %in% c("ignorance","knowledge")) %>%
   # check this, need to make sure this is a robust way of identifying the first test trial
   filter(trial_num==5) %>%
-  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error_valid_looking) %>%
+  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error_valid_looking, trial_error_lab_reported) %>%
   mutate(
     valid_first_test_trial = case_when(
-      trial_error_valid_looking == "yes" ~ 0,
-      trial_error_valid_looking == "no" ~ 1,
+      (trial_error_lab_reported == "yes" | trial_error_valid_looking == "yes") ~ 0,
+      (trial_error_lab_reported == "no" & trial_error_valid_looking == "no") ~ 1,
       TRUE ~ NA
     )
   ) %>%
@@ -284,8 +282,6 @@ data_preprocessed <- data_preprocessed %>%
 participant_trial_errors <- data_preprocessed %>%
   mutate(
     trial_based_error = case_when(
-      #step 0 (lab-reported)
-      trial_error_lab_reported == "yes" ~ "yes",
       #step 5 (familiarization)
       sufficient_fam_trials == 0 ~ "yes",
       #step 6 (first test trial)
@@ -293,7 +289,6 @@ participant_trial_errors <- data_preprocessed %>%
       TRUE ~ "no"
     ),
     trial_based_error_type = case_when(
-      trial_error_lab_reported == "yes" ~ "0",
       sufficient_fam_trials == 0 ~ "5",
       valid_first_test_trial == 0 ~ "6",
       TRUE ~ NA
