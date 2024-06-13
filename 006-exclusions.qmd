@@ -279,7 +279,7 @@ data_preprocessed <- data_preprocessed %>%
 ## Overall Trial-based Exclusions
 
 ```{r}
-participant_trial_errors <- data_preprocessed %>%
+data_preprocessed <- data_preprocessed %>%
   mutate(
     trial_based_error = case_when(
       #step 5 (familiarization)
@@ -294,13 +294,16 @@ participant_trial_errors <- data_preprocessed %>%
       TRUE ~ NA
     )
   )
+
+participant_trial_error_info <- data_preprocessed %>% 
+  distinct(participant_lab_id, trial_based_error, trial_based_error_type)
   
 ```
 
 ## Overview
 
 ```{r}
-overview_trial_based_errors <- participant_trial_errors %>%
+overview_trial_based_errors <- data_preprocessed %>%
   distinct(participant_lab_id,lab_id,age_cohort,participant_id,trial_based_error,trial_based_error_type) %>%
   group_by(age_cohort) %>%
   summarize(
@@ -317,8 +320,8 @@ overview_trial_based_errors %>%
 ## Filtering trial-based errors
 
 ```{r}
-data_preprocessed <- participant_trial_errors %>% 
-  filter(participant_trial_errors$trial_based_error=="no")
+data_preprocessed <- data_preprocessed %>% 
+  filter(trial_based_error=="no")
 
 ```
 
@@ -328,10 +331,9 @@ data_preprocessed <- participant_trial_errors %>%
 ```{r}
 #MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
 
-d_participants <- participant_trial_errors %>% distinct(participant_lab_id, trial_based_error, trial_based_error_type)
-  
+
 d_participants <- combined_demo %>%
-  left_join(d_participants)
+  left_join(participant_trial_error_info)
 
 write_csv(d_participants,
           here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
