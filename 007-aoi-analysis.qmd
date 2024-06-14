@@ -366,14 +366,14 @@ First look at the proportional looking measures, focusing on the target exit dur
 
 ```{r}
 #plot average proportion looking
-overall_p <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5), aes(x=condition, y=prop_exit,color=condition))+
+overall_p <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
   geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,N_exit>=5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
