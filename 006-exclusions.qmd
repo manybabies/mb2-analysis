@@ -331,7 +331,6 @@ data_preprocessed <- data_preprocessed %>%
 ```{r}
 #MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
 
-
 d_participants <- combined_demo %>%
   left_join(participant_trial_error_info)
 
@@ -464,7 +463,7 @@ papaja::apa_table(lab_stats_toddlers,
 ```
 
 
-Our final dataset will consist of `r n_before_exclusion` participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (XX% female) that will have been tested in `r n_labs_toddlers` labs (mean lab sample size = `r mean(lab_stats_toddlers_included$N_included)`, SD =`r sd(lab_stats_toddlers_included$N_included)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) will be analyzed. The average age of toddlers in the final sample will be `r round(age_stat_toddlers$mean, 2)` months (SD: `r round(age_stat_toddlers$sd, 2)`, range: `r round(age_stat_toddlers$min, 2)` - `r round(age_stat_toddlers$max, 2)`). The final sample size of included adults will be N = `r n_adults_included` (XX% female), tested in `r sum(lab_stats_adults_included$N_included)` labs (mean lab sample size = `r mean(lab_stats_adults_included$N_included)`, SD = `r sd(lab_stats_adults_included$N_included)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). Their mean age will be `r round(age_stat_adults$mean, 2)` years (SD: `r round(age_stat_adults$sd, 2)`, range: `r round(age_stat_adults$min, 2)` - `r round(age_stat_adults$max, 2)`).
+Our final dataset will consist of `r n_before_exclusion` participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (XX% female) that will have been tested in `r n_labs_toddlers` labs (mean lab sample size = `r mean(lab_stats_toddlers_included$N_included)`, SD =`r sd(lab_stats_toddlers_included$N_included)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) will be analyzed. The average age of toddlers in the final sample will be `r round(age_stat_toddlers$mean, 2)` months (SD: `r round(age_stat_toddlers$sd, 2)`, range: `r round(age_stat_toddlers$min, 2)` - `r round(age_stat_toddlers$max, 2)`). The final sample size of included adults will be N = `r sum(lab_stats_adults_included$N_included)` (XX% female), tested in `r n_labs_adults` labs (mean lab sample size = `r mean(lab_stats_adults_included$N_included)`, SD = `r sd(lab_stats_adults_included$N_included)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). Their mean age will be `r round(age_stat_adults$mean, 2)` years (SD: `r round(age_stat_adults$sd, 2)`, range: `r round(age_stat_adults$min, 2)` - `r round(age_stat_adults$max, 2)`).
 
 ```{r saving}
 save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
