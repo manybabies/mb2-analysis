@@ -113,7 +113,7 @@ overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes
   #geom_violin()+
   geom_boxplot()+
   #geom_beeswarm(alpha=0.5)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
   scale_color_brewer(palette="Set1")+
@@ -123,7 +123,7 @@ overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes
   xlab("Trial Number")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window)")
 overall_p
-ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white")
+ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white",width=9, height=6)
 
 ```
 
@@ -456,10 +456,6 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
 summarize_test_aoi %>%
   knitr::kable()
 ```
-
-
-d <- summarize_participant_test_first_trial %>% group_by(condition) %>% count(sum_distractor_exit)
-t <- summarize_participant_test_first_trial %>% group_by(condition) %>% count(sum_target_exit)
 
 ### Main Model
 
