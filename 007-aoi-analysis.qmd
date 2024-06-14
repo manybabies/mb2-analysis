@@ -240,9 +240,9 @@ bm_fam_aoi_toddlers %>%
 Compute Bayes factor approach
 
 ```{r}
-null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
-summary(null_fam_aoi_toddlers)
-brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
+# null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
+# summary(null_fam_aoi_toddlers)
+# brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
 ```
 
 #### Adults
@@ -287,9 +287,9 @@ bm_fam_aoi_adults %>%
 Compute Bayes factor approach
 
 ```{r}
-null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
-summary(null_fam_aoi_adults)
-brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
+# null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
+# summary(null_fam_aoi_adults)
+# brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
 ```
 
 ## Test Data
@@ -432,12 +432,16 @@ Plot the effect by age
 
 ```{r}
 kid_prop_by_age <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"),aes(x=age_mo,y=prop_exit,color=condition))+
-  geom_point()+
+  geom_hline(yintercept=0.5, linetype="dashed")+
+  geom_point(alpha=0.4)+
   geom_smooth(method="lm")+
   xlab("Age (in months)")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")
 kid_prop_by_age
-  
+ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking_by_age.png"),bg="white", width = 9, height = 6)
 ```
 
 ### Summary Statistics
@@ -496,9 +500,30 @@ bm_aoi_toddlers %>%
   mean_hdi(.width = 0.95)
 
 bm_aoi_toddlers %>%
+  spread_draws(b_age_mo_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_aoi_toddlers %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 ```
+
+Visualize model coefficients
+
+```{r}
+bm_aoi_toddlers %>%
+  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient,y=b)) +
+  stat_halfeye()+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme_cowplot()+
+  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
+  ylab("Model Coefficient Estimate")+
+  xlab("Model Predictor")+
+  coord_flip()
+```
+
 
 Hypothesis test/ compute Bayes Factor
 
