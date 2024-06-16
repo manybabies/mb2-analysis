@@ -28,26 +28,34 @@ combined_demo <- combined_demo %>% unite(col = "participant_lab_id",
         remove = FALSE, sep = "_")
 ```
 
-
-First trim toddlers that are outside of age range. 
+Compare participants in the eyetracking data and participants in the demographics data.
 
 ```{r}
-# this needs to be filled in after we have age in the preprocessed file.
-data_preprocessed <- data_preprocessed %>%
-  left_join(combined_demo) #by=join_by(participant_lab_id, lab_id, participant_id, age_cohort))
+participants_demo_only <- setdiff(combined_demo$participant_lab_id, unique(data_preprocessed$participant_lab_id))
 
-#filter out participants that fall outside of the age range
-data_preprocessed <- data_preprocessed %>%
-  filter(age_exclusion=="no")
+# TO-DO: validate against session exclusions
+
+#participants who appear in the eyetracking data but not in the demographics data
+participants_et_only <- setdiff(unique(data_preprocessed$participant_lab_id),combined_demo$participant_lab_id)
+#validate
+assert_that(length(participants_et_only)==0)
 ```
 
+Extract all of the unique participants and trials in the eyetracking data. This is helfpul to ensure that all exclusion relevant to the remaining eyetracking data is preserved in one dataframe without making multiple joins into the (very large) eyetracking dataset.
+
+```{r}
+# extract unique participants and trials
+unique_et_participants_trials <- data_preprocessed %>%
+  distinct(lab_id, participant_lab_id, participant_id, age_cohort, participant_trial_id, condition,trial_num,media_name,trial_file_name) %>%
+  # remove calibration trials
+  filter(!(media_name %in% c("Pupil_Calibration","star_calib")))
+```
 
 # Individual Trial Exclusions
 
 ## Webcam specific: exclude after manual checking of dataquality
 
 ```{r}
-
 mew <- bind_rows(lapply(
   list.files(
     here(DEMO_DATA_DIR, "webcam_exclusions"),
@@ -79,11 +87,13 @@ manual_exclusions <- bind_rows(
              ) %>% 
   select(participant_lab_id, media_name = trial, man_exclude)
 
-data_preprocessed <- data_preprocessed %>%
-  left_join(manual_exclusions, by=c("media_name", "participant_lab_id"))
+#ensure that all participants with blank media name info are not in data preprocessed
+valid_media_names <- unique(data_preprocessed$media_name)
+assert_that(!any(unique(filter(manual_exclusions,!(media_name %in% valid_media_names))$participant_lab_id) %in% unique(data_preprocessed$participant_lab_id)))
 
-data_preprocessed <- data_preprocessed %>%
-    filter(is.na(man_exclude)|man_exclude==FALSE)
+# join into unique_et_participants_trials
+unique_et_participants_trials <- unique_et_participants_trials %>%
+  left_join(manual_exclusions, by=c("media_name", "participant_lab_id"))
 ```
 
 ## Apply trial-level errors reported by labs
@@ -136,10 +146,11 @@ trial_level_errors_demographics_lab_reported %>%
     prop_valid_trials = valid_trials/total_trials
   )
 
-data_preprocessed <- left_join(data_preprocessed, trial_level_errors_demographics_lab_reported)
+# join into eye-tracking data trials
+unique_et_participants_trials <- unique_et_participants_trials %>%
+  left_join(trial_level_errors_demographics_lab_reported)
 
 ```
-
 
 ## Sufficient Looking Data per Trial
 
@@ -150,6 +161,7 @@ data_preprocessed <- left_join(data_preprocessed, trial_level_errors_demographic
 summarized_valid_looks <- data_preprocessed %>%
   #define a valid point of gaze
   #we define a valid point of gaze as requiring both a valid x-coordinate and a valid y-coordinate
+  # x-screen and y-screen are x-y coordinates relative to the screen size, prior
   mutate(
     valid_xy_look_type = case_when(
       !is.na(x_screen) & !is.na(y_screen) ~ "both x and y are valid",
@@ -163,7 +175,9 @@ summarized_valid_looks <- data_preprocessed %>%
     valid_xy_look = ifelse(valid_xy_look_type == "both x and y are valid",1,0)
   ) %>%
   #only focus on familiarization and test trials
-  filter(condition %in% c("familiarization", "ignorance", "knowledge")) %>%
+  #filter(condition %in% c("familiarization", "ignorance", "knowledge")) %>%
+  #TO-DO check whether to go back to filtering based on condition once some preprocessing steps are fixed?
+  filter(!media_name %in% c("Pupil_Calibration","star_calib")) %>%
   group_by(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num) %>%
   summarize(
     total_frames=n(),
@@ -175,14 +189,12 @@ summarized_valid_looks <- data_preprocessed %>%
 Inspect the resulting valid looking data
 
 ```{r}
-hist(summarized_valid_looks$prop_valid_looks)
-
 ggplot(summarized_valid_looks, aes(prop_valid_looks,fill=age_cohort))+
   geom_histogram()+
   facet_wrap(~age_cohort+condition)
 ```
 
-Exclude trials that do not meet the 50% valid looking criterion
+Exclude trials that do not meet the 50% valid looking criterion (exclude more than 50% missing is equivalent to at least 50% looking for inclusion)
 
 ```{r}
 summarized_valid_looks <- summarized_valid_looks %>%
@@ -207,125 +219,213 @@ summarized_valid_looks %>%
   )
 ```
 
-Join back in the information about trial errors into the overall data
+Join back in the information about trial errors into the eyetracking-based trial information
 
 ```{r}
-data_preprocessed <- data_preprocessed %>%
+#join
+unique_et_participants_trials <- unique_et_participants_trials %>%
   left_join(summarized_valid_looks)
 ```
 
-# Trial-based Exclusions
+## Overall valid trials
+
+Summarize information about whether each trial is valid
+
+```{r}
+# Create an overarching trial error common based on all of the trial-based exclusion criteria
+# TO-DO: check the order of trial error assignment
+unique_et_participants_trials <- unique_et_participants_trials %>%
+  mutate(
+    trial_error = case_when(
+      #Did the lab report a trial error?
+      trial_error_lab_reported == "yes" ~ "yes",
+      #manual web-cam exclusions
+      !is.na(man_exclude) & man_exclude==TRUE ~ "yes",
+      #is there sufficient looking on the given trial?
+      trial_error_valid_looking == "yes" ~ "yes",
+      TRUE ~ "no"
+    ),
+    trial_error_type = case_when(
+      trial_error_lab_reported == "yes" ~ "lab reported trial error",
+      !is.na(man_exclude) & man_exclude==TRUE ~ "manual webcam exclusion",
+      trial_error_valid_looking == "yes" ~ "insufficient looking",
+      TRUE ~ NA
+    )
+  )
+```
+
+# Trial-based Participant Exclusions
 
 ## Sufficient Valid Familiarization Trials
 
-> Of these, participants will be excluded sequentially if (5) their data is missing on more than one familiarization trial, or 
+Next, we exclude participants if their data is missing on more than one familiarization trial.
 
-Summarize the number of valid familiarization trials by participant.
+First, let's summarize the number of valid familiarization trials by participant.
 
 ```{r}
-summarized_valid_familiarization_trials <- data_preprocessed %>%
+summarized_valid_familiarization_trials <- unique_et_participants_trials %>%
   filter(condition == "familiarization") %>%
-  filter(trial_error_valid_looking == "no" & trial_error_lab_reported == "no") %>%
-  distinct(participant_lab_id,lab_id,age_cohort,participant_id,participant_trial_id,trial_num) %>%
   group_by(participant_lab_id,lab_id,age_cohort,participant_id) %>%
   summarize(
-    total_valid_fam_trials = n()
-  )
-
-#inspect
-ggplot(summarized_valid_familiarization_trials, aes(total_valid_fam_trials,fill=age_cohort))+
-  geom_histogram()+
-  facet_wrap(~age_cohort)
-
-#participants are excluded if insufficient valid familiarization trials are available
-summarized_valid_familiarization_trials <- summarized_valid_familiarization_trials %>%
+    total_valid_fam_trials = sum(trial_error=="no")
+  ) %>%
+  #participants are excluded if insufficient valid familiarization trials are available
   mutate(
     sufficient_fam_trials = ifelse(total_valid_fam_trials>=3,1,0)
   )
 
-#join back in to main data
-data_preprocessed <- data_preprocessed %>%
+#join back in to eyetracking data
+unique_et_participants_trials <- unique_et_participants_trials %>%
   left_join(summarized_valid_familiarization_trials)
+
+#check if any participants are missing familiarization information
+assert_that(sum(is.na(unique_et_participants_trials$sufficient_fam_trials))==0)
 ```
 
 ## Valid First Test Trial
 
-> (6) their data is missing on the first test trial. If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above (for details on exclusions, see Supplemental Material).
+Finally we exclude participants if their data is missing on the first test trial. 
+
+Text: "If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above (for details on exclusions, see Supplemental Material)."
 
 Identify participants without the first test trial
 
 ```{r}
 # identify valid and invalid first test trials
-summarized_valid_first_test_trials <- data_preprocessed %>%
+summarized_valid_first_test_trials <- unique_et_participants_trials %>%
   filter(condition %in% c("ignorance","knowledge")) %>%
-  # check this, need to make sure this is a robust way of identifying the first test trial
+  # TO-DO: make sure this is a robust way of identifying the first test trial
   filter(trial_num==5) %>%
-  distinct(participant_lab_id,lab_id,age_cohort,condition,participant_id,participant_trial_id,trial_num,trial_error_valid_looking, trial_error_lab_reported) %>%
   mutate(
     valid_first_test_trial = case_when(
-      (trial_error_lab_reported == "yes" | trial_error_valid_looking == "yes") ~ 0,
-      (trial_error_lab_reported == "no" & trial_error_valid_looking == "no") ~ 1,
+      trial_error == "no" ~ 1,
+      trial_error == "yes" ~ 0,
       TRUE ~ NA
     )
   ) %>%
   #remove columns that vary within participants, to make joining at the participant level possible
-  select(-condition, -participant_trial_id,-trial_num)
+  select(lab_id,participant_lab_id, participant_id,age_cohort,valid_first_test_trial)
 
-#join back in to main data
-data_preprocessed <- data_preprocessed %>%
+#check for participants with missing first test trials
+setdiff(unique(unique_et_participants_trials$participant_lab_id),unique(summarized_valid_first_test_trials$participant_lab_id))
+setdiff(unique(summarized_valid_first_test_trials$participant_lab_id),unique(unique_et_participants_trials$participant_lab_id))
+
+#join back in to unique_et_participants_trials
+unique_et_participants_trials <- unique_et_participants_trials %>%
   left_join(summarized_valid_first_test_trials)
+
+##TO-DO: Fix up this portion once we figure out what is going on with these participants
+#https://github.com/manybabies/mb2-analysis/issues/121
+#check if any participants are missing valid first test trial information
+#(given that there are participants with only familiarization trials, this appears to be the case)
+sum(is.na(unique_et_participants_trials$valid_first_test_trial))
+
+#fix up valid_first_test_trial column for participants who only have familiarization trials
+unique_et_participants_trials <- unique_et_participants_trials %>%
+  mutate(valid_first_test_trial = ifelse(is.na(valid_first_test_trial),0,valid_first_test_trial))
+
+#validate
+assert_that(sum(is.na(unique_et_participants_trials$valid_first_test_trial))==0)
 ```
 
-## Overall Trial-based Exclusions
+## Apply overall trial-based participant exclusions
 
 ```{r}
-data_preprocessed <- data_preprocessed %>%
+unique_et_participants_trials <- unique_et_participants_trials %>%
   mutate(
-    trial_based_error = case_when(
-      #step 5 (familiarization)
+    trial_based_participant_exclusion = case_when(
+      #step 5 (insufficient familiarization trials)
       sufficient_fam_trials == 0 ~ "yes",
       #step 6 (first test trial)
       valid_first_test_trial == 0 ~ "yes",
       TRUE ~ "no"
     ),
-    trial_based_error_type = case_when(
+    trial_based_participant_exclusion_type = case_when(
       sufficient_fam_trials == 0 ~ "5",
       valid_first_test_trial == 0 ~ "6",
       TRUE ~ NA
     )
   )
 
-participant_trial_error_info <- data_preprocessed %>% 
-  distinct(participant_lab_id, trial_based_error, trial_based_error_type)
-  
+participant_trial_error_info <- unique_et_participants_trials %>% 
+  distinct(participant_lab_id, trial_based_participant_exclusion, trial_based_participant_exclusion_type)
 ```
 
-## Overview
+## Overview of trial-based participant exclusions
+
+Note that this is before applying age-based exclusions.
 
 ```{r}
-overview_trial_based_errors <- data_preprocessed %>%
-  distinct(participant_lab_id,lab_id,age_cohort,participant_id,trial_based_error,trial_based_error_type) %>%
+overview_trial_based_errors <- unique_et_participants_trials %>%
+  distinct(participant_lab_id,lab_id,age_cohort,participant_id,trial_based_participant_exclusion, trial_based_participant_exclusion_type) %>%
   group_by(age_cohort) %>%
   summarize(
     total_N = n(),
-    trial_error_exclusions = sum(trial_based_error=="yes"),
+    trial_error_exclusions = sum(trial_based_participant_exclusion=="yes"),
     prop_excluded = trial_error_exclusions / total_N
   )
 
 overview_trial_based_errors %>%
   knitr::kable()
-
 ```
 
-## Filtering trial-based errors
+
+# Join in exclusion & demographic information to ET data and apply exclusions
+
+## Join all exclusion information to eye-tracking data
 
 ```{r}
-data_preprocessed <- data_preprocessed %>% 
-  filter(trial_based_error=="no")
-
+# join all information into data_preprocessed (the eye-tracking data)
+data_preprocessed <- data_preprocessed %>%
+  left_join(unique_et_participants_trials)
 ```
 
+## Join minimal demographic information into the eye-tracking data
+
+```{r}
+#create a minimal demographic data frame to join into the eyetracking data
+## The combined demographic data has a huge amount of information, so we need to be careful about
+## how much of that info (i.e. how many columns) we join into the full demographic dataset.
+## Currently, the strategy is to join just the most critical columns needed for the primary analyses.
+## If more demographic information is needed for exploratory analyses, we can join the demographic information in at that point in the script
+combined_demo_minimal <- combined_demo %>%
+  select(participant_lab_id,lab_id,age_cohort,participant_id,pilot,method,session_error,session_error_info,session_error_notes,exclude_session,participant_gender,age_years,age_days,age_days_num,age_mo,age_exclusion,nationality,institution,country,lang1,lang1_exposure, lang2,lang2_exposure)
+
+#join the minimal demographics file into the eyetracking data
+data_preprocessed <- data_preprocessed %>%
+  left_join(combined_demo_minimal)
+```
+
+## Write the dataset pre-exclusions
+
+```{r}
+save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b))
+```
+
+## Apply all exclusions
+
+```{r}
+# filter
+data_preprocessed <- data_preprocessed %>%
+  #filter based on age
+  filter(age_exclusion=="no") %>%
+  # filter out trial errors (including webcam exclusions, insufficient looking, and lab-reported trial errors)
+  filter(trial_error=="no") %>%
+  #filter based on trial errors
+  filter(trial_based_participant_exclusion=="no")
+```
+
+## Write the dataset post-exclusions
+
+```{r saving}
+save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+```
+
+
+
+
 > TO DO: spit out overview of trial-based exclusions and pass a dataset with trial-based exclusions incorporated on to the next processing step
+
 
 # Lab and participant information
 ```{r}
@@ -464,7 +564,3 @@ papaja::apa_table(lab_stats_toddlers,
 
 
 Our final dataset will consist of `r n_before_exclusion` participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (XX% female) that will have been tested in `r n_labs_toddlers` labs (mean lab sample size = `r mean(lab_stats_toddlers_included$N_included)`, SD =`r sd(lab_stats_toddlers_included$N_included)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) will be analyzed. The average age of toddlers in the final sample will be `r round(age_stat_toddlers$mean, 2)` months (SD: `r round(age_stat_toddlers$sd, 2)`, range: `r round(age_stat_toddlers$min, 2)` - `r round(age_stat_toddlers$max, 2)`). The final sample size of included adults will be N = `r sum(lab_stats_adults_included$N_included)` (XX% female), tested in `r n_labs_adults` labs (mean lab sample size = `r mean(lab_stats_adults_included$N_included)`, SD = `r sd(lab_stats_adults_included$N_included)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). Their mean age will be `r round(age_stat_adults$mean, 2)` years (SD: `r round(age_stat_adults$sd, 2)`, range: `r round(age_stat_adults$min, 2)` - `r round(age_stat_adults$max, 2)`).
-
-```{r saving}
-save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
-```
