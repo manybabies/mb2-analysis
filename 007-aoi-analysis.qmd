@@ -94,6 +94,14 @@ summarize_participant_familiarization <- fam_data %>%
   ) %>%
   group_by(lab_id,age_cohort,condition,participant_id) %>%
   mutate(familiarization_trial_num = rank(trial_num, ties.method = "first")) #check this
+
+summarize_participant_familiarization_overall <- summarize_participant_familiarization %>%
+  group_by(lab_id,age_cohort,participant_lab_id,participant_id) %>%
+  summarize(
+    fam_trial_n = n(),
+    fam_prop_exit=mean(prop_exit,na.rm=TRUE),
+    fam_prop_general=mean(prop_general,na.rm=TRUE)
+  )
 ```
 
 Some quick checks on the resulting data
@@ -453,8 +461,13 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
     participant_num=sum(!is.na(prop_exit)),
     mean_target_looking=mean(prop_exit,na.rm=T),
     sd_target_looking=sd(prop_exit,na.rm=T),
+    #95% CIs
+    lower_ci_target_looking = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
+    upper_ci_target_looking = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
     mean_target_looking_general = mean(prop_general, na.rm=T),
     sd_target_looking_general=sd(prop_general,na.rm=T),
+    lower_ci_target_looking_general = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
+    upper_ci_target_looking_general = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
   )
 
 summarize_test_aoi %>%
@@ -1402,4 +1415,51 @@ summary(bm_aoi_adults_correct_final_fam_trial)
 bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+```
+
+## Only >50% looking to target during familiarization trials
+
+```{r}
+#join overall familiarization looking in to test trial
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  left_join(summarize_participant_familiarization_overall)
+
+# overall plot
+#plot average proportion looking
+overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_test_first_trial,fam_prop_exit>0.5), aes(x=condition, y=prop_exit,color=condition))+
+  #geom_violin()+
+  #geom_boxplot()+
+  geom_beeswarm(alpha=0.2,cex=0.5)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  facet_wrap(~age_cohort)+
+  theme(legend.position="none")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+overall_p_sufficient_fam_prop_looking
+ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
+```
+
+### Summary Statistics
+
+```{r}
+summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
+  filter(fam_prop_exit>0.5) %>%
+  group_by(age_cohort,condition) %>%
+  summarize(
+    participant_num=sum(!is.na(prop_exit)),
+    mean_target_looking=mean(prop_exit,na.rm=T),
+    sd_target_looking=sd(prop_exit,na.rm=T),
+    mean_target_looking_general = mean(prop_general, na.rm=T),
+    sd_target_looking_general=sd(prop_general,na.rm=T),
+  )
+
+summarize_test_aoi_sufficient_fam_prop_looking %>%
+  knitr::kable()
 ```
