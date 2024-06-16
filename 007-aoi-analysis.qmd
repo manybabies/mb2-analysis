@@ -1419,6 +1419,8 @@ bm_aoi_adults_correct_final_fam_trial %>%
 
 ## Only >50% looking to target during familiarization trials
 
+### Plot
+
 ```{r}
 #join overall familiarization looking in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
@@ -1463,3 +1465,31 @@ summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_fir
 summarize_test_aoi_sufficient_fam_prop_looking %>%
   knitr::kable()
 ```
+
+## Correlation between familiarization and test
+
+### Plot 
+
+```{r}
+correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  geom_point(alpha=0.25)+
+  geom_smooth(method="lm")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  xlab("Overall Proportion Target Looking during Familiarization")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+correlation_plot_fam_test
+ggsave(here(plot_path,"correlation_plot_fam_test.png"),bg="white",width=9,height=6)
+
+#correlation between familiarization and test
+corrlelation_fam_test <- summarize_participant_test_first_trial %>%
+  select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
+  group_by(age_cohort,condition) %>%
+  nest() %>%
+  #use map to compute correlation
+  summarize(correlation=map(data,corrr::correlate))
+```
+
