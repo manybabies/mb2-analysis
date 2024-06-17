@@ -513,7 +513,7 @@ combined_demo <- combined_demo |>
       TRUE ~ "no"
     )
   )
-View(select(combined_demo,age_cohort,age_years_n,age_mo,age_days_num,age_exclusion))
+View(select(combined_demo,age_cohort,lab_id,participant_id,age_years_n,age_mo,age_days_num,age_exclusion))
 ```
 
 

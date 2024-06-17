@@ -31,7 +31,13 @@ combined_demo <- combined_demo %>% unite(col = "participant_lab_id",
 Compare participants in the eyetracking data and participants in the demographics data.
 
 ```{r}
+#participants who appear in the demographics data but not in the eyetracking data
 participants_demo_only <- setdiff(combined_demo$participant_lab_id, unique(data_preprocessed$participant_lab_id))
+#add a column to combined_demo to track this
+combined_demo <- combined_demo %>%
+  mutate(
+    no_eyetracking_data = participant_lab_id %in% participants_demo_only
+  )
 
 # TO-DO: validate against session exclusions
 
@@ -46,7 +52,24 @@ Extract all of the unique participants and trials in the eyetracking data. This 
 ```{r}
 # extract unique participants and trials
 unique_et_participants_trials <- data_preprocessed %>%
-  distinct(lab_id, participant_lab_id, participant_id, age_cohort, participant_trial_id, condition,trial_num,media_name,trial_file_name) %>%
+  distinct(lab_id, participant_lab_id, participant_id, age_cohort, participant_trial_id, condition,trial_num,media_name,trial_file_name) 
+
+# interim solution to participants with only calibration ET data
+# store them here and then handle this as a special case
+unique_et_participants_calib_removed <- unique_et_participants_trials %>%
+  filter(!(media_name %in% c("Pupil_Calibration","star_calib"))) %>%
+  distinct(participant_lab_id) %>%
+  pull(participant_lab_id)
+participants_with_only_calibration_et <- setdiff(
+  unique(unique_et_participants_trials$participant_lab_id), 
+  unique_et_participants_calib_removed)
+#to handle this exception, let's create a specific column to track this issue in combined_demo
+combined_demo <- combined_demo %>%
+  mutate(
+    only_calibration_et = participant_lab_id %in% participants_with_only_calibration_et
+  )
+
+unique_et_participants_trials <- unique_et_participants_trials %>%
   # remove calibration trials
   filter(!(media_name %in% c("Pupil_Calibration","star_calib")))
 ```
@@ -346,9 +369,6 @@ unique_et_participants_trials <- unique_et_participants_trials %>%
       TRUE ~ NA
     )
   )
-
-participant_trial_error_info <- unique_et_participants_trials %>% 
-  distinct(participant_lab_id, trial_based_participant_exclusion, trial_based_participant_exclusion_type)
 ```
 
 ## Overview of trial-based participant exclusions
@@ -389,12 +409,80 @@ data_preprocessed <- data_preprocessed %>%
 ## Currently, the strategy is to join just the most critical columns needed for the primary analyses.
 ## If more demographic information is needed for exploratory analyses, we can join the demographic information in at that point in the script
 combined_demo_minimal <- combined_demo %>%
-  select(participant_lab_id,lab_id,age_cohort,participant_id,pilot,method,session_error,session_error_info,session_error_notes,exclude_session,participant_gender,age_years,age_days,age_days_num,age_mo,age_exclusion,nationality,institution,country,lang1,lang1_exposure, lang2,lang2_exposure)
+  select(participant_lab_id,lab_id,age_cohort,participant_id,pilot,method,session_error,session_error_info,session_error_notes,exclude_session,participant_gender,age_years,age_days,age_days_num,age_mo,age_exclusion,nationality,institution,country,lang1,lang1_exposure, lang2,lang2_exposure,only_calibration_et)
 
 #join the minimal demographics file into the eyetracking data
 data_preprocessed <- data_preprocessed %>%
   left_join(combined_demo_minimal)
 ```
+
+## Join trial-based exclusion information into demographic data
+
+```{r}
+participant_trial_error_info <- unique_et_participants_trials %>% 
+  distinct(lab_id, participant_lab_id, participant_id, age_cohort,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion, trial_based_participant_exclusion_type)
+
+d_participants <- combined_demo %>%
+  left_join(participant_trial_error_info)
+
+## handle some exceptional cases
+### participants who only had calibration ET data
+d_participants <- d_participants %>%
+  mutate(
+    trial_based_participant_exclusion = case_when(
+      only_calibration_et == TRUE ~ "yes",
+      TRUE ~ trial_based_participant_exclusion
+    ),
+    trial_based_participant_exclusion_type = case_when(
+      only_calibration_et == TRUE ~ "5",
+      TRUE ~ trial_based_participant_exclusion_type
+    ),
+    sufficient_fam_trials = case_when(
+      only_calibration_et == TRUE ~ 0,
+      TRUE ~ sufficient_fam_trials
+    ),
+    valid_first_test_trial = case_when(
+      only_calibration_et == TRUE ~ 0,
+      TRUE ~ valid_first_test_trial
+    ),
+    total_valid_fam_trials = case_when(
+      only_calibration_et == TRUE ~ 0,
+      TRUE ~ total_valid_fam_trials
+    )
+    )
+
+```
+
+Apply exclusions
+
+```{r}
+d_participants <- d_participants %>%
+  #check the order here
+  mutate(
+    exclude_participant = case_when(
+      pilot == "yes" ~ "yes",
+      session_error == "error" ~ "yes",
+      age_exclusion == "yes" ~ "yes",
+      trial_based_participant_exclusion == "yes" ~ "yes",
+      TRUE ~ "no"
+    ),
+    exclude_participant_type = case_when(
+      pilot == "yes" ~ "pilot",
+      session_error == "error" ~ as.character(session_error_info),
+      age_exclusion == "yes" ~ "age exclusion",
+      trial_based_participant_exclusion == "yes" ~ trial_based_participant_exclusion_type,
+      TRUE ~ NA
+    )
+  )
+```
+
+Write out the participant info with exclusion information
+
+```{r}
+write_csv(d_participants,
+          here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
+```
+
 
 ## Write the dataset pre-exclusions
 
@@ -406,7 +494,7 @@ save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b))
 
 ```{r}
 # filter
-data_preprocessed <- data_preprocessed %>%
+data_preprocessed_post_exclusions <- data_preprocessed %>%
   #filter based on age
   filter(age_exclusion=="no") %>%
   # filter out trial errors (including webcam exclusions, insufficient looking, and lab-reported trial errors)
@@ -418,149 +506,207 @@ data_preprocessed <- data_preprocessed %>%
 ## Write the dataset post-exclusions
 
 ```{r saving}
-save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+save(data_preprocessed_post_exclusions, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
+# Summarize lab and participant information
 
+## Handle pilot participants
 
+We remove pilot participants from considerations of participant counts. Essentially, we want pilot participants not  to count towards any tallies in the main analyses, including exclusion counts, because, by definition, they were "only" pilot participants.
 
-> TO DO: spit out overview of trial-based exclusions and pass a dataset with trial-based exclusions incorporated on to the next processing step
-
-
-# Lab and participant information
 ```{r}
-#MSS: One key question to me is what is meant by N collected? Does this include every single adult/kid that was tested? Even pilots?
-
-d_participants <- combined_demo %>%
-  left_join(participant_trial_error_info)
-
-write_csv(d_participants,
-          here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
-
-n_before_exclusion <- d_participants %>%
+#record number of pilot participants
+n_pilot_participants <- d_participants %>%
+  filter(pilot=="yes") %>%
   summarise(n = length(unique(participant_lab_id)))
 
+#retain a data frame that includes the pilot participants
+d_participants_including_pilot <- d_participants
+
+#focus all subsequent counts on participants NOT including pilot participants
+d_participants <- d_participants %>%
+  filter(pilot=="no")
+```
+
+## Compute participant counts: Pre-exclusion
+
+```{r}
+n_before_exclusion_by_cohort <- d_participants %>%
+    group_by(age_cohort) %>% 
+  summarise(n_participants = n(),
+            n_labs = length(unique(lab_id)))
+
+#To-Do: validate against ET and session error info
 # check if this overlaps with eye-tracking data. If no eyetracking data available, check session info. If equipment error, participant should still be included in initial sample.
+```
 
-n_adults_included <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(participant_lab_id)))
-n_toddlers_included <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(participant_lab_id)))
+## Summarize age information for each cohort: Pre-exclusion
 
-n_labs_adults <- d_participants %>% filter(age_cohort=="adults") %>% summarise(n = length(unique(lab_id)))
-
-n_labs_toddlers <- d_participants %>% filter(age_cohort=="toddlers") %>% summarise(n = length(unique(lab_id)))
-
-age_stat_adults <- data_preprocessed %>% 
+```{r}
+age_stat_adults_before_exclusion <- d_participants %>% 
   filter(age_cohort=="adults") %>% 
   group_by(lab_id, participant_lab_id) %>%
   summarise(age_years = (as.numeric(age_years))[1]) %>%
-  ungroup %>%
+  ungroup() %>%
   summarise(mean = mean(age_years, na.rm = TRUE), 
             min = min(age_years, na.rm = TRUE), 
             max = max(age_years, na.rm = TRUE),
             sd = sd(age_years, na.rm = TRUE))
 
-age_stat_toddlers <- data_preprocessed %>% 
+age_stat_toddlers_before_exclusion <- d_participants %>% 
   filter(age_cohort=="toddlers") %>% 
   group_by(lab_id, participant_lab_id) %>%
   summarise(age_mo = age_mo[1]) %>%
-  ungroup %>%
+  ungroup() %>%
   summarise(mean = mean(age_mo), 
             min = min(age_mo), 
             max = max(age_mo),
             sd = sd(age_mo))
 ```
 
+## Summarize lab information for each cohort: Pre-exclusion
+
 ```{r}
 #adults
-lab_stats_adults <- data_preprocessed %>%
+lab_stats_adults_before_exclusion <- d_participants %>%
   filter(age_cohort=="adults") %>% 
   group_by(lab_id, participant_lab_id) %>%
-  summarise(age_years = (as.numeric(age_years))[1], 
-            method = method[1]) %>%
+  summarise(
+    participant_gender = participant_gender[1],
+    age_years = (as.numeric(age_years))[1],
+    method = method[1]) %>%
   group_by(lab_id) %>%
-  summarise(Mean_Age = round(mean(age_years, na.rm = TRUE), 2),
-            Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+  summarise(
+    N_collected = n(),
+    N_female = sum(participant_gender=="woman"),
+    Mean_Age = round(mean(age_years, na.rm = TRUE), 2),
+    Method = paste(unique(method[!is.na(method)]), collapse = ", "))
 
-n_adults_collected <- combined_demo %>% 
+#toddlers
+lab_stats_toddlers_before_exclusion <- d_participants %>%
+  filter(age_cohort=="toddlers") %>% 
+  group_by(lab_id, participant_lab_id) %>%
+  summarise(
+    participant_gender = participant_gender[1],
+    age_mo = (as.numeric(age_mo))[1],
+    method = method[1]) %>%
+  group_by(lab_id) %>%
+  summarise(
+    N_collected = n(),
+    N_female = sum(participant_gender=="girl"),
+    Mean_Age = round(mean(age_mo, na.rm = TRUE), 2),
+    Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+```
+
+## Summarize participant counts: after exclusions applied
+
+Apply exclusions
+
+```{r}
+d_participants_included <- d_participants %>%
+  filter(exclude_participant=="no")
+
+#validate against participants in post-exclusion ET data
+setdiff(unique(d_participants_included$participant_lab_id),unique(data_preprocessed_post_exclusions$participant_lab_id))
+setdiff(unique(data_preprocessed_post_exclusions$participant_lab_id),unique(d_participants_included$participant_lab_id))
+```
+
+```{r}
+#number of participants and labs in each group
+n_included_by_cohort <- d_participants_included %>% 
+  group_by(age_cohort) %>% 
+  summarise(n_participants = n(),
+            n_labs = length(unique(lab_id)))
+```
+
+## Summarize age information for each cohort: after exclusions applied
+
+```{r}
+age_stat_adults_included<- d_participants_included %>% 
   filter(age_cohort=="adults") %>% 
-  group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(participant_lab_id)))
+  group_by(lab_id, participant_lab_id) %>%
+  summarise(age_years = (as.numeric(age_years))[1]) %>%
+  ungroup() %>%
+  summarise(mean = mean(age_years, na.rm = TRUE), 
+            min = min(age_years, na.rm = TRUE), 
+            max = max(age_years, na.rm = TRUE),
+            sd = sd(age_years, na.rm = TRUE))
 
-lab_stats_adults_included <- data_preprocessed %>%  filter(age_cohort=="adults") %>%   mutate(trial_based_error = case_when(
-      sufficient_fam_trials == 0 ~ "yes",
-      valid_first_test_trial == 0 ~ "yes",
-      TRUE ~ "no")) %>% 
-  filter(trial_based_error=="no") 
+age_stat_toddlers_included <- d_participants_included %>% 
+  filter(age_cohort=="toddlers") %>% 
+  group_by(lab_id, participant_lab_id) %>%
+  summarise(age_mo = age_mo[1]) %>%
+  ungroup() %>%
+  summarise(mean = mean(age_mo), 
+            min = min(age_mo), 
+            max = max(age_mo),
+            sd = sd(age_mo))
+```
 
-lab_stats_adults_female <- lab_stats_adults_included %>% group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(participant_lab_id))) %>% filter(participant_gender=="woman") %>% select(-participant_gender)
-  
-lab_stats_adults_included <- lab_stats_adults_included %>% 
-  group_by (lab_id) %>%
-  summarise(N_included = length(unique(participant_lab_id)))
+## Summarize lab information for each cohort: after exclusions applied
 
-lab_stats_adults <- lab_stats_adults %>% left_join(lab_stats_adults_included) %>%      left_join(lab_stats_adults_female) %>% left_join(n_adults_collected) %>% 
-  select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
-  arrange(lab_id, Method)
+```{r}
+#adults
+lab_stats_adults_included <- d_participants_included %>%
+  filter(age_cohort=="adults") %>% 
+  group_by(lab_id, participant_lab_id) %>%
+  summarise(
+    participant_gender = participant_gender[1],
+    age_years = (as.numeric(age_years))[1],
+    method = method[1]) %>%
+  group_by(lab_id) %>%
+  summarise(
+    N_included = n(),
+    N_female = sum(participant_gender=="woman"),
+    Mean_Age = round(mean(age_years, na.rm = TRUE), 2),
+    Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+#the reason there's a mismatch between the N when you sum across all N_included here and the n in n_included_by_cohort is related to GitHub issue #124: https://github.com/manybabies/mb2-analysis/issues/124
 
-papaja::apa_table(lab_stats_adults,
+lab_stats_adults_included <- lab_stats_adults_included %>%
+  left_join(select(lab_stats_adults_before_exclusion,lab_id,N_collected)) %>%
+  relocate(N_collected,.after=lab_id)
+
+papaja::apa_table(lab_stats_adults_included,
                   caption = "Lab and Participant information.",
                   format.args = list(digits = 0),
                   longtable = TRUE,font_size="footnotesize",
                   align=c("l","c","c","c","c","l"),
-                  col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (years)","Method"))
+                  col.names = c("Lab","N collected", "N included","Sex (N   Female)","Mean Age (years)","Method"))
 ```
 
 ```{r}
 #toddlers
-lab_stats_toddlers <- data_preprocessed %>%
+lab_stats_toddlers_included <- d_participants_included %>%
   filter(age_cohort=="toddlers") %>% 
   group_by(lab_id, participant_lab_id) %>%
-  summarise(age_mo = (as.numeric(age_mo))[1], 
-            method = method[1]) %>%
+  summarise(
+    participant_gender = participant_gender[1],
+    age_mo = (as.numeric(age_mo))[1],
+    method = method[1]) %>%
   group_by(lab_id) %>%
-  summarise(Mean_Age = round(mean(age_mo, na.rm = TRUE), 2),
-            Method = paste(unique(method[!is.na(method)]), collapse = ", "))
+  summarise(
+    N_included = n(),
+    N_female = sum(participant_gender=="girl"),
+    Mean_Age = round(mean(age_mo, na.rm = TRUE), 2),
+    Method = paste(unique(method[!is.na(method)]), collapse = ", "))
 
-n_toddlers_collected <- combined_demo %>% 
-  filter(age_cohort=="toddlers") %>% 
-  group_by(lab_id) %>% 
-  summarise(N_collected = length(unique(participant_lab_id)))
+lab_stats_toddlers_included <- lab_stats_toddlers_included %>%
+  left_join(select(lab_stats_toddlers_before_exclusion,lab_id,N_collected)) %>%
+  relocate(N_collected,.after=lab_id)
 
-lab_stats_toddlers_included <- data_preprocessed %>%
-  filter(age_cohort=="toddlers") %>% 
-  mutate(trial_based_error = case_when(
-      #step 5 (familiarization)
-      sufficient_fam_trials == 0 ~ "yes",
-      #step 6 (first test trial)
-      valid_first_test_trial == 0 ~ "yes",
-      TRUE ~ "no")) %>% 
-  filter(trial_based_error=="no") 
 
-lab_stats_toddlers_female <- lab_stats_toddlers_included %>%
-  group_by (lab_id, participant_gender) %>%
-  summarise(N_female = length(unique(participant_lab_id))) %>%
-  filter(participant_gender=="girl") %>%
-  select(-participant_gender)
-  
-lab_stats_toddlers_included <- lab_stats_toddlers_included %>% 
-  group_by (lab_id) %>%
-  summarise(N_included = length(unique(participant_lab_id)))
-
-lab_stats_toddlers <- lab_stats_toddlers %>%
-  left_join(lab_stats_toddlers_included) %>%
-  left_join(lab_stats_toddlers_female) %>%
-  left_join(n_toddlers_collected) %>% 
-  select(lab_id, N_collected, N_included, N_female, Mean_Age, Method) %>% 
-  arrange(lab_id, Method)
-
-papaja::apa_table(lab_stats_toddlers,
+papaja::apa_table(lab_stats_toddlers_included,
                   caption = "Lab and Participant information.",
                   format.args = list(digits = 0),
                   longtable = TRUE,font_size="footnotesize",
-                  align=c("l","c","c","c","c","l"),
+                  align=c("l","c","c","c","c","c","l"),
                   col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (months)","Method"))
 ```
 
-
-Our final dataset will consist of `r n_before_exclusion` participants, with an overall exclusion rate of XYZ% (toddlers: XYZ%, adults: XYZ%). Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (XX% female) that will have been tested in `r n_labs_toddlers` labs (mean lab sample size = `r mean(lab_stats_toddlers_included$N_included)`, SD =`r sd(lab_stats_toddlers_included$N_included)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) will be analyzed. The average age of toddlers in the final sample will be `r round(age_stat_toddlers$mean, 2)` months (SD: `r round(age_stat_toddlers$sd, 2)`, range: `r round(age_stat_toddlers$min, 2)` - `r round(age_stat_toddlers$max, 2)`). The final sample size of included adults will be N = `r sum(lab_stats_adults_included$N_included)` (XX% female), tested in `r n_labs_adults` labs (mean lab sample size = `r mean(lab_stats_adults_included$N_included)`, SD = `r sd(lab_stats_adults_included$N_included)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). Their mean age will be `r round(age_stat_adults$mean, 2)` years (SD: `r round(age_stat_adults$sd, 2)`, range: `r round(age_stat_adults$min, 2)` - `r round(age_stat_adults$max, 2)`).
+Our final dataset consisted of `r sum(n_included_by_cohort$n_participants)` participants, with an overall exclusion rate of `r round(sum(n_included_by_cohort$n_participants)/sum(n_before_exclusion_by_cohort$n_participants),4)*100`% (toddlers: `r round(filter(n_included_by_cohort,age_cohort=="toddlers")$n_participants/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100`%, adults: `r round(filter(n_included_by_cohort,age_cohort=="adults")$n_participants/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100`%).
+Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. 
+A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (`r round(sum(lab_stats_toddlers_included$N_female)/sum(lab_stats_toddlers_included$N_included),4)*100`% female) that were tested in `r length(unique(lab_stats_toddlers_included$lab_id))` labs (mean lab sample size = `r round(mean(lab_stats_toddlers_included$N_included),2)`, SD =`r round(sd(lab_stats_toddlers_included$N_included),2)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) was analyzed. 
+The average age of toddlers in the final sample was `r round(age_stat_toddlers_included$mean, 2)` months (SD: `r round(age_stat_toddlers_included$sd, 2)`, range: `r round(age_stat_toddlers_included$min, 2)` - `r round(age_stat_toddlers_included$max, 2)`). 
+The final sample size of included adults was N = `r sum(lab_stats_adults_included$N_included)` (`r round(sum(lab_stats_adults_included$N_female)/sum(lab_stats_adults_included$N_included),4)*100`% female), tested in `r length(unique(lab_stats_adults_included$lab_id))` labs (mean lab sample size = `r round(mean(lab_stats_adults_included$N_included),2)`, SD = `r round(sd(lab_stats_adults_included$N_included),2)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). 
+Their mean age was `r round(age_stat_adults_included$mean, 2)` years (SD: `r round(age_stat_adults_included$sd, 2)`, range: `r round(age_stat_adults_included$min, 2)` - `r round(age_stat_adults_included$max, 2)`).
