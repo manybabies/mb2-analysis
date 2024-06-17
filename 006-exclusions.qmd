@@ -409,7 +409,7 @@ data_preprocessed <- data_preprocessed %>%
 ## Currently, the strategy is to join just the most critical columns needed for the primary analyses.
 ## If more demographic information is needed for exploratory analyses, we can join the demographic information in at that point in the script
 combined_demo_minimal <- combined_demo %>%
-  select(participant_lab_id,lab_id,age_cohort,participant_id,pilot,method,session_error,session_error_info,session_error_notes,exclude_session,participant_gender,age_years,age_days,age_days_num,age_mo,age_exclusion,nationality,institution,country,lang1,lang1_exposure, lang2,lang2_exposure,only_calibration_et)
+  select(participant_lab_id,lab_id,age_cohort,participant_id,pilot,method,session_error,session_error_info,session_error_notes,exclude_session,participant_gender,age_years,age_years_n,age_days,age_days_num,age_mo,age_exclusion,nationality,institution,country,lang1,lang1_exposure, lang2,lang2_exposure,only_calibration_et)
 
 #join the minimal demographics file into the eyetracking data
 data_preprocessed <- data_preprocessed %>%
@@ -482,7 +482,6 @@ Write out the participant info with exclusion information
 write_csv(d_participants,
           here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
 ```
-
 
 ## Write the dataset pre-exclusions
 

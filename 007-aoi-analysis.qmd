@@ -26,7 +26,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 Inspecting the structure of the unique trials in the data. Check to see if we have the expected number of familiarization (4 trials) and test trials (2, one ignorance, one knowledge).
 
 ```{r}
-distinct_trials <- data_preprocessed %>%
+distinct_trials <- data_preprocessed_post_exclusions %>%
   ungroup() %>%
   distinct(lab_id,participant_id,participant_lab_id,participant_trial_id,trial_file_name,media_name,condition)
 
@@ -60,10 +60,10 @@ distinct_trials %>%
 Splitting the data into familiarization data and test data.
 
 ```{r}
-fam_data <- data_preprocessed %>%
+fam_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("familiarization"))
 
-test_data <- data_preprocessed %>%
+test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
 ```
 
