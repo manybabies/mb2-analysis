@@ -14,6 +14,7 @@ library(patchwork)
 library(brms)
 library(tidybayes)
 library(knitr)
+library(corrr)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
@@ -456,19 +457,34 @@ ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking_by_age.pn
 
 ```{r}
 summarize_test_aoi <- summarize_participant_test_first_trial %>%
+  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
+  summarize(
+    n=n(),
+    mean_subj_prop_exit=mean(prop_exit,na.rm=T)
+  ) %>%
   group_by(age_cohort,condition) %>%
   summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
+    participant_num=sum(!is.na(mean_subj_prop_exit)),
+    mean_target_looking=mean(mean_subj_prop_exit,na.rm=T),
+    sd_target_looking=sd(mean_subj_prop_exit,na.rm=T),
+     t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu=0.5)))) %>%
+  mutate(
     #95% CIs
     lower_ci_target_looking = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
     upper_ci_target_looking = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    mean_target_looking_general = mean(prop_general, na.rm=T),
-    sd_target_looking_general=sd(prop_general,na.rm=T),
+    #mean_target_looking_general = mean(prop_general, na.rm=T),
+   # sd_target_looking_general=sd(prop_general,na.rm=T),
     lower_ci_target_looking_general = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
     upper_ci_target_looking_general = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
+    p.value = purrr::map(t_test, ~select(.x, c('p.value', 'parameter','statistic')))
+  ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval=statistic,
+    df=parameter
   )
+  
 
 summarize_test_aoi %>%
   knitr::kable()
@@ -1204,6 +1220,8 @@ bm_first_look_toddlers <- brm(
   sample_prior=TRUE)
 summary(bm_first_look_toddlers)
 prior_summary(bm_first_look_toddlers)
+
+t.test(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"], alternative = "two.sided", mu=0.5)
 ```
 
 Summarize outcomes
@@ -1491,5 +1509,14 @@ corrlelation_fam_test <- summarize_participant_test_first_trial %>%
   nest() %>%
   #use map to compute correlation
   summarize(correlation=map(data,corrr::correlate))
+
+#correlation between familiarization and test
+corrlelation_fam_test <- summarize_participant_test_first_trial %>%
+  select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
+  group_by(age_cohort,condition)
+
+cor.test(corrlelation_fam_test$fam_prop_exit[corrlelation_fam_test$condition=="knowledge" & corrlelation_fam_test$age_cohort=="toddlers"], corrlelation_fam_test$prop_exit[corrlelation_fam_test$condition=="knowledge"& corrlelation_fam_test$age_cohort=="toddlers"])
+
+cor.test(corrlelation_fam_test$fam_prop_exit[corrlelation_fam_test$condition=="ignorance" & corrlelation_fam_test$age_cohort=="toddlers"], corrlelation_fam_test$prop_exit[corrlelation_fam_test$condition=="ignorance" & corrlelation_fam_test$age_cohort=="toddlers"])
 ```
 
