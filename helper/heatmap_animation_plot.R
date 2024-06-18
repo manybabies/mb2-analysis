@@ -51,11 +51,11 @@ animate_trial <- function(trial, cohort){
   #Extract individual frames from videos
   system(paste0('ffmpeg -i ',stimuli_path, '/' , trial,'.mp4 -vf "fps=40" ',frame_split_path,'/',trial,'_%04d.png'))
  
-  data_used <- data_preprocessed %>%
+  data_used <- data_preprocessed_post_exclusions %>%
     #match media name based on beginning elements (ignore different endings)
     filter(str_detect(media_name,trial) & cohort == age_cohort & data_type != 'web-based') %>%
-    select(unique_participant_id, media_name, t_zeroed, x, y) %>% 
-    group_by(unique_participant_id, media_name) %>%
+    select(participant_lab_id, media_name, t_zeroed, x, y) %>% 
+    group_by(participant_lab_id, media_name) %>%
     mutate(frame = row_number()) %>% 
     ungroup() %>% 
     group_by(frame) %>%
