@@ -694,7 +694,6 @@ lab_stats_toddlers_included <- lab_stats_toddlers_included %>%
   left_join(select(lab_stats_toddlers_before_exclusion,lab_id,N_collected)) %>%
   relocate(N_collected,.after=lab_id)
 
-
 papaja::apa_table(lab_stats_toddlers_included,
                   caption = "Lab and Participant information.",
                   format.args = list(digits = 0),
@@ -703,7 +702,7 @@ papaja::apa_table(lab_stats_toddlers_included,
                   col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (months)","Method"))
 ```
 
-Our final dataset consisted of `r sum(n_included_by_cohort$n_participants)` participants, with an overall exclusion rate of `r round(sum(n_included_by_cohort$n_participants)/sum(n_before_exclusion_by_cohort$n_participants),4)*100`% (toddlers: `r round(filter(n_included_by_cohort,age_cohort=="toddlers")$n_participants/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100`%, adults: `r round(filter(n_included_by_cohort,age_cohort=="adults")$n_participants/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100`%).
+Our final dataset consisted of `r sum(n_included_by_cohort$n_participants)` participants, with an overall exclusion rate of `r round((sum(n_before_exclusion_by_cohort$n_participants)-sum(n_included_by_cohort$n_participants))/sum(n_before_exclusion_by_cohort$n_participants),4)*100`% (toddlers: `r round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_included_by_cohort,age_cohort=="toddlers")$n_participants)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100`%, adults: `r round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_included_by_cohort,age_cohort=="adults")$n_participants)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100`%).
 Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. 
 A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (`r round(sum(lab_stats_toddlers_included$N_female)/sum(lab_stats_toddlers_included$N_included),4)*100`% female) that were tested in `r length(unique(lab_stats_toddlers_included$lab_id))` labs (mean lab sample size = `r round(mean(lab_stats_toddlers_included$N_included),2)`, SD =`r round(sd(lab_stats_toddlers_included$N_included),2)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) was analyzed. 
 The average age of toddlers in the final sample was `r round(age_stat_toddlers_included$mean, 2)` months (SD: `r round(age_stat_toddlers_included$sd, 2)`, range: `r round(age_stat_toddlers_included$min, 2)` - `r round(age_stat_toddlers_included$max, 2)`). 
