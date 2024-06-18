@@ -694,7 +694,7 @@ mss_timecourse_test <- test_data %>%
   filter(t_norm>=-16000, t_norm<=10000) %>%
   # filter out sections of first_trial that are too long
   filter((first_trial&t_norm<=1500)| !first_trial) %>%
-  group_by(age_cohort, participant_id, participant_trial_id, 
+  group_by(age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            condition, first_trial, t_norm_downsampled) |>
   summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
             on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
@@ -763,34 +763,54 @@ mss_fam <- fam_data %>%
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
   #check this!!!
   filter(t_norm>=-16000, t_norm<=10000) %>%
-  group_by(age_cohort, participant_id, participant_trial_id, 
+  group_by(age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            condition, t_norm_downsampled) |>
   summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
-            on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
+            on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)
+            ) 
 
-mss_fam <- mss_fam |>
+ms_fam <- mss_fam |>
+  group_by(participant_lab_id,age_cohort, condition, t_norm_downsampled) |>
+  summarize(target_exit=mean(on_target, na.rm=TRUE),
+            distractor_exit = mean(on_dist, na.rm=TRUE),
+            prop_target_exit = target_exit/(target_exit + distractor_exit)) |> 
+  ungroup() |> 
   group_by(age_cohort, condition, t_norm_downsampled) |>
-  summarize(mean_target_general = mean(on_target, na.rm=TRUE),
-            mean_distractor_general = mean(on_dist, na.rm=TRUE),
-            sum_target_general = sum(on_target, na.rm=TRUE),
-            sum_distractor_general = sum(on_dist, na.rm=TRUE),
-            prop_general = sum_target_general / 
-              (sum_target_general+sum_distractor_general))
+  summarize(
+    participant_num=n(),
+    mean_target = mean(target_exit, na.rm=TRUE),
+    sd_target = sd(target_exit,na.rm=TRUE),
+    se_target = sd_target/sqrt(participant_num),
+    ci_target=qt(1 - (0.05 / 2), participant_num - 1) * se_target,
+    ci_targetLOW = mean_target - ci_target,
+    ci_targetHI = mean_target + ci_target,
+    mean_distractor = mean(distractor_exit, na.rm=TRUE),
+    sd_distractor = sd(distractor_exit,na.rm=TRUE),
+    se_distractor = sd_distractor/sqrt(participant_num),
+    ci_distractor=qt(1 - (0.05 / 2), participant_num - 1) * se_distractor,
+    ci_distractorLOW = mean_distractor - ci_distractor,
+    ci_distractorHI = mean_distractor + ci_distractor,
+    prop = mean(prop_target_exit,na.rm=TRUE))
 
 ```
 
 ```{r}
-ggplot(mss_fam |>
-         pivot_longer(mean_target_general:mean_distractor_general, 
-                      names_to = "trial_type", values_to = "mean_looking"),       
-         aes(x = t_norm_downsampled, y = mean_looking, col = trial_type)) + 
+ms_fam_long <- ms_fam |>
+  #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
+  pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_")
+
+ggplot(ms_fam_long,       
+         aes(x = t_norm_downsampled, y = mean, col = aoi_type)) + 
   # geom_point(alpha = .1) +
   geom_line() + 
+  geom_ribbon(aes(ymin = mean-se, ymax = mean+se, fill = aoi_type), alpha = .2,color=NA) +
   facet_grid(.~age_cohort) + 
   geom_vline(xintercept = -3880, lty = 3, col = "black") + 
   geom_vline(xintercept = 120, lty = 3, col = "black") + 
   ggthemes::theme_few() + 
   theme(legend.position = "bottom")+
+  scale_fill_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_color_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
   xlab("Time")+
   ylab("Mean Proportion Looking")
 ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12,height=6)
@@ -1034,7 +1054,7 @@ ggplot(filter(d_anticipatory_test,!is.na(first_look)&trial_num==5),aes(condition
 
 ggplot(summarize_overall_test_first_look_first_trial,aes(condition,prop_target_first_look,color=condition))+
   geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
-  geom_point(size = 3) +
+  geom_point(size = 5) +
   geom_hline(yintercept=0.5,linetype="dashed")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
@@ -1105,9 +1125,9 @@ Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
-summary(null_fam_first_look_toddlers)
-brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
+# null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
+# summary(null_fam_first_look_toddlers)
+# brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
 ```
 
 #### Adults
@@ -1153,9 +1173,9 @@ Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
-summary(null_fam_first_look_adults)
-brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
+# null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
+# summary(null_fam_first_look_adults)
+# brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
 ```
 
 ### Test Data
@@ -1221,7 +1241,10 @@ bm_first_look_toddlers <- brm(
 summary(bm_first_look_toddlers)
 prior_summary(bm_first_look_toddlers)
 
-t.test(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"], alternative = "two.sided", mu=0.5)
+# quick and dirty binomial test just for exploratory purposes
+sum_correct_first_looks_knowledge <- sum(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"],na.rm=TRUE)
+sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"]))
+binom.test(sum_correct_first_looks_knowledge,sum_total_first_looks_knowledge, alternative = "two.sided", p=0.5)
 ```
 
 Summarize outcomes
@@ -1492,7 +1515,7 @@ summarize_test_aoi_sufficient_fam_prop_looking %>%
 correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
   geom_hline(yintercept=0.5,linetype="dashed")+
   geom_point(alpha=0.25)+
-  geom_smooth(method="lm")+
+  geom_smooth(method="gam")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
   scale_color_brewer(palette="Set1")+
@@ -1502,21 +1525,41 @@ correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(f
 correlation_plot_fam_test
 ggsave(here(plot_path,"correlation_plot_fam_test.png"),bg="white",width=9,height=6)
 
+#correlation function
+compute_correlation <- function(data){
+  result <- cor.test(data$fam_prop_exit,data$prop_exit)
+  #return the estimate, p-value,df, and test statistic of cor.test
+  
+  return(data.frame(
+    correlation_estimate=result$estimate,
+    correlation_df = result$parameter,
+    correlation_p_value=result$p.value,
+    correlation_statistic=result$statistic))
+}
 #correlation between familiarization and test
-corrlelation_fam_test <- summarize_participant_test_first_trial %>%
+correlation_fam_test_overall <- summarize_participant_test_first_trial %>%
+  select(age_cohort,fam_prop_exit,prop_exit) %>%
+  group_by(age_cohort) %>%
+  nest() %>%
+  #use map to compute correlation
+  summarize(correlation=map(data,compute_correlation)) %>%
+  #extract the correlation values into tidy data frame
+  unnest(correlation)
+
+correlation_fam_test_overall %>%
+  knitr::kable()
+
+correlation_fam_test_by_age <- summarize_participant_test_first_trial %>%
   select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
   group_by(age_cohort,condition) %>%
   nest() %>%
   #use map to compute correlation
-  summarize(correlation=map(data,corrr::correlate))
+  summarize(correlation=map(data,compute_correlation)) %>%
+  #extract the correlation values into tidy data frame
+  unnest(correlation)
 
-#correlation between familiarization and test
-corrlelation_fam_test <- summarize_participant_test_first_trial %>%
-  select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
-  group_by(age_cohort,condition)
+correlation_fam_test_by_age %>%
+  knitr::kable()
 
-cor.test(corrlelation_fam_test$fam_prop_exit[corrlelation_fam_test$condition=="knowledge" & corrlelation_fam_test$age_cohort=="toddlers"], corrlelation_fam_test$prop_exit[corrlelation_fam_test$condition=="knowledge"& corrlelation_fam_test$age_cohort=="toddlers"])
-
-cor.test(corrlelation_fam_test$fam_prop_exit[corrlelation_fam_test$condition=="ignorance" & corrlelation_fam_test$age_cohort=="toddlers"], corrlelation_fam_test$prop_exit[corrlelation_fam_test$condition=="ignorance" & corrlelation_fam_test$age_cohort=="toddlers"])
 ```
 
