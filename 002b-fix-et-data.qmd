@@ -7,6 +7,7 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
+library(patchwork) # MBP2; to create plots with panels.
 
 source(here('helper','ensure_repo_structure.R'))
 FIRST_TIME = FALSE
@@ -22,7 +23,6 @@ load(file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_002A))
 xy <- xy %>% 
   mutate(media_name = tools::file_path_sans_ext(media_name))
 ```
-
 
 Begin standardizing data. The main thing we want to do here is validate the media names to make sure that we can use them for merge later. 
 
@@ -414,7 +414,6 @@ data |>
 
 ```
 
-
 ## pupil_left & pupil_right
 
 ```{r}
@@ -428,6 +427,64 @@ data |>
 # filter out web-based labs
 data.pupil <- data |> filter(lab_id!="affcogUTSC" & lab_id!="beinghumanWroclaw" & lab_id!="CogConcordia" & lab_id!="collabUIOWA" & lab_id!="saxelab" & lab_id!="socallabUCSD")
 
+# look at summaries again
+data.pupil |>
+  group_by(lab_id) |>
+  summarise(min_pupil_left = min(pupil_left, na.rm=TRUE),
+            max_pupil_left = max(pupil_left, na.rm=TRUE), 
+            min_pupil_right = min(pupil_right, na.rm=TRUE),
+            max_pupil_right = max(pupil_right, na.rm=TRUE)) 
+
+# warnings from babylabMPIB, babylingOslo, tauccd, kidsdevUniofNewcastle due to Inf. Remove for now, then follow up.
+# looking at second test trial only.
+data.pupil.overview <- data.pupil |>
+  filter(lab_id!="babylabMPIB" & lab_id!="babylingOslo" & lab_id!="tauccd" & lab_id!="kidsdevUniofNewcastle") |>
+  filter(grepl("CON", media_name) | grepl("INC", media_name)) |>
+  group_by(lab_id) |>
+  summarise(mean_pupil_left = mean(pupil_left, na.rm=TRUE),
+            mean_pupil_right = mean(pupil_right, na.rm=TRUE),
+            sd_pupil_left = sd(pupil_left, na.rm=TRUE),
+            sd_pupil_right = sd(pupil_right, na.rm=TRUE),
+            min_pupil_left = min(pupil_left, na.rm=TRUE),
+            max_pupil_left = max(pupil_left, na.rm=TRUE), 
+            min_pupil_right = min(pupil_right, na.rm=TRUE),
+            max_pupil_right = max(pupil_right, na.rm=TRUE)) 
+
+# ToMcdlSalzburg -> negative values for pupil min
+# UIUCinfantlab -> higher SD for pupil_left than pupil_right
+# babylabAmsterdam -> higher SD for pupil_right than pupil_left
+# babylabPrinceton -> higher SD for pupil_left
+# irlConcordia -> higher mean and SD for pupil_right
+# sociocognitivelab -> higher mean and SD for pupil_right
+# unicph -> -> higher mean and SD for pupil_right
+
+to.plot <- 0 # Set this to 1 if you want 1000+ plots to be created.
+if(to.plot == 1){
+#uniq.labs <- unique(data.pupil$lab_id)
+uniq.labs <- unique(data.pupil$participant_lab_id)
+for(a in 1:length(uniq.labs)){
+  #lab.data <- data.pupil |> filter(lab_id == uniq.labs[a]) |> filter(grepl("CON", media_name) | grepl("INC", media_name))
+  # ggplot(lab.data, aes(t, pupil_left)) + geom_point(alpha = 0.1, size=0.1) +   facet_wrap(~age_cohort, scales="free")
+  # ggplot(lab.data, aes(t, pupil_left)) + geom_line(alpha = 0.1, size=0.1) +   facet_wrap(~age_cohort, scales="free")
+  # ggplot(lab.data, aes(pupil_right, pupil_left)) + geom_point(alpha = 0.1, size=0.1) +   facet_wrap(~age_cohort, scales="free")
+
+  lab.data <- data.pupil |> filter(participant_lab_id == uniq.labs[a]) |> filter(grepl("CON", media_name) | grepl("INC", media_name))
+  suppressMessages({
+    suppressWarnings({
+  plot1 <- ggplot(lab.data, aes(pupil_left)) + geom_histogram() 
+  plot2 <- ggplot(lab.data, aes(t, pupil_left)) + geom_point(size=0.2) + ggtitle(as.character(uniq.labs[a])) + theme(plot.title = element_text(size = 10))
+  plot3 <- ggplot(lab.data, aes(pupil_right, pupil_left)) + geom_point(size=0.1)
+  plot4 <- ggplot(lab.data, aes(pupil_right)) + geom_histogram() 
+  plot5 <- ggplot(lab.data, aes(t, pupil_right)) + geom_point(size=0.2)
+  plot6 <- ggplot(lab.data, aes(x, y)) + geom_point(size=0.1)
+  combined_plot <- (plot1 | plot2 | plot3) / (plot4 | plot5 | plot6)
+  ggsave(plot = combined_plot, filename=paste("./MB2P/MB2P-diagnosticPlots/", uniq.labs[a],".png"), bg="white",width=9, height=6, device="png", dpi=100)
+  })
+  })
+  #print(combined_plot)
+}
+}
+
 # visualize distribution of pupil left for all labs
 ggplot(data.pupil,aes(pupil_left))+
   geom_histogram()+
@@ -440,16 +497,13 @@ ggplot(data.pupil,aes(pupil_right))+
   facet_wrap(~lab_id, scales="free")+
   ylab("Right Pupil Size")
 
-
 ```
-
 
 ## age_cohort
 
 ```{r}
 assert_that(all(data$age_cohort %in% c("adults","toddlers")))
 ```
-
 
 ## event_num
 
@@ -460,11 +514,9 @@ Only for babylabOxford. Other labs go up to 9 event numbers which is due to cali
 unique(data$event_num)
 ```
 
-
 ```{r}
 hist(data$event_num, breaks = 0:17)
 ```
-
 
 Event 7 is overrepresented as it refers to calibration
 
@@ -515,7 +567,6 @@ combined_demo <- combined_demo |>
   )
 View(select(combined_demo,age_cohort,lab_id,participant_id,age_years_n,age_mo,age_days_num,age_exclusion))
 ```
-
 
 # Saving 
 
