@@ -1515,7 +1515,7 @@ summarize_test_aoi_sufficient_fam_prop_looking %>%
 correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
   geom_hline(yintercept=0.5,linetype="dashed")+
   geom_point(alpha=0.25)+
-  geom_smooth(method="gam")+
+  geom_smooth(method="lm")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
   scale_color_brewer(palette="Set1")+
