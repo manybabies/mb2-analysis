@@ -682,13 +682,12 @@ ggplot(ms_timecourse_test_first_trial |>
 
 ```{r}
 mss_timecourse_test <- test_data %>%
-  #quick filter of the (extended duration) 2nd test trials
   mutate(first_trial = (trial_num==5)) %>%
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name, first_trial, 
            bear_not_visible_ms, point_of_disambiguation, 
            video_duration_ms, condition) %>%
-  mutate(t_norm_downsampled = floor(t_norm / 500) * 500) |>
+  mutate(t_norm_downsampled = floor(t_norm / 100) * 100) |>
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   filter(t_norm>=-16000, t_norm<=10000) %>%
@@ -722,9 +721,6 @@ ms_timecourse_test <- mss_timecourse_test |>
 
 ```
 
-
-
-
 ```{r}
 ms_timecourse_test_long <- ms_timecourse_test |>
   #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
@@ -748,6 +744,92 @@ ggplot(filter(ms_timecourse_test_long,t_norm_downsampled<=0),
   xlab("Time")+
   ylab("Mean Proportion Looking")
 ggsave(here(plot_path,"test_timecourse_plot.png"),bg="white",width=12,height=6)
+```
+
+### With Extension
+
+```{r}
+#continued timecourse
+ggplot(ms_timecourse_test_long,       
+         aes(x = t_norm_downsampled, y = mean, 
+             col = aoi_type, lty = trial_number_name)) + 
+  # geom_point(alpha = .1) +
+  geom_line() + 
+  geom_ribbon(aes(ymin = mean-se, ymax = mean+se, fill = aoi_type), alpha = .2,color=NA) +
+  facet_grid(condition~age_cohort) + 
+  geom_vline(xintercept = -3880, lty = 3, col = "black") + 
+  geom_vline(xintercept = 120, lty = 3, col = "black") + 
+  ggthemes::theme_few() + 
+  scale_fill_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_color_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_linetype(name="Trial Number")+
+  theme(legend.position = "bottom")+
+  xlab("Time")+
+  ylab("Mean Proportion Looking")
+
+## Focus on second trial, split by consistency
+mss_timecourse_test <- test_data %>%
+  mutate(first_trial = (trial_num==5)) %>%
+  group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
+           trial_file_name, media_name, first_trial, 
+           bear_not_visible_ms, point_of_disambiguation, 
+           video_duration_ms, condition) %>%
+  mutate(t_norm_downsampled = floor(t_norm / 100) * 100) |>
+  #filter to relevant anticipatory window
+  # based on current format, t_norm == 0 is the point of disambiguation
+  filter(t_norm>=-16000, t_norm<=10000) %>%
+  # filter out sections of first_trial that are too long
+  filter((first_trial&t_norm<=1500)| !first_trial) %>%
+  group_by(age_cohort, participant_lab_id,participant_id, participant_trial_id, 
+           condition, media_name, first_trial, t_norm_downsampled) |>
+  summarize(on_target = mean(aoi == "target_exit", na.rm=TRUE),
+            on_dist = mean(aoi == "distractor_exit", na.rm=TRUE)) 
+
+ms_timecourse_test_outcome <- mss_timecourse_test |>
+  separate(media_name,into=c("condition_name","location_pattern","exit_location","outcome"),remove=FALSE) |> 
+  select(-condition_name,-location_pattern,-exit_location) |>
+  filter(!is.na(outcome)) |> 
+  ungroup() |>
+  group_by(age_cohort, first_trial, condition,outcome, t_norm_downsampled) |>
+  summarize(
+    participant_num=n(),
+    mean_target = mean(on_target, na.rm=TRUE),
+    sd_target = sd(on_target,na.rm=TRUE),
+    se_target = sd_target/sqrt(participant_num),
+    ci_target=qt(1 - (0.05 / 2), participant_num - 1) * se_target,
+    ci_targetLOW = mean_target - ci_target,
+    ci_targetHI = mean_target + ci_target,
+    mean_distractor = mean(on_dist, na.rm=TRUE),
+    sd_distractor = sd(on_dist,na.rm=TRUE),
+    se_distractor = sd_distractor/sqrt(participant_num),
+    ci_distractor=qt(1 - (0.05 / 2), participant_num - 1) * se_distractor,
+    ci_distractorLOW = mean_distractor - ci_distractor,
+    ci_distractorHI = mean_distractor + ci_distractor,
+    sum_target = sum(on_target, na.rm=TRUE),
+    sum_distractor = sum(on_dist, na.rm=TRUE),
+    prop = sum_target / (sum_target+sum_distractor))
+
+ms_timecourse_test_outcome_long <- ms_timecourse_test_outcome |>
+  #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
+  pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_") |> 
+  mutate(trial_number_name=if_else(first_trial,"First Trial","Second Trial"))
+
+ggplot(filter(ms_timecourse_test_outcome_long,!first_trial),       
+         aes(x = t_norm_downsampled, y = mean, 
+             col = aoi_type, lty = outcome)) + 
+  # geom_point(alpha = .1) +
+  geom_line() + 
+  geom_ribbon(aes(ymin = mean-se, ymax = mean+se, fill = aoi_type), alpha = .2,color=NA) +
+  facet_grid(condition~age_cohort) + 
+  geom_vline(xintercept = -3880, lty = 3, col = "black") + 
+  geom_vline(xintercept = 120, lty = 3, col = "black") + 
+  ggthemes::theme_few() + 
+  scale_fill_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_color_manual(name="AOI",values=c("#440154FF","#21908CFF"))+
+  scale_linetype(name="Trial Number")+
+  theme(legend.position = "bottom")+
+  xlab("Time")+
+  ylab("Mean Proportion Looking")
 ```
 
 
