@@ -1,0 +1,302 @@
+---
+title: "MB2-P - Multiverse work in progress "
+author: "Rmarkdown by Giulia Calignano, Marlena Mayer, Robert Hepach "
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    css: styles.css
+  pdf_document: default
+  word_document: default
+  theme: united
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(MASS)
+library(stringi)
+set.seed(248)
+```
+
+The following is based on the standard template as provided on aspredicted.org. This resource was very helpful: https://osf.io/byu28
+
+## 1. Have any data been collected for this study already?
+
+Yes, data have been collected as part of the Manybabies2 main study. The data collection was completed in 2023. The data is currently being curated by the main analysis team which will provide the raw data for the present study. 
+
+
+**To do**s
+
+- Include adults and children? The hypotheses should not change, right?
+- Can we include pupil dilation data from Eyelink-systems? At the moment it looks as though we can't.
+- What is the best measure of *degree of anticipation* before the bear exists? Proportion of looks to the correct AOI or time to fixate correct AOI or something else?
+- What is a good infant controlled cumulative looking time measure, i.e., how to best calculate this?
+- What are the different age cohorts in the main study, you, old, adults?
+- Can we provide more details on the Bayesian analyses?
+- Can we simulate the data based on the info from the preliminary dataset (i.e., the 'BCCCD-data')?
+- How large should the simulated dataset be?
+- Do we need to include trial in the simulated dataset?
+- Add titles to figures.
+
+## 2. What's the main question being asked or hypothesis being tested in this study?
+
+<br>
+
+**Main question and hypothesis 1: Does observing goal-incongruent events result in greater pupil dilation? -> Children’s baseline-corrected changes in pupil dilation will systematically vary as a function of the two experimental factors ‘condition’ (knowledge; ignorance) and 'outcom'e (congruent; incongruent).**
+
+If children show a 
+
+- perceptual familiarity preference, pupil dilation will increase in response to the familiar outcome, i.e., the bear approaches the mouse’s box. This would be evident in a main effect of outcome (Hypothesis 1.1). 
+- perceptual novelty preference, pupil dilation will increase in response to the novel outcome, i.e., the bear approaches the empty box. This would be evident in a main effect of outcome. (Hypothesis 1.2)
+- conceptual familiarity preference, pupil dilation will increase in response to the bear approaching the mouse’s box in the knowledge condition only. This would be evident in an interaction effect of outcome and condition. (Hypothesis 1.3)
+- conceptual novelty preference, pupil dilation will be increased in response to the bear approaching the empty box in the knowledge condition only. This would be evident in an interaction effect of outcome and condition. (Hypothesis 1.4)
+
+**Main question 2: Does observing goal-incongruent events result in longer cumulative looking time?** 
+We will test the same hypotheses as for **Main question 1**.
+
+**Main question and hypothesis 3: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? Children’s pupil dilation (and cumulative looking time) in response to the outcome will systematically vary with the degree of anticipatory looking before the outcome. This would be evidence for changes in pupil dilation (and cumulative looking time) reflecting a surprise response.**
+
+- Knowledge / goal congruent condition. We expect a positive correlation between the differential AL score (proportion looking to correct AOI / [looking to correct + incorrect AOI]) and the VoE measures of change in pupil dilation and cumulative looking time. Interpretation: The more children anticipate the agent to act in line with their knowledge, the more children should be surprised to see that she does not so act) (Hypothesis 3.1).
+ - Knowledge / goal incongruent condition. We expect a negative correlation between the differential AL-score. Interpretation: The more children anticipate the agent to act in line with their knowledge, the less they should be surprised to see that she does indeed so act (Hypothesis 3.2).
+- There are no predictions for the two ignorance conditions.
+
+## 3. Describe the key dependent variable(s) specifying how they will be measured.
+
+The main dependent variables are 
+
+- the **baseline-corrected change in pupil dilation** for the second test trial only. We will follow the preprocessing of the main study and work with those trials that were included in the main analyses for MB2. We will only use trials (i.e., the second test trial) which were included in the main MB2-analysis, i.e., wequire children to have contributed data for both test trial in the main analysis. The information typically used for pre-processing pupil dilation data: PupilLeft(mm), PupilRight(mm), StimuliName, GazeX, GazeY, GazeEventType, RecordingTimeStamp.
+- The preprocessing steps of pupil size data employ the multiverse approach shown in detail below with reproducible R-code (based on Calignano et al., 2023) on simulated data based on MB2 data dictionary. We run the analysis on the ‘liberal’ average of PupilLeft and PupilRight.
+- **Total looking time in a fixed time window**, i.e., 30 sec after the bear exits the tubes (following e.g., Dörrenberg et al., 2018). This is calculated for the second test trial only.
+- **Standard VoE infant controlled measure**, i.e., looking time until infant looks away for 2 seconds (see Baillargeon et al., 2018 commentary *→ check details with Renee Baillargeon, Gergo Csibra and other VoE experts*). These analyses include looking at the whole screen (maximum AOI). 
+- The **degree of anticipation**, that is the time children took to fixate the ‘correct’ AOI. The measure will be provided by the main MB2-analysis. -> AL score (proportion looking to correct AOI/ looking to correct + incorrect AOI).
+
+## Data simulation
+
+To simulate data effectively for pre-registering our data preprocessing and analysis plans, the provided R-script outlines a method for generating a dataset similar to the one we will analyze. The data simulation approach is particularly useful in planning how to handle and analyze data before it is actually collected. The simulation encompasses generating random strings for identifiers and categorical variables, creating numeric data within specified ranges, handling missing values, and calculating correlations. Through understanding the characteristics of the simulated dataset, we can ensure that our analysis plan is robust and capable of handling the intricacies of the actual dataset/
+
+Here the description of the dataset generated by the R-code:
+
+- **participant_id**: A unique identifier for each participant, generated as a random string. Each participant has a unique ID to distinguish them in the dataset.
+- **media_name**: A randomly generated string representing the name of the media content viewed by the participant.
+- **age_cohort**: A randomly generated string intended to categorize participants into different age cohorts.
+- **participant_trial_id**: A unique identifier for each trial associated with a participant, generated as a random string. NEED THIS?
+- **t**: A numeric variable representing a timestamp or duration, generated within a specified range and with a possibility of missing values (NA).
+- **x and y**: Numeric variables generated within specified ranges, intended to represent coordinates or other measurements, with a possibility of missing values.
+- **pupil_left and pupil_right**: Numeric variables representing measurements of the left and right pupil sizes, respectively. These variables are generated with a specified correlation and then rescaled to a specific range.
+- **event_num**: A numeric variable representing an event number or type, generated within a specified range.
+- **lab_id**: A randomly generated string serving as a unique identifier for the lab or testing location.
+- **trial_num**: A numeric variable indicating the trial number for each participant, generated within a specified range and with a possibility of missing values. NEED THIS?
+
+Additionally, the dataset is enhanced by introducing a temporal component, **t_sim**, that simulates the passage (CAN WE FIND A DIFFERENT NAME FOR THIS?) of time for each trial of each participant. This is achieved by grouping the data by lab_id, participant_id and trial_num, and then creating a sequence that represents time increments within each group. This temporal aspect is crucial for analyses that involve time-series data like pupillometry data.
+
+```{r, SIMULATE DATA, echo=TRUE,include=TRUE, out.width='90%'}
+# Functions from the original script remain unchanged
+generate_random_string <- function(max_length) {
+  return(stri_rand_strings(n = 1, length = sample(1:max_length, 1), pattern = "[A-Za-z0-9]"))
+}
+
+generate_numeric_data <- function(min_val, max_val, n, na_prob = 0) {
+  data <- runif(n, min = min_val, max = max_val)
+  na_indices <- sample(1:n, size = round(n * na_prob), replace = FALSE)
+  data[na_indices] <- NA
+  return(data)
+}
+
+scale_data <- function(data, min_range, max_range) {
+  min_data <- min(data, na.rm = TRUE)
+  max_data <- max(data, na.rm = TRUE)
+  a <- (max_range - min_range) / (max_data - min_data)
+  b <- max_range - a * max_data
+  scaled_data <- a * data + b
+  return(scaled_data)
+}
+
+# Assuming `n` is the number of unique participant_id and trial_num combinations
+n <- 20
+
+# Generate base dataset
+base_data <- data.frame(
+  participant_id = sapply(1:n, function(x) generate_random_string(20)),
+  trial_num = sample(1:7, n, replace = TRUE)
+)
+
+# Replicate each combination 4000 times to meet the requirement
+replicated_data <- base_data[rep(1:n, each = 4000), ]
+
+# Generate other variables, adjusting for the replicated dataset size
+n_replicated <- nrow(replicated_data)
+
+# Re-generate pupil data to match the new dataset size
+means <- c(3.3, 3.2)
+stddevs <- c(1, 1)
+cor_matrix <- matrix(c(1, 0.9, 0.9, 1), nrow = 2)
+pupil_data <- mvrnorm(n_replicated, mu = means, Sigma = cor_matrix * (stddevs %*% t(stddevs)))
+pupil_left_scaled <- scale_data(pupil_data[, 1], 2, 10)
+pupil_right_scaled <- scale_data(pupil_data[, 2], 2, 10)
+
+# Incorporate the additional variables and replicate appropriately
+replicated_data$media_name = rep(sapply(1:n, function(x) generate_random_string(30)), each = 4000)
+replicated_data$age_cohort = rep(sapply(1:n, function(x) generate_random_string(2)), each = 4000)
+replicated_data$participant_trial_id = rep(sapply(1:n, function(x) generate_random_string(4601)), each = 4000)
+replicated_data$t = generate_numeric_data(325, 1009853728750, n_replicated)
+replicated_data$x = generate_numeric_data(-320, 1600, n_replicated, 0.1)
+replicated_data$y = generate_numeric_data(-60, 1020, n_replicated, 0.1)
+replicated_data$pupil_left = pupil_left_scaled
+replicated_data$pupil_right = pupil_right_scaled
+replicated_data$event_num = generate_numeric_data(1, 9, n_replicated)
+replicated_data$lab_id = rep(sapply(1:n, function(x) generate_random_string(5)), each = 4000)
+
+# Adjusting t_sim generation
+simulate_data <- replicated_data %>% 
+  group_by(participant_id, trial_num, lab_id) %>%
+  mutate(t_sim = seq(from=0, by=16.66667, along.with = row_number()))
+ 
+
+
+```
+
+## The Multiverse forking paths of pupillometry preprocessing 
+
+The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2-P (see Calignano, Girardi, and Altoé, 2023).
+
+- First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+
+```{r, DF1, echo=TRUE,include=TRUE, out.width='90%'}
+#### plausible value range ]2,8[ - from 1 to 2 DATASETS
+simulate_data$average <- (simulate_data$pupil_left + simulate_data$pupil_right)/2
+all <-simulate_data
+all$step <- "implausible"
+summary(all)
+
+plausible <-simulate_data[simulate_data$average>2 & simulate_data$average<8,]
+plausible$step <- "plausible"
+summary(plausible)
+
+all_plausible <- list(all, plausible)
+
+all$pupil_left = as.numeric(as.character(all$pupil_left))
+all$pupil_right = as.numeric(as.character(all$pupil_right))
+all = all[all$pupil_left >0 & all$pupil_right>0,]
+
+all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 | pupil_right >=8,"blue", "red")) %>%
+  ggplot(aes(x = pupil_left, y= pupil_right, color = Color))+
+  geom_point(alpha= 0.2)+ xlab("pupil size left eye (mm)") + ylab("pupil size right eye (mm)") +
+  scale_color_identity() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+- Third degree of freedom: Baseline correction i.e. 100, 300, 500 ms between 34.5s and 35s following the beginning of the videos. Correction is performed by subtracting the average pupil diameter from all subsequent values between 35s and 40s, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
+
+```{r, echo=TRUE,include=TRUE, out.width='90%'}
+### median baseline from 2 to 6 DATASETS
+
+### 3 median baseline i.e. initial time window for each trial_num ,id, lab_id
+### i.e. 100, 300, 500 ms
+library(plyr)
+universe_one <- all_plausible
+#100ms baseline 
+    for (i in 1:2) {
+         dg = 100
+           universe_one[[i]]<-ddply(universe_one[[i]],.(participant_id,trial_num, lab_id),
+                  transform,baseline = average - median(average[1]), na.rm = T)
+           }
+          
+            
+#300 ms baseline 
+universe_two <- all_plausible
+  for (i in 1:2) {
+    dg = 300
+    universe_two[[i]]<-ddply(universe_two[[i]],.(participant_id, trial_num, lab_id),
+                                     transform,baseline = average - median(average[1:min(6:length(t_sim))]), na.rm = T)
+}
+
+#500 ms baseline 
+universe_three <-all_plausible
+  for (i in 1:2) {
+    dg = 500
+    universe_three[[i]]<-ddply(universe_three[[i]],.(participant_id, trial_num, lab_id),
+                                    transform,baseline = average - median(average[1:min(12:length(t_sim))]), na.rm = T)
+}
+
+#multiverse
+multiverse <- list(universe_one, universe_two, universe_three)
+
+#plot
+library(gridExtra)
+data_summary <- function(x) {
+  m <- median(x)
+  ymin <- m-sd(x)
+  ymax <- m+sd(x)
+  return(c(y=m,ymin=ymin,ymax=ymax))
+}
+
+grid.arrange(
+ggplot(universe_one[[1]], aes(t_sim, average,lab_id, color =lab_id )) +
+  geom_smooth(se = F) +
+  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("no baseline") ,
+  
+ggplot(universe_one[[2]], aes(t_sim, baseline,lab_id, color =lab_id )) +
+  geom_smooth(se = F) +
+  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 100"),
+
+ggplot(universe_two[[2]], aes(t_sim, baseline, lab_id, color =lab_id )) + stat_summary(fun.data=data_summary) +
+  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 300"),
+
+ggplot(universe_three[[1]], aes(t_sim, baseline,lab_id, color =lab_id )) +
+  geom_smooth(se = F) +
+  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 500"),nrow = 2)
+```
+## 4. How many and which conditions will participants be assigned to?
+
+Participants are randomly assigned to 1 of 4 conditions. This is done as part of the main MB2-study.
+
+## 5. Specify exactly which analyses you will conduct to examine the main question/hypothesis.
+
+The multiverse forking path of statistical modeling
+
+- Fourth degree of freedom: Linear vs nonlinear modeling: A linear and a nonlinear model are fitted to each of the 8(?) resulting data sets. 
+
+```{r , include=FALSE}
+#Multiverse of modeling : modeling pupil over time vs collapsed i.e. no time, 48 estimated effects
+library(mgcv)
+library(itsadug)
+library(sjPlot)
+par(mfrow=c(5,3), cex=.7, mar=c(2,3,2,2))
+
+for(k in 1:3){ #multiverse 3 levels
+  for(i in 1:2){ # all_plausible  levels 
+multiverse[[k]][[i]]$lab_id = as.factor(multiverse[[k]][[i]]$lab_id)
+multiverse[[k]][[i]]$participant_id = as.factor(multiverse[[k]][[i]]$participant_id)
+
+    
+          TIME<-bam(baseline~ lab_id + s(t_sim, by= lab_id, k=7) +                                      #s(t_sim, by= Condition, k=20)+
+                           #s(t_sim, by= Outcome, k=20)+
+                           s(t_sim, participant_id, bs='fs', m=1),#+ 
+                         data= multiverse[[k]][[i]], discrete=TRUE,nthreads=40)
+                #multi_acf <-  acf_resid(TIME) #autocorrelation check
+                
+                #multi_time <- plot_diff(TIME, view="t_sim", rm.ranef=TRUE, 
+multi_time2 <- plot_smooth(TIME, view="t_sim", plot_all=c("lab_id"), 
+       rm.ranef=F,rug=F, shade=T,  add=F , lty=c(1,1), lwd=4)
+                                                        
+                   }
+    }
+```
+
+## 6. Any secondary analyses?
+
+In addition to the frequentist analyses, we will run Bayesian analyses for all hypotheses described above since Bayesian analyses allow us to capture evidence for as well as against an effect.
+
+## 7. How many observations will be collected or what will determine the sample size? 
+
+This will be determined by the main MB2-analysis. We will include as many observation as are provided by the main study.
+
+## 8. Anything else you would like to pre-register? (e.g., data exclusions, variables collected for exploratory purposes, unusual analyses planned?)
+
+We are going to explore the following additional questions:
+- Does belief induction (as the mouse changes location in the test trial) increase pupil dilation?
+- Does belief induction before the outcome relate to changes in pupil dilation after the outcome?
+
+We will run supplementary analyses to investigate whether the overall luminance during testing sessions had an influence on pupil dilation changes.

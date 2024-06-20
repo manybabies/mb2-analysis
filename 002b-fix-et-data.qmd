@@ -440,6 +440,8 @@ data.pupil |>
 data.pupil.overview <- data.pupil |>
   filter(lab_id!="babylabMPIB" & lab_id!="babylingOslo" & lab_id!="tauccd" & lab_id!="kidsdevUniofNewcastle") |>
   filter(grepl("CON", media_name) | grepl("INC", media_name)) |>
+  mutate(pupil_left = na_if(pupil_left, 0)) |>
+  mutate(pupil_right = na_if(pupil_right, 0)) |>
   group_by(lab_id) |>
   summarise(mean_pupil_left = mean(pupil_left, na.rm=TRUE),
             mean_pupil_right = mean(pupil_right, na.rm=TRUE),
@@ -450,13 +452,36 @@ data.pupil.overview <- data.pupil |>
             min_pupil_right = min(pupil_right, na.rm=TRUE),
             max_pupil_right = max(pupil_right, na.rm=TRUE)) 
 
-# ToMcdlSalzburg -> negative values for pupil min
-# UIUCinfantlab -> higher SD for pupil_left than pupil_right
-# babylabAmsterdam -> higher SD for pupil_right than pupil_left
-# babylabPrinceton -> higher SD for pupil_left
-# irlConcordia -> higher mean and SD for pupil_right
-# sociocognitivelab -> higher mean and SD for pupil_right
-# unicph -> -> higher mean and SD for pupil_right
+# Here shorter version:
+data.pupil.overview.short <- data.pupil |>
+  filter(lab_id!="babylabMPIB" & lab_id!="babylingOslo" & lab_id!="tauccd" & lab_id!="kidsdevUniofNewcastle") |>
+  filter(grepl("CON", media_name) | grepl("INC", media_name)) |>
+  mutate(pupil_left = na_if(pupil_left, 0)) |>
+  mutate(pupil_right = na_if(pupil_right, 0)) |>
+  group_by(lab_id, age_cohort) |>
+  filter(mean(pupil_left, na.rm=T) < 10) |>
+  ungroup() |>
+  group_by(age_cohort) |>
+  summarise(mean_pupil_left = mean(pupil_left, na.rm=TRUE),
+            mean_pupil_right = mean(pupil_right, na.rm=TRUE),
+            sd_pupil_left = sd(pupil_left, na.rm=TRUE),
+            sd_pupil_right = sd(pupil_right, na.rm=TRUE),
+            min_pupil_left = min(pupil_left, na.rm=TRUE),
+            max_pupil_left = max(pupil_left, na.rm=TRUE), 
+            min_pupil_right = min(pupil_right, na.rm=TRUE),
+            max_pupil_right = max(pupil_right, na.rm=TRUE),
+            N = length(unique(participant_lab_id)),
+            mean_X = mean(x, na.rm=TRUE),
+            sd_X = sd(x, na.rm=TRUE),
+            min_X = min(x, na.rm=TRUE),
+            max_X = max(x, na.rm=TRUE),
+            mean_Y = mean(y, na.rm=TRUE),
+            sd_Y = sd(y, na.rm=TRUE),
+            min_Y = min(y, na.rm=TRUE),
+            max_Y = max(y, na.rm=TRUE),
+            ) 
+
+write.table(data.pupil.overview.short, file="./MB2P/summaries4simulation.txt", col.names=T, row.names=F, sep="\t")
 
 to.plot <- 0 # Set this to 1 if you want 1000+ plots to be created.
 if(to.plot == 1){
