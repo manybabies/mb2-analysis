@@ -9,18 +9,42 @@ Run a brief simulation to test different types of model comparisons.
 ---
 
 ```{r}
+set.seed(1)
+
 library(tidyverse)
 simulated.data <- tibble(
   Participant = sample(c(1:100),100, replace=F)
 ) |>
   mutate(Condition1 = sample(c("A","B"),100, replace=T)) |>
-  mutate(Condition2 = sample(c("c","d"),100, replace=T)) |>
+  mutate(Condition2 = sample(c("c","d"),100, replace=T)) |> 
   mutate(PD = runif(100, min = 2, max = 6))
 
 Full.model = lm(PD ~ Condition1 + Condition2 + Condition1*Condition2, data = simulated.data)
+#MZ: Reduced.model1 is identical to Full.model because R completes Condition1*Condition2 as Condition1+Condition2+Condition1:Condition2
 Reduced.model1 = lm(PD ~ Condition1 + Condition1*Condition2, data = simulated.data)
 Reduced.model2 = lm(PD ~ Condition1, data = simulated.data)
 
-anova(Reduced.model1, Full.model, test="F")
-anova(Reduced.model2, Full.model, test="F")
+anova(Reduced.model1, Full.model, test="F") # note that Reduc
+anova(Reduced.model2, Full.model, test="F") #note that this tests the effect of adding condition 2 AND the condition 1 by condition 2 interaction; I'm not quite sure how to interpret what this test would tell us
+```
+
+Martin's comment/ approach:
+
+```{r}
+#approach: center the main effects and then interpret the 1-df effects in the summary() command for the lm model
+#center condition
+simulated.data <- simulated.data |>
+  mutate(PD = runif(100, min = 2, max = 6)) |> 
+  mutate(
+    condition1_c = ifelse(Condition1=="A",-0.5, 0.5),
+    condition2_c = ifelse(Condition2=="c",-0.5, 0.5)
+  )
+
+#approach: fit the main regression model, with centered predictors, allowing for interpretation of the "main" effects as well as the interaction
+Full.model_c = lm(PD ~ condition1_c*condition2_c, data = simulated.data)
+summary(Full.model_c)
+
+#note that e.g. the condition2_c effect is identical/ equivalent to what you would get in a model comparison using anova()
+Reduced.model1_c = lm(PD ~ condition1_c+ condition1_c:condition2_c, data = simulated.data)
+anova(Reduced.model1_c, Full.model_c, test="F") # this matches the summary output for condition2_c in the summary(Full.model_c) call (same p-values; t- and F-values are equivalent)
 ```
