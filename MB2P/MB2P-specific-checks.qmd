@@ -1,0 +1,26 @@
+---
+title: "MB2P Specific analyses"
+format: html
+editor: visual
+---
+
+---
+Run a brief simulation to test different types of model comparisons.
+---
+
+```{r}
+library(tidyverse)
+simulated.data <- tibble(
+  Participant = sample(c(1:100),100, replace=F)
+) |>
+  mutate(Condition1 = sample(c("A","B"),100, replace=T)) |>
+  mutate(Condition2 = sample(c("c","d"),100, replace=T)) |>
+  mutate(PD = runif(100, min = 2, max = 6))
+
+Full.model = lm(PD ~ Condition1 + Condition2 + Condition1*Condition2, data = simulated.data)
+Reduced.model1 = lm(PD ~ Condition1 + Condition1*Condition2, data = simulated.data)
+Reduced.model2 = lm(PD ~ Condition1, data = simulated.data)
+
+anova(Reduced.model1, Full.model, test="F")
+anova(Reduced.model2, Full.model, test="F")
+```
