@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  18 JUN 2024 15:46
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  24 JUN 2024 14:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1031,23 +1031,19 @@ File: Figure4.jpg Graphic file (type bmp)
 [29]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[30]
-Underfull \vbox (badness 1221) has occurred while \output is active []
+[30] [31]
+File: Figure5.png Graphic file (type bmp)
+<Figure5.png>
 
-[31]
-Underfull \vbox (badness 2189) has occurred while \output is active []
+Overfull \hbox (21.66663pt too wide) in paragraph at lines 561--562
+ [][] 
+ []
 
 [32]
-Underfull \vbox (badness 2189) has occurred while \output is active []
+Underfull \vbox (badness 7649) has occurred while \output is active []
 
-[33] [34]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-[35] [36]
+[33] [34] [35] [36] [37]
 Underfull \vbox (badness 1028) has occurred while \output is active []
-
-[37]
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [38]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1061,12 +1057,15 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [41]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[42] AED endfloat: Processing end Figures and Tables [43] (./mb2-paper.ttt [44
+[42]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[43] AED endfloat: Processing end Figures and Tables [44] (./mb2-paper.ttt [45
 
 
-] [45] [46
+] [46] [47
 
-]) [47] (./mb2-paper.aux)
+]) [48] (./mb2-paper.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2020/03/25>
@@ -1076,12 +1075,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22003 strings out of 476662
- 407675 string characters out of 5798323
+ 22024 strings out of 476662
+ 407989 string characters out of 5798323
  1947403 words of memory out of 5000000
- 43763 multiletter control sequences out of 15000+600000
+ 43783 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 90i,12n,121p,2740b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,11n,121p,2740b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (47 pages).
+Output written on mb2-paper.pdf (48 pages).

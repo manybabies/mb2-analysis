@@ -15,9 +15,12 @@ library(brms)
 library(tidybayes)
 library(knitr)
 library(corrr)
+library(ggpubr)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
+paper_path <- here("paper")
+
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
@@ -118,7 +121,7 @@ ggplot(summarize_participant_familiarization,aes(N_exit))+
 
 ```{r}
 #plot average proportion looking
-overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes(x=as.factor(familiarization_trial_num), y=prop_exit,color=condition))+
+overall_p_fam <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes(x=as.factor(familiarization_trial_num), y=prop_exit,color=condition))+
   #geom_violin()+
   geom_boxplot()+
   #geom_beeswarm(alpha=0.5)+
@@ -129,9 +132,11 @@ overall_p <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes
   scale_fill_brewer(palette="Set1")+
   facet_wrap(~age_cohort)+
   theme(legend.position="none")+
+  ggtitle("Familiarization")+
+  theme(plot.title = element_text(hjust= 0.5, face="bold"))+
   xlab("Trial Number")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window)")
-overall_p
+overall_p_fam
 ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white",width=9, height=6)
 
 ```
@@ -249,9 +254,9 @@ bm_fam_aoi_toddlers %>%
 Compute Bayes factor approach
 
 ```{r}
-# null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
-# summary(null_fam_aoi_toddlers)
-# brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
+ null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
+ summary(null_fam_aoi_toddlers)
+ brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
 ```
 
 #### Adults
@@ -375,7 +380,7 @@ First look at the proportional looking measures, focusing on the target exit dur
 
 ```{r}
 #plot average proportion looking
-overall_p <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_exit,color=condition))+
+overall_p_test <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
   geom_beeswarm(alpha=0.2,cex=0.5)+
@@ -390,8 +395,10 @@ overall_p <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=p
   scale_fill_brewer(palette="Set1")+
   facet_wrap(~age_cohort)+
   theme(legend.position="none")+
+  ggtitle("Test")+
+  theme(plot.title = element_text(hjust= 0.5, face="bold"))+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-overall_p
+overall_p_test
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white",width=9,height=6)
 ```
 
@@ -1064,6 +1071,65 @@ quick and dirty averaging of the first look proportions
 
 TO DO: familiarization plot
 
+```{r}
+summarize_participant_familiarization_first_look <- d_anticipatory_fam %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,trial_num) %>%
+  summarize(
+    N = n(),
+    prop_correct_first_look = mean(first_look =="target_exit"),
+    average_rt = mean(first_look_rt),
+    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
+  ) 
+
+#check N, SEs, CIs, might not be quite right yet
+summarize_overall_familiarization_first_look <- summarize_participant_familiarization_first_look %>%
+  group_by(age_cohort,trial_num) %>%
+  summarize(
+    N = sum(!is.na(prop_correct_first_look)),
+    prop_target_first_look = mean(prop_correct_first_look,na.rm=T),
+    sd_target_first_look=sd(prop_correct_first_look,na.rm=T),
+    se_target_first_look = sd_target_first_look/sqrt(N),
+    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
+    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
+  ) 
+
+ggplot(filter(d_anticipatory_fam,!is.na(first_look)),aes(trial_num,fill=first_look))+
+  geom_bar(position="fill")+
+  facet_wrap(~age_cohort)
+
+ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
+  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
+  geom_point(size = 3) +
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylim(0,1)+
+  ylab("Proportion First Look to Target Exit")
+```
+
+
+```{r}
+overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
+  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
+  geom_point(size = 5) +
+  geom_hline(yintercept=0.5,linetype="dashed")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  theme(strip.background = element_blank(),
+  strip.text.x = element_blank())+
+  #scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  xlab("Trial Number")+
+  ylim(0,1)+
+  ylab("Proportion First Look to Target Exit")
+overall_fl_fam
+ggsave(here(plot_path,"overall_fam_trials_first_look.png"),bg="white",width=9, height=6)
+```
+
 ### Test Data
 
 ```{r}
@@ -1134,17 +1200,20 @@ ggplot(filter(d_anticipatory_test,!is.na(first_look)&trial_num==5),aes(condition
   geom_bar(position="fill")+
   facet_wrap(~age_cohort)
 
-ggplot(summarize_overall_test_first_look_first_trial,aes(condition,prop_target_first_look,color=condition))+
+overall_fl_test <- ggplot(summarize_overall_test_first_look_first_trial,aes(condition,prop_target_first_look,color=condition))+
   geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
   geom_point(size = 5) +
   geom_hline(yintercept=0.5,linetype="dashed")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
+  theme(strip.background = element_blank(),
+  strip.text.x = element_blank())+
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
   ylim(0,1)+
   ylab("Proportion First Look to Target Exit\n(First Trial Only)")
+overall_fl_test
 ggsave(here(plot_path,"overall_test_trial_first_look_first_trial.png"),bg="white",width=9, height=6)
 ```
 
@@ -1404,6 +1473,38 @@ null_first_look_adults <-  update(bm_first_look_adults, formula = ~ .-condition_
 summary(null_first_look_adults)
 brms::bayes_factor(bm_first_look_adults, null_first_look_adults)
 ```
+
+## Plotting PTL and First Look for familiarization and test
+
+```{r}
+figure_fam_test_p_fl <- ggarrange(overall_p_fam, overall_p_test, overall_fl_fam, overall_fl_test,
+                    labels = c("A", "B", "C", "D"),
+                    ncol = 2, nrow = 2)
+
+figure_fam_test_p_fl
+
+figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
+                                              theme(axis.text.x = element_blank(),
+                                                    axis.ticks.x = element_blank(),
+                                                    axis.title.x = element_blank()),
+                                         overall_p_test + 
+                                              theme(axis.text.y = element_blank(),
+                                                    axis.ticks.y = element_blank(),
+                                                    axis.title.y = element_blank(),
+                                                    axis.text.x = element_blank(),
+                                                    axis.ticks.x = element_blank(),
+                                                    axis.title.x = element_blank()), 
+                                         overall_fl_fam,
+                                         overall_fl_test +
+                                              theme(axis.text.y = element_blank(),
+                                                    axis.ticks.y = element_blank(),
+                                                    axis.title.y = element_blank()),
+                                         nrow = 2,
+                                         align = "v")
+
+ggsave(here(paper_path,"Figure5.png"),bg="white",width=16, height=9)
+```
+
 
 # Connections between familiarization and test
 
