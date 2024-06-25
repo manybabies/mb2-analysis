@@ -181,6 +181,22 @@ d_participants_including_pilot <- d_participants
 d_participants <- d_participants %>%
   filter(pilot=="no")
 
+## Handle participants outside of age range
+
+#We remove participants outside of the specified age range from considerations of participant counts.
+
+#record number of participants
+n_age_exclusiion_participants <- d_participants %>%
+  filter(age_exclusion=="yes") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants outside of age range
+d_participants_including_age_excluded <- d_participants
+
+#focus all subsequent counts on participants NOT including participants outside of age range
+d_participants <- d_participants %>%
+  filter(age_exclusion=="no")
+
 ## Compute participant counts: Pre-exclusion
 
 n_before_exclusion_by_cohort <- d_participants %>%

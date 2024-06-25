@@ -22,6 +22,9 @@ output            : papaja::apa6_pdf
 library(papaja)
 library(knitr)
 library(kableExtra)
+library(here)
+library(readr)
+library(dplyr)
 ```
 
 This document contains supplemental material of the manuscript:
@@ -129,14 +132,162 @@ All labs are required to report anomalies, technical issues, concerns, and gener
 
 
 ## Participant exclusion
-Of the initial sample (toddlers: N = XYZ, adults: N = XYZ), participants will be excluded from the main confirmatory analyses if:
-They did not complete the full experiment (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%),
-Participants’ caregivers interfered with the procedure, e.g., by pointing at stimuli or talking to their toddler (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%),
-The experimenter made an error during testing that was relevant to the procedure (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%),
-Technical problems occurred, e.g., data not saved, unable to calibrate eye-tracker, eye-tracker lost signal, data loss due to computer failure, computer crashed during recording  (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%).
-The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of XYZ toddlers and XYZ adults whose data will be analyzed. Of these, participants will be excluded sequentially if:
-5. Their data were excluded due to missingness (see Preprocessing section) from more than one familiarization trial (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%),
-6.  Their data from the first (critical) test trial were excluded due to missingness (toddlers: N = XYZ, XYZ%; adults: N = XYZ, XYZ%).
+
+```{r Lab and participant information, warning=FALSE}
+
+source(here('helper','ensure_repo_structure.R'))
+d_participants <- read_csv(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006a))
+
+# Summarize lab and participant information
+
+## Handle pilot participants
+
+#We remove pilot participants from considerations of participant counts. Essentially, we want pilot participants not  to count towards any tallies in the main analyses, including exclusion counts, because, by definition, they were "only" pilot participants.
+
+#record number of pilot participants
+n_pilot_participants <- d_participants %>%
+  filter(pilot=="yes") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes the pilot participants
+d_participants_including_pilot <- d_participants
+
+#focus all subsequent counts on participants NOT including pilot participants and Not including participants outside of the age range
+d_participants <- d_participants %>%
+  filter(pilot=="no")
+
+#record number of participants outside of age range
+n_age_excluded_participants <- d_participants %>%
+  filter(age_exclusion=="yes") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes the participants outside of age_range
+d_participants_including_age_excluded <- d_participants_including_pilot
+
+#focus all subsequent counts on participants NOT including pilot participants and Not including participants outside of the age range
+d_participants <- d_participants %>%
+  filter(age_exclusion=="no")
+
+## Compute participant counts: Pre-exclusion
+
+n_before_exclusion_by_cohort <- d_participants %>%
+    group_by(age_cohort) %>% 
+  summarise(n_participants = n(),
+            n_labs = length(unique(lab_id)))
+
+## Participants with session errors
+
+### Session error 1: 
+
+#record number of participants with session error 1
+n_participants_session_error1 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="1") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 1
+d_participants_including_session_error1 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 1
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="1")
+
+### Session error 2: 
+
+#record number of participants with session error 2
+n_participants_session_error2 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="2") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 2
+d_participants_including_session_error2 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 2
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="")
+
+### Session error 3: 
+
+#record number of participants with session error 3
+n_participants_session_error3 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="3") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 3
+d_participants_including_session_error3 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 3
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="3")
+
+### Session error 4: 
+
+#record number of participants with session error 4
+n_participants_session_error4 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="4") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 4
+d_participants_including_session_error4 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 4
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="4")
+
+## Compute participant counts: After session error exclusion
+
+n_after_session_error_exclusion_by_cohort <- d_participants %>%
+    group_by(age_cohort) %>% 
+  summarise(n_participants = n(),
+            n_labs = length(unique(lab_id)))
+
+## Participants with trial-based errors
+
+### Session error 5: 
+
+#record number of participants with session error 5
+n_participants_session_error5 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="5") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 5
+d_participants_including_session_error5 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 5
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="5")
+
+### Session error 6: 
+
+#record number of participants with session error 6
+n_participants_session_error6 <- d_participants %>%
+  group_by(age_cohort) %>%
+  filter(exclude_participant=="yes" & exclude_participant_type=="6") %>%
+  summarise(n = length(unique(participant_lab_id)))
+
+#retain a data frame that includes participants with session error 6
+d_participants_including_session_error6 <- d_participants
+
+#focus all subsequent counts on participants NOT including participants with session error 6
+d_participants <- d_participants %>%
+  filter(is.na(exclude_participant_type) | exclude_participant_type!="6")
+
+#(round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error1,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)
+
+```
+
+Of the initial sample (toddlers: *N* = `r filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants`, adults: *N* = `r filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants`), participants will be excluded from the main confirmatory analyses if:
+They did not complete the full experiment (toddlers: *n* = `r filter(n_participants_session_error1,age_cohort=="toddlers")$n`,  `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error1,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = 0, 0%),
+Participants’ caregivers interfered with the procedure, e.g., by pointing at stimuli or talking to their toddler (toddlers: *n* = `r filter(n_participants_session_error2,age_cohort=="toddlers")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error2,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = 0, 0%),
+the experimenter made an error during testing that was relevant to the procedure (toddlers: *n* = `r filter(n_participants_session_error3,age_cohort=="toddlers")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error3,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = `r filter(n_participants_session_error3,age_cohort=="adults")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_participants_session_error3,age_cohort=="adults")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100-100)*(-1)`%),
+technical problems occurred, e.g., data not saved, unable to calibrate eye-tracker, eye-tracker lost signal, data loss due to computer failure, computer crashed during recording  (toddlers: *n* = `r filter(n_participants_session_error4,age_cohort=="toddlers")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error4,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = `r filter(n_participants_session_error4,age_cohort=="adults")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_participants_session_error4,age_cohort=="adults")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100-100)*(-1)`%).
+The individual labs will determine whether and to which extent participant exclusion criteria 1-4 apply and add this information to the participant protocol sheet they provide. This set of exclusions will leave a total of `r filter(n_after_session_error_exclusion_by_cohort,age_cohort=="toddlers")$n_participants` toddlers and `r filter(n_after_session_error_exclusion_by_cohort,age_cohort=="adults")$n_participants` adults whose data will be analyzed. Of these, participants will be excluded sequentially if:
+5. Their data were excluded due to missingness (see Preprocessing section) from more than one familiarization trial (toddlers: *n* = `r filter(n_participants_session_error5,age_cohort=="toddlers")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error5,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = `r filter(n_participants_session_error5,age_cohort=="adults")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_participants_session_error5,age_cohort=="adults")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100-100)*(-1)`%),
+6.  Their data from the first (critical) test trial were excluded due to missingness (toddlers: *n* = `r filter(n_participants_session_error6,age_cohort=="toddlers")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_participants_session_error6,age_cohort=="toddlers")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100-100)*(-1)`%; adults: *n* = `r filter(n_participants_session_error6,age_cohort=="adults")$n`, `r (round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_participants_session_error6,age_cohort=="adults")$n)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100-100)*(-1)`%).
 If multiple reasons for exclusion are applicable to a participant, the criteria will be assigned in the order above.
 
 \newpage
