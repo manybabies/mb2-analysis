@@ -20,7 +20,7 @@ library(ggpubr)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 paper_path <- here("paper")
-
+results_path <- here("results")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
@@ -171,6 +171,8 @@ summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
   
 summarize_fam_aoi_overall %>%
   knitr::kable()
+
+saveRDS(summarize_fam_aoi_overall, file=here(results_path,"summary_fam_aoi_overall.rds"))
 ```
 
 By individual trial
@@ -205,6 +207,11 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
+
+priors_null<-c(
+  set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L"))
 #shift trial number coding
 #From the RR:
 #Our key question ofinterest is whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we will code trial number so that the last trial before the test trials (trial 4) is set to the intercept
@@ -219,8 +226,8 @@ bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+fami
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_familiarization,age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 2000, 
+        warmup = 10000, 
+        iter = 20000, 
         chains = 4, 
         cores = 4,
         seed = 123,
@@ -254,9 +261,12 @@ bm_fam_aoi_toddlers %>%
 Compute Bayes factor approach
 
 ```{r}
- null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
- summary(null_fam_aoi_toddlers)
- brms::bayes_factor(bm_fam_aoi_toddlers, null_fam_aoi_toddlers)
+null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
+summary(null_fam_aoi_toddlers)
+ 
+fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,null_fam_aoi_toddlers)
+
+saveRDS(fam_m_comparision_PTL_toddlers, file=here(results_path,"fam_m_comparision_PTL_toddlers.rds"))
 ```
 
 #### Adults
@@ -267,8 +277,8 @@ bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+famili
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_familiarization,age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 2000, 
+        warmup = 10000, 
+        iter = 20000, 
         chains = 4, 
         cores = 4,
         seed = 123,
@@ -301,9 +311,11 @@ bm_fam_aoi_adults %>%
 Compute Bayes factor approach
 
 ```{r}
-# null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
-# summary(null_fam_aoi_adults)
-# brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
+null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
+summary(null_fam_aoi_adults)
+fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
+ 
+ saveRDS(fam_m_comparison_PTL_adults, file=here(results_path,"fam_m_comparison_PTL_adults.rds"))
 ```
 
 ## Test Data
@@ -1093,6 +1105,8 @@ summarize_overall_familiarization_first_look <- summarize_participant_familiariz
     upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
   ) 
 
+# TO DO: add binomial test
+
 ggplot(filter(d_anticipatory_fam,!is.na(first_look)),aes(trial_num,fill=first_look))+
   geom_bar(position="fill")+
   facet_wrap(~age_cohort)
@@ -1103,11 +1117,16 @@ ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_fi
   geom_hline(yintercept=0.5,linetype="dashed")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
+  #scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
   ylim(0,1)+
   ylab("Proportion First Look to Target Exit")
+
+summarize_overall_familiarization_first_look %>%
+  knitr::kable()
+
+saveRDS(summarize_overall_familiarization_first_look, file=here(results_path,"summary_fam_fl_overall.rds"))
 ```
 
 
@@ -1240,8 +1259,8 @@ bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(d_anticipatory_fam,age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 2000, 
+        warmup = 10000, 
+        iter = 20000, 
         chains = 4, 
         cores = 4,
         seed = 123,
@@ -1276,9 +1295,11 @@ Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-# null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
-# summary(null_fam_first_look_toddlers)
-# brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
+null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
+summary(null_fam_first_look_toddlers)
+fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
+
+saveRDS(fam_m_comparison_FL_toddlers, file=here(results_path,"fam_m_comparison_FL_toddlers.rds"))
 ```
 
 #### Adults
@@ -1289,8 +1310,8 @@ bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+fa
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(d_anticipatory_fam,age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 2000, 
+        warmup = 10000, 
+        iter = 20000, 
         chains = 4, 
         cores = 4,
         seed = 123,
@@ -1324,9 +1345,11 @@ Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-# null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
-# summary(null_fam_first_look_adults)
-# brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
+ null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
+ summary(null_fam_first_look_adults)
+ fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
+ 
+  saveRDS(fam_m_comparison_FL_adults, file=here(results_path,"fam_m_comparison_FL_adults.rds"))
 ```
 
 ### Test Data
