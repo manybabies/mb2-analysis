@@ -50,12 +50,38 @@ library(here)
 library(knitr)
 #library(kableExtra)
 
+source(here('helper','ensure_repo_structure.R'))
+
 ```
+
+```{r parameters}
+# set to TRUE to re-run the model fits
+# need to set to TRUE the first time you load the paper to generate local results/model outputs
+model <- FALSE
+```
+
 
 ```{r load_authors}
 # downloaded from https://docs.google.com/spreadsheets/d/1--ToAecjii3W2PtXuE_ZXkMw_u4MgFo-6G50b6hFQUw/edit#gid=1763252679 on ?
-
 ```
+
+```{r load_model_results}
+#re-run the model fits if desired
+if (model) {
+  knitr::purl(input = here("007-aoi-analysis.qmd"), output = "007-aoi-analysis.R")
+  source("007-aoi-analysis.R")
+}
+
+#load all model results
+load(here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
+load(here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
+load(here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
+load(here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
+load(here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
+load(here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
+load(here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
+```
+
 
 The capacity to represent epistemic states, known as Theory of Mind (ToM) or mentalizing, plays a central role in human cognition [@premack1978does; @frith2006neural; @dennett1989intentional]. Although ToM has been under intense scrutiny in the past decades, its nature and ontogeny are still the subjects of much controversy. At the heart of these debates are questions about the reliability of the tools used to measure ToM [e.g., @poulin2018infants; @baillargeon2018invited], among others, anticipatory looking (AL) paradigms. To address this issue, in a collaborative long-term project we assess the robustness of infants’ and adults’ tendency to spontaneously take into account different kinds of epistemic states  — what they perceive, know, think, or believe — when predicting others’ behaviors. This paper reports the first foundational step of this project, which focuses on the most basic epistemic state ascription: the capacity to distinguish between knowledgeable and ignorant individuals. Simple forms of knowledge attribution (such as tracking what other individuals have seen or experienced) are typically assumed to develop early and to operate spontaneously throughout the lifespan [e.g., @luo200712; @liszkowski2007pointing; @o1996two; @phillips2021knowledge]. Thus, evaluating whether ToM measures are sensitive to the knowledge-ignorance distinction is a crucial test case to assess their robustness. The present paper investigates this question in an AL paradigm including 18-27-month-old infants and adults.
 
@@ -459,26 +485,10 @@ which included no intercept term. We then computed the BF comparing this model t
 
 ##### Toddlers
 
-```{r Results familiarization PTL toddlers, warning=FALSE}
-
-source(here('helper','ensure_repo_structure.R'))
-results_path <- here("results")
-summarize_fam_aoi_overall <- readRDS(here(results_path,"summary_fam_aoi_overall.rds"))
-
-fam_m_comparison_PTL_toddlers <- readRDS(here(results_path,"fam_m_comparison_PTL_toddlers.rds"))
-
-```
 As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r round(fam_m_comparison_PTL_toddlers$bf, 0)`, strongly favoring the base model over the null model. See also Table X for regression coefficients for the base and the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
 In addition, toddlers' mean PTL of `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* = `r format(filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$p.value, scientific = TRUE, digits = 3)`, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 ##### Adults
-
-```{r Results familiarization PTL adults, warning=FALSE}
-
-source(here('helper','ensure_repo_structure.R'))
-
-fam_m_comparison_PTL_adults <- readRDS(here(results_path,"fam_m_comparison_PTL_adults.rds"))
-```
 
 Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r round(fam_m_comparison_PTL_adults$bf, 0)`, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of `r filter(summarize_fam_aoi_overall, age_cohort=="adults")$mean_target_looking` significantly differed from chance, *t*(`r filter(summarize_fam_aoi_overall, age_cohort=="adults")$df`) = `r filter(summarize_fam_aoi_overall, age_cohort=="adults")$tval`, *p* = `r format(filter(summarize_fam_aoi_overall, age_cohort=="adults")$p.value, scientific = TRUE, digits = 3)`, suggesting that adults successfully anticipated during the familiarization trials.
 
@@ -486,23 +496,9 @@ Next, we used a Bayesian mixed effects model to predict PTL based on trial numbe
 
 ##### Toddlers
 
-```{r Results familiarization FL toddlers, warning=FALSE}
-
-source(here('helper','ensure_repo_structure.R'))
-
-fam_m_comparison_FL_toddlers <- readRDS(here(results_path,"fam_m_comparison_FL_toddlers.rds"))
-```
-
 Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be `r round(fam_m_comparison_PTL_adults$bf, 0)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* = `r round(filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$p.value, 3)`, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 ##### Adults
-
-```{r Results familiarization FL adults, warning=FALSE}
-
-source(here('helper','ensure_repo_structure.R'))
-
-fam_m_comparison_FL_adults <- readRDS(here(results_path,"fam_m_comparison_FL_adults.rds"))
-```
 
 Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of `r round(fam_m_comparison_PTL_adults$bf, 0)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* = `r round(filter(summarize_fam_aoi_overall, age_cohort=="toddlers")$p.value, 3)`, suggesting that toddlers successfully anticipated during the familiarization trials.
 

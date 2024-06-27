@@ -1,9 +1,4 @@
----
-title: "AOI-based analysis"
-format: html
----
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 library(tidyverse)
 library(here)
 library(assertthat)
@@ -22,13 +17,9 @@ plot_path <- here("plots")
 paper_path <- here("paper")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
-```
 
-# Preliminaries
 
-Inspecting the structure of the unique trials in the data. Check to see if we have the expected number of familiarization (4 trials) and test trials (2, one ignorance, one knowledge).
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 distinct_trials <- data_preprocessed_post_exclusions %>%
   ungroup() %>%
   distinct(lab_id,participant_id,participant_lab_id,participant_trial_id,trial_file_name,media_name,condition)
@@ -58,25 +49,17 @@ distinct_trials %>%
   filter(participant_lab_id %in% participants_w_fewer_familiarization_trials) %>%
   View()
   
-```
 
-Splitting the data into familiarization data and test data.
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 fam_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("familiarization"))
 
 test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
-```
 
-# AOI Proportion Looking
 
-## Familiarization Data
-
-### Summarizing Familiarization Data
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_participant_familiarization <- fam_data %>%
   group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
   filter(t_norm<=120 & t_norm>=-3880) %>%
@@ -105,20 +88,16 @@ summarize_participant_familiarization_overall <- summarize_participant_familiari
     fam_prop_exit=mean(prop_exit,na.rm=TRUE),
     fam_prop_general=mean(prop_general,na.rm=TRUE)
   )
-```
 
-Some quick checks on the resulting data
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #distribution of total looks
 ggplot(summarize_participant_familiarization,aes(N_exit))+
   geom_histogram()+
   facet_wrap(~age_cohort)
-```
 
-### Overall Plots
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #plot average proportion looking
 overall_p_fam <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes(x=as.factor(familiarization_trial_num), y=prop_exit,color=condition))+
   #geom_violin()+
@@ -138,11 +117,9 @@ overall_p_fam <- ggplot(filter(summarize_participant_familiarization,N_exit>=5),
 overall_p_fam
 ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.png"),bg="white",width=9, height=6)
 
-```
 
-### Summary Statistics
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
@@ -172,11 +149,9 @@ summarize_fam_aoi_overall %>%
   knitr::kable()
 
 save(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
-```
 
-By individual trial
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_fam_aoi_by_trial <- summarize_participant_familiarization %>%
   group_by(age_cohort,condition,familiarization_trial_num) %>%
   summarize(
@@ -192,13 +167,9 @@ summarize_fam_aoi_by_trial <- summarize_participant_familiarization %>%
 
 summarize_fam_aoi_by_trial %>%
   knitr::kable()
-```
 
-### Main Model
 
-#### Toddlers
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
@@ -235,44 +206,34 @@ summary(bm_fam_aoi_toddlers)
 prior_summary(bm_fam_aoi_toddlers)
 
 save(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
-```
 
-Summarize outcomes
 
-Intercept
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_toddlers %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Trial Number
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_toddlers %>%
   spread_draws(b_familiarization_trial_num_4, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Compute Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_aoi_toddlers)
  
 fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,null_fam_aoi_toddlers)
 
-save(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
-```
+save(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparision_PTL_toddlers.Rds"))
 
-#### Adults
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=gaussian,
          prior = priors,
@@ -288,44 +249,32 @@ summary(bm_fam_aoi_adults)
 prior_summary(bm_fam_aoi_adults)
 
 save(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
-```
 
-Summarize outcomes
 
-Intercept
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_fam_aoi_adults %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Trial Number
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_adults %>%
   spread_draws(b_familiarization_trial_num_4, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Compute Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_aoi_adults)
 fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
  
 save(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
-```
 
-## Test Data
 
-### Summarizing Test Data (First Trial)
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #filter to first trials
 test_data_first_trial <- test_data %>%
   #filter to first trial only
@@ -344,9 +293,9 @@ num_test_first_trials <- test_data_first_trial_overview %>%
 #the next two statements must both be true
 assert_that(num_test_first_trials$n[1]==1) # first element equals one
 assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 #now summarize all data
 summarize_participant_test_first_trial <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
@@ -382,20 +331,16 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
   )
 
 save(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 #distribution of total looks
 ggplot(summarize_participant_test_first_trial,aes(N_exit))+
   geom_histogram()+
   facet_wrap(~age_cohort)
-```
 
-### Overall Plots
 
-First look at the proportional looking measures, focusing on the target exit during the anticipatory window.
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #plot average proportion looking
 overall_p_test <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
@@ -417,11 +362,9 @@ overall_p_test <- ggplot(summarize_participant_test_first_trial, aes(x=condition
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p_test
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white",width=9,height=6)
-```
 
-Splitting plot by lab and age cohort
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 adults_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="adults"), aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
@@ -459,11 +402,9 @@ kids_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 kids_prop
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white", width = 16, height = 10)
-```
 
-Plot the effect by age
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 kid_prop_by_age <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"),aes(x=age_mo,y=prop_exit,color=condition))+
   geom_hline(yintercept=0.5, linetype="dashed")+
   geom_point(alpha=0.4)+
@@ -475,11 +416,9 @@ kid_prop_by_age <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=
   scale_fill_brewer(palette="Set1")
 kid_prop_by_age
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking_by_age.png"),bg="white", width = 9, height = 6)
-```
 
-### Summary Statistics
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_test_aoi <- summarize_participant_test_first_trial %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
@@ -514,15 +453,9 @@ summarize_test_aoi %>%
   knitr::kable()
 
 save(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
-```
 
-### Main Model
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
-
-#### Toddlers
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
@@ -545,11 +478,9 @@ summary(bm_aoi_toddlers)
 prior_summary(bm_aoi_toddlers)
 
 save(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
-```
 
-Summarize outcomes
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_aoi_toddlers %>%
@@ -563,11 +494,9 @@ bm_aoi_toddlers %>%
 bm_aoi_toddlers %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Visualize model coefficients
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_aoi_toddlers %>%
   spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
   pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
@@ -580,31 +509,23 @@ bm_aoi_toddlers %>%
   xlab("Model Predictor")+
   coord_flip()
 ggsave(here(plot_path,"test_toddlers_model_coefficients.png"),bg="white",width=9,height=6)
-```
 
 
-Hypothesis test/ compute Bayes Factor
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 h_aoi_toddlers <- hypothesis(bm_aoi_toddlers, "condition_c = 0", class="b")
 h_aoi_toddlers
 plot(h_aoi_toddlers)
 # evidence in favor of condition being different from zero
 1/h_aoi_toddlers$hypothesis$Evid.Ratio
-```
 
-Alternate Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
 summary(null_aoi_toddlers)
 brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
-```
 
 
-#### Adults
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -619,36 +540,30 @@ bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
 summary(bm_aoi_adults)
 
 save(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_aoi_adults %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-Hypothesis test/ compute Bayes Factor
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 h_aoi_adults <- hypothesis(bm_aoi_adults, "condition_c = 0")
 h_aoi_adults 
 plot(h_aoi_adults)
 # evidence in favor of condition being different from zero
 1/h_aoi_adults$hypothesis$Evid.Ratio
-```
 
-Alternate Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_aoi_adults <-  update(bm_aoi_adults, formula = ~ .-condition_c)
 summary(null_aoi_adults)
 brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
-```
 
-# Timecourse extension
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 mss_timecourse_test_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
@@ -675,19 +590,16 @@ ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
             prop_general = sum_target_general / 
               (sum_target_general+sum_distractor_general))
 
-```
-Check time-course lengths across videos. 
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 test_data |>
   group_by(trial_file_name) |>
   summarise(min_t = min(t_norm), 
             max_t = max(t_norm))
-```
 
 
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 ggplot(ms_timecourse_test_first_trial |>
          filter(age_cohort=="adults") |>
          pivot_longer(mean_target_general:mean_distractor_general, 
@@ -705,12 +617,9 @@ ggplot(ms_timecourse_test_first_trial |>
   geom_point(alpha = .1) +
   geom_smooth() + 
   facet_wrap(trial_file_name~age_cohort, ncol=4)
-```
 
 
-## Timecourse with all test trials
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 mss_timecourse_test <- test_data %>%
   mutate(first_trial = (trial_num==5)) %>%
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
@@ -749,9 +658,9 @@ ms_timecourse_test <- mss_timecourse_test |>
     sum_distractor = sum(on_dist, na.rm=TRUE),
     prop = sum_target / (sum_target+sum_distractor))
 
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 ms_timecourse_test_long <- ms_timecourse_test |>
   #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
   pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_") |> 
@@ -774,11 +683,9 @@ ggplot(filter(ms_timecourse_test_long,t_norm_downsampled<=0),
   xlab("Time")+
   ylab("Mean Proportion Looking")
 ggsave(here(plot_path,"test_timecourse_plot.png"),bg="white",width=12,height=6)
-```
 
-### With Extension
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #continued timecourse
 ggplot(ms_timecourse_test_long,       
          aes(x = t_norm_downsampled, y = mean, 
@@ -860,12 +767,9 @@ ggplot(filter(ms_timecourse_test_outcome_long,!first_trial),
   theme(legend.position = "bottom")+
   xlab("Time")+
   ylab("Mean Proportion Looking")
-```
 
 
-## Fam trials
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 mss_fam <- fam_data %>%
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name) %>%
@@ -904,9 +808,9 @@ ms_fam <- mss_fam |>
     ci_distractorHI = mean_distractor + ci_distractor,
     prop = mean(prop_target_exit,na.rm=TRUE))
 
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 ms_fam_long <- ms_fam |>
   #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
   pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_")
@@ -927,18 +831,9 @@ ggplot(ms_fam_long,
   ylab("Mean Proportion Looking")
 ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12,height=6)
 
-```
 
 
-# First Look Analysis
-
- <!-- First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner et al. (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins. -->
-
-## Compute first looks
-
-### Convert to run-length encoding format
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #convert to rle data
 rle_fam_data <- fam_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
@@ -951,19 +846,9 @@ rle_test_data <- test_data %>%
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   reframe(lengths = rle(aoi)$lengths, 
             values = rle(aoi)$values)
-```
 
 
-### Compute the first looks/ anticipatory looking
-
-Function for computing first look and RT
-
-Summarizing a few key decisions:
-- We compute both a first look (first valid look to the target or distractor AOIs during the anticipatory window) and a first shift (consistent with the Registered Report: starting on the AOIs does not count, there must be evidence of a shift to the AOI during the anticipatory window)
-- We ignore NAs altogether in defining shifts (this also means that if there are a lot of NAs at the beginning of the window and then the infants' first look is to the target/ distractor AOI, this is counted the same (i.e., ignored - we still need to see a shift to the AOI) as if the infant started on the target/distractor AOI.
-- For RT computation, we compute all samples up to landing on the target/ distractor AOI look and multiply by the sampling rate.
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 # takes rle_data dataframe (already rle'd)
 get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_LOOK_MS = 150) {
   
@@ -1068,11 +953,9 @@ get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_L
     shift_type_all = shift_type_all) # all shifts during the anticipatory window
     )
 }
-```
 
-Now compute anticipatory looking/ first looks for every trial
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 # compute RTs
 d_anticipatory_fam <- rle_fam_data %>%
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
@@ -1084,17 +967,9 @@ d_anticipatory_test <- rle_test_data %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data))
-```
 
-## Plot
 
-quick and dirty averaging of the first look proportions
-
-### Familiarization Data
-
-TO DO: familiarization plot
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_participant_familiarization_first_look <- d_anticipatory_fam %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,trial_num) %>%
   summarize(
@@ -1138,10 +1013,9 @@ summarize_overall_familiarization_first_look %>%
   knitr::kable()
 
 save(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
-```
 
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
   geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
   geom_point(size = 5) +
@@ -1158,11 +1032,9 @@ overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_
   ylab("Proportion First Look to Target Exit")
 overall_fl_fam
 ggsave(here(plot_path,"overall_fam_trials_first_look.png"),bg="white",width=9, height=6)
-```
 
-### Test Data
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_participant_test_first_look <- d_anticipatory_test %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
   summarize(
@@ -1199,11 +1071,9 @@ ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,co
   theme(legend.position="none")+
   ylim(0,1)+
   ylab("Proportion First Look to Target Exit")
-```
 
-#### First Trial Only
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num==5) %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
@@ -1245,15 +1115,9 @@ overall_fl_test <- ggplot(summarize_overall_test_first_look_first_trial,aes(cond
   ylab("Proportion First Look to Target Exit\n(First Trial Only)")
 overall_fl_test
 ggsave(here(plot_path,"overall_test_trial_first_look_first_trial.png"),bg="white",width=9, height=6)
-```
 
-## Main Model
 
-### Familiarization Data
-
-#### Toddlers
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
@@ -1280,44 +1144,34 @@ summary(bm_fam_first_look_toddlers)
 prior_summary(bm_fam_first_look_toddlers)
 
 save(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
-```
 
-Summarize outcomes
 
-Intercept
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_toddlers %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
-```
 
-Trial Number
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_toddlers %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
-```
 
-Compute Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #this seems broken at the moment
 null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_first_look_toddlers)
 fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
 
 save(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
-```
 
-#### Adults
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=bernoulli(link = "logit"),
          prior = priors,
@@ -1333,45 +1187,33 @@ summary(bm_fam_first_look_adults)
 prior_summary(bm_fam_first_look_adults)
 
 save(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
-```
 
-Summarize outcomes
 
-Intercept
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_fam_first_look_adults %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
-```
 
-Trial Number
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_adults %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
-```
 
-Compute Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #this seems broken at the moment
 null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_first_look_adults)
 fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
  
 save(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
-```
 
-### Test Data
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial first looks during the anticipatory window.
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #select first test trial
 test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num==5) %>%
@@ -1402,12 +1244,9 @@ d_anticipatory_test <- d_anticipatory_test %>%
       condition=="ignorance" ~ 0.5
     )
   )
-```
 
 
-#### Toddlers
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
@@ -1431,48 +1270,38 @@ summary(bm_test_first_look_toddlers)
 prior_summary(bm_test_first_look_toddlers)
 
 save(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
-```
 
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 # quick and dirty binomial test just for exploratory purposes
 sum_correct_first_looks_knowledge <- sum(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"],na.rm=TRUE)
 sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"]))
 binom.test(sum_correct_first_looks_knowledge,sum_total_first_looks_knowledge, alternative = "two.sided", p=0.5)
-```
 
-Summarize outcomes
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_test_first_look_toddlers %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
-```
 
-Hypothesis test/ compute Bayes Factor
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 h_first_look_toddlers <- hypothesis(bm_test_first_look_toddlers, "condition_c = 0", class="b")
 h_first_look_toddlers
 plot(h_first_look_toddlers)
 # evidence in favor of condition being different from zero
 1/h_first_look_toddlers$hypothesis$Evid.Ratio
-```
 
-Alternate Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_first_look_toddlers <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
 summary(null_first_look_toddlers)
 brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
-```
 
 
-#### Adults
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_test_first_look_adults <- brm(
   correct_first_look ~ 1+condition_c+(1+condition_c|lab_id),
   family=bernoulli(link = "logit"),
@@ -1489,39 +1318,31 @@ summary(bm_test_first_look_adults)
 prior_summary(bm_test_first_look_adults)
 
 save(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
-```
 
-Summarize outcomes
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_test_first_look_adults %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
-```
 
-Hypothesis test/ compute Bayes Factor
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 h_first_look_adults <- hypothesis(bm_test_first_look_adults, "condition_c = 0", class="b")
 h_first_look_adults
 plot(h_first_look_adults)
 # evidence in favor of condition being different from zero
 1/h_first_look_adults$hypothesis$Evid.Ratio
-```
 
-Alternate Bayes factor approach
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 null_first_look_adults <-  update(bm_test_first_look_adults, formula = ~ .-condition_c)
 summary(null_first_look_adults)
 brms::bayes_factor(bm_test_first_look_adults, null_first_look_adults)
-```
 
-## Plotting PTL and First Look for familiarization and test
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 figure_fam_test_p_fl <- ggarrange(overall_p_fam, overall_p_test, overall_fl_fam, overall_fl_test,
                     labels = c("A", "B", "C", "D"),
                     ncol = 2, nrow = 2)
@@ -1548,14 +1369,9 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
                                          align = "v")
 
 ggsave(here(paper_path,"Figure5.png"),bg="white",width=16, height=9)
-```
 
 
-# Connections between familiarization and test
-
-## Only anticipators on final familiarization trial
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #first, find the participants who anticipate correctly on the last trial
 summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition,trial_num) %>%
@@ -1596,11 +1412,9 @@ overall_p_correct_final_fam_trial <- ggplot(filter(summarize_participant_test_fi
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p_correct_final_fam_trial
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_correct_final_fam_first_look.png"),bg="white",width=9,height=6)
-```
 
-### Summary Statistics
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_test_aoi_correct_final_fam_trial <- summarize_participant_test_first_trial %>%
   filter(correct_first_look_final_fam_trial==1) %>%
   group_by(age_cohort,condition) %>%
@@ -1614,15 +1428,9 @@ summarize_test_aoi_correct_final_fam_trial <- summarize_participant_test_first_t
 
 summarize_test_aoi_correct_final_fam_trial %>%
   knitr::kable()
-```
 
-### Main Model
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
-
-#### Toddlers
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
@@ -1644,11 +1452,9 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
 save(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
-```
 
-Summarize outcomes
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_aoi_toddlers_correct_final_fam_trial %>%
@@ -1662,11 +1468,9 @@ bm_aoi_toddlers_correct_final_fam_trial %>%
 bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-#### Adults
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -1681,20 +1485,16 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
 summary(bm_aoi_adults_correct_final_fam_trial)
 
 save(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
-```
 
-## Only >50% looking to target during familiarization trials
 
-### Plot
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 #join overall familiarization looking in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
   left_join(summarize_participant_familiarization_overall)
@@ -1719,11 +1519,9 @@ overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_tes
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p_sufficient_fam_prop_looking
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
-```
 
-### Summary Statistics
 
-```{r}
+## ---------------------------------------------------------------------------------------------------
 summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
   filter(fam_prop_exit>0.5) %>%
   group_by(age_cohort,condition) %>%
@@ -1737,13 +1535,9 @@ summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_fir
 
 summarize_test_aoi_sufficient_fam_prop_looking %>%
   knitr::kable()
-```
 
-## Correlation between familiarization and test
 
-### Plot 
-
-```{r}
+## ---------------------------------------------------------------------------------------------------
 correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
   geom_hline(yintercept=0.5,linetype="dashed")+
   geom_point(alpha=0.25)+
@@ -1793,5 +1587,4 @@ correlation_fam_test_by_age <- summarize_participant_test_first_trial %>%
 correlation_fam_test_by_age %>%
   knitr::kable()
 
-```
 
