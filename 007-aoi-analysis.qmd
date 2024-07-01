@@ -171,7 +171,7 @@ summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
 summarize_fam_aoi_overall %>%
   knitr::kable()
 
-save(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
+saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
 ```
 
 By individual trial
@@ -234,7 +234,7 @@ bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+fami
 summary(bm_fam_aoi_toddlers)
 prior_summary(bm_fam_aoi_toddlers)
 
-save(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
+saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -267,7 +267,7 @@ summary(null_fam_aoi_toddlers)
  
 fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,null_fam_aoi_toddlers)
 
-save(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
+saveRDS(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
 ```
 
 #### Adults
@@ -287,7 +287,7 @@ bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+famili
 summary(bm_fam_aoi_adults)
 prior_summary(bm_fam_aoi_adults)
 
-save(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
+saveRDS(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
 ```
 
 Summarize outcomes
@@ -318,7 +318,7 @@ null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove inter
 summary(null_fam_aoi_adults)
 fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
  
-save(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
+saveRDS(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
 ```
 
 ## Test Data
@@ -381,7 +381,7 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
     )
   )
 
-save(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
+saveRDS(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
 ```
 
 ```{r}
@@ -513,7 +513,7 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
 summarize_test_aoi %>%
   knitr::kable()
 
-save(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
+saveRDS(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
 ```
 
 ### Main Model
@@ -544,7 +544,7 @@ bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_
 summary(bm_aoi_toddlers)
 prior_summary(bm_aoi_toddlers)
 
-save(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
+saveRDS(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -618,7 +618,7 @@ bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
         sample_prior=TRUE)
 summary(bm_aoi_adults)
 
-save(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
+saveRDS(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
 ```
 
 ```{r}
@@ -1137,7 +1137,7 @@ ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_fi
 summarize_overall_familiarization_first_look %>%
   knitr::kable()
 
-save(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
+saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
 ```
 
 
@@ -1279,7 +1279,7 @@ bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+
 summary(bm_fam_first_look_toddlers)
 prior_summary(bm_fam_first_look_toddlers)
 
-save(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
+saveRDS(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -1312,7 +1312,7 @@ null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ 
 summary(null_fam_first_look_toddlers)
 fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
 
-save(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
+saveRDS(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
 ```
 
 #### Adults
@@ -1332,7 +1332,7 @@ bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+fa
 summary(bm_fam_first_look_adults)
 prior_summary(bm_fam_first_look_adults)
 
-save(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
+saveRDS(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
 ```
 
 Summarize outcomes
@@ -1364,7 +1364,7 @@ null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1)
 summary(null_fam_first_look_adults)
 fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
  
-save(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
+saveRDS(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
 ```
 
 ### Test Data
@@ -1430,7 +1430,7 @@ bm_test_first_look_toddlers <- brm(
 summary(bm_test_first_look_toddlers)
 prior_summary(bm_test_first_look_toddlers)
 
-save(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
+saveRDS(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
 ```
 
 
@@ -1488,7 +1488,7 @@ bm_test_first_look_adults <- brm(
 summary(bm_test_first_look_adults)
 prior_summary(bm_test_first_look_adults)
 
-save(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
+saveRDS(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
 ```
 
 Summarize outcomes
@@ -1643,7 +1643,7 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         sample_prior=TRUE)
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
-save(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
 Summarize outcomes
@@ -1680,7 +1680,7 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         sample_prior=TRUE)
 summary(bm_aoi_adults_correct_final_fam_trial)
 
-save(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
 ```
 
 ```{r}
