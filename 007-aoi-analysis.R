@@ -1,4 +1,4 @@
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(tidyverse)
 library(here)
 library(assertthat)
@@ -19,7 +19,7 @@ paper_path <- here("paper")
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 distinct_trials <- data_preprocessed_post_exclusions %>%
   ungroup() %>%
   distinct(lab_id,participant_id,participant_lab_id,participant_trial_id,trial_file_name,media_name,condition)
@@ -36,22 +36,18 @@ participants_w_additional_test_trials <- trial_overview %>%
   filter(condition=="knowledge",n>1) %>%
   pull(participant_lab_id)
 
-distinct_trials %>%
-  filter(participant_lab_id %in% participants_w_additional_test_trials) %>%
-  View()
+assert_that(length(participants_w_additional_test_trials)==0)
 
 # look a little closer at any cases where participants have too few familiarization trials
 participants_w_fewer_familiarization_trials <- trial_overview %>%
   filter(condition=="familiarization",n<3) %>%
   pull(participant_lab_id)
 
-distinct_trials %>%
-  filter(participant_lab_id %in% participants_w_fewer_familiarization_trials) %>%
-  View()
+assert_that(length(participants_w_fewer_familiarization_trials)==0)
   
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 fam_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("familiarization"))
 
@@ -59,7 +55,7 @@ test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_participant_familiarization <- fam_data %>%
   group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
   filter(t_norm<=120 & t_norm>=-3880) %>%
@@ -90,14 +86,14 @@ summarize_participant_familiarization_overall <- summarize_participant_familiari
   )
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #distribution of total looks
 ggplot(summarize_participant_familiarization,aes(N_exit))+
   geom_histogram()+
   facet_wrap(~age_cohort)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #plot average proportion looking
 overall_p_fam <- ggplot(filter(summarize_participant_familiarization,N_exit>=5), aes(x=as.factor(familiarization_trial_num), y=prop_exit,color=condition))+
   #geom_violin()+
@@ -119,7 +115,7 @@ ggsave(here(plot_path,"familiarization_overall_proportion_target_exit_looking.pn
 
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
@@ -148,10 +144,10 @@ summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
 summarize_fam_aoi_overall %>%
   knitr::kable()
 
-save(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
+saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_fam_aoi_by_trial <- summarize_participant_familiarization %>%
   group_by(age_cohort,condition,familiarization_trial_num) %>%
   summarize(
@@ -169,7 +165,7 @@ summarize_fam_aoi_by_trial %>%
   knitr::kable()
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
@@ -205,10 +201,10 @@ bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+fami
 summary(bm_fam_aoi_toddlers)
 prior_summary(bm_fam_aoi_toddlers)
 
-save(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
+saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_toddlers %>%
@@ -216,7 +212,7 @@ bm_fam_aoi_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_toddlers %>%
@@ -224,16 +220,16 @@ bm_fam_aoi_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_aoi_toddlers)
  
 fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,null_fam_aoi_toddlers)
 
-save(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparision_PTL_toddlers.Rds"))
+saveRDS(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=gaussian,
          prior = priors,
@@ -248,17 +244,17 @@ bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+famili
 summary(bm_fam_aoi_adults)
 prior_summary(bm_fam_aoi_adults)
 
-save(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
+saveRDS(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_fam_aoi_adults %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_aoi_adults %>%
@@ -266,15 +262,15 @@ bm_fam_aoi_adults %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_aoi_adults)
 fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
  
-save(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
+saveRDS(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #filter to first trials
 test_data_first_trial <- test_data %>%
   #filter to first trial only
@@ -295,7 +291,7 @@ assert_that(num_test_first_trials$n[1]==1) # first element equals one
 assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #now summarize all data
 summarize_participant_test_first_trial <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
@@ -330,17 +326,17 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
     )
   )
 
-save(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
+saveRDS(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #distribution of total looks
 ggplot(summarize_participant_test_first_trial,aes(N_exit))+
   geom_histogram()+
   facet_wrap(~age_cohort)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #plot average proportion looking
 overall_p_test <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
@@ -364,7 +360,7 @@ overall_p_test
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking.png"),bg="white",width=9,height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 adults_prop <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="adults"), aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
@@ -404,7 +400,7 @@ kids_prop
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking.png"),bg="white", width = 16, height = 10)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 kid_prop_by_age <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"),aes(x=age_mo,y=prop_exit,color=condition))+
   geom_hline(yintercept=0.5, linetype="dashed")+
   geom_point(alpha=0.4)+
@@ -418,7 +414,7 @@ kid_prop_by_age
 ggsave(here(plot_path,"kids_proportion_first_trial_target_exit_looking_by_age.png"),bg="white", width = 9, height = 6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_test_aoi <- summarize_participant_test_first_trial %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
@@ -452,10 +448,10 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
 summarize_test_aoi %>%
   knitr::kable()
 
-save(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
+saveRDS(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
@@ -477,10 +473,10 @@ bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_
 summary(bm_aoi_toddlers)
 prior_summary(bm_aoi_toddlers)
 
-save(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
+saveRDS(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_aoi_toddlers %>%
@@ -496,7 +492,7 @@ bm_aoi_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_aoi_toddlers %>%
   spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
   pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
@@ -511,7 +507,7 @@ bm_aoi_toddlers %>%
 ggsave(here(plot_path,"test_toddlers_model_coefficients.png"),bg="white",width=9,height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 h_aoi_toddlers <- hypothesis(bm_aoi_toddlers, "condition_c = 0", class="b")
 h_aoi_toddlers
 plot(h_aoi_toddlers)
@@ -519,13 +515,13 @@ plot(h_aoi_toddlers)
 1/h_aoi_toddlers$hypothesis$Evid.Ratio
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
 summary(null_aoi_toddlers)
 brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -539,17 +535,17 @@ bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
         sample_prior=TRUE)
 summary(bm_aoi_adults)
 
-save(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
+saveRDS(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_aoi_adults %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 h_aoi_adults <- hypothesis(bm_aoi_adults, "condition_c = 0")
 h_aoi_adults 
 plot(h_aoi_adults)
@@ -557,13 +553,13 @@ plot(h_aoi_adults)
 1/h_aoi_adults$hypothesis$Evid.Ratio
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_aoi_adults <-  update(bm_aoi_adults, formula = ~ .-condition_c)
 summary(null_aoi_adults)
 brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 mss_timecourse_test_first_trial <- test_data %>%
   #quick filter of the (extended duration) 2nd test trials
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
@@ -592,14 +588,14 @@ ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
 
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 test_data |>
   group_by(trial_file_name) |>
   summarise(min_t = min(t_norm), 
             max_t = max(t_norm))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ggplot(ms_timecourse_test_first_trial |>
          filter(age_cohort=="adults") |>
          pivot_longer(mean_target_general:mean_distractor_general, 
@@ -619,7 +615,7 @@ ggplot(ms_timecourse_test_first_trial |>
   facet_wrap(trial_file_name~age_cohort, ncol=4)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 mss_timecourse_test <- test_data %>%
   mutate(first_trial = (trial_num==5)) %>%
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
@@ -660,7 +656,7 @@ ms_timecourse_test <- mss_timecourse_test |>
 
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ms_timecourse_test_long <- ms_timecourse_test |>
   #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
   pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_") |> 
@@ -685,7 +681,7 @@ ggplot(filter(ms_timecourse_test_long,t_norm_downsampled<=0),
 ggsave(here(plot_path,"test_timecourse_plot.png"),bg="white",width=12,height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #continued timecourse
 ggplot(ms_timecourse_test_long,       
          aes(x = t_norm_downsampled, y = mean, 
@@ -769,7 +765,7 @@ ggplot(filter(ms_timecourse_test_outcome_long,!first_trial),
   ylab("Mean Proportion Looking")
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 mss_fam <- fam_data %>%
   group_by(lab_id,age_cohort, participant_lab_id,participant_id, participant_trial_id, 
            trial_file_name) %>%
@@ -810,7 +806,7 @@ ms_fam <- mss_fam |>
 
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ms_fam_long <- ms_fam |>
   #pivot mean and sd looking for target and distractor longer (separate mean and sd columns in long dataset)
   pivot_longer(c(mean_target,mean_distractor,se_target,se_distractor),  names_to = c(".value","aoi_type"),names_sep="_")
@@ -833,7 +829,7 @@ ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12
 
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #convert to rle data
 rle_fam_data <- fam_data %>%
   filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
@@ -848,7 +844,7 @@ rle_test_data <- test_data %>%
             values = rle(aoi)$values)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # takes rle_data dataframe (already rle'd)
 get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_LOOK_MS = 150) {
   
@@ -955,7 +951,7 @@ get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_L
 }
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # compute RTs
 d_anticipatory_fam <- rle_fam_data %>%
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
@@ -969,7 +965,7 @@ d_anticipatory_test <- rle_test_data %>%
   unnest(cols = c(data))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_participant_familiarization_first_look <- d_anticipatory_fam %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,trial_num) %>%
   summarize(
@@ -1012,10 +1008,10 @@ ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_fi
 summarize_overall_familiarization_first_look %>%
   knitr::kable()
 
-save(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
+saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
   geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
   geom_point(size = 5) +
@@ -1034,7 +1030,7 @@ overall_fl_fam
 ggsave(here(plot_path,"overall_fam_trials_first_look.png"),bg="white",width=9, height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_participant_test_first_look <- d_anticipatory_test %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
   summarize(
@@ -1073,7 +1069,7 @@ ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,co
   ylab("Proportion First Look to Target Exit")
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num==5) %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
@@ -1117,7 +1113,7 @@ overall_fl_test
 ggsave(here(plot_path,"overall_test_trial_first_look_first_trial.png"),bg="white",width=9, height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
@@ -1143,10 +1139,10 @@ bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+
 summary(bm_fam_first_look_toddlers)
 prior_summary(bm_fam_first_look_toddlers)
 
-save(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
+saveRDS(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_toddlers %>%
@@ -1154,7 +1150,7 @@ bm_fam_first_look_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_toddlers %>%
@@ -1162,16 +1158,16 @@ bm_fam_first_look_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #this seems broken at the moment
 null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
 summary(null_fam_first_look_toddlers)
 fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
 
-save(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
+saveRDS(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=bernoulli(link = "logit"),
          prior = priors,
@@ -1186,17 +1182,17 @@ bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+fa
 summary(bm_fam_first_look_adults)
 prior_summary(bm_fam_first_look_adults)
 
-save(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
+saveRDS(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_fam_first_look_adults %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_fam_first_look_adults %>%
@@ -1204,16 +1200,16 @@ bm_fam_first_look_adults %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #this seems broken at the moment
 null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_first_look_adults)
 fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
  
-save(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
+saveRDS(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_FL_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #select first test trial
 test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num==5) %>%
@@ -1246,7 +1242,7 @@ d_anticipatory_test <- d_anticipatory_test %>%
   )
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
@@ -1269,17 +1265,17 @@ bm_test_first_look_toddlers <- brm(
 summary(bm_test_first_look_toddlers)
 prior_summary(bm_test_first_look_toddlers)
 
-save(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
+saveRDS(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # quick and dirty binomial test just for exploratory purposes
 sum_correct_first_looks_knowledge <- sum(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"],na.rm=TRUE)
 sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort=="toddlers" & test_first_look_first_trial$condition=="knowledge"]))
 binom.test(sum_correct_first_looks_knowledge,sum_total_first_looks_knowledge, alternative = "two.sided", p=0.5)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_test_first_look_toddlers %>%
@@ -1287,7 +1283,7 @@ bm_test_first_look_toddlers %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 h_first_look_toddlers <- hypothesis(bm_test_first_look_toddlers, "condition_c = 0", class="b")
 h_first_look_toddlers
 plot(h_first_look_toddlers)
@@ -1295,13 +1291,13 @@ plot(h_first_look_toddlers)
 1/h_first_look_toddlers$hypothesis$Evid.Ratio
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_first_look_toddlers <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
 summary(null_first_look_toddlers)
 brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_test_first_look_adults <- brm(
   correct_first_look ~ 1+condition_c+(1+condition_c|lab_id),
   family=bernoulli(link = "logit"),
@@ -1317,10 +1313,10 @@ bm_test_first_look_adults <- brm(
 summary(bm_test_first_look_adults)
 prior_summary(bm_test_first_look_adults)
 
-save(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
+saveRDS(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_test_first_look_adults %>%
@@ -1328,7 +1324,7 @@ bm_test_first_look_adults %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 h_first_look_adults <- hypothesis(bm_test_first_look_adults, "condition_c = 0", class="b")
 h_first_look_adults
 plot(h_first_look_adults)
@@ -1336,13 +1332,13 @@ plot(h_first_look_adults)
 1/h_first_look_adults$hypothesis$Evid.Ratio
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 null_first_look_adults <-  update(bm_test_first_look_adults, formula = ~ .-condition_c)
 summary(null_first_look_adults)
 brms::bayes_factor(bm_test_first_look_adults, null_first_look_adults)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 figure_fam_test_p_fl <- ggarrange(overall_p_fam, overall_p_test, overall_fl_fam, overall_fl_test,
                     labels = c("A", "B", "C", "D"),
                     ncol = 2, nrow = 2)
@@ -1371,7 +1367,7 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
 ggsave(here(paper_path,"Figure5.png"),bg="white",width=16, height=9)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #first, find the participants who anticipate correctly on the last trial
 summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition,trial_num) %>%
@@ -1414,7 +1410,7 @@ overall_p_correct_final_fam_trial
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_correct_final_fam_first_look.png"),bg="white",width=9,height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_test_aoi_correct_final_fam_trial <- summarize_participant_test_first_trial %>%
   filter(correct_first_look_final_fam_trial==1) %>%
   group_by(age_cohort,condition) %>%
@@ -1430,7 +1426,7 @@ summarize_test_aoi_correct_final_fam_trial %>%
   knitr::kable()
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #set the prior
 priors <-c(
   set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
@@ -1451,10 +1447,10 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         sample_prior=TRUE)
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
-save(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
 bm_aoi_toddlers_correct_final_fam_trial %>%
@@ -1470,7 +1466,7 @@ bm_aoi_toddlers_correct_final_fam_trial %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -1484,17 +1480,17 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         sample_prior=TRUE)
 summary(bm_aoi_adults_correct_final_fam_trial)
 
-save(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #get main coefficient estimate and HDI
 bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 #join overall familiarization looking in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
   left_join(summarize_participant_familiarization_overall)
@@ -1521,7 +1517,7 @@ overall_p_sufficient_fam_prop_looking
 ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
   filter(fam_prop_exit>0.5) %>%
   group_by(age_cohort,condition) %>%
@@ -1537,7 +1533,7 @@ summarize_test_aoi_sufficient_fam_prop_looking %>%
   knitr::kable()
 
 
-## ---------------------------------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
   geom_hline(yintercept=0.5,linetype="dashed")+
   geom_point(alpha=0.25)+

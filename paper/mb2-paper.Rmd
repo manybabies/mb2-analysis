@@ -139,7 +139,7 @@ All materials, and later the collected de-identified data, will be provided on t
 Figures 1 and 2 provide an overview of the paradigm. For the stimuli, 3D animations were created depicting a chasing scenario between two agents (chaser and chasee) who start in the upper part of the scene. At the very top of the scene a door leads to outside the visible scene. Below this area, a horizontal fence separates the space, and thus the lower part of the space can be reached by the Y-shaped tunnel only. Additional information on the general scene setup, events, and timings in the familiarization and the test trials, as well as trial randomization can be found in the Supplemental Material.
 
 ```{r fig1, fig.cap="Timeline of the familiarization trials.", fig.align="center", out.width = "6.8in"}
-include_graphics("Figure1.jpg")
+include_graphics(here("paper","Figure1.jpg"), rel_path=FALSE)
 ```
 
 ### Familiarization Trials 
@@ -161,7 +161,7 @@ In test trials, the chasee first hides in one of the boxes, but shortly thereaft
 When designing the *knowledge* and *ignorance* condition, we aimed at keeping all events and their timings parallel, except the crucial manipulation. We show the same events in both conditions. Where possible, all events also have the same duration. In the case of the chaser’s absence in the *knowledge* condition, there were two main options, both with inevitable trade-offs. First, we could have increased the duration of the chaser’s absence in the *knowledge* condition to match the duration of the chaser's absence in both conditions. Yet, this would potentially disrupt the flow of events, such as keeping track of the chasee’s actions and the general scene dynamics, since nothing would happen for a substantial amount of time. Second, the chaser can be absent for a shorter time in the *knowledge* than in the *ignorance* condition, in which case the flow of events – the chasee’s actions and the general scene dynamics – remains natural. We chose the second option because we reasoned that the artificial break in the *knowledge* condition could disrupt the participant’s tracking of the chaser’s epistemic state, thus being a confound that would be more detrimental than the difference in the duration of absence. Further, the current contrast has the advantage that the chasee’s sequence and timing of actions are identical in both conditions, thus minimizing the difference between conditions. Finally, with the current design, the duration of the chaser’s absence will be closely matched in the later planned false belief - true belief contrast, because in the future false belief condition, the chaser has to be absent for fewer events (because the chaser witnesses the first hiding events after the chasee reappeared at the other side of the tunnel).
 
 ```{r fig2, fig.cap="Schematic overview of stimuli and conditions of the test trials. \\newline{} \\textit{Note}. After the familiarization phase, participants know about the agent’s goal (chaser wants to find chasee), perceptual access (chaser can see what happens on the other side of the fence), and situational constraints (boxes can be reached by walking through the forking tunnel). In the \\textit{knowledge} condition, the chaser witnesses the chasee walking through the tunnel and jumping in and out of the first box. While the chasee is in the box, the chaser briefly leaves the scene through the door in the back and returns shortly after. Subsequently, the chaser watches the chasee jumping out of the box again and hiding in the second box. In the \\textit{ignorance} condition, the chaser turns around and stands on the other side of the door in the back of the scene, thus unable to witness any of the chasee’s actions. The chaser then returns and enters the tunnel to look for the chasee. During the test phase (4 seconds still frame), AL towards the end of the tunnels is measured.", fig.align="center", out.width = "6.5in"}
-include_graphics("Figure2.jpg")
+include_graphics(here("paper","Figure2.jpg"),rel_path=FALSE)
 ```
 
 ### Trial Randomization 
@@ -434,7 +434,7 @@ We first ran a simulation for the first look analysis. In each iteration of our 
 We also ran a design analysis for the proportional looking analysis. We used the same experimental parameters (number of labs, participants, ages, etc.). For generating simulated data, we drew the condition effect from a uniform distribution between .05 and .20 (in proportion space). The age and age:condition effects were drawn from uniform distributions between -.05 and .05. Sigma, the overall noise in the experiment, was drawn from a uniform distribution between .05 and .1. The intercept was drawn from a normal distribution with mean .65 and a standard deviation of .05. The by-lab standard deviation for the intercept and condition slope was set to .01. Priors were as described in the main text. We ran 119 simulations, and in all 119 we obtained a BF greater than 10, suggesting that, under our assumptions, the study is well-powered.
 
 ```{r fig3, fig.cap="Effect sizes of simulated experiments. \\newline{} \\textit{Note}. Ordered by effect size (from left to right), 95% credible intervals for the key effect (in logit space) for our simulated experiments that use first look as the dependent variable.", fig.align="left", out.width = "6in"}
-include_graphics("Figure3.jpg")
+include_graphics(here("paper","Figure3.jpg"),rel_path=FALSE)
 ```
 
 ## Data Preprocessing
@@ -446,7 +446,7 @@ We will exclude individual trials if more than 50% of the gaze data is missing (
 For each monitor size, we will determine the specific AOIs and compute whether the specific x- and y-position for each participant, trial, and time point fall within their screen resolution-specific AOIs. Our goal is to determine whether participants are anticipating the emergence of the chaser from one of the two tunnel exits. Thus, we defined AOIs on the stimulus by creating a rectangular region around the tunnel exit that is D units from the top, bottom, left, and right of the boundary of the tunnel exit, where D is the diameter of the tunnel exits. We then expanded the sides of the AOI rectangles by 25% in all directions to account for tracker calibration error. Our rationale was that, if we made the AOI too small, we might fail to capture anticipations by participants with poor calibrations. In contrast, if we made the regions too large, we might capture some fixations by participants looking at the box where the chasee actually is. On the other hand, these chasee looks would not be expected to vary between conditions and so would only affect our baseline level of looking. Thus, the chosen AOIs aim at maximizing our ability to capture between-condition differences. For an illustration of the tunnel exit AOIs see Figure 4. We are not analyzing looks to the boxes, since they can less unambiguously be interpreted as epistemic state-based action predictions and because we observed few anticipatory looks to the boxes in the pilot studies. For more detailed information about the AOI definition process see the description of the pilot study results in the Supplemental Material.
 
 ```{r fig4, fig.cap="Illustration of Areas of Interest (AOIs) for gaze data analysis during the anticipatory period. \\newline{} \\textit{Note}. The light green rectangles show the dimensions of the AOIs used for the analysis of AL during the test period.", fig.align="center", out.width = "4in"}
-include_graphics("Figure4.jpg")
+include_graphics(here("paper","Figure4.jpg"),rel_path=FALSE)
 ```
 
 ### Manual Coding
@@ -470,7 +470,7 @@ Bayesian model comparisons require the specification of proper priors on the coe
 	For the proportional looking score analysis, we used a uniform prior on the intercept between -0.5 and 0.5 (corresponding to proportional looking scores between 0 and 1: the full possible range). For the priors on the fixed effect coefficients, we used a normal prior with a mean of 0 and an *SD* of 0.1. Because these regressions are in proportion space, 0.10 corresponds to a change in proportion of 10%. For the random effect priors, we used a normal distribution with mean 0 and standard deviation .05. The LKJ prior was specified as above.
 	
 ```{r fig5, fig.cap="Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.", fig.align="center", out.width = "6.8in"}
-include_graphics("Figure5.png")
+include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
 ### Familiarization Trials.

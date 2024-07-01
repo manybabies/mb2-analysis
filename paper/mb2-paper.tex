@@ -3,23 +3,21 @@
 \PassOptionsToPackage{hyphens}{url}
 %
 \documentclass[
-  english,
   man,floatsintext]{apa6}
-\title{Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults}
-\author{The ManyBabies2 Consortium\textsuperscript{1}}
-\date{}
-
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -38,16 +36,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults},
-  pdfauthor={The ManyBabies2 Consortium1},
-  pdflang={en-EN},
-  pdfkeywords={anticipatory looking; spontaneous Theory of Mind; replication},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -97,6 +85,15 @@
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+\babelprovide[main,import]{english}
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
 % Manuscript styling
 \usepackage{upgreek}
 \captionsetup{font=singlespacing,justification=justified}
@@ -173,19 +170,23 @@
 \linenumbers
 \usepackage{csquotes}
 \usepackage{caption}
-\ifXeTeX
-  % Load polyglossia as late as possible: uses bidi with RTL langages (e.g. Hebrew, Arabic)
-  \usepackage{polyglossia}
-  \setmainlanguage[]{english}
-\else
-  \usepackage[main=english]{babel}
-% get rid of language-specific shorthands (see #6817):
-\let\LanguageShortHands\languageshorthands
-\def\languageshorthands#1{}
-\fi
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults},
+  pdfauthor={The ManyBabies2 Consortium1},
+  pdflang={en-EN},
+  pdfkeywords={anticipatory looking; spontaneous Theory of Mind; replication},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults}
+\author{The ManyBabies2 Consortium\textsuperscript{1}}
+\date{}
 
 
 \shorttitle{EPISTEMIC STATE-BASED ACTION ANTICIPATION}
@@ -268,7 +269,7 @@ Figures 1 and 2 provide an overview of the paradigm. For the stimuli, 3D animati
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{Figure1} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure1} 
 
 }
 
@@ -298,7 +299,7 @@ When designing the \emph{knowledge} and \emph{ignorance} condition, we aimed at 
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.5in]{Figure2} 
+{\centering \includegraphics[width=6.5in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure2} 
 
 }
 
@@ -500,7 +501,7 @@ We also ran a design analysis for the proportional looking analysis. We used the
 
 \begin{figure}
 
-\includegraphics[width=6in]{Figure3} \hfill{}
+\includegraphics[width=6in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure3} \hfill{}
 
 \caption{Effect sizes of simulated experiments. \newline{} \textit{Note}. Ordered by effect size (from left to right), 95\% credible intervals for the key effect (in logit space) for our simulated experiments that use first look as the dependent variable.}\label{fig:fig3}
 \end{figure}
@@ -518,7 +519,7 @@ For each monitor size, we will determine the specific AOIs and compute whether t
 
 \begin{figure}
 
-{\centering \includegraphics[width=4in]{Figure4} 
+{\centering \includegraphics[width=4in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure4} 
 
 }
 
@@ -558,7 +559,7 @@ For the proportional looking score analysis, we used a uniform prior on the inte
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{Figure5} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure5} 
 
 }
 
@@ -582,13 +583,13 @@ which included no intercept term. We then computed the BF comparing this model t
 \hypertarget{toddlers}{%
 \subparagraph{Toddlers}\label{toddlers}}
 
-As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be 14,347.12, strongly favoring the base model over the null model. See also Table X for regression coefficients for the base and the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
+As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be 0.00, strongly favoring the base model over the null model. See also Table X for regression coefficients for the base and the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
 In addition, toddlers' mean PTL of 0.69 significantly differed from chance, \emph{t}(519) = 21.03, \emph{p} \textless{} .001, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 \hypertarget{adults}{%
 \subparagraph{Adults}\label{adults}}
 
-Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be 50,680,593,537,150,411,765,666,807,808.00, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of 0.60 significantly differed from chance, \emph{t}(696) = 12.19, \emph{p} \textless{} .001, suggesting that adults successfully anticipated during the familiarization trials.
+Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be 248,314,741,817,616,416.00, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of 0.60 significantly differed from chance, \emph{t}(696) = 12.19, \emph{p} \textless{} .001, suggesting that adults successfully anticipated during the familiarization trials.
 
 \hypertarget{proportion-of-first-looks}{%
 \paragraph{Proportion of first looks}\label{proportion-of-first-looks}}
@@ -596,12 +597,12 @@ Next, we used a Bayesian mixed effects model to predict PTL based on trial numbe
 \hypertarget{toddlers-1}{%
 \subparagraph{Toddlers}\label{toddlers-1}}
 
-Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be 50,680,593,537,150,411,765,666,807,808.00, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of 0.69 significantly differed from chance, \emph{t}(519) = 21.03, \emph{p} \textless{} .001, suggesting that toddlers successfully anticipated during the familiarization trials.
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be 248,314,741,817,616,416.00, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of 0.69 significantly differed from chance, \emph{t}(519) = 21.03, \emph{p} \textless{} .001, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 \hypertarget{adults-1}{%
 \subparagraph{Adults}\label{adults-1}}
 
-Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of 50,680,593,537,150,411,765,666,807,808.00, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of 0.69 significantly differed from chance, \emph{t}(519) = 21.03, \emph{p} \textless{} .001, suggesting that toddlers successfully anticipated during the familiarization trials.
+Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of 248,314,741,817,616,416.00, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of 0.69 significantly differed from chance, \emph{t}(519) = 21.03, \emph{p} \textless{} .001, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 \hypertarget{test-trials.}{%
 \subsubsection{Test Trials.}\label{test-trials.}}
@@ -664,7 +665,7 @@ Buttelmann, D., Carpenter, M., \& Tomasello, M. (2009). Eighteen-month-old infan
 Carruthers, P. (2013). Mindreading in infancy. \emph{Mind \& Language}, \emph{28}(2), 141--172.
 
 \leavevmode\vadjust pre{\hypertarget{ref-csibra2007obsessed}{}}%
-Csibra, G., \& Gergely, G. (2007). {`Obsessed with goals'}: Functions and mechanisms of teleological interpretation of actions in humans. \emph{Acta Psychologica}, \emph{124}(1), 60--78.
+Csibra, G., \& Gergely, G. (2007). {``Obsessed with goals''}: Functions and mechanisms of teleological interpretation of actions in humans. \emph{Acta Psychologica}, \emph{124}(1), 60--78.
 
 \leavevmode\vadjust pre{\hypertarget{ref-dennett1989intentional}{}}%
 Dennett, D. C. (1989). \emph{The intentional stance}. MIT press.
@@ -697,7 +698,7 @@ Gliga, T., Jones, E. J., Bedford, R., Charman, T., \& Johnson, M. H. (2014). Fro
 Grosse Wiesmann, C., Friederici, A. D., Singer, T., \& Steinbeis, N. (2017). Implicit and explicit false belief development in preschool children. \emph{Developmental Science}, \emph{20}(5), e12445.
 
 \leavevmode\vadjust pre{\hypertarget{ref-hayashi2020macaques}{}}%
-Hayashi, T., Akikawa, R., Kawasaki, K., Egawa, J., Minamimoto, T., Kobayashi, K., \ldots{} others. (2020). Macaques exhibit implicit gaze bias anticipating others' false-belief-driven actions via medial prefrontal cortex. \emph{Cell Reports}, \emph{30}(13), 4433--4444.
+Hayashi, T., Akikawa, R., Kawasaki, K., Egawa, J., Minamimoto, T., Kobayashi, K., et al.others. (2020). Macaques exhibit implicit gaze bias anticipating others' false-belief-driven actions via medial prefrontal cortex. \emph{Cell Reports}, \emph{30}(13), 4433--4444.
 
 \leavevmode\vadjust pre{\hypertarget{ref-kampis2021two}{}}%
 Kampis, D., Karman, P., Csibra, G., Southgate, V., \& Hernik, M. (2021). A two-lab direct replication attempt of southgate, senju and csibra (2007). \emph{Royal Society Open Science}, \emph{8}(8), 210190.
@@ -775,7 +776,7 @@ Perner, J. (1991). \emph{Understanding the representational mind.} The MIT Press
 Phillips, J., Buckwalter, W., Cushman, F., Friedman, O., Martin, A., Turri, J., \ldots{} Knobe, J. (2021). Knowledge before belief. \emph{Behavioral and Brain Sciences}, \emph{44}, e140.
 
 \leavevmode\vadjust pre{\hypertarget{ref-poulin2018infants}{}}%
-Poulin-Dubois, D., Rakoczy, H., Burnside, K., Crivello, C., Dörrenberg, S., Edwards, K., \ldots{} others. (2018). Do infants understand false beliefs? We don't know yet--a commentary on baillargeon, buttelmann and southgate's commentary. \emph{Cognitive Development}, \emph{48}, 302--315.
+Poulin-Dubois, D., Rakoczy, H., Burnside, K., Crivello, C., Dörrenberg, S., Edwards, K., et al.others. (2018). Do infants understand false beliefs? We don't know yet--a commentary on baillargeon, buttelmann and southgate's commentary. \emph{Cognitive Development}, \emph{48}, 302--315.
 
 \leavevmode\vadjust pre{\hypertarget{ref-powell2018replications}{}}%
 Powell, L. J., Hobbs, K., Bardis, A., Carey, S., \& Saxe, R. (2018). Replications of implicit theory of mind tasks with varying representational demands. \emph{Cognitive Development}, \emph{46}, 40--50.
