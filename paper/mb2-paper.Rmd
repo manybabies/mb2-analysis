@@ -65,7 +65,7 @@ model <- FALSE
 # downloaded from https://docs.google.com/spreadsheets/d/1--ToAecjii3W2PtXuE_ZXkMw_u4MgFo-6G50b6hFQUw/edit#gid=1763252679 on ?
 ```
 
-```{r load_model_results}
+```{r load_model_results, include=FALSE}
 #re-run the model fits if desired
 if (model) {
   knitr::purl(input = here("007-aoi-analysis.qmd"), output = "007-aoi-analysis.R")
