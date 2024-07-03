@@ -28,24 +28,13 @@ The following is based on the standard template as provided on aspredicted.org. 
 Yes, data have been collected as part of the Manybabies2 main study. The data collection was completed in 2023. The data is currently being curated by the main analysis team which will provide the raw data for the present study. 
 
 
-**To do**s
-
-- Include adults and children? The hypotheses should not change, right?
-- Can we include pupil dilation data from Eyelink-systems? At the moment it looks as though we can't.
-- What is the best measure of *degree of anticipation* before the bear exists? Proportion of looks to the correct AOI or time to fixate correct AOI or something else?
-- What is a good infant controlled cumulative looking time measure, i.e., how to best calculate this?
-- What are the different age cohorts in the main study, you, old, adults?
-- Can we provide more details on the Bayesian analyses?
-- Can we simulate the data based on the info from the preliminary dataset (i.e., the 'BCCCD-data')?
-- How large should the simulated dataset be?
-- Do we need to include trial in the simulated dataset?
-- Add titles to figures.
-
 ## 2. What's the main question being asked or hypothesis being tested in this study?
 
 <br>
 
-**Main question and hypothesis 1: Does observing goal-incongruent events result in greater pupil dilation? -> Children’s baseline-corrected changes in pupil dilation will systematically vary as a function of the two experimental factors ‘condition’ (knowledge; ignorance) and 'outcom'e (congruent; incongruent).**
+**Main question and hypothesis 1: Does observing goal-incongruent events result in greater pupil dilation? **
+<br>
+**Children’s baseline-corrected changes in pupil dilation will systematically vary as a function of the two experimental factors ‘condition’ (knowledge; ignorance) and 'outcome' (congruent; incongruent).**
 
 If children show a 
 
@@ -57,7 +46,12 @@ If children show a
 **Main question 2: Does observing goal-incongruent events result in longer cumulative looking time?** 
 We will test the same hypotheses as for **Main question 1**.
 
-**Main question and hypothesis 3: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? Children’s pupil dilation (and cumulative looking time) in response to the outcome will systematically vary with the degree of anticipatory looking before the outcome. This would be evidence for changes in pupil dilation (and cumulative looking time) reflecting a surprise response.**
+**Main question and hypothesis 3:**
+
+<br>
+**Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response?**
+<br>
+**Children’s pupil dilation (and cumulative looking time) in response to the outcome will systematically vary with the degree of anticipatory looking before the outcome. This would be evidence for changes in pupil dilation (and cumulative looking time) reflecting a surprise response.**
 
 - Knowledge / goal congruent condition. We expect a positive correlation between the differential AL score (proportion looking to correct AOI / [looking to correct + incorrect AOI]) and the VoE measures of change in pupil dilation and cumulative looking time. Interpretation: The more children anticipate the agent to act in line with their knowledge, the more children should be surprised to see that she does not so act) (Hypothesis 3.1).
  - Knowledge / goal incongruent condition. We expect a negative correlation between the differential AL-score. Interpretation: The more children anticipate the agent to act in line with their knowledge, the less they should be surprised to see that she does indeed so act (Hypothesis 3.2).
@@ -68,93 +62,129 @@ We will test the same hypotheses as for **Main question 1**.
 The main dependent variables are 
 
 - the **baseline-corrected change in pupil dilation** for the second test trial only. We will follow the preprocessing of the main study and work with those trials that were included in the main analyses for MB2. We will only use trials (i.e., the second test trial) which were included in the main MB2-analysis, i.e., wequire children to have contributed data for both test trial in the main analysis. The information typically used for pre-processing pupil dilation data: PupilLeft(mm), PupilRight(mm), StimuliName, GazeX, GazeY, GazeEventType, RecordingTimeStamp.
-- The preprocessing steps of pupil size data employ the multiverse approach shown in detail below with reproducible R-code (based on Calignano et al., 2023) on simulated data based on MB2 data dictionary. We run the analysis on the ‘liberal’ average of PupilLeft and PupilRight.
+- The **pupil dilation** across a multiverse of preprocessing steps of pupil size data employ the multiverse approach shown in detail below with reproducible R-code (based on Calignano et al., 2023) on simulated data based on MB2 data dictionary. 
 - **Total looking time in a fixed time window**, i.e., 30 sec after the bear exits the tubes (following e.g., Dörrenberg et al., 2018). This is calculated for the second test trial only.
 - **Standard VoE infant controlled measure**, i.e., looking time until infant looks away for 2 seconds (see Baillargeon et al., 2018 commentary *→ check details with Renee Baillargeon, Gergo Csibra and other VoE experts*). These analyses include looking at the whole screen (maximum AOI). 
 - The **degree of anticipation**, that is the time children took to fixate the ‘correct’ AOI. The measure will be provided by the main MB2-analysis. -> AL score (proportion looking to correct AOI/ looking to correct + incorrect AOI).
 
 ## Data simulation
 
-To simulate data effectively for pre-registering our data preprocessing and analysis plans, the provided R-script outlines a method for generating a dataset similar to the one we will analyze. The data simulation approach is particularly useful in planning how to handle and analyze data before it is actually collected. The simulation encompasses generating random strings for identifiers and categorical variables, creating numeric data within specified ranges, handling missing values, and calculating correlations. Through understanding the characteristics of the simulated dataset, we can ensure that our analysis plan is robust and capable of handling the intricacies of the actual dataset/
+To facilitate the pre-registration of our data preprocessing and analysis strategies, the accompanying R-script details a procedure for creating a simulated dataset that mirrors the characteristics of our anticipated data. This data simulation technique is instrumental in devising our data handling and analysis plans prior to actual data analysis The simulation includes generating random strings for identifiers and categorical variables, producing numeric data within defined ranges, managing missing values, and computing correlations. By examining the properties of the simulated dataset, we can ensure our analysis plan is robust and well-equipped to manage the complexities of the real dataset./
+
+Of note the dataset includes only the second trial and the two conditions x two outcome are presented in a long form with each of the N = 946 participants having time-series data for the four possible solutions./
 
 Here the description of the dataset generated by the R-code:
 
 - **participant_id**: A unique identifier for each participant, generated as a random string. Each participant has a unique ID to distinguish them in the dataset.
-- **media_name**: A randomly generated string representing the name of the media content viewed by the participant.
 - **age_cohort**: A randomly generated string intended to categorize participants into different age cohorts.
-- **participant_trial_id**: A unique identifier for each trial associated with a participant, generated as a random string. NEED THIS?
 - **t**: A numeric variable representing a timestamp or duration, generated within a specified range and with a possibility of missing values (NA).
 - **x and y**: Numeric variables generated within specified ranges, intended to represent coordinates or other measurements, with a possibility of missing values.
 - **pupil_left and pupil_right**: Numeric variables representing measurements of the left and right pupil sizes, respectively. These variables are generated with a specified correlation and then rescaled to a specific range.
-- **event_num**: A numeric variable representing an event number or type, generated within a specified range.
 - **lab_id**: A randomly generated string serving as a unique identifier for the lab or testing location.
-- **trial_num**: A numeric variable indicating the trial number for each participant, generated within a specified range and with a possibility of missing values. NEED THIS?
 
-Additionally, the dataset is enhanced by introducing a temporal component, **t_sim**, that simulates the passage (CAN WE FIND A DIFFERENT NAME FOR THIS?) of time for each trial of each participant. This is achieved by grouping the data by lab_id, participant_id and trial_num, and then creating a sequence that represents time increments within each group. This temporal aspect is crucial for analyses that involve time-series data like pupillometry data.
+- **conditions**: A catehorical variable with two levels, i.e. "knowledge" and "ignorance"
+- **outcomes**: A categorical variable with two levels, i.e. "same" and "empty"
 
 ```{r, SIMULATE DATA, echo=TRUE,include=TRUE, out.width='90%'}
-# Functions from the original script remain unchanged
-generate_random_string <- function(max_length) {
-  return(stri_rand_strings(n = 1, length = sample(1:max_length, 1), pattern = "[A-Za-z0-9]"))
+# Install and load required packages
+if (!require('dplyr')) install.packages('dplyr')
+if (!require('tidyr')) install.packages('tidyr')
+library(dplyr)
+library(tidyr)
+
+set.seed(123)  # For reproducibility
+rm(list = ls())
+# Number of participants
+num_participants <- 946
+num_toddlers <- 453
+num_adults <- 493
+
+# Generate participant IDs
+participant_id <- as.character(1:num_participants)
+
+# Generate age cohorts
+age_cohort <- c(rep("toddlers", num_toddlers), rep("adults", num_adults))
+
+# Generate time vector t
+time_per_condition <- seq(0, 10000, by=25)
+n_times <- length(time_per_condition)
+n_conditions <- 4  # Two levels for condition and two levels for outcome
+
+# Generate x and y coordinates
+generate_coordinates <- function(n, mean_X, sd_X, min_X, max_X, mean_Y, sd_Y, min_Y, max_Y) {
+  data.frame(
+    x = pmin(pmax(rnorm(n, mean_X, sd_X), min_X), max_X),
+    y = pmin(pmax(rnorm(n, mean_Y, sd_Y), min_Y), max_Y)
+  )
 }
 
-generate_numeric_data <- function(min_val, max_val, n, na_prob = 0) {
-  data <- runif(n, min = min_val, max = max_val)
-  na_indices <- sample(1:n, size = round(n * na_prob), replace = FALSE)
-  data[na_indices] <- NA
-  return(data)
+# Generate pupil diameters with correlation
+generate_pupils <- function(n, mean_left, sd_left, min_left, max_left, mean_right, sd_right, min_right, max_right, cor) {
+  pupils <- MASS::mvrnorm(n, mu = c(mean_left, mean_right), 
+                          Sigma = matrix(c(sd_left^2, cor * sd_left * sd_right, 
+                                           cor * sd_left * sd_right, sd_right^2), 
+                                         ncol = 2))
+  pupils <- data.frame(
+    pupil_left = pmin(pmax(pupils[,1], min_left), max_left),
+    pupil_right = pmin(pmax(pupils[,2], min_right), max_right)
+  )
+  return(pupils)
 }
 
-scale_data <- function(data, min_range, max_range) {
-  min_data <- min(data, na.rm = TRUE)
-  max_data <- max(data, na.rm = TRUE)
-  a <- (max_range - min_range) / (max_data - min_data)
-  b <- max_range - a * max_data
-  scaled_data <- a * data + b
-  return(scaled_data)
+# Generate conditions and outcomes
+conditions <- c("knowledge", "ignorance")
+outcomes <- c("same", "empty")
+
+# Generate lab_id
+lab_id <- rep(1:16, each = num_participants / 16)
+
+# Helper function to generate random strings
+generate_string <- function(n, length) {
+  replicate(n, paste0(sample(LETTERS, length, replace = TRUE), collapse = ""))
 }
 
-# Assuming `n` is the number of unique participant_id and trial_num combinations
-n <- 20
+# Assemble the dataset
+simulate_data <- do.call(rbind, lapply(1:num_participants, function(pid) {
+  cohort <- age_cohort[pid]
+  if (cohort == "toddlers") {
+    coord <- generate_coordinates(n_times * n_conditions, 794.8072342, 436.464115, -4433, 4534, 508.3721513, 305.1846593, -2474, 2430)
+    pupils <- generate_pupils(n_times * n_conditions, 3.835746142, 0.693875755, 0.846, 7.997, 3.851782931, 0.68683815, 0.982, 6.824, 0.8)
+  } else {
+    coord <- generate_coordinates(n_times * n_conditions, 870.0972924, 406.371616, -5328.666667, 4625, 584.0366922, 342.2138564, -4222, 3588)
+    pupils <- generate_pupils(n_times * n_conditions, 3.41242103, 0.628702372, 0.518, 7.567, 3.416267459, 0.632454602, 0.846, 6.46, 0.8)
+  }
+  data.frame(
+    participant_id = rep(participant_id[pid], n_times * n_conditions),
+    age_cohort = rep(cohort, n_times * n_conditions),
+    t = rep(time_per_condition, n_conditions),
+    condition = rep(conditions, each = n_times * 2),
+    outcome = rep(rep(outcomes, each = n_times), 2),
+    x = coord$x,
+    y = coord$y,
+    pupil_left = pupils$pupil_left,
+    pupil_right = pupils$pupil_right,
+    event_num = sample(1:9, n_times * n_conditions, replace = TRUE),
+    lab_id = rep(lab_id[pid], n_times * n_conditions),
+    distance = runif(n_times * n_conditions, 0, 0),
+    target_side = generate_string(n_times * n_conditions, 2),
+    bear_not_visible_ms = runif(n_times * n_conditions, 0, 31264),
+    point_of_disambiguation = runif(n_times * n_conditions, 0, 35499),
+    screen_width = sample(c(1280, 1920), n_times * n_conditions, replace = TRUE),
+    screen_height = sample(c(720, 1080), n_times * n_conditions, replace = TRUE),
+    point_zero = generate_string(n_times * n_conditions, 1),
+    x_screen = runif(n_times * n_conditions, 0, 1930),
+    y_screen = runif(n_times * n_conditions, 0, 1080),
+    side = generate_string(n_times * n_conditions, 4),
+    aoitype = generate_string(n_times * n_conditions, 5),
+    aoi = generate_string(n_times * n_conditions, 15)
+  )
+}))
 
-# Generate base dataset
-base_data <- data.frame(
-  participant_id = sapply(1:n, function(x) generate_random_string(20)),
-  trial_num = sample(1:7, n, replace = TRUE)
-)
-
-# Replicate each combination 4000 times to meet the requirement
-replicated_data <- base_data[rep(1:n, each = 4000), ]
-
-# Generate other variables, adjusting for the replicated dataset size
-n_replicated <- nrow(replicated_data)
-
-# Re-generate pupil data to match the new dataset size
-means <- c(3.3, 3.2)
-stddevs <- c(1, 1)
-cor_matrix <- matrix(c(1, 0.9, 0.9, 1), nrow = 2)
-pupil_data <- mvrnorm(n_replicated, mu = means, Sigma = cor_matrix * (stddevs %*% t(stddevs)))
-pupil_left_scaled <- scale_data(pupil_data[, 1], 2, 10)
-pupil_right_scaled <- scale_data(pupil_data[, 2], 2, 10)
-
-# Incorporate the additional variables and replicate appropriately
-replicated_data$media_name = rep(sapply(1:n, function(x) generate_random_string(30)), each = 4000)
-replicated_data$age_cohort = rep(sapply(1:n, function(x) generate_random_string(2)), each = 4000)
-replicated_data$participant_trial_id = rep(sapply(1:n, function(x) generate_random_string(4601)), each = 4000)
-replicated_data$t = generate_numeric_data(325, 1009853728750, n_replicated)
-replicated_data$x = generate_numeric_data(-320, 1600, n_replicated, 0.1)
-replicated_data$y = generate_numeric_data(-60, 1020, n_replicated, 0.1)
-replicated_data$pupil_left = pupil_left_scaled
-replicated_data$pupil_right = pupil_right_scaled
-replicated_data$event_num = generate_numeric_data(1, 9, n_replicated)
-replicated_data$lab_id = rep(sapply(1:n, function(x) generate_random_string(5)), each = 4000)
-
-# Adjusting t_sim generation
-simulate_data <- replicated_data %>% 
-  group_by(participant_id, trial_num, lab_id) %>%
-  mutate(t_sim = seq(from=0, by=16.66667, along.with = row_number()))
- 
-
+all$participant_id = as.factor(all$participant_id)
+all$lab_id = as.factor(all$lab_id)
+all$age_cohort = as.factor(all$lab_id)
+all$condition=as.factor(all$condition)
+all$outcome = as.factor(all$outcome)
 
 ```
 
@@ -166,6 +196,7 @@ The following script specifies the preprocessing and analysis steps of the multi
 
 ```{r, DF1, echo=TRUE,include=TRUE, out.width='90%'}
 #### plausible value range ]2,8[ - from 1 to 2 DATASETS
+simulate_data$age_cohort = as.factor(simulate_data$age_cohort)
 simulate_data$average <- (simulate_data$pupil_left + simulate_data$pupil_right)/2
 all <-simulate_data
 all$step <- "implausible"
@@ -184,23 +215,25 @@ all = all[all$pupil_left >0 & all$pupil_right>0,]
 all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 | pupil_right >=8,"blue", "red")) %>%
   ggplot(aes(x = pupil_left, y= pupil_right, color = Color))+
   geom_point(alpha= 0.2)+ xlab("pupil size left eye (mm)") + ylab("pupil size right eye (mm)") +
-  scale_color_identity() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  scale_color_identity() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + facet_wrap("age_cohort")
+
+plot(all$x,all$y)
 ```
 
-- Third degree of freedom: Baseline correction i.e. 100, 300, 500 ms between 34.5s and 35s following the beginning of the videos. Correction is performed by subtracting the average pupil diameter from all subsequent values between 35s and 40s, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
+- Second degree of freedom: We consider three possible baseline correction i.e. 5 seconds before the bear resolution vs 300 and 500 ms after the bear resolution. Correction is performed by subtracting the average pupil diameter from all subsequent values between, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
 
 ```{r, echo=TRUE,include=TRUE, out.width='90%'}
 ### median baseline from 2 to 6 DATASETS
 
 ### 3 median baseline i.e. initial time window for each trial_num ,id, lab_id
-### i.e. 100, 300, 500 ms
+### i.e. 5s before resulution vs 300 abd 500 ms after bear resolution
 library(plyr)
 universe_one <- all_plausible
-#100ms baseline 
+#5ms baseline 
     for (i in 1:2) {
-         dg = 100
-           universe_one[[i]]<-ddply(universe_one[[i]],.(participant_id,trial_num, lab_id),
-                  transform,baseline = average - median(average[1]), na.rm = T)
+         dg = 5
+           universe_one[[i]]<-ddply(universe_one[[i]],.(participant_id,condition, outcome, lab_id),
+                  transform,baseline = average - median(1:min(200:length(t))), na.rm = T)
            }
           
             
@@ -208,16 +241,16 @@ universe_one <- all_plausible
 universe_two <- all_plausible
   for (i in 1:2) {
     dg = 300
-    universe_two[[i]]<-ddply(universe_two[[i]],.(participant_id, trial_num, lab_id),
-                                     transform,baseline = average - median(average[1:min(6:length(t_sim))]), na.rm = T)
+    universe_two[[i]]<-ddply(universe_two[[i]],.(participant_id, condition, outcome, lab_id),
+                                     transform,baseline = average - median(average[1:min(206:length(t))]), na.rm = T)
 }
 
 #500 ms baseline 
 universe_three <-all_plausible
   for (i in 1:2) {
     dg = 500
-    universe_three[[i]]<-ddply(universe_three[[i]],.(participant_id, trial_num, lab_id),
-                                    transform,baseline = average - median(average[1:min(12:length(t_sim))]), na.rm = T)
+    universe_three[[i]]<-ddply(universe_three[[i]],.(participant_id, condition, outcome, lab_id),
+                                    transform,baseline = average - median(average[1:min(212:length(t))]), na.rm = T)
 }
 
 #multiverse
@@ -232,21 +265,168 @@ data_summary <- function(x) {
   return(c(y=m,ymin=ymin,ymax=ymax))
 }
 
-grid.arrange(
-ggplot(universe_one[[1]], aes(t_sim, average,lab_id, color =lab_id )) +
-  geom_smooth(se = F) +
-  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("no baseline") ,
+ggplot(multiverse[[2]][[2]], aes(t,baseline,condition, colour =condition)) +
+               labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+
+               geom_vline(xintercept = 0 )+ geom_smooth(se = T) + facet_wrap("outcome") + 
+               geom_hline(yintercept = 0) +  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                                                    panel.background = element_blank(), axis.line = element_line(colour = "black"))
+                                               
+ggplot(multiverse[[2]][[1]], aes(t,baseline,condition, colour =condition)) +
+               labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+
+               geom_vline(xintercept = 0 )+ geom_smooth(se = T) + facet_wrap("outcome") + 
+               geom_hline(yintercept = 0) +  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                                                    panel.background = element_blank(), axis.line = element_line(colour = "black"))
   
-ggplot(universe_one[[2]], aes(t_sim, baseline,lab_id, color =lab_id )) +
-  geom_smooth(se = F) +
-  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 100"),
 
-ggplot(universe_two[[2]], aes(t_sim, baseline, lab_id, color =lab_id )) + stat_summary(fun.data=data_summary) +
-  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 300"),
+```
+At this point, the multiverse object contains a list of three elements, each with a nested structure consisting of two data frames. Each data frame has the same structure but differs in the observations they contain. Here is a breakdown of the structure:
 
-ggplot(universe_three[[1]], aes(t_sim, baseline,lab_id, color =lab_id )) +
-  geom_smooth(se = F) +
-  labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+ ggtitle("baseline 500"),nrow = 2)
+List of 3: The top-level list contains three elements. Each element in this list is itself a list containing two data frames.
+
+Each of the three lists:
+
+Contains two data frames, each having 27 variables (columns).
+The structure of these data frames is the same, but they have different numbers of observations (rows).
+//
+<br>
+
+Third degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial.
+
+```{r, echo=TRUE,include=TRUE, out.width='90%'}
+# Function to remove specific participant IDs from a multiverse
+remove_participants <- function(multiverse, ids_to_remove) {
+  lapply(multiverse, function(x) {
+    lapply(x, function(df) {
+      df[!df$participant_id %in% ids_to_remove, ]
+    })
+  })
+}
+
+# Define participant IDs to remove for the second and third multiverse
+remove_ids_1 <- c(102 , 103,  104,  105)
+remove_ids_2 <- c(181, 182, 183, 185)
+
+# Create the three multiverses
+multiverse_one <- multiverse
+multiverse_two <- remove_participants(multiverse, remove_ids_1)
+multiverse_three <- remove_participants(multiverse, remove_ids_2)
+
+# Combine into the megaverse
+megaverse <- list(multiverse_one, multiverse_two, multiverse_three)
+
+```
+At this point we have an object called megaverse. The megaverse is a comprehensive collection of datasets organized into three different versions, each known as a multiverse. Each multiverse represents a different scenario or variation of the original dataset. Here's a detailed description of the structure:
+
+Original Multiverse (multiverse_one): This version contains the unaltered original data. It serves as the baseline for comparison with other multiverses.
+Modified Multiverse 1 (multiverse_two): In this version, certain participants are removed based on a specified list of participant IDs (remove_ids_1). This allows for analyzing how the removal of specific participants affects the results.
+Modified Multiverse 2 (multiverse_three): This version excludes a different set of participants, defined by another list of participant IDs (remove_ids_2). This provides another perspective on the dataset with a different subset of participants removed.
+Each multiverse consists of:
+
+A list of lists, where each sublist contains one or more data frames.
+Each data frame represents a segment of the dataset, including columns such as participant_id and other relevant variables (e.g., score).
+By structuring the data in this way, the megaverse allows for systematic comparison across different scenarios, facilitating a robust analysis of the dataset under various conditions.
+
+<br>
+
+As a final step, we investigated (1) the averaged interaction effect Conditions x Outcome, (2) the time-course of the interaction effect Conditions x Outcome and (3) the non linear interaction effect of Conditions x Outcome considering the time-course of the effect. This approach provided an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across the 54 datasets we created.
+
+For the analysis of pupillary data, we utilized generalized additive mixed modeling (GAMM, Wood, 2011). GAMMs combine the flexibility of generalized additive models (GAMs) with the ability to incorporate random effects, which are essential for accounting for correlations among observations within clusters or groups. This includes the use of smooth functions that handle both continuous and categorical predictors. The random effects component facilitates the inclusion of hierarchical structures, such as nested or repeated measures within the data, making GAMMs useful for a wide range of data types, including time series, spatial, and longitudinal data. The model is estimated using penalized regression techniques, which help to avoid overfitting and produce more reliable predictions.
+
+```{r, echo=TRUE,include=TRUE, out.width='90%'}
+library(mgcv)
+library(itsadug)
+library(sjPlot)
+library(lme4)
+## megaverse <- list(multiverse_one, multiverse_two, multiverse_three)
+
+# Define a function to fit three different linear models to a dataset
+fit_models <- function(data) {
+  # Model 1: Linear model with condition*outcome
+  model1 <- lmer(average ~ condition*outcome + (1|participant_id), data = data)
+  
+  # Model 2: Linear model with condition*outcome across the trial time
+  model2 <-  lmer(average ~ t*condition*outcome + (1|participant_id), data = data)
+  
+  # Model 3: Linear model with both predictor variables 'x1' and 'x2'
+  model3 <- bam(baseline~ condition*outcome + s(t, by= lab_id, k=7) + s(t, by= condition, k=20)+ s(t, by= outcome, k=20)+ s(t, participant_id, bs='fs', m=1), data= data, discrete=TRUE,nthreads=40)
+  
+  # Store the models in a list
+  models <- list(model1 = model1, model2 = model2, model3 = model3)
+  
+  return(models)
+}
+
+# Initialize a list to store the results for all datasets in the megaverse
+megaverse_models <- list()
+
+# Loop through each dataset in the megaverse and fit the models
+for (i in seq_along(megaverse)) {
+  dataset <- megaverse[[i]]
+  models <- fit_models(dataset)
+  megaverse_models[[i]] <- models
+}
+
+# megaverse_models now contains the results of the three models for each dataset
+
+# Define a function to fit three different linear models to a dataset and create predictions
+fit_and_predict <- function(data) {
+  # Fit the models
+  model1 <- lm(y ~ x1, data = data)
+  model2 <- lm(y ~ x2, data = data)
+  model3 <- lm(y ~ x1 + x2, data = data)
+  
+  # Create a data frame with predictions for each model
+  data$pred1 <- predict(model1, data)
+  data$pred2 <- predict(model2, data)
+  data$pred3 <- predict(model3, data)
+  
+  return(data)
+}
+
+# Initialize a list to store the datasets with predictions
+megaverse_predictions <- list()
+
+# Loop through each dataset in the megaverse and create predictions
+for (i in seq_along(megaverse)) {
+  dataset <- megaverse[[i]]
+  dataset_with_predictions <- fit_and_predict(dataset)
+  megaverse_predictions[[i]] <- dataset_with_predictions
+}
+
+# Define a function to plot the effects of the models
+plot_effects <- function(data, dataset_name) {
+  # Melt the data frame to long format for ggplot2
+  library(reshape2)
+  data_long <- melt(data, id.vars = c("x1", "x2", "y"), 
+                    measure.vars = c("pred1", "pred2", "pred3"), 
+                    variable.name = "model", value.name = "prediction")
+  
+  # Create the plot
+  p <- ggplot(data_long, aes(x = y, y = prediction, color = model)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "lm", se = FALSE) +
+    labs(title = paste("Effects of Models on", dataset_name),
+         x = "Actual y", y = "Predicted y") +
+    theme_minimal()
+  
+  return(p)
+}
+
+# Loop through each dataset with predictions and create plots
+plots <- list()
+for (i in seq_along(megaverse_predictions)) {
+  dataset_with_predictions <- megaverse_predictions[[i]]
+  dataset_name <- paste("Dataset", i)
+  plot <- plot_effects(dataset_with_predictions, dataset_name)
+  plots[[i]] <- plot
+}
+
+# Display the plots
+for (plot in plots) {
+  print(plot)
+}
+
+
 ```
 ## 4. How many and which conditions will participants be assigned to?
 
@@ -254,36 +434,8 @@ Participants are randomly assigned to 1 of 4 conditions. This is done as part of
 
 ## 5. Specify exactly which analyses you will conduct to examine the main question/hypothesis.
 
-The multiverse forking path of statistical modeling
+The multiverse forking path of statistical modeling as explain in detail above.
 
-- Fourth degree of freedom: Linear vs nonlinear modeling: A linear and a nonlinear model are fitted to each of the 8(?) resulting data sets. 
-
-```{r , include=FALSE}
-#Multiverse of modeling : modeling pupil over time vs collapsed i.e. no time, 48 estimated effects
-library(mgcv)
-library(itsadug)
-library(sjPlot)
-par(mfrow=c(5,3), cex=.7, mar=c(2,3,2,2))
-
-for(k in 1:3){ #multiverse 3 levels
-  for(i in 1:2){ # all_plausible  levels 
-multiverse[[k]][[i]]$lab_id = as.factor(multiverse[[k]][[i]]$lab_id)
-multiverse[[k]][[i]]$participant_id = as.factor(multiverse[[k]][[i]]$participant_id)
-
-    
-          TIME<-bam(baseline~ lab_id + s(t_sim, by= lab_id, k=7) +                                      #s(t_sim, by= Condition, k=20)+
-                           #s(t_sim, by= Outcome, k=20)+
-                           s(t_sim, participant_id, bs='fs', m=1),#+ 
-                         data= multiverse[[k]][[i]], discrete=TRUE,nthreads=40)
-                #multi_acf <-  acf_resid(TIME) #autocorrelation check
-                
-                #multi_time <- plot_diff(TIME, view="t_sim", rm.ranef=TRUE, 
-multi_time2 <- plot_smooth(TIME, view="t_sim", plot_all=c("lab_id"), 
-       rm.ranef=F,rug=F, shade=T,  add=F , lty=c(1,1), lwd=4)
-                                                        
-                   }
-    }
-```
 
 ## 6. Any secondary analyses?
 
