@@ -1,5 +1,5 @@
 ---
-title: "MB2-P - Multiverse"
+title: "MB2-P - Multiverse work in progress "
 author: "Rmarkdown by Giulia Calignano, Marlena Mayer, Robert Hepach "
 date: "`r Sys.Date()`"
 output:
@@ -180,11 +180,6 @@ simulate_data <- do.call(rbind, lapply(1:num_participants, function(pid) {
   )
 }))
 
-all$participant_id = as.factor(all$participant_id)
-all$lab_id = as.factor(all$lab_id)
-all$age_cohort = as.factor(all$lab_id)
-all$condition=as.factor(all$condition)
-all$outcome = as.factor(all$outcome)
 
 ```
 
