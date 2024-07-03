@@ -1,11 +1,11 @@
-# MB2-P - Multiverse Approach to Data analysis - Preregistration
+# MB2P - Multiverse Approach to Data analysis - Preregistration
 
 **Authors:**  
 Giulia Calignano, Marlena Mayer, Robert Hepach
 
 ## Overview
 
-This document outlines the detailed methodology and analysis plan for the MB2P study investigating how children’s pupil dilation and looking time vary in response to goal-incongruent events. 
+The documents in this repository outlines the detailed methodology and analysis plan for the MB2P study investigating how children’s pupil dilation and looking time vary in response to goal and events. 
 Using a multiverse approach, we explore different preprocessing paths and statistical models to ensure robustness and comprehensiveness in our findings beyond statistical significance.
 
 ## 1. Data Collection
