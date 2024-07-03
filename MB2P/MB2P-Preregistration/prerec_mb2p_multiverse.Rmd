@@ -1,5 +1,5 @@
 ---
-title: "MB2-P - Multiverse work in progress "
+title: "MB2-P - Multiverse Preregistration"
 author: "Rmarkdown by Giulia Calignano, Marlena Mayer, Robert Hepach "
 date: "`r Sys.Date()`"
 output:
