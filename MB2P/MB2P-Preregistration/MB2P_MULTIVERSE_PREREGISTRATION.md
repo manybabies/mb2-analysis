@@ -104,7 +104,6 @@ The sample size will be determined by the main MB2 study, and all available obse
 - Examine the relationship between belief induction before the outcome and changes in pupil dilation after the outcome.
 - Conduct supplementary analyses to explore the influence of overall luminance during testing on pupil dilation changes.
 
-## Conclusion
-
-This multiverse approach ensures a robust examination of how children’s pupil dilation and looking time vary in response to goal-incongruent events. 
-By exploring multiple preprocessing paths and statistical models, we aim to provide robust results and informative interpretations.
+## Of note
+The multiverse approach increase the robustness of the study of how children’s pupil dilation and looking time vary in response to goal-incongruent events [(Sirois et al., 2023)](10.1016/j.infbeh.2023.101890). 
+By exploring multiple preprocessing paths and statistical models, we aim to provide robust results and informative interpretations [(Calignano et al., 2023)](10.3758/s13428-023-02172-8).
