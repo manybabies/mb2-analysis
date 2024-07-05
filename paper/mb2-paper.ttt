@@ -115,3 +115,69 @@ Total & 809 & 521 & 256 & 22.48 & \\
 }
 
 \end{ThreePartTable}
+\efloatseparator
+ 
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llcccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the familiarization trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Intercept & 0.12 & 0.02 & 0.09 & 0.15\\
+PTL toddlers & Trial number & -0.05 & 0.01 & -0.06 & -0.03\\
+PTL adults & Intercept & 0.26 & 0.02 & 0.23 & 0.29\\
+PTL adults & Trial number & 0.10 & 0.01 & 0.09 & 0.11\\
+First Look toddlers & Intercept & 0.44 & 0.09 & 0.27 & 0.62\\
+First Look toddlers & Trial number & -0.22 & 0.05 & -0.32 & -0.12\\
+First Look adults & Intercept & 1.03 & 0.09 & 0.86 & 1.20\\
+First Look adults & Trial number & 0.38 & 0.04 & 0.30 & 0.47\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\efloatseparator
+ 
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llcccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the test trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Intercept & 0.61 & 0.02 & 0.58 & 0.65\\
+PTL toddlers & Condition & 0.10 & 0.03 & 0.03 & 0.16\\
+PTL toddlers & Age & 0.01 & 0.01 & -0.01 & 0.02\\
+PTL toddlers & Condition x Age & -0.01 & 0.02 & -0.04 & 0.02\\
+PTL adults & Intercept & 0.48 & 0.02 & 0.45 & 0.51\\
+PTL adults & Condition & -0.20 & 0.03 & -0.26 & -0.15\\
+First Look toddlers & Intercept & 0.52 & 0.11 & 0.32 & 0.72\\
+First Look toddlers & Condition & 0.53 & 0.21 & 0.11 & 0.93\\
+First Look toddlers & Age & 0.06 & 0.04 & -0.03 & 0.14\\
+First Look toddlers & Condition x Age & -0.13 & 0.09 & -0.31 & 0.05\\
+First Look adults & Intercept & 0.05 & 0.09 & -0.13 & 0.22\\
+First Look adults & Condition & -0.89 & 0.17 & -1.21 & -0.56\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}

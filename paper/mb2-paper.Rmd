@@ -473,6 +473,66 @@ Bayesian model comparisons require the specification of proper priors on the coe
 include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
+```{r Results table of Bayesian regression models, warning=FALSE}
+library(broom)
+library(broom.mixed)
+
+# Extract results
+e_bm_fam_aoi_toddlers <- tidy(bm_fam_aoi_toddlers, effects = "fixed")
+e_bm_fam_aoi_adults <- tidy(bm_fam_aoi_adults, effects = "fixed")
+e_bm_fam_first_look_toddlers <- tidy(bm_fam_first_look_toddlers, effects = "fixed")
+e_bm_fam_first_look_adults <- tidy(bm_fam_first_look_adults, effects = "fixed")
+e_bm_aoi_toddlers <- tidy(bm_aoi_toddlers, effects = "fixed")
+e_bm_aoi_adults <- tidy(bm_aoi_adults, effects = "fixed")
+e_bm_test_first_look_toddlers <- tidy(bm_test_first_look_toddlers, effects = "fixed")
+e_bm_test_first_look_adults <- tidy(bm_test_first_look_adults, effects = "fixed")
+
+# Add model names
+e_bm_fam_aoi_toddlers <- e_bm_fam_aoi_toddlers %>% mutate(model = "PTL toddlers")
+e_bm_fam_aoi_adults <- e_bm_fam_aoi_adults %>% mutate(model = "PTL adults")
+e_bm_fam_first_look_toddlers <- e_bm_fam_first_look_toddlers %>% mutate(model = "First Look toddlers")
+e_bm_fam_first_look_adults <-  e_bm_fam_first_look_adults %>% mutate(model = "First Look adults")
+e_bm_aoi_toddlers <- e_bm_aoi_toddlers %>% mutate(model = "PTL toddlers")
+e_bm_aoi_adults <- e_bm_aoi_adults %>% mutate(model = "PTL adults")
+e_bm_test_first_look_toddlers <- e_bm_test_first_look_toddlers %>% mutate(model = "First Look toddlers")
+e_bm_test_first_look_adults <- e_bm_test_first_look_adults %>% mutate(model = "First Look adults")
+
+combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
+
+combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
+
+library(kableExtra)
+
+# Create the table
+combined_brm_results_fam <- combined_brm_results_fam %>%
+  select(model, term, estimate, std.error, conf.low, conf.high) %>%
+  mutate(term = case_when(
+      term == "familiarization_trial_num_4" ~ "Trial number",
+      term == "(Intercept)" ~ "Intercept"))
+
+combined_brm_results_test <- combined_brm_results_test %>%
+  select(model, term, estimate, std.error, conf.low, conf.high) %>%
+  mutate(term = case_when(
+      term == "condition_c" ~ "Condition",
+      term == "age_mo_c" ~ "Age",
+      term == "condition_c:age_mo_c" ~ "Condition x Age",
+      term == "(Intercept)" ~ "Intercept"))
+  
+
+papaja::apa_table(combined_brm_results_fam,
+                  caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align=c("l","l","c","c","c","c"))
+
+papaja::apa_table(combined_brm_results_test,
+                  caption = "Results of the Bayesian mixed effects models for the test trials.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align=c("l","l","c","c","c","c"))
+
+```
+
 ### Familiarization Trials.
 Figure 5 shows the proportion of total relative looking time (non-logit transformed) and proportion of first looks for toddlers and adults plotted across familiarization trials and test trials. Our first set of analyses examined data from the four familiarization trials and asked whether participants anticipated the chaser’s reappearance at one of the tunnel exits. In our first analysis, we were interested in whether participants engage in AL during the familiarization trials. To quantify the level of familiarization, we fitted Bayesian mixed effect models predicting target looks based on trial number (1-4) with random effects for lab and participants and random slopes for trial number for each.
 In R formula notation (which we adopt here because of its relative concision compared with standard mathematical notation), our base model was as follows:
@@ -486,22 +546,24 @@ which included no intercept term. We then computed the BF comparing this model t
 
 ##### Toddlers
 
-As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_toddlers$bf)`, strongly favoring the base model over the null model. See also Table X for regression coefficients for the base and the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
+As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_toddlers$bf)`, strongly favoring the base model over the null model. See also Table 3 for regression coefficients for the base model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
 In addition, toddlers' mean PTL of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials.
 
 ##### Adults
 
-Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of `r filter(summary_fam_aoi_overall, age_cohort=="adults")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="adults")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="adults")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="adults")$p.value)`, suggesting that adults successfully anticipated during the familiarization trials.
+Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the positive coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of `r filter(summary_fam_aoi_overall, age_cohort=="adults")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="adults")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="adults")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="adults")$p.value)`, suggesting that adults successfully anticipated during the familiarization trials.
 
 #### Proportion of first looks
 
 ##### Toddlers
 
-Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials.
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be `r printnum(fam_m_comparison_FL_toddlers$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_fl_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance,
+<!-- *t*(`r filter(summary_fam_fl_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_fl_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_fl_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials. -->
 
 ##### Adults
 
-Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials.
+Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of `r printnum(fam_m_comparison_FL_adults$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_fl_overall, age_cohort=="adults")$mean_target_looking` significantly differed from chance, 
+<!-- *t*(`r filter(summary_fam_fl_overall, age_cohort=="adults")$df`) = `r filter(summary_fam_fl_overall, age_cohort=="adults")$tval`, *p* `r printp(filter(summary_fam_fl_overall, age_cohort=="adults")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials. -->
 
 ### Test Trials.
 We focused our confirmatory analysis on the first test trial (see Exploratory Analysis section for an analysis of both trials). Our primary question of interest was whether AL differs between conditions (knowledge vs. ignorance, coded as -.5/.5) and by age (in months, centered). For child participants, we fitted models with the specification:
@@ -515,6 +577,29 @@ $$measure ~ 1 + condition + age + (1 + condition + age + condition:age | lab).$$
 These BFs captured the evidence for age-related changes in the difference in action anticipation between the two conditions. 
 It is important to note that in the case of a null effect, there are two main explanations: (1) toddlers and adults in our study do not distinguish between knowledgeable and ignorant agents when predicting their actions. (2) The method used is not appropriate to reveal knowledge/ignorance understanding. By using Bayesian analyses, we are able to better evaluate the first of these two possibilities: The BF provides a measure of our statistical confidence in the null hypothesis, i.e., no difference between experimental conditions, given the data in ways that standard null hypothesis significance testing does not. In other words, instead of merely concluding that we did not find a difference between conditions, we would be able to find no/anecdotal/moderate/strong/very strong/extreme evidence for the null hypothesis that our participants did not distinguish between knowledgeable and ignorant agents when predicting their actions (Schönbrodt & Wagenmakers, 2018). We therefore consider this analysis an important addition to our overall analysis strategy. Yet, even our Bayesian analyses are not able to rule out the second possibility that participants may well show such knowledge/ignorance understanding with different methods, or that this ability may not be measurable with any methods available at the current time. Addressing this alternative explanation warrants follow up experiments.
 
+#### Proportion of total relative looking time
+
+##### Toddlers
+
+As first model, we used a Bayesian mixed effects models to predict PTL based on condition for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_toddlers$bf)`, strongly favoring the base model over the null model. Table 4 shows the statistics for regression coefficients of the base model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model.
+In addition, toddlers' mean PTL of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials.
+
+##### Adults
+
+Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. These results suggest a significant effect of trial number on PTL, with the positive coefficient indicating an increase in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. In addition, adults' mean PTL of `r filter(summary_fam_aoi_overall, age_cohort=="adults")$mean_target_looking` significantly differed from chance, *t*(`r filter(summary_fam_aoi_overall, age_cohort=="adults")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="adults")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="adults")$p.value)`, suggesting that adults successfully anticipated during the familiarization trials.
+
+#### Proportion of first looks
+
+##### Toddlers
+
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing the base model to the simpler model was estimated to be `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance,
+<!-- *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials. -->
+
+##### Adults
+
+Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of `r printnum(fam_m_comparison_PTL_adults$bf)`, strongly favoring the base model over the null model. There was a significant effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials. The strong Bayes factor provides substantial evidence in support of the base model, highlighting its robustness in explaining the data compared to the null model. Using binomal test, the proportion of first looks of `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$mean_target_looking` significantly differed from chance,
+<!-- *t*(`r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$df`) = `r filter(summary_fam_aoi_overall, age_cohort=="toddlers")$tval`, *p* `r printp(filter(summary_fam_aoi_overall, age_cohort=="toddlers")$p.value)`, suggesting that toddlers successfully anticipated during the familiarization trials. -->
+
 ## Exploratory Analyses
 
 [WE LIST POTENTIAL EXPLORATORY ANALYSES HERE TO SIGNAL OUR INTEREST AND INTENTIONS BUT DO NOT COMMIT TO THEIR INCLUSION, DUE TO LENGTH AND OTHER CONSIDERATIONS]
@@ -522,10 +607,6 @@ It is important to note that in the case of a null effect, there are two main ex
 2. We will explore whether condition differences vary for participants who show higher rates of anticipation during the four familiarization trials. For example, we might group participants according to whether they did or did not show correct AL at the end of the familiarization phase, defined as overall longer looking at the correct AOI than the incorrect AOI on average in trials 3 and 4 of the familiarization phase.
 3. In analyses introducing model terms for certain measurement characteristics (e.g., types of eye-tracker manufacturers, screen dimensions), we will quantify potential variability between different in-lab data acquisition methods [cf., @manybabies2020quantifying]. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population. 
 4. If we observe substantial looking (defined *post hoc* by evaluating scatter plot videos of gaze data) to the boxes as well as the tunnel exit AOIs, we will conduct an exploratory analysis using tighter AOIs around tunnel exits and boxes, asking whether box and tunnel looking vary separately by age or by condition. In particular, we expect that the difference in AL between the two conditions will be bigger for the tunnel exits than for the box (as looks to the correct box might indicate looks to the target, which is in the same box for both conditions, rather than action anticipation).
-
-
-
-
 
 # General Discussion
 
