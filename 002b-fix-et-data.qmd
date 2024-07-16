@@ -479,7 +479,7 @@ data.pupil.overview.short <- data.pupil |>
             sd_Y = sd(y, na.rm=TRUE),
             min_Y = min(y, na.rm=TRUE),
             max_Y = max(y, na.rm=TRUE),
-            ) 
+            )
 
 write.table(data.pupil.overview.short, file="./MB2P/summaries4simulation.txt", col.names=T, row.names=F, sep="\t")
 
