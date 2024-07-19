@@ -68,8 +68,8 @@ model <- FALSE
 ```{r load_model_results, include=FALSE}
 #re-run the model fits if desired
 if (model) {
-  knitr::purl(input = here("007-aoi-analysis.qmd"), output = "007-aoi-analysis.R")
-  source("007-aoi-analysis.R")
+  knitr::purl(input = here("007a-aoi-analysis.qmd"), output = "007a-aoi-analysis.R")
+  source("007a-aoi-analysis.R")
 }
 
 # Load all model result

@@ -66,6 +66,16 @@ test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
 ```
 
+<!-- Splitting the data into familiarization data and test data. -->
+
+<!-- ```{r} -->
+<!-- fam_data <- fam_data %>% -->
+<!--   filter(method=="In-lab") -->
+
+<!-- test_data <- test_data %>% -->
+<!--    filter(method=="In-lab") -->
+<!-- ``` -->
+
 # AOI Proportion Looking
 
 ## Familiarization Data
@@ -346,7 +356,7 @@ assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
 #now summarize all data
 summarize_participant_test_first_trial <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
-           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
+           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type) %>%
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
@@ -368,13 +378,15 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
     N_exit = sum_target_exit+sum_distractor_exit
   ) %>%
   ungroup() %>%
-  #center age and condition
+  #center age, condition, and method
   mutate(
     age_mo_c = age_mo - mean(age_mo,na.rm=TRUE),
     condition_c = case_when(
       condition=="knowledge" ~ -0.5,
-      condition=="ignorance" ~ 0.5
-    )
+      condition=="ignorance" ~ 0.5),
+    method_c = case_when( # MSS: why do we have two variables for method/data_type?
+      data_type=="web-based" ~ -0.5,
+      data_type=="in-lab" ~ 0.5)
   )
 
 saveRDS(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
@@ -1545,249 +1557,3 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
 
 ggsave(here(paper_path,"Figure5.png"),bg="white",width=16, height=9)
 ```
-
-
-# Connections between familiarization and test
-
-## Only anticipators on final familiarization trial
-
-```{r}
-#first, find the participants who anticipate correctly on the last trial
-summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
-  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition,trial_num) %>%
-  summarize(
-    prop_correct_first_look = mean(first_look =="target_exit"),
-    average_rt = mean(first_look_rt),
-    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
-  )
-correct_first_looks_final_fam_trial <- summarize_first_looks_fam_trials %>%
-  filter(!is.na(prop_correct_first_look)&trial_num==4) %>%
-  ungroup() %>%
-  select(age_cohort,lab_id, participant_id, participant_lab_id,prop_correct_first_look) %>%
-  rename(correct_first_look_final_fam_trial=prop_correct_first_look)
-
-#join in to test trial
-summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
-  left_join(correct_first_looks_final_fam_trial)
-summarize_participant_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
-  left_join(correct_first_looks_final_fam_trial)
-
-# overall plot
-#plot average proportion looking
-overall_p_correct_final_fam_trial <- ggplot(filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-overall_p_correct_final_fam_trial
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_correct_final_fam_first_look.png"),bg="white",width=9,height=6)
-```
-
-### Summary Statistics
-
-```{r}
-summarize_test_aoi_correct_final_fam_trial <- summarize_participant_test_first_trial %>%
-  filter(correct_first_look_final_fam_trial==1) %>%
-  group_by(age_cohort,condition) %>%
-  summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
-    mean_target_looking_general = mean(prop_general, na.rm=T),
-    sd_target_looking_general=sd(prop_general,na.rm=T),
-  )
-
-summarize_test_aoi_correct_final_fam_trial %>%
-  knitr::kable()
-```
-
-### Main Model
-
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
-
-#### Toddlers
-
-```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="toddlers"&correct_first_look_final_fam_trial==1),
-        warmup = 1000, 
-        iter = 2000, 
-        chains = 4, 
-        cores = 4,
-        seed = 123,
-        sample_prior=TRUE)
-summary(bm_aoi_toddlers_correct_final_fam_trial)
-
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
-```
-
-Summarize outcomes
-
-```{r}
-#get_variables(bm_aoi_toddlers)
-#get main coefficient estimate and HDI
-bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(b_condition_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(b_age_mo_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
-  mean_hdi(.width = 0.95)
-```
-
-#### Adults
-
-```{r}
-bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="adults"&correct_first_look_final_fam_trial==1),
-        warmup = 1000, 
-        iter = 2000, 
-        chains = 4, 
-        cores = 4,
-        seed = 123,
-        sample_prior=TRUE)
-summary(bm_aoi_adults_correct_final_fam_trial)
-
-saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
-```
-
-```{r}
-#get main coefficient estimate and HDI
-bm_aoi_adults_correct_final_fam_trial %>%
-  spread_draws(b_condition_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-```
-
-## Only >50% looking to target during familiarization trials
-
-### Plot
-
-```{r}
-#join overall familiarization looking in to test trial
-summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
-  left_join(summarize_participant_familiarization_overall)
-
-# overall plot
-#plot average proportion looking
-overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_test_first_trial,fam_prop_exit>0.5), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-overall_p_sufficient_fam_prop_looking
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
-```
-
-### Summary Statistics
-
-```{r}
-summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
-  filter(fam_prop_exit>0.5) %>%
-  group_by(age_cohort,condition) %>%
-  summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
-    mean_target_looking_general = mean(prop_general, na.rm=T),
-    sd_target_looking_general=sd(prop_general,na.rm=T),
-  )
-
-summarize_test_aoi_sufficient_fam_prop_looking %>%
-  knitr::kable()
-```
-
-## Correlation between familiarization and test
-
-### Plot 
-
-```{r}
-correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  geom_point(alpha=0.25)+
-  geom_smooth(method="lm")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  xlab("Overall Proportion Target Looking during Familiarization")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-correlation_plot_fam_test
-ggsave(here(plot_path,"correlation_plot_fam_test.png"),bg="white",width=9,height=6)
-
-#correlation function
-compute_correlation <- function(data){
-  result <- cor.test(data$fam_prop_exit,data$prop_exit)
-  #return the estimate, p-value,df, and test statistic of cor.test
-  
-  return(data.frame(
-    correlation_estimate=result$estimate,
-    correlation_df = result$parameter,
-    correlation_p_value=result$p.value,
-    correlation_statistic=result$statistic))
-}
-#correlation between familiarization and test
-correlation_fam_test_overall <- summarize_participant_test_first_trial %>%
-  select(age_cohort,fam_prop_exit,prop_exit) %>%
-  group_by(age_cohort) %>%
-  nest() %>%
-  #use map to compute correlation
-  summarize(correlation=map(data,compute_correlation)) %>%
-  #extract the correlation values into tidy data frame
-  unnest(correlation)
-
-correlation_fam_test_overall %>%
-  knitr::kable()
-
-correlation_fam_test_by_age <- summarize_participant_test_first_trial %>%
-  select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
-  group_by(age_cohort,condition) %>%
-  nest() %>%
-  #use map to compute correlation
-  summarize(correlation=map(data,compute_correlation)) %>%
-  #extract the correlation values into tidy data frame
-  unnest(correlation)
-
-correlation_fam_test_by_age %>%
-  knitr::kable()
-
-```
-
