@@ -58,23 +58,5 @@ helper/stimuli
 heatmaps/
 
 lookingscore_graphs/
-006-aoi-analysis_files/figure-html/unnamed-chunk-10-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-11-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-11-2.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-19-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-21-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-23-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-5-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-6-1.png
-006-aoi-analysis_files/figure-html/unnamed-chunk-9-1.png
-006-aoi-analysis_files/libs/bootstrap/bootstrap-icons.css
-006-aoi-analysis_files/libs/bootstrap/bootstrap-icons.woff
-006-aoi-analysis_files/libs/bootstrap/bootstrap.min.css
-006-aoi-analysis_files/libs/bootstrap/bootstrap.min.js
-006-aoi-analysis_files/libs/clipboard/clipboard.min.js
-006-aoi-analysis_files/libs/quarto-html/anchor.min.js
-006-aoi-analysis_files/libs/quarto-html/popper.min.js
-006-aoi-analysis_files/libs/quarto-html/quarto-syntax-highlighting.css
-006-aoi-analysis_files/libs/quarto-html/quarto.js
-006-aoi-analysis_files/libs/quarto-html/tippy.css
-006-aoi-analysis_files/libs/quarto-html/tippy.umd.min.js
+006-aoi-analysis_files/
+MB2P-diagnosticPlots/*
