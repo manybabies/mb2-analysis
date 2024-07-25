@@ -19,7 +19,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
 
 # add information about screen size and eyetracker coordinate origin
 dataset_specs <- read.csv(here('metadata', 'dataset_sheet.csv')) %>%
-  select(data_id, data_type, screen_dimensions, point_zero) %>%
+  select(data_id, data_type, screen_dimensions, point_zero, tracker_type, software_type, sampling_rate) %>%
   separate(data_id, c("lab_id", "age_cohort"), sep="_") %>% 
   separate(screen_dimensions, c("screen_width", "screen_height"), sep=" x ") %>% 
   mutate(screen_width = as.numeric(str_trim(screen_width)),
@@ -67,11 +67,6 @@ data_with_aois <- data_trimmed %>%
 ```{r visualize AOIs and data}
 source(here('helper', 'aoi_helper.R'))
 data_with_aois <- data_with_aois %>% ungroup()
-
-
-# TODO: Investigate NAs for coords
-# data_with_aois <- data_with_aois
-
 
 draw_aoi <- function(aoi_name, color){
   return(
