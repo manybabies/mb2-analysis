@@ -69,11 +69,15 @@ test_data <- data_preprocessed_post_exclusions %>%
 <!-- Splitting the data into familiarization data and test data. -->
 
 <!-- ```{r} -->
+
 <!-- fam_data <- fam_data %>% -->
+
 <!--   filter(method=="In-lab") -->
 
 <!-- test_data <- test_data %>% -->
+
 <!--    filter(method=="In-lab") -->
+
 <!-- ``` -->
 
 # AOI Proportion Looking
@@ -104,6 +108,8 @@ summarize_participant_familiarization <- fam_data %>%
   group_by(lab_id,age_cohort,condition,participant_id) %>%
   mutate(familiarization_trial_num = rank(trial_num, ties.method = "first")) #check this
 
+saveRDS(summarize_participant_familiarization, file = here(RESULTS_FOLDER,"summarize_participant_familiarization.rds"))
+
 summarize_participant_familiarization_overall <- summarize_participant_familiarization %>%
   group_by(lab_id,age_cohort,participant_lab_id,participant_id) %>%
   summarize(
@@ -111,6 +117,8 @@ summarize_participant_familiarization_overall <- summarize_participant_familiari
     fam_prop_exit=mean(prop_exit,na.rm=TRUE),
     fam_prop_general=mean(prop_general,na.rm=TRUE)
   )
+
+saveRDS(summarize_participant_familiarization_overall, file = here(RESULTS_FOLDER,"summarize_participant_familiarization_overall.rds"))
 ```
 
 Some quick checks on the resulting data
@@ -177,7 +185,7 @@ summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
 summarize_fam_aoi_overall %>%
   knitr::kable()
 
-saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
+saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summarize_fam_aoi_overall.rds"))
 ```
 
 By individual trial
@@ -590,7 +598,6 @@ bm_aoi_toddlers %>%
 ggsave(here(plot_path,"test_toddlers_model_coefficients.png"),bg="white",width=9,height=6)
 ```
 
-
 Hypothesis test/ compute Bayes Factor
 
 ```{r}
@@ -608,7 +615,6 @@ null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
 summary(null_aoi_toddlers)
 brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
 ```
-
 
 #### Adults
 
@@ -684,7 +690,8 @@ ms_timecourse_test_first_trial <- mss_timecourse_test_first_trial |>
               (sum_target_general+sum_distractor_general))
 
 ```
-Check time-course lengths across videos. 
+
+Check time-course lengths across videos.
 
 ```{r}
 test_data |>
@@ -692,8 +699,6 @@ test_data |>
   summarise(min_t = min(t_norm), 
             max_t = max(t_norm))
 ```
-
-
 
 ```{r}
 ggplot(ms_timecourse_test_first_trial |>
@@ -714,7 +719,6 @@ ggplot(ms_timecourse_test_first_trial |>
   geom_smooth() + 
   facet_wrap(trial_file_name~age_cohort, ncol=4)
 ```
-
 
 ## Timecourse with all test trials
 
@@ -870,7 +874,6 @@ ggplot(filter(ms_timecourse_test_outcome_long,!first_trial),
   ylab("Mean Proportion Looking")
 ```
 
-
 ## Fam trials
 
 ```{r}
@@ -937,10 +940,9 @@ ggsave(here(plot_path,"familiarization_timecourse_plot.png"),bg="white",width=12
 
 ```
 
-
 # First Look Analysis
 
- <!-- First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner et al. (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins. -->
+<!-- First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner et al. (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins. -->
 
 ## Compute first looks
 
@@ -961,14 +963,13 @@ rle_test_data <- test_data %>%
             values = rle(aoi)$values)
 ```
 
-
 ### Compute the first looks/ anticipatory looking
 
 Function for computing first look and RT
 
-Summarizing a few key decisions:
-- We compute both a first look (first valid look to the target or distractor AOIs during the anticipatory window) and a first shift (consistent with the Registered Report: starting on the AOIs does not count, there must be evidence of a shift to the AOI during the anticipatory window)
-- We ignore NAs altogether in defining shifts (this also means that if there are a lot of NAs at the beginning of the window and then the infants' first look is to the target/ distractor AOI, this is counted the same (i.e., ignored - we still need to see a shift to the AOI) as if the infant started on the target/distractor AOI.
+Summarizing a few key decisions: 
+- We compute both a first look (first valid look to the target or distractor AOIs during the anticipatory window) and a first shift (consistent with the Registered Report: starting on the AOIs does not count, there must be evidence of a shift to the AOI during the anticipatory window) 
+- We ignore NAs altogether in defining shifts (this also means that if there are a lot of NAs at the beginning of the window and then the infants' first look is to the target/ distractor AOI, this is counted the same (i.e., ignored - we still need to see a shift to the AOI) as if the infant started on the target/distractor AOI. 
 - For RT computation, we compute all samples up to landing on the target/ distractor AOI look and multiply by the sampling rate.
 
 ```{r}
@@ -1087,11 +1088,16 @@ d_anticipatory_fam <- rle_fam_data %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data))
+
+saveRDS(d_anticipatory_fam, file=here(RESULTS_FOLDER,"d_anticipatory_fam.rds"))
+
 d_anticipatory_test <- rle_test_data %>%
   group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data))
+
+saveRDS(d_anticipatory_test, file=here(RESULTS_FOLDER,"d_anticipatory_test.rds"))
 ```
 
 ## Plot
@@ -1111,6 +1117,7 @@ summarize_participant_familiarization_first_look <- d_anticipatory_fam %>%
     average_rt = mean(first_look_rt),
     average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
   ) 
+saveRDS(summarize_participant_familiarization_first_look, file=here(RESULTS_FOLDER,"summarize_participant_familiarization_first_look.rds"))
 
 #check N, SEs, CIs, might not be quite right yet
 summarize_overall_familiarization_first_look <- summarize_participant_familiarization_first_look %>%
@@ -1124,33 +1131,51 @@ summarize_overall_familiarization_first_look <- summarize_participant_familiariz
     upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
   ) 
 
-# TO DO: add binomial test
-
 ggplot(filter(d_anticipatory_fam,!is.na(first_look)),aes(trial_num,fill=first_look))+
   geom_bar(position="fill")+
   facet_wrap(~age_cohort)
 
-ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
-  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
-  geom_point(size = 3) +
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  #scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  ylim(0,1)+
-  ylab("Proportion First Look to Target Exit")
-
 summarize_overall_familiarization_first_look %>%
   knitr::kable()
 
-saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
+saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summarize_overall_familiarization_first_look.rds"))
+
+#summarize across trials
+summarize_participant_familiarization_first_look_across_trials <- d_anticipatory_fam %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id) %>%
+  summarize(
+    N = n(),
+    prop_correct_first_look = mean(first_look =="target_exit",na.rm=TRUE),
+    average_rt = mean(first_look_rt,na.rm=TRUE),
+    average_rt_correct = mean(first_look_rt[first_look =="target_exit"],na.rm=TRUE)
+  ) 
+saveRDS(summarize_participant_familiarization_first_look_across_trials, file=here(RESULTS_FOLDER,"summarize_participant_familiarization_first_look_across_trials.rds"))
+
+summarize_overall_familiarization_first_look_across_trials <- summarize_participant_familiarization_first_look_across_trials %>%
+  group_by(age_cohort) %>%
+  summarize(
+    N = sum(!is.na(prop_correct_first_look)),
+    prop_target_first_look = mean(prop_correct_first_look,na.rm=T),
+    sd_target_first_look=sd(prop_correct_first_look,na.rm=T),
+    se_target_first_look = sd_target_first_look/sqrt(N),
+    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
+    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look,
+    t_test = list(broom::tidy(t.test(prop_correct_first_look, alternative = "two.sided", mu=0.5)))) %>%
+      mutate(
+        p.value = purrr::map(t_test, ~select(.x, c('p.value', 'parameter','statistic')))
+      ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval=statistic,
+    df=parameter
+  )
+
+saveRDS(summarize_overall_familiarization_first_look_across_trials, file=here(RESULTS_FOLDER,"summarize_overall_familiarization_first_look_across_trials.rds"))
 ```
 
-
 ```{r}
-overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look,color=trial_num))+
+overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_num,prop_target_first_look))+
   geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
   geom_point(size = 5) +
   geom_hline(yintercept=0.5,linetype="dashed")+
@@ -1158,8 +1183,7 @@ overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_
   theme_cowplot()+
   theme(strip.background = element_blank(),
   strip.text.x = element_blank())+
-  #scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
+  geom_smooth(data=summarize_participant_familiarization_first_look,aes(y=prop_correct_first_look),method="lm")+
   theme(legend.position="none")+
   xlab("Trial Number")+
   ylim(0,1)+
@@ -1179,6 +1203,7 @@ summarize_participant_test_first_look <- d_anticipatory_test %>%
     average_rt = mean(first_look_rt),
     average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
   ) 
+saveRDS(summarize_participant_test_first_look, file=here(RESULTS_FOLDER,"summarize_participant_test_first_look.rds"))
 
 #check N, SEs, CIs, might not be quite right yet
 summarize_overall_test_first_look <- summarize_participant_test_first_look %>%
@@ -1191,6 +1216,8 @@ summarize_overall_test_first_look <- summarize_participant_test_first_look %>%
     lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
     upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
   ) 
+
+saveRDS(summarize_overall_test_first_look, file=here(RESULTS_FOLDER,"summarize_overall_test_first_look.rds"))
 
 ggplot(filter(d_anticipatory_test,!is.na(first_look)),aes(condition,fill=first_look))+
   geom_bar(position="fill")+
@@ -1222,6 +1249,8 @@ summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
     average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
   ) 
 
+saveRDS(summarize_participant_test_first_look_first_trial, file=here(RESULTS_FOLDER,"summarize_participant_test_first_look_first_trial.rds"))
+
 #check N, SEs, CIs, might not be quite right yet
 summarize_overall_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
   group_by(age_cohort,condition) %>%
@@ -1233,6 +1262,9 @@ summarize_overall_test_first_look_first_trial <- summarize_participant_test_firs
     lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
     upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
   ) 
+
+saveRDS(summarize_overall_test_first_look_first_trial, file=here(RESULTS_FOLDER,"summarize_overall_test_first_look_first_trial.rds"))
+
 
 ggplot(filter(d_anticipatory_test,!is.na(first_look)&trial_num==5),aes(condition,fill=first_look))+
   geom_bar(position="fill")+
@@ -1412,7 +1444,6 @@ d_anticipatory_test <- d_anticipatory_test %>%
   )
 ```
 
-
 #### Toddlers
 
 ```{r}
@@ -1440,7 +1471,6 @@ prior_summary(bm_test_first_look_toddlers)
 
 saveRDS(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
 ```
-
 
 ```{r}
 # quick and dirty binomial test just for exploratory purposes
@@ -1476,7 +1506,6 @@ null_first_look_toddlers <-  update(bm_test_first_look_toddlers, formula = ~ .-c
 summary(null_first_look_toddlers)
 brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
 ```
-
 
 #### Adults
 

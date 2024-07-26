@@ -24,10 +24,13 @@ paper_path <- here("paper")
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
+
+# Load data
+
 ```{r}
-# Load all summaries
+# Load all .rds files
 # List all RDS files in the results folder
-rds_files <- list.files(RESULTS_FOLDER, pattern = ".*summarize.*\\.rds$", full.names = TRUE)
+rds_files <- list.files(RESULTS_FOLDER, pattern = "\\.rds$", full.names = TRUE)
 
 # Load each RDS file as a separate variable in the global environment
 for (file in rds_files) {
@@ -46,368 +49,6 @@ test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
 ```
 
-<!-- Splitting the data into familiarization data and test data. -->
-
-<!-- ```{r} -->
-<!-- fam_data <- fam_data %>% -->
-<!--   filter(method=="In-lab") -->
-
-<!-- test_data <- test_data %>% -->
-<!--    filter(method=="In-lab") -->
-<!-- ``` -->
-
-# AOI Proportion Looking
-
-## Familiarization Data
-
-### Summarizing Familiarization Data
-
-```{r}
-# Load all summaries
-# List all RDS files in the results folder
-rds_files <- list.files(RESULTS_FOLDER, pattern = ".*summarize.*\\.rds$", full.names = TRUE)
-
-# Load each RDS file as a separate variable in the global environment
-for (file in rds_files) {
-  rds_name <- tools::file_path_sans_ext(basename(file))
-  assign(rds_name, readRDS(file))
-}
-
-summarize_participant_familiarization <- fam_data %>%
-  group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>%
-  mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
-  ) %>%
-  summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_general = sum(aoi=="target_general",na.rm=T),
-    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
-    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
-    N_general = sum_target_general+sum_distractor_general,
-    N_exit = sum_target_exit+sum_distractor_exit
-  ) %>%
-  group_by(lab_id,age_cohort,condition,participant_id) %>%
-  mutate(familiarization_trial_num = rank(trial_num, ties.method = "first")) #check this
-
-summarize_participant_familiarization_overall <- summarize_participant_familiarization %>%
-  group_by(lab_id,age_cohort,participant_lab_id,participant_id) %>%
-  summarize(
-    fam_trial_n = n(),
-    fam_prop_exit=mean(prop_exit,na.rm=TRUE),
-    fam_prop_general=mean(prop_general,na.rm=TRUE)
-  )
-```
-
-## Test Data
-
-### Summarizing Test Data (First Trial)
-
-```{r}
-#filter to first trials
-test_data_first_trial <- test_data %>%
-  #filter to first trial only
-  filter(trial_num==5)
-
-#check to make sure we are filtering correctly 
-# e.g., no participants contribute multiple first trials
-test_data_first_trial_overview <- test_data_first_trial %>%
-  ungroup() %>%
-  distinct(lab_id,participant_lab_id,participant_id,participant_trial_id,trial_num) 
-
-num_test_first_trials <- test_data_first_trial_overview %>%
-  group_by(lab_id,participant_lab_id,participant_id) %>%
-  count()
-#make sure we only have one trial per participant
-#the next two statements must both be true
-assert_that(num_test_first_trials$n[1]==1) # first element equals one
-assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
-```
-
-```{r}
-#now summarize all data
-summarize_participant_test_first_trial <- test_data_first_trial %>%
-  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
-           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition) %>%
-  #filter to relevant anticipatory window
-  # based on current format, t_norm == 0 is the point of disambiguation
-  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
-  #check this!!!
-  filter(t_norm<=120 & t_norm>=-3880) %>%
-  mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
-  ) %>%
-  summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_general = sum(aoi=="target_general",na.rm=T),
-    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
-    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
-    N_general = sum_target_general+sum_distractor_general,
-    N_exit = sum_target_exit+sum_distractor_exit
-  ) %>%
-  ungroup() %>%
-  #center age and condition
-  mutate(
-    age_mo_c = age_mo - mean(age_mo,na.rm=TRUE),
-    condition_c = case_when(
-      condition=="knowledge" ~ -0.5,
-      condition=="ignorance" ~ 0.5
-    )
-  )
-
-saveRDS(summarize_participant_test_first_trial, file = here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
-```
-
-# First Look Analysis
-
- <!-- First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner et al. (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins. -->
-
-## Compute first looks
-
-### Convert to run-length encoding format
-
-```{r}
-#convert to rle data
-rle_fam_data <- fam_data %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  reframe(lengths = rle(aoi)$lengths, 
-            values = rle(aoi)$values)
-
-rle_test_data <- test_data %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  reframe(lengths = rle(aoi)$lengths, 
-            values = rle(aoi)$values)
-```
-
-
-### Compute the first looks/ anticipatory looking
-
-Function for computing first look and RT
-
-Summarizing a few key decisions:
-- We compute both a first look (first valid look to the target or distractor AOIs during the anticipatory window) and a first shift (consistent with the Registered Report: starting on the AOIs does not count, there must be evidence of a shift to the AOI during the anticipatory window)
-- We ignore NAs altogether in defining shifts (this also means that if there are a lot of NAs at the beginning of the window and then the infants' first look is to the target/ distractor AOI, this is counted the same (i.e., ignored - we still need to see a shift to the AOI) as if the infant started on the target/distractor AOI.
-- For RT computation, we compute all samples up to landing on the target/ distractor AOI look and multiply by the sampling rate.
-
-```{r}
-# takes rle_data dataframe (already rle'd)
-get_first_look <- function (rle_data, SAMPLING_RATE = 40, MINIMUM_ANTICIPATORY_LOOK_MS = 150) {
-  
-  # end if no data
-  if (is.null(rle_data$values) | is.null(rle_data$lengths) | sum(rle_data$values!="NA_NA") == 0) {
-    return(tibble(
-      first_look = NA,
-      first_look_rt = NA,
-      first_shift = NA,
-      first_shift_rt = NA,
-      shift_type = NA,
-      shift_type_all = NA))
-  }
-  
-  #minimum look duration
-  #look must be a specific duration to count (e.g. 150 ms)
-  min_look_length = ceiling(MINIMUM_ANTICIPATORY_LOOK_MS / (1000/SAMPLING_RATE))
-  #any values we want to skip as a potential looking/ landing target
-  values_to_skip = c("NA_NA")
-  
-  rle_data_idx <- rle_data |> 
-    #create an overall index
-    mutate(idx = seq_along(values)) |> 
-    #create an index that skips specific values (NA_NA)
-    mutate(
-      include = !(values %in% values_to_skip),
-      cumulative_index_skipping_nas = cumsum(include)
-    ) |> 
-    mutate(
-      idx_skip_nas = if_else(include,cumulative_index_skipping_nas,NA)
-    ) |> 
-    select(-include,-cumulative_index_skipping_nas)
-  
-  #determine onsets
-  onset_aoi <- filter(rle_data_idx,idx == 1)$values
-  onset_aoi_skip_nas <- filter(rle_data_idx,idx_skip_nas == 1)$values # zero point AOI, excluding NAs
-  
-  #find the first valid look within the rle data
-  first_look_rle <- rle_data_idx |> 
-    #filter to valid looks to target or distractor
-    filter(values %in% c("target_exit", "distractor_exit"),
-           lengths >= min_look_length) |> 
-    #get the first look
-    slice(1)
-  
-  #finds the first valid "shift" within the rle data
-  first_shift_landing_rle <- rle_data_idx |> 
-    filter(idx_skip_nas != 1, # first shift landing is post the initial look location, not counting NAs
-           values %in% c("target_exit", "distractor_exit"),
-           lengths >= min_look_length) |> 
-    slice(1)
-  
-  # end if no anticipatory look to the AOIs
-  if (nrow(first_look_rle) == 0) {
-    return(tibble(
-      first_look = NA,
-      first_look_rt = NA,
-      first_shift = NA,
-      first_shift_rt = NA,
-      shift_type = "no anticipatory look",
-      shift_type_all = NA))
-  }
-  
-  #determine first look
-  first_look <- first_look_rle$values
-  
-  # rt is the number of samples happening before arrival
-  # (first sample of arrival)
-  # times the length of a sample
-  #need to keep NAs here for valid looking times
-  #MZ: we used to add 1 here but I think that might be wrong? because the first sample is 0 ms, i.e. right at the start of the window
-  first_look_rt <- ((rle_data_idx |> 
-    filter(idx < first_look_rle$idx) |> 
-    pull(lengths) |> sum())) * (1000/SAMPLING_RATE)
-  
-  # if there are valid shifts, add them
-  if (nrow(first_shift_landing_rle) == 0) {
-    first_shift_landing <- NA
-    landing_time_rt <- NA
-    shift_type <- NA
-    shift_type_all <- NA
-  } else {
-    #consolidate shift location information
-    first_shift_landing <- first_shift_landing_rle$values
-    shift_type <- paste0(onset_aoi_skip_nas, "_TO_", first_shift_landing)
-    shift_type_all <- rle_data_idx |> 
-      filter(idx_skip_nas <= first_shift_landing_rle$idx_skip_nas) |> 
-      pull(values) |> 
-      paste(collapse = "_TO_")
-    #compute RT
-    landing_time_rt <- ((rle_data_idx |> 
-                           filter(idx < first_shift_landing_rle$idx) |> 
-                           pull(lengths) |> sum())) * (1000/SAMPLING_RATE)
-  }
-    
-  return(tibble(
-    first_look = first_look, #first valid look location, regardless of whether there was a shift to the location
-    first_look_rt = first_look_rt, #reaction time for first valid look location, regardless of whether there was a shift to the location
-    first_shift = first_shift_landing, #first shift to a valid look location
-    first_shift_rt = landing_time_rt, #reaction time for first shift to a valid look location
-    shift_type = shift_type, #shift in locations (START_LOCATION_TO_LANDING_LOCATION) for first shift to a valid look location
-    shift_type_all = shift_type_all) # all shifts during the anticipatory window
-    )
-}
-```
-
-Now compute anticipatory looking/ first looks for every trial
-
-```{r}
-# compute RTs
-d_anticipatory_fam <- rle_fam_data %>%
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  nest() %>%
-  mutate(data = lapply(data, get_first_look)) %>%
-  unnest(cols = c(data))
-d_anticipatory_test <- rle_test_data %>%
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  nest() %>%
-  mutate(data = lapply(data, get_first_look)) %>%
-  unnest(cols = c(data))
-```
-
-### Test Data
-
-```{r}
-summarize_participant_test_first_look <- d_anticipatory_test %>%
-  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
-  summarize(
-    N = n(),
-    prop_correct_first_look = mean(first_look =="target_exit"),
-    average_rt = mean(first_look_rt),
-    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
-  ) 
-
-#check N, SEs, CIs, might not be quite right yet
-summarize_overall_test_first_look <- summarize_participant_test_first_look %>%
-  group_by(age_cohort,condition) %>%
-  summarize(
-    N = sum(!is.na(prop_correct_first_look)),
-    prop_target_first_look = mean(prop_correct_first_look,na.rm=T),
-    sd_target_first_look=sd(prop_correct_first_look,na.rm=T),
-    se_target_first_look = sd_target_first_look/sqrt(N),
-    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
-    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
-  ) 
-
-ggplot(filter(d_anticipatory_test,!is.na(first_look)),aes(condition,fill=first_look))+
-  geom_bar(position="fill")+
-  facet_wrap(~age_cohort)
-
-ggplot(summarize_overall_test_first_look,aes(condition,prop_target_first_look,color=condition))+
-  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
-  geom_point(size = 3) +
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  ylim(0,1)+
-  ylab("Proportion First Look to Target Exit")
-```
-
-#### First Trial Only
-
-```{r}
-summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
-  filter(trial_num==5) %>%
-  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
-  summarize(
-    N = n(),
-    prop_correct_first_look = mean(first_look =="target_exit"),
-    average_rt = mean(first_look_rt),
-    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
-  ) 
-
-#check N, SEs, CIs, might not be quite right yet
-summarize_overall_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
-  group_by(age_cohort,condition) %>%
-  summarize(
-    N = sum(!is.na(prop_correct_first_look)),
-    prop_target_first_look = mean(prop_correct_first_look,na.rm=T),
-    sd_target_first_look=sd(prop_correct_first_look,na.rm=T),
-    se_target_first_look = sd_target_first_look/sqrt(N),
-    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look ,
-    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
-  ) 
-
-ggplot(filter(d_anticipatory_test,!is.na(first_look)&trial_num==5),aes(condition,fill=first_look))+
-  geom_bar(position="fill")+
-  facet_wrap(~age_cohort)
-
-overall_fl_test <- ggplot(summarize_overall_test_first_look_first_trial,aes(condition,prop_target_first_look,color=condition))+
-  geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
-  geom_point(size = 5) +
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  theme(strip.background = element_blank(),
-  strip.text.x = element_blank())+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  ylim(0,1)+
-  ylab("Proportion First Look to Target Exit\n(First Trial Only)")
-overall_fl_test
-ggsave(here(plot_path,"overall_test_trial_first_look_first_trial.png"),bg="white",width=9, height=6)
-```
 # Exploratory analyses
 
 ## 1. Spill-over:
@@ -415,6 +56,50 @@ ggsave(here(plot_path,"overall_test_trial_first_look_first_trial.png"),bg="white
 Spill-over: we will analyze within-participants data from the second test trial that participants saw, using exploratory models to assess whether (1) findings are consistent when both trials are included (overall condition effect), (2) whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect).
 
 ## 1.a.Spill-over Analysis
+
+### Summarize all test data
+
+```{r}
+#now summarize test data for each trial
+summarize_participant_test_both_trials <- test_data %>%
+  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_num,trial_file_name,
+           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type) %>%
+  #filter to relevant anticipatory window
+  # based on current format, t_norm == 0 is the point of disambiguation
+  # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
+  filter(t_norm<=120 & t_norm>=-3880) %>%
+  mutate(
+    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+  ) %>%
+  summarize(
+    t_min=min(t_norm),
+    t_max=max(t_norm),
+    sum_target_general = sum(aoi=="target_general",na.rm=T),
+    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
+    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
+    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
+    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
+    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
+    N_general = sum_target_general+sum_distractor_general,
+    N_exit = sum_target_exit+sum_distractor_exit
+  ) %>%
+  ungroup() %>%
+  #center age, condition, and method
+  mutate(
+    age_mo_c = age_mo - mean(age_mo,na.rm=TRUE),
+    condition_c = case_when(
+      condition=="knowledge" ~ -0.5,
+      condition=="ignorance" ~ 0.5),
+    method_c = case_when( 
+      data_type=="web-based" ~ -0.5,
+      data_type=="in-lab" ~ 0.5)
+  ) %>%
+  mutate(
+    test_trial_num = trial_num-4
+  )
+
+
+```
 
 ### Overall Plots
 
@@ -425,65 +110,23 @@ First look at the proportional looking measures, focusing on the target exit dur
 overall_p_test_both <- ggplot(summarize_participant_test_both_trials, aes(x=condition, y=prop_exit,color=condition))+
   #geom_violin()+
   #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
+  geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_boxplot(data=filter(summarize_participant_test_both_trials,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
   geom_half_boxplot(data=filter(summarize_participant_test_both_trials,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
+  facet_wrap(age_cohort~test_trial_num)+
   theme(legend.position="none")+
   #ggtitle("Test")+
   theme(plot.title = element_text(hjust= 0.5, face="bold"))+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")
 overall_p_test_both
-ggsave(here(plot_path,"overall_proportion_both_trials_target_exit_looking.png"),bg="white",width=9,height=6)
-```
-
-Splitting plot by lab and age cohort
-
-```{r}
-adults_prop_both <- ggplot(filter(summarize_participant_test_both_trials,N_exit>=5&age_cohort=="adults"), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="ignorance"&age_cohort=="adults"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="knowledge"&age_cohort=="adults"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="ignorance"&age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="knowledge"&age_cohort=="adults"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_beeswarm(alpha=0.5)+
-  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort+lab_id)+
-  theme(legend.position="none")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")
-adults_prop_both
-ggsave(here(plot_path,"adults_proportion_both_trials_target_exit_looking.png"),bg="white", width = 16, height = 10)
-
-kids_prop_both <- ggplot(filter(summarize_participant_test_both_trials,N_exit>=5&age_cohort=="toddlers"), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="ignorance"&age_cohort=="toddlers"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="knowledge"&age_cohort=="toddlers"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="ignorance"&age_cohort=="toddlers"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,N_exit>=5&condition=="knowledge"&age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_beeswarm(alpha=0.5)+
-  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort+lab_id)+
-  theme(legend.position="none")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")
-kids_prop_both
-ggsave(here(plot_path,"kids_proportion_both_trials_target_exit_looking.png"),bg="white", width = 16, height = 10)
+ggsave(here(plot_path,"overall_proportion_both_trials_target_exit_looking.png"),bg="white",width=9,height=9)
 ```
 
 Plot the effect by age
@@ -496,6 +139,7 @@ kid_prop_by_age_both <- ggplot(filter(summarize_participant_test_both_trials,N_e
   xlab("Age (in months)")+
   ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")+
   theme_cowplot()+
+  facet_wrap(~test_trial_num)+
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")
 kid_prop_by_age_both
@@ -506,17 +150,12 @@ ggsave(here(plot_path,"kids_proportion_both_trials_target_exit_looking_by_age.pn
 
 ```{r}
 summarize_test_aoi_both <- summarize_participant_test_both_trials %>%
-  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
+  group_by(age_cohort,condition,trial_num,test_trial_num) %>%
   summarize(
-    n=n(),
-    mean_subj_prop_exit=mean(prop_exit,na.rm=T)
-  ) %>%
-  group_by(age_cohort,condition) %>%
-  summarize(
-    participant_num=sum(!is.na(mean_subj_prop_exit)),
-    mean_target_looking=mean(mean_subj_prop_exit,na.rm=T),
-    sd_target_looking=sd(mean_subj_prop_exit,na.rm=T),
-     t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu=0.5)))) %>%
+    participant_num=sum(!is.na(prop_exit)),
+    mean_target_looking=mean(prop_exit,na.rm=T),
+    sd_target_looking=sd(prop_exit,na.rm=T),
+     t_test = list(broom::tidy(t.test(prop_exit, alternative = "two.sided", mu=0.5)))) %>%
   mutate(
     #95% CIs
     lower_ci_target_looking = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
@@ -547,6 +186,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 #### Toddlers
 
+## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
+
 ```{r}
 #set the prior
 priors <-c(
@@ -555,7 +196,7 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c|participant_lab_id)+(1+condition_c*age_mo_c|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -629,8 +270,10 @@ brms::bayes_factor(bm_aoi_toddlers_both, null_aoi_toddlers_both)
 
 #### Adults
 
+## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
+
 ```{r}
-bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
+bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+condition_c|participant_lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -689,10 +332,20 @@ brms::bayes_factor(bm_aoi_adults_both, null_aoi_adults_both)
 
 ## 1.b. whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect)
 
+## MZ this needs further discussion - I'm not sure how to parse what is in the preregistration, but my reading is that at least for (2), and perhaps for (3), we are asking about a trial number by condition effect (not the "order" as defined here)
+
 ```{r}
 # create order variable
-summarize_participant_test_both_trials_order <- summarize_participant_test_both_trials %>% 
-   mutate(order_c=case_when((trial_num==5 & condition=="knowledge") | (trial_num==6 & condition=="ignorance") ~ -0.5, (trial_num==5 & condition=="ignorance")| (trial_num==6 & condition=="knowledge") ~ 0.5))
+summarize_participant_test_both_trials <- summarize_participant_test_both_trials %>% 
+  ungroup() %>%
+  arrange(participant_lab_id,trial_num,test_trial_num) %>%
+  group_by(participant_lab_id) %>%
+  mutate(conditions = paste0(condition, collapse = "_")) %>%
+  ungroup() %>%
+ mutate(order_c=case_when(
+     (trial_num==5 & condition=="knowledge") | (trial_num==6 & condition=="ignorance") ~ -0.5, 
+     (trial_num==5 & condition=="ignorance") | (trial_num==6 & condition=="knowledge") ~ 0.5,
+     TRUE ~ NA))
 ```
 
 ### Main Model
@@ -1101,20 +754,16 @@ correlation_fam_test_by_age %>%
 
 ### 3.1. Data collection type: in-lab vs. web-based
 
-```{r}
-readRDS(here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
-```
-
-### Summary Statistics
+#### Summary Statistics
 
 ```{r}
 summarize_test_aoi_method <- summarize_participant_test_first_trial %>%
-  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition_c, method_c) %>%
+  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition,condition_c,data_type,method_c) %>%
   summarize(
     n=n(),
     mean_subj_prop_exit=mean(prop_exit,na.rm=T)
   ) %>%
-  group_by(age_cohort,condition_c, method_c) %>%
+  group_by(age_cohort,condition,condition_c, data_type,method_c) %>%
   summarize(
     participant_num=sum(!is.na(mean_subj_prop_exit)),
     mean_target_looking=mean(mean_subj_prop_exit,na.rm=T),
