@@ -1181,8 +1181,8 @@ overall_fl_fam <- ggplot(summarize_overall_familiarization_first_look,aes(trial_
   geom_hline(yintercept=0.5,linetype="dashed")+
   facet_wrap(~age_cohort)+
   theme_cowplot()+
-  theme(strip.background = element_blank(),
-  strip.text.x = element_blank())+
+  # theme(strip.background = element_blank(),
+  # strip.text.x = element_blank())+
   geom_smooth(data=summarize_participant_familiarization_first_look,aes(y=prop_correct_first_look),method="lm")+
   theme(legend.position="none")+
   xlab("Trial Number")+
