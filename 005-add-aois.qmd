@@ -207,6 +207,9 @@ data_preprocessed <- data_with_aois %>% filter(lab_id %in% usable_labs)
 ```
 
 ```{r saving}
+
+data_preprocessed <- data_with_aois
+
 save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
 
 #write.csv(data_preprocessed, here("data", "preprocessed.csv"), row.names = F)
