@@ -204,6 +204,7 @@ all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 
 plot(all$x,all$y)
 ```
 # Second degree of freedom: within the screen vs outside the screen
+
 ```{r, DF2 Area Of Interest, echo=TRUE,include=TRUE, out.width='90%'}
 AOI_all <- all[all$x > 0,]
 AOI_all <- AOI_all[AOI_all$x < 2000,]
@@ -224,6 +225,7 @@ plot(AOI_all$x,AOI_all$y)
 
 ```
 #Third degree of freedom: moving average filtered vs unfiltered data
+
 ```{r, DF3 moving average, echo=TRUE,include=TRUE, out.width='90%'}
 # Install and load required packages
 if (!require('dplyr')) install.packages('dplyr')
@@ -260,6 +262,7 @@ MA <- list(AOI, AOI_MA)
 ```
 
 # Fourth degree of freedom: 1s, 0.5s, or 0.25s before the bear resolution.
+
 We consider three possible baseline correction all performed by subtracting the average pupil diameter from all subsequent values between, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
 
 ```{r, DF4 BASELINE-CORRECTION, echo=TRUE,include=TRUE, out.width='90%'}
@@ -348,13 +351,13 @@ ggplot(multiverse[[2]][[1]][[1]], aes(t,baseline,condition, colour =condition)) 
                                                     panel.background = element_blank(), axis.line = element_line(colour = "black"))
   
 ```
-At this point, the multiverse object contains a list of three elements, each with a nested structure consisting of two data frames. Each data frame has the same structure but differs in the observations they contain. Here is a breakdown of the structure:
+At this point, the multiverse object contains a list of three elements, each with a nested structure consisting of four data frames. Each data frame has the same structure but differs in the observations they contain. Here is a breakdown of the structure:
 
-List of 3: The top-level list contains three elements. Each element in this list is itself a list containing two data frames.
+List of 3: The top-level list contains three elements. Each element in this list is itself a list containing four data frames.
 
 Each of the three lists:
 
-Contains two data frames, each having 27 variables (columns).
+Contains four data frames, each having 27 variables (columns).
 The structure of these data frames is the same, but they have different numbers of observations (rows).
 //
 <br>
@@ -364,18 +367,35 @@ The structure of these data frames is the same, but they have different numbers 
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
 ```{r, DF5 PARTICIPANT EXCLUSION, echo=TRUE,include=TRUE, out.width='90%'}
-remove_participants <- function(multiverse, ids_to_remove) {
-  lapply(multiverse, function(sublist) {
-    lapply(sublist, function(df) {
-      if (is.data.frame(df)) {
-        df[!df$participant_id %in% ids_to_remove, ]
-      } 
-    })
-  })
+# Load necessary library
+library(dplyr)
+
+# Function to handle nested lists and remove specific participant_ids
+remove_participants <- function(multiverse, participant_ids_to_remove) {
+
+  clean_data <- function(data) {
+    # Check if the element is a data frame
+    if (is.data.frame(data)) {
+      return(data %>% filter(!participant_id %in% participant_ids_to_remove))
+    }
+    # If it's a list, apply the function recursively
+    else if (is.list(data)) {
+      return(lapply(data, clean_data))
+    }
+    # If it's neither, return it unchanged (or NULL if you prefer skipping non-list, non-data.frame items)
+    else {
+      return(NULL)
+    }
+  }
+
+  # Apply the cleaning function at the top level
+  cleaned_multiverse <- lapply(multiverse, clean_data)
+
+  return(cleaned_multiverse)
 }
 
 # Define participant IDs to remove for the second and third multiverse
-remove_ids_1 <- c(102, 103, 104, 105)
+remove_ids_1 <- c(101, 102, 103)
 remove_ids_2 <- c(181, 182, 183, 185)
 
 # Create the three multiverses
@@ -395,7 +415,7 @@ Modified Multiverse 2 (multiverse_three): This version excludes a different set 
 Each multiverse consists of:
 
 A list of lists, where each sublist contains one or more data frames.
-Each data frame represents a segment of the dataset, including columns such as participant_id and other relevant variables (e.g., score).
+Each data frame represents a segment of the dataset, including columns such as participant_id and other relevant variables included in the simulated data.
 By structuring the data in this way, the megaverse allows for systematic comparison across different scenarios, facilitating a robust analysis of the dataset under various conditions.
 
 <br>
@@ -405,42 +425,207 @@ As a final step, we investigated (1) the averaged interaction effect Condition x
 For the analysis of pupillary data, we utilized generalized additive mixed modeling (GAMM, Wood, 2011). GAMMs combine the flexibility of generalized additive models (GAMs) with the ability to incorporate random effects, which are essential for accounting for correlations among observations within clusters or groups. This includes the use of smooth functions that handle both continuous and categorical predictors. The random effects component facilitates the inclusion of hierarchical structures, such as nested or repeated measures within the data, making GAMMs useful for a wide range of data types, including time series, spatial, and longitudinal data. The model is estimated using penalized regression techniques, which help to avoid overfitting and produce more reliable predictions.
 
 ```{r, SETTING MODEL, FUNCTIONS, echo=TRUE,include=TRUE, out.width='90%'}
-library(mgcv)
-library(itsadug)
-library(sjPlot)
-library(lme4)
-## megaverse <- list(multiverse_one, multiverse_two, multiverse_three)
+# Inspect the structure of megaverse
+str(megaverse, max.level = 3)
 
-# Define a function to fit three different linear models to a dataset
+extract_data_frame <- function(data) {
+  while (is.list(data) && length(data) == 1) {
+    data <- data[[1]]
+  }
+  return(data)
+}
+
+library(dplyr)
+library(lme4)
+library(mgcv)
+library(purrr)
+
+# Function to check if all dataset are a data frame
+is_valid_dataset <- function(data) {
+  return(is.data.frame(data))
+}
+
+# Pre-validation: Validate all datasets in megaverse with debug information
+validate_megaverse <- function(megaverse) {
+  validation_results <- map2(megaverse, seq_along(megaverse), function(sublist, i) {
+    if (is.list(sublist)) {
+      return(map2(sublist, seq_along(sublist), function(innerlist, j) {
+        if (is.list(innerlist)) {
+          return(map2(innerlist, seq_along(innerlist), function(innermostlist, k) {
+            if (is.list(innermostlist)) {
+              return(map2(innermostlist, seq_along(innermostlist), function(dataset, l) {
+                dataset <- extract_data_frame(dataset)
+                cat(sprintf("Validating dataset at [%d][%d][%d][%d]: Type = %s\n", i, j, k, l, class(dataset)))
+                if (!is_valid_dataset(dataset)) {
+                  warning(sprintf("Dataset at [%d][%d][%d][%d] is not a valid data frame. Type: %s", i, j, k, l, class(dataset)))
+                  return(NULL)  # Mark invalid datasets as NULL
+                }
+                cat(sprintf("Structure of dataset at [%d][%d][%d][%d]:\n", i, j, k, l))
+                print(str(dataset))
+                return(TRUE)  # Mark valid datasets
+              }))
+            } else {
+              warning(sprintf("Expected list of lists at [%d][%d][%d], but found: %s", i, j, k, class(innermostlist)))
+              return(NULL)
+            }
+          }))
+        } else {
+          warning(sprintf("Expected list of lists at [%d][%d], but found: %s", i, j, class(innerlist)))
+          return(NULL)
+        }
+      }))
+    } else {
+      warning(sprintf("Expected list of lists at index %d, but found: %s", i, class(sublist)))
+      return(NULL)
+    }
+  })
+  return(validation_results)
+}
+
+# Define the function to fit the models to a dataset
 fit_models <- function(data) {
-  
-  # Select data only from after the resolution, i.e., after 1s.
-  
-  data <- data |>
-    filter(t>1000)
-  
-  # Model 1: Linear model with condition*outcome
-  # This data needs to be averaged across the 5s window.
-  model1.data <- simulate_data.trans |>
-    filter(t > 1000 & t < 6000) |>
-    group_by(participant_id, condition, outcome, age_cohort) |>
-    dplyr::summarise(baseline.average = mean(baseline)) |>
-    ungroup()
-  model1 <- lm(baseline.average ~ condition*outcome*age_cohort, data = data)
-  # model1 <- lmer(average ~ condition*outcome + (1|participant_id), data = data)
-  
-  # Model 2: Linear model with condition*outcome across the trial time
-  model2 <-  lmer(baseline ~ t*condition*outcome*age_cohort + (1 +  t|participant_id), data = data)
-  #RH: What about slopes for t on id?#I do agree
-  
-  # Model 3: Linear model with both predictor variables 'x1' and 'x2'
-  model3 <- bam(baseline~ condition*outcome*age_cohort + s(t, by= lab_id, k=7) + s(t, by= condition, k=20)+ s(t, by= outcome, k=20)+ s(t, participant_id, bs='fs', m=1), data= data, discrete=TRUE,nthreads=40)
-  #RH: Need to fit age_cohort in here. #GC done
-  
-  # Store the models in a list
-  models <- list(model1 = model1, model2 = model2, model3 = model3)
-  
+  models <- list()
+  if (is_valid_dataset(data)) {
+    # Model 1: Linear model with condition*outcome
+    model1_data <- data %>%
+      filter(t > 1000 & t < 6000) %>%
+      group_by(participant_id, condition, outcome, age_cohort) %>%
+      dplyr::summarise(baseline_average = mean(baseline, na.rm = TRUE)) %>%
+      ungroup()
+    models$model1 <- tryCatch(lm(baseline_average ~ condition * outcome * age_cohort, data = model1_data), error = function(e) e)
+
+    # Model 2: Linear mixed model with condition*outcome across trial time
+    models$model2 <- tryCatch(lmer(baseline ~ t * condition * outcome * age_cohort + (1 + t | participant_id), data = data), error = function(e) e)
+
+    # Model 3: Generalized additive model with smooth terms
+    models$model3 <- tryCatch(
+      bam(baseline ~ condition * outcome * age_cohort + 
+      s(t, by = lab_id, k=7) +
+      s(t, by = condition, k=20) +
+      s(t, by = outcome, k=20) + 
+      s(t, participant_id, bs = 'fs', m = 1), 
+      data = data, discrete = TRUE, nthreads = 40), 
+      error = function(e) e
+    )
+  } else {
+    models$error <- "Provided data is not a valid data frame."
+  }
   return(models)
 }
+
+# Model fitting: Process valid datasets in megaverse
+fit_models_to_valid_datasets <- function(megaverse, validation_results) {
+  model_results <- map2(megaverse, validation_results, function(sublist, valid_sublist) {
+    if (is.list(sublist) && !is.null(valid_sublist)) {
+      return(map2(sublist, valid_sublist, function(innerlist, valid_innerlist) {
+        if (is.list(innerlist) && !is.null(valid_innerlist)) {
+          return(map2(innerlist, valid_innerlist, function(innermostlist, valid_innermostlist) {
+            if (is.list(innermostlist) && !is.null(valid_innermostlist)) {
+              return(map2(innermostlist, valid_innermostlist, function(dataset, is_valid) {
+                dataset <- extract_data_frame(dataset)
+                if (is.null(is_valid)) {
+                  return(list(error = "Invalid data frame. Skipped processing."))
+                }
+                return(fit_models(dataset))
+              }))
+            }
+            return(NULL)
+          }))
+        }
+        return(NULL)
+      }))
+    }
+    return(NULL)
+  })
+  return(model_results)
+}
+
+# Validate all datasets first
+validation_results <- validate_megaverse(megaverse)
+
+# Fit models to only valid datasets
+megaverse_model_results <- fit_models_to_valid_datasets(megaverse, validation_results)
+
+# Print the results (or handle them as needed)
+cat("Model fitting results:\n")
+print(megaverse_model_results)
+
+
+```
+To select the best model based on the lowest BIC, lowest AIC, and highest R-squared (Calignano et al., 2024), we computed the aboved cited statistics for each model and then compare them. We create a function to extract these metrics, identify the best model based on each criterion, and then plot the effects of the best model.
+
+```{r, MODEL SELECTION, echo=TRUE,include=TRUE, out.width='90%'}
+# Function to extract BIC, AIC, and R-squared from a model
+extract_model_metrics <- function(model) {
+  if (inherits(model, "lm") || inherits(model, "lmerMod") || inherits(model, "bam")) {
+    aic_value <- AIC(model)
+    bic_value <- BIC(model)
+    r_squared <- if (inherits(model, "lm")) {
+      summary(model)$r.squared
+    } else if (inherits(model, "lmerMod")) {
+      r.squaredGLMM(model)[1]  # Marginal R-squared for mixed models
+    } else if (inherits(model, "bam")) {
+      summary(model)$r.sq
+    } else {
+      NA
+    }
+    return(list(AIC = aic_value, BIC = bic_value, R_squared = r_squared))
+  } else {
+    return(NULL)
+  }
+}
+
+# Function to compare models and select the best based on AIC, BIC, and R-squared
+compare_models <- function(models_list) {
+  model_metrics <- map(models_list, ~map(.x, extract_model_metrics))
+  
+  best_models <- list()
+  best_models$AIC <- model_metrics %>%
+    map_df(~map_df(.x, ~data.frame(AIC = .x$AIC)), .id = "model") %>%
+    arrange(AIC) %>%
+    slice(1)
+  
+  best_models$BIC <- model_metrics %>%
+    map_df(~map_df(.x, ~data.frame(BIC = .x$BIC)), .id = "model") %>%
+    arrange(BIC) %>%
+    slice(1)
+  
+  best_models$R_squared <- model_metrics %>%
+    map_df(~map_df(.x, ~data.frame(R_squared = .x$R_squared)), .id = "model") %>%
+    arrange(desc(R_squared)) %>%
+    slice(1)
+  
+  return(best_models)
+}
+
+library(ggplot2)
+
+# Function to plot the effects of a model
+plot_model_effects <- function(model) {
+  if (inherits(model, "lm")) {
+    plot_data <- data.frame(
+      Fitted = fitted(model),
+      Residuals = residuals(model)
+    )
+    ggplot(plot_data, aes(Fitted, Residuals)) +
+      geom_point() +
+      geom_smooth(method = "loess") +
+      labs(title = "Effects of the Best Linear Model")
+  } else if (inherits(model, "lmerMod")) {
+    plot_data <- data.frame(
+      Fitted = fitted(model),
+      Residuals = residuals(model)
+    )
+    ggplot(plot_data, aes(Fitted, Residuals)) +
+      geom_point() +
+      geom_smooth(method = "loess") +
+      labs(title = "Effects of the Best Linear Mixed Model")
+  } else if (inherits(model, "bam")) {
+    plot(model, pages = 1, main = "Effects of the Best Generalized Additive Model")
+  } else {
+    stop("Unknown model type")
+  }
+}
+
 
 ```
