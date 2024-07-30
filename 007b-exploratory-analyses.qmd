@@ -342,9 +342,9 @@ summarize_participant_test_both_trials <- summarize_participant_test_both_trials
   group_by(participant_lab_id) %>%
   mutate(conditions = paste0(condition, collapse = "_")) %>%
   ungroup() %>%
- mutate(order_c=case_when(
-     (trial_num==5 & condition=="knowledge") | (trial_num==6 & condition=="ignorance") ~ -0.5, 
-     (trial_num==5 & condition=="ignorance") | (trial_num==6 & condition=="knowledge") ~ 0.5,
+ mutate(test_trial=case_when(
+     trial_num==5 ~ 1, 
+     trial_num==6 ~ 2,
      TRUE ~ NA))
 ```
 
@@ -362,11 +362,11 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c*order_c+(1+condition_c*order_c|lab_id),
+bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c*test_trial_num+(1+condition_c*test_trial_num|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_order,age_cohort=="toddlers"),
+        filter(summarize_participant_test_both_trials, age_cohort=="toddlers"),
         warmup = 1000, 
         iter = 2000, 
         chains = 4, 
@@ -389,11 +389,11 @@ bm_aoi_toddlers_both_order %>%
   mean_hdi(.width = 0.95)
 
 bm_aoi_toddlers_both_order %>%
-  spread_draws(b_order_c, sigma) %>%
+  spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
 bm_aoi_toddlers_both_order %>%
-  spread_draws(`b_condition_c:order_c`, sigma) %>%
+  spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
 ```
 
@@ -401,13 +401,13 @@ Visualize model coefficients
 
 ```{r}
 bm_aoi_toddlers_both_order %>%
-  spread_draws(b_condition_c,b_order_c,`b_condition_c:order_c`, sigma) %>%
+  spread_draws(b_condition_c,b_test_trial_num,`b_condition_c:test_trial_num`, sigma) %>%
   pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
   ggplot(aes(x = coefficient,y=b)) +
   stat_halfeye()+
   geom_hline(yintercept=0,linetype="dashed")+
   theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:order_c","b_order_c","b_condition_c"),labels=c("Condition x Order","Order","Condition"))+
+  scale_x_discrete(limits=c("b_condition_c:test_trial_num","b_test_trial_num","b_condition_c"),labels=c("Condition x Test Trial","Test Trial","Condition"))+
   ylab("Model Coefficient Estimate")+
   xlab("Model Predictor")+
   coord_flip()
@@ -418,7 +418,7 @@ ggsave(here(plot_path,"test_toddlers_model_coefficients_both_order.png"),bg="whi
 Hypothesis test/ compute Bayes Factor
 
 ```{r}
-h_aoi_toddlers_both_order <- hypothesis(bm_aoi_toddlers_both_order, "order_c = 0", class="b")
+h_aoi_toddlers_both_order <- hypothesis(bm_aoi_toddlers_both_order, "test_trial_num = 0", class="b")
 h_aoi_toddlers_both_order
 plot(h_aoi_toddlers_both_order)
 # evidence in favor of condition being different from zero
@@ -428,7 +428,7 @@ plot(h_aoi_toddlers_both_order)
 Alternate Bayes factor approach
 
 ```{r}
-null_aoi_toddlers_both_order <-  update(bm_aoi_toddlers_both_order, formula = ~ .-order_c)
+null_aoi_toddlers_both_order <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
 summary(null_aoi_toddlers_both_order)
 brms::bayes_factor(bm_aoi_toddlers_both_order, null_aoi_toddlers_both_order)
 ```
@@ -436,11 +436,11 @@ brms::bayes_factor(bm_aoi_toddlers_both_order, null_aoi_toddlers_both_order)
 #### Adults
 
 ```{r}
-bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c*order_c+(1+condition_c*order_c|lab_id),
+bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c*test_trial_num+(1+condition_c*test_trial_num|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_order,age_cohort=="adults"),
+        filter(summarize_participant_test_both_trials,age_cohort=="adults"),
         warmup = 1000, 
         iter = 2000, 
         chains = 4, 
@@ -460,24 +460,24 @@ bm_aoi_adults_both_order %>%
   mean_hdi(.width = 0.95)
 
 bm_aoi_adults_both_order %>%
-  spread_draws(b_order_c, sigma) %>%
+  spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
 bm_aoi_adults_both_order %>%
-  spread_draws(`b_condition_c:order_c`, sigma) %>%
+  spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
 ```
 Visualize model coefficients
 
 ```{r}
 bm_aoi_adults_both_order %>%
-  spread_draws(b_condition_c,b_order_c,`b_condition_c:order_c`, sigma) %>%
+  spread_draws(b_condition_c,b_test_trial_num,`b_condition_c:test_trial_num`, sigma) %>%
   pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
   ggplot(aes(x = coefficient,y=b)) +
   stat_halfeye()+
   geom_hline(yintercept=0,linetype="dashed")+
   theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:order_c","b_order_c","b_condition_c"),labels=c("Condition x Order","Order","Condition"))+
+  scale_x_discrete(limits=c("b_condition_c:test_trial_num","b_test_trial_num","b_condition_c"),labels=c("Condition x Test Trial","Test Trial","Condition"))+
   ylab("Model Coefficient Estimate")+
   xlab("Model Predictor")+
   coord_flip()
@@ -488,7 +488,7 @@ ggsave(here(plot_path,"test_adults_model_coefficients_both_order.png"),bg="white
 Hypothesis test/ compute Bayes Factor
 
 ```{r}
-h_aoi_adults_both_order <- hypothesis(bm_aoi_adults_both_order, "order_c = 0")
+h_aoi_adults_both_order <- hypothesis(bm_aoi_adults_both_order, "test_trial_num = 0")
 h_aoi_adults_both_order 
 plot(h_aoi_adults_both_order)
 # evidence in favor of condition being different from zero
@@ -498,7 +498,7 @@ plot(h_aoi_adults_both_order)
 Alternate Bayes factor approach
 
 ```{r}
-null_aoi_adults_both_order <-  update(bm_aoi_adults_both_order, formula = ~ .-order_c)
+null_aoi_adults_both_order <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
 summary(null_aoi_adults_both_order)
 brms::bayes_factor(bm_aoi_adults_both_order, null_aoi_adults_both_order)
 ```
@@ -572,7 +572,7 @@ summarize_test_aoi_correct_final_fam_trial %>%
 
 #### Main Model
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who anticipated correctly during the last familiarization trial (trial 4, first look to target).
 
 ##### Toddlers
 
@@ -618,6 +618,41 @@ bm_aoi_toddlers_correct_final_fam_trial %>%
   mean_hdi(.width = 0.95)
 ```
 
+Visualize model coefficients
+
+```{r}
+bm_aoi_toddlers_correct_final_fam_trial %>%
+  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient,y=b)) +
+  stat_halfeye()+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme_cowplot()+
+  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
+  ylab("Model Coefficient Estimate")+
+  xlab("Model Predictor")+
+  coord_flip()
+ggsave(here(plot_path,"test_toddlers_model_coefficients_correct_final_fam_trial.png"),bg="white",width=9,height=6)
+```
+
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_aoi_toddlers_correct_final_fam_trial <- hypothesis(bm_aoi_toddlers_correct_final_fam_trial, "condition_c = 0", class="b")
+h_aoi_toddlers_correct_final_fam_trial
+plot(h_aoi_toddlers_correct_final_fam_trial)
+# evidence in favor of condition being different from zero
+1/h_aoi_toddlers_correct_final_fam_trial$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_toddlers_correct_final_fam_trial <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
+summary(null_aoi_toddlers_correct_final_fam_trial)
+brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, null_aoi_toddlers_correct_final_fam_trial)
+```
 ##### Adults
 
 ```{r}
@@ -642,6 +677,24 @@ saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_ao
 bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+```
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_aoi_adults_correct_final_fam_trial <- hypothesis(bm_aoi_adults_correct_final_fam_trial, "condition_c = 0", class="b")
+h_aoi_adults_correct_final_fam_trial
+plot(h_aoi_adults_correct_final_fam_trial)
+# evidence in favor of condition being different from zero
+1/h_aoi_adults_correct_final_fam_trial$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_adults_correct_final_fam_trial <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
+summary(null_aoi_adults_correct_final_fam_trial)
+brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, null_aoi_adults_correct_final_fam_trial)
 ```
 
 ### 2.b. Only >50% looking to target during familiarization trials
@@ -691,6 +744,133 @@ summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_fir
 
 summarize_test_aoi_sufficient_fam_prop_looking %>%
   knitr::kable()
+```
+#### Main Model
+
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial.
+
+##### Toddlers
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_first_trial, age_cohort=="toddlers" & fam_prop_exit>0.5),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+```
+
+Summarize outcomes
+
+```{r}
+#get_variables(bm_aoi_toddlers)
+#get main coefficient estimate and HDI
+bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(b_age_mo_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Visualize model coefficients
+
+```{r}
+bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient,y=b)) +
+  stat_halfeye()+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme_cowplot()+
+  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
+  ylab("Model Coefficient Estimate")+
+  xlab("Model Predictor")+
+  coord_flip()
+ggsave(here(plot_path,"test_toddlers_model_coefficients_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
+```
+
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_aoi_toddlers_sufficient_fam_prop_looking <- hypothesis(bm_aoi_toddlers_sufficient_fam_prop_looking, "condition_c = 0", class="b")
+h_aoi_toddlers_sufficient_fam_prop_looking
+plot(h_aoi_toddlers_sufficient_fam_prop_looking)
+# evidence in favor of condition being different from zero
+1/h_aoi_toddlers_sufficient_fam_prop_looking$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_toddlers_sufficient_fam_prop_looking <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+summary(null_aoi_toddlers_sufficient_fam_prop_looking)
+brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, null_aoi_toddlers_sufficient_fam_prop_looking)
+```
+
+##### Adults
+
+```{r}
+bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_first_trial,age_cohort=="adults"&fam_prop_exit>=0.5),
+        warmup = 1000, 
+        iter = 2000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_aoi_adults_sufficient_fam_prop_looking)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_adults_sufficient_fam_prop_looking.rds"))
+```
+
+```{r}
+#get main coefficient estimate and HDI
+bm_aoi_adults_sufficient_fam_prop_looking %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_aoi_adults_sufficient_fam_prop_looking <- hypothesis(bm_aoi_adults_sufficient_fam_prop_looking, "condition_c = 0", class="b")
+h_aoi_adults_sufficient_fam_prop_looking
+plot(h_aoi_adults_sufficient_fam_prop_looking)
+# evidence in favor of condition being different from zero
+1/h_aoi_adults_sufficient_fam_prop_looking$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_adults_sufficient_fam_prop_looking <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+summary(null_aoi_adults_sufficient_fam_prop_looking)
+brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking, null_aoi_adults_sufficient_fam_prop_looking)
 ```
 
 ### 2.c. Correlation between familiarization and test
@@ -750,9 +930,9 @@ correlation_fam_test_by_age %>%
 ```
 
 
-## 3. In analyses introducing model terms for certain measurement characteristics (e.g., types of eye-tracker manufacturers, screen dimensions), we will quantify potential variability between different in-lab data acquisition methods [cf., @manybabies2020quantifying]. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
+## 3. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
 
-### 3.1. Data collection type: in-lab vs. web-based
+### Data collection type: in-lab vs. web-based
 
 #### Summary Statistics
 
@@ -763,7 +943,7 @@ summarize_test_aoi_method <- summarize_participant_test_first_trial %>%
     n=n(),
     mean_subj_prop_exit=mean(prop_exit,na.rm=T)
   ) %>%
-  group_by(age_cohort,condition,condition_c, data_type,method_c) %>%
+  group_by(age_cohort,condition,condition_c, data_type, method_c) %>%
   summarize(
     participant_num=sum(!is.na(mean_subj_prop_exit)),
     mean_target_looking=mean(mean_subj_prop_exit,na.rm=T),
@@ -850,7 +1030,7 @@ bm_aoi_toddlers_method %>%
   stat_halfeye()+
   geom_hline(yintercept=0,linetype="dashed")+
   theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:b_method_c","b_method_c","b_condition_c"),labels=c("Condition x Method","Method","Condition"))+
+  scale_x_discrete(limits=c("b_condition_c:method_c","b_method_c","b_condition_c"),labels=c("Condition x Method","Method","Condition"))+
   ylab("Model Coefficient Estimate")+
   xlab("Model Predictor")+
   coord_flip()
@@ -861,7 +1041,7 @@ ggsave(here(plot_path,"test_toddlers_model_coefficients_method.png"),bg="white",
 Hypothesis test/ compute Bayes Factor
 
 ```{r}
-h_aoi_toddlers_method <- hypothesis(bm_aoi_toddlers_method, "condition_c = 0", class="b")
+h_aoi_toddlers_method <- hypothesis(bm_aoi_toddlers_method, "method_c = 0", class="b")
 h_aoi_toddlers_method
 plot(h_aoi_toddlers_method)
 # evidence in favor of condition being different from zero
@@ -871,7 +1051,7 @@ plot(h_aoi_toddlers_method)
 Alternate Bayes factor approach
 
 ```{r}
-null_aoi_toddlers_method <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c)
+null_aoi_toddlers_method <-  update(bm_aoi_toddlers_method, formula = ~ .-method_c)
 summary(null_aoi_toddlers_method)
 brms::bayes_factor(bm_aoi_toddlers_method, null_aoi_toddlers_method)
 ```
@@ -880,59 +1060,145 @@ brms::bayes_factor(bm_aoi_toddlers_method, null_aoi_toddlers_method)
 #### Adults
 
 ```{r}
-bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
+bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*method_c|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials,age_cohort=="adults"),
+        filter(summarize_participant_test_first_trial,age_cohort=="adults"),
         warmup = 1000, 
         iter = 2000, 
         chains = 4, 
         cores = 4,
         seed = 123,
         sample_prior=TRUE)
-summary(bm_aoi_adults_both)
+summary(bm_aoi_adults_method)
 
-saveRDS(bm_aoi_adults_both, file = here(RESULTS_FOLDER,"bm_aoi_adults_both.rds"))
+saveRDS(bm_aoi_adults_method, file = here(RESULTS_FOLDER,"bm_aoi_adults_method.rds"))
 ```
+Summarize outcomes
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_both %>%
+bm_aoi_adults_method %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+bm_aoi_adults_method %>%
+  spread_draws(b_method_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_aoi_adults_method %>%
+  spread_draws(`b_condition_c:method_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Visualize model coefficients
+
+```{r}
+bm_aoi_adults_method %>%
+  spread_draws(b_condition_c,b_method_c,`b_condition_c:method_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient,y=b)) +
+  stat_halfeye()+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme_cowplot()+
+  scale_x_discrete(limits=c("b_condition_c:b_method_c","b_method_c","b_condition_c"),labels=c("Condition x Method","Method","Condition"))+
+  ylab("Model Coefficient Estimate")+
+  xlab("Model Predictor")+
+  coord_flip()
+ggsave(here(plot_path,"test_adults_model_coefficients_method.png"),bg="white",width=9,height=6)
 ```
 
 Hypothesis test/ compute Bayes Factor
 
 ```{r}
-h_aoi_adults_both <- hypothesis(bm_aoi_adults_both, "condition_c = 0")
-h_aoi_adults_both 
-plot(h_aoi_adults_both)
+h_aoi_adults_method <- hypothesis(bm_aoi_adults_method, "method_c = 0")
+h_aoi_adults_method 
+plot(h_aoi_adults_method)
 # evidence in favor of condition being different from zero
-1/h_aoi_adults_both$hypothesis$Evid.Ratio
+1/h_aoi_adults_method$hypothesis$Evid.Ratio
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
-null_aoi_adults_both <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
-summary(null_aoi_adults_both)
-brms::bayes_factor(bm_aoi_adults_both, null_aoi_adults_both)
+null_aoi_adults_method <-  update(bm_aoi_adults_method, formula = ~ .-method_c)
+summary(null_aoi_adults_method)
+brms::bayes_factor(bm_aoi_adults_method, null_aoi_adults_method)
 ```
 
-
-### 3.2. Measurement characteristics (eye-tracker)
 
 ## 4. If we observe substantial looking (defined *post hoc* by evaluating scatter plot videos of gaze data) to the boxes as well as the tunnel exit AOIs, we will conduct an exploratory analysis using tighter AOIs around tunnel exits and boxes, asking whether box and tunnel looking vary separately by age or by condition. In particular, we expect that the difference in AL between the two conditions will be bigger for the tunnel exits than for the box (as looks to the correct box might indicate looks to the target, which is in the same box for both conditions, rather than action anticipation).
 
 ## 5. Looking patterns during mouse's change of location
 
-### 5.1. a.	Introduce new AOIs during location change: 
+Introduce new AOIs during location change: bear and mouse
+Rough dimensions of new AOIs (include all movements during TOI + double-check using the heatmap-videos):
 
-i.	bear
-ii.	mouse
+Time frame of interest (TOI; from “Box A reopens and mouse jumps out” to “Box B closes with mouse inside”)
+IG: 20:52 - 25:46
+KNOW: 24:63 - 29:00
 
-### 5.1. b.	Infants and adults
 
-### 5.1. c.	c.	Infants gaze shifts during location change as a function of AL
+### 5.1. Compare looking patterns of toddlers and adults
+
+Hypothesis 1: adults shift more than toddlers
+
+Create a variable shifts_num that counts the number of times the participants shift their gaze between bear and mouse. Also compute the times participants fixate the mouse or the bear during location change.
+
+ignorance t>=20520 & t<=25460
+knowledge t>=24630 & t<=29000
+
+
+```{r}
+
+ # Function to compute shifts and fixation times during location change (specified time intervals for each condition)
+compute_shifts_and_fixation_times <- function(data, condition) {
+  # Define time intervals for each condition
+  location_changes <- list(
+    ignorance = c(20520, 25460),
+    knowledge = c(24630, 29000)
+  )
+  
+  # Get the time interval for the specified condition
+  location_change <- location_changes[[condition]]
+  
+  # Filter the data based on the time interval
+  filtered_data <- data %>%
+    filter(t >= location_change[1] & t <= location_change[2]) %>%
+    filter(aoi_bearmouse_special %in% c("bear", "mouse")) %>%
+    arrange(participant_lab_id, t)
+  
+  # Calculate number of shifts and fixation times on mouse and bear during location change of mouse
+  results <- filtered_data %>%
+    group_by(participant_lab_id) %>%
+    mutate(
+      shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special)),
+      fixation_time = lead(t, default = last(t)) - t
+    ) %>%
+    summarise(
+      num_shifts = sum(shift, na.rm = TRUE),
+      total_fixation_bear = sum(fixation_time[aoi_bearmouse_special == "bear"], na.rm = TRUE),
+      total_fixation_mouse = sum(fixation_time[aoi_bearmouse_special == "mouse"], na.rm = TRUE)
+    ) %>%
+    ungroup()
+  
+  return(results)
+}
+
+# Apply the function to the dataset for both conditions
+location_change_ignorance <- compute_shifts_and_fixation_times(test_data, "ignorance")
+location_change_knowledge <- compute_shifts_and_fixation_times(test_data, "knowledge")
+```
+
+### 5.1. Infants gaze shifts during location change as a function of AL
+Hypothesis 2:  “Bear-trackers” have stronger looking bias in KNOW
+
+MSS What is a bear-tracker? Is that a participant whose fixation times for the bear are longer than for the mouse?
+
+Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking bias in KNOW
+
+MSS Could this possibly be a correlation or a model that includes shift_num as fixed effect?
+
+Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of distraction; similarly, more looking at the mouse during change in ign compared to know cond
+
