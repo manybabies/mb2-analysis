@@ -1149,52 +1149,201 @@ Create a variable shifts_num that counts the number of times the participants sh
 ignorance t>=20520 & t<=25460
 knowledge t>=24630 & t<=29000
 
+Function for computing shifts and looking times to bear and mouse during location change of the mouse
+
+Summarizing a few key decisions: 
+- We compute shifts whenever the AOI changes from mouse to bear and vice versa, ignoring NAs altogether in defining shifts 
+- For looking time computation, we compute all samples landing on mouse or bear and multiply by 25 ms (sampling rate of 40).
 
 ```{r}
 
  # Function to compute shifts and fixation times during location change (specified time intervals for each condition)
-compute_shifts_and_fixation_times <- function(data, condition) {
+compute_shifts_and_fixation_times <- function(data) {
   # Define time intervals for each condition
   location_changes <- list(
     ignorance = c(20520, 25460),
     knowledge = c(24630, 29000)
   )
   
+   # Initialize an empty data frame to store the results
+  results <- data.frame()
+  
+  # Loop over each condition
+  for (condition in names(location_changes)) {
+    # Get the time interval for the current condition
+  
   # Get the time interval for the specified condition
   location_change <- location_changes[[condition]]
-  
+  #data<-test_data
+  #location_change<-c(24630, 29000)
   # Filter the data based on the time interval
   filtered_data <- data %>%
-    filter(t >= location_change[1] & t <= location_change[2]) %>%
+    filter(t_zeroed >= location_change[1] & t_zeroed <= location_change[2]) %>%
     filter(aoi_bearmouse_special %in% c("bear", "mouse")) %>%
-    arrange(participant_lab_id, t)
-  
-  # Calculate number of shifts and fixation times on mouse and bear during location change of mouse
-  results <- filtered_data %>%
-    group_by(participant_lab_id) %>%
+    arrange(participant_lab_id, trial_num, t_zeroed)
+
+    # Calculate number of shifts and fixation times on mouse and bear during location change of mouse
+  condition_results <- filtered_data %>% #filter(participant_lab_id=="CogConcordia_Adult10-adults"& trial_num==5) %>%      #select(participant_lab_id, trial_num, condition, lab_id, age_cohort, t_zeroed, aoi_bearmouse_special) %>% 
+    group_by(participant_lab_id, condition, trial_num, lab_id, age_cohort) %>%
     mutate(
-      shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special)),
-      fixation_time = lead(t, default = last(t)) - t
+      shift_test = (lag(aoi_bearmouse_special)),
+      shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
+      #fixation_time = lead(t_zeroed, default = last(t_zeroed)) - t_zeroed
     ) %>%
     summarise(
       num_shifts = sum(shift, na.rm = TRUE),
-      total_fixation_bear = sum(fixation_time[aoi_bearmouse_special == "bear"], na.rm = TRUE),
-      total_fixation_mouse = sum(fixation_time[aoi_bearmouse_special == "mouse"], na.rm = TRUE)
+      total_fixation_bear = sum(aoi_bearmouse_special == "bear", na.rm = TRUE)*25,
+      total_fixation_mouse = sum(aoi_bearmouse_special == "mouse", na.rm = TRUE)*25
     ) %>%
-    ungroup()
+    ungroup() %>% 
+    mutate(condition = condition)
+  
+    results <- bind_rows(results, condition_results)
+  }
   
   return(results)
 }
 
 # Apply the function to the dataset for both conditions
-location_change_ignorance <- compute_shifts_and_fixation_times(test_data, "ignorance")
-location_change_knowledge <- compute_shifts_and_fixation_times(test_data, "knowledge")
+d_location_change <- compute_shifts_and_fixation_times(test_data) %>% 
+  mutate(
+    age_cohort_c = case_when(
+      age_cohort=="toddlers" ~ -0.5,
+      age_cohort=="adults" ~ 0.5)
+    )
+
 ```
 
-### 5.1. Infants gaze shifts during location change as a function of AL
+```{r}
+summarize_overall_test_shifts <- d_location_change %>%
+  group_by(age_cohort, condition) %>%
+  summarise(N = sum(!is.na(num_shifts)),
+    average_shifts = mean(num_shifts,na.rm=T))
+
+saveRDS(summarize_overall_test_shifts, file=here(RESULTS_FOLDER,"summarize_overall_test_shifts.rds"))
+
+ggplot(d_location_change,aes(condition,num_shifts,color=condition))+
+  #geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0)+
+  geom_point(position = position_jitter(seed = 2, width = 0.4)) +
+  geom_violin(alpha = 0.5) +
+  #geom_jitter(width=0.25)+
+  #geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Number of shifts between mouse and bear")
+```
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+age_cohort_c+(1+age_cohort_c|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(d_location_change),
+        warmup = 1000, 
+        iter = 5000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_test_shifts_age_cohort)
+prior_summary(bm_test_shifts_age_cohort)
+
+saveRDS(bm_test_shifts_age_cohort, file = here(RESULTS_FOLDER,"bm_test_shifts_age_cohort.rds"))
+```
+
+```{r}
+#get main coefficient estimate and HDI
+bm_test_shifts_age_cohort %>%
+  spread_draws(b_age_cohort_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_test_shifts_age_cohort <- hypothesis(bm_test_shifts_age_cohort, "age_cohort_c = 0")
+h_test_shifts_age_cohort 
+plot(h_test_shifts_age_cohort)
+# evidence in favor of condition being different from zero
+1/h_test_shifts_age_cohort$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_test_shifts_age_cohort <-  update(bm_test_shifts_age_cohort, formula = ~ .-age_cohort_c)
+summary(null_test_shifts_age_cohort)
+brms::bayes_factor(bm_test_shifts_age_cohort, null_test_shifts_age_cohort)
+```
+
+### 5.2. Infants gaze shifts during location change as a function of AL
 Hypothesis 2:  “Bear-trackers” have stronger looking bias in KNOW
 
-MSS What is a bear-tracker? Is that a participant whose fixation times for the bear are longer than for the mouse?
+MSS What is a bear-tracker? Is that a participant whose fixation times for the bear are longer than for the mouse? Compute difference score for looking times to bear vs mouse and run model for knowledge condition with diff score as fixed-effect?
+
+```{r}
+# Plotting looking times difference in looking time to mouse and bear for each age cohort and each condition
+d_location_change <- d_location_change %>% mutate(diff_mouse_bear = total_fixation_mouse - total_fixation_bear)
+
+ggplot(d_location_change,aes(condition,diff_mouse_bear,color=condition))+
+  #geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0
+  geom_point(position = position_jitter(seed = 2, width = 0.4)) +
+  geom_violin(alpha = 0.5) +
+  #geom_jitter(width=0.5)+
+  #geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  geom_hline(yintercept=0,linetype="dashed")+
+  facet_wrap(~age_cohort)+
+  theme_cowplot()+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Difference in looking time between mouse and bear")
+
+# Plotting looking to mouse and bear for each age cohort and each condition
+d_location_change_long <- d_location_change %>% pivot_longer(
+    cols = c("total_fixation_mouse", "total_fixation_bear"),
+    names_to = "target",
+    names_prefix = "total_fixation_",
+    values_to = "looking_time",
+    values_drop_na = TRUE)
+
+ggplot(d_location_change_long,aes(target,looking_time,color=target))+
+  #geom_errorbar(aes(ymin=lower_ci,ymax=upper_ci),width=0
+  geom_point(position = position_jitter(seed = 2, width = 0.4)) +
+  geom_violin(alpha = 0.5) +
+  #geom_jitter(width=0.5)+
+  #geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  #geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
+  geom_hline(yintercept=0,linetype="dashed")+
+  facet_wrap(condition~age_cohort)+
+  theme_cowplot()+
+  scale_color_manual(values=c("brown", "yellow"))+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Difference in looking time between mouse and bear")
+```
+
 
 Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking bias in KNOW
 
