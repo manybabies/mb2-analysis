@@ -20,7 +20,7 @@ library(MASS)
 library(stringi)
 ```
 
-# Data simulation
+## Data simulation
 
 To facilitate the pre-registration of our data preprocessing and analysis strategies, the following R-routines detail a procedure for creating a simulated dataset that mirrors the characteristics of our anticipated data. This data simulation technique is instrumental in devising our data handling and analysis plans prior to actual data analysis The simulation includes generating random strings for identifiers and categorical variables, producing numeric data within defined ranges, managing missing values, and computing correlations. By examining the properties of the simulated dataset, we can ensure our analysis plan is robust and well-equipped to manage the complexities of the real dataset.
 
@@ -203,7 +203,6 @@ all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 
 
 plot(all$x,all$y)
 ```
-
 # Second degree of freedom: within the screen vs outside the screen
 
 ```{r, DF2 Area Of Interest, echo=TRUE,include=TRUE, out.width='90%'}
@@ -225,8 +224,7 @@ AOI <- list(AOI_all, AOI_plausible, all, plausible)
 plot(AOI_all$x,AOI_all$y)
 
 ```
-
-# Third degree of freedom: moving average filtered vs unfiltered data
+#Third degree of freedom: moving average filtered vs unfiltered data
 
 ```{r, DF3 moving average, echo=TRUE,include=TRUE, out.width='90%'}
 # Install and load required packages
