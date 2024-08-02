@@ -58,7 +58,7 @@ participant_id <- as.character(1:num_participants)
 age_cohort <- c(rep("toddlers", num_toddlers), rep("adults", num_adults))
 
 # Generate time vector t
-time_per_condition <- seq(0, 10000, by=25)
+time_per_condition <- seq(0, 10000, by=25) # MSS Do we really only want to look at the first 10000 ms? what about the remaining 20000 ms?
 n_times <- length(time_per_condition)
 n_conditions <- 4  # Two levels for condition and two levels for outcome
 
@@ -108,25 +108,25 @@ simulate_data <- do.call(rbind, lapply(1:num_participants, function(pid) {
   data.frame(
     participant_id = rep(participant_id[pid], n_times * n_conditions),
     age_cohort = rep(cohort, n_times * n_conditions),
-    t = rep(time_per_condition, n_conditions),
+    t = rep(time_per_condition, n_conditions), # MSS Why do we only habe t 0 through 10000? Shouldn't we have 30000 ms? Or 360000 if we include the time before the resolution, which we plan to use as baseline? Possibly -1000 through 350000 with 0 being the onset of the resolution? edit: I only saw your notes on timing below later. 
     condition = rep(conditions, each = n_times * 2),
     outcome = rep(rep(outcomes, each = n_times), 2),
     x = coord$x,
     y = coord$y,
     pupil_left = pupils$pupil_left,
     pupil_right = pupils$pupil_right,
-    event_num = sample(1:9, n_times * n_conditions, replace = TRUE),
+    event_num = sample(1:9, n_times * n_conditions, replace = TRUE), # MSS This should just contain 6 event numbers and the value within a trial should be the same.
     lab_id = rep(lab_id[pid], n_times * n_conditions),
     distance = runif(n_times * n_conditions, 0, 0),
-    target_side = generate_string(n_times * n_conditions, 2),
-    bear_not_visible_ms = runif(n_times * n_conditions, 0, 31264),
-    point_of_disambiguation = runif(n_times * n_conditions, 0, 35499),
-    screen_width = sample(c(1280, 1920), n_times * n_conditions, replace = TRUE),
-    screen_height = sample(c(720, 1080), n_times * n_conditions, replace = TRUE),
-    point_zero = generate_string(n_times * n_conditions, 1),
+    target_side = generate_string(n_times * n_conditions, 2), # MSS Should be the same within a trial and shoudl be left and right.
+    bear_not_visible_ms = runif(n_times * n_conditions, 0, 31264), # MSS Should be the same within a trial.
+    point_of_disambiguation = runif(n_times * n_conditions, 0, 35499), # MSS Should be the same within a trial.
+    screen_width = sample(c(1280, 1920), n_times * n_conditions, replace = TRUE), # MSS Should be the same within each lab.
+    screen_height = sample(c(720, 1080), n_times * n_conditions, replace = TRUE), # MSS Should be the same within each lab.
+    point_zero = generate_string(n_times * n_conditions, 1), # MSS Should be the same within each lab.
     x_screen = runif(n_times * n_conditions, 0, 1930),
     y_screen = runif(n_times * n_conditions, 0, 1080),
-    side = generate_string(n_times * n_conditions, 4),
+    side = generate_string(n_times * n_conditions, 4), 
     aoitype = generate_string(n_times * n_conditions, 5),
     aoi = generate_string(n_times * n_conditions, 15),
     Trial = rep(c(1,2,3,4), each = n_times))
@@ -135,6 +135,7 @@ simulate_data <- do.call(rbind, lapply(1:num_participants, function(pid) {
 # Introduce NA values randomly in the dataset
 na_percentage <- 0.5  # Percentage of NA values
 columns_to_na <- c("x", "y", "pupil_left", "pupil_right")
+# MSS Is there a specific reason to have 50 % NA values? I checked the MB2 data set and it has 28% of NAs for the pupil size variables and around 10 % of NAs for the coordinate variables for labs that collected data within their lab. 
 
 simulate_data <- simulate_data %>%
   mutate(across(all_of(columns_to_na), ~ ifelse(runif(n()) < na_percentage, NA, .)))
@@ -148,6 +149,8 @@ participants_to_keep <- valid_trials %>%
 simulate_data <- simulate_data %>%
   filter(participant_id %in% participants_to_keep$participant_id)
 
+# MSS: Why do we do this at this point? In the end, there are only two test trials and one critical test trial that has the resolution phase. Am I missing something here? 
+# What I am missing is that we need to filter the data according to a minimum of 50% looking during the 5 s window after the resolution, that is we need a minimum of 50% of data points from 1000 to 6000 ms
 
 # Check how many data series there are per participant:
 
@@ -173,7 +176,7 @@ simulate_data <- simulate_data %>%
 
 The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2-P (see Calignano, Girardi, and Altoé, 2023).
 
-Let's assume that we have 10s worth of data per participant which starts at 1s before the resolution until 9s after the resultion. The crucial time-window for our analyses is the 5s after the bear exits the tubes, i.e,. from 1s to 6s in this dataset.
+Let's assume that we have 10s worth of data per participant which starts at 1s before the resolution until 9s after the resolution. The crucial time-window for our analyses is the 5s after the bear exits the tubes, i.e,. from 1s to 6s in this dataset.
 
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
 
@@ -203,9 +206,10 @@ all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 
 
 plot(all$x,all$y)
 ```
-# Second degree of freedom: within the screen vs outside the screen
+# Second degree of freedom: fixation within the screen vs outside the screen
 
 ```{r, DF2 Area Of Interest, echo=TRUE,include=TRUE, out.width='90%'}
+# MSS: We rescaled x and y coordinate to an area of interest of 1280 by 960. Should we already use this specific AOI? Or is there a particular reason for making it larger?
 AOI_all <- all[all$x > 0,]
 AOI_all <- AOI_all[AOI_all$x < 2000,]
 AOI_all <- AOI_all[AOI_all$y > 0 ,]
@@ -268,9 +272,12 @@ We consider three possible baseline correction all performed by subtracting the 
 ```{r, DF4 BASELINE-CORRECTION, echo=TRUE,include=TRUE, out.width='90%'}
 ### 3 median baselines, i.e., initial time window for each trial_num ,id, lab_id
 ### i.e. 1s, 0.5s, or 0.25s before resolution.
+# MSS According to the current data set, the resolution is at 1000 ms? This would mean
 library(plyr)
 universe_one <- MA
 # 1s baseline 
+
+# MSS Is it ok if we label the baseline-corrected pupil size bc_pupil_size?
 
            # Iterate through each list within universe_one
 for (i in seq_along(universe_one)) {
@@ -279,7 +286,7 @@ for (i in seq_along(universe_one)) {
     # Check if the current element is a data frame
     if (is.data.frame(universe_one[[i]][[j]])) {
       # Apply the baseline correction
-      universe_one[[i]][[j]] <- ddply(universe_one[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, baseline = {        avg_filtered <- average[1:41]
+      universe_one[[i]][[j]] <- ddply(universe_one[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, bc_pupil_size = {        avg_filtered <- average[1:41]
                                         avg_mean <- mean(avg_filtered, na.rm = TRUE)
                                         average - avg_mean
                                       })
@@ -298,7 +305,7 @@ for (i in seq_along(universe_two)) {
     # Check if the current element is a data frame
     if (is.data.frame(universe_two[[i]][[j]])) {
       # Apply the baseline correction
-      universe_two[[i]][[j]] <- ddply(universe_two[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, baseline = {        avg_filtered <- average[21:41]
+      universe_two[[i]][[j]] <- ddply(universe_two[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, bc_pupil_size = {        avg_filtered <- average[21:41]
                                         avg_mean <- mean(avg_filtered, na.rm = TRUE)
                                         average - avg_mean
                                       })
@@ -316,7 +323,7 @@ universe_three <- MA
     # Check if the current element is a data frame
     if (is.data.frame(universe_three[[i]][[j]])) {
       # Apply the baseline correction
-      universe_three[[i]][[j]] <- ddply(universe_three[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, baseline = {        avg_filtered <- average[31:41]
+      universe_three[[i]][[j]] <- ddply(universe_three[[i]][[j]], .(participant_id, condition, outcome, lab_id), transform, bc_pupil_size = {        avg_filtered <- average[31:41]
                                         avg_mean <- mean(avg_filtered, na.rm = TRUE)
                                         average - avg_mean
                                       })
@@ -338,13 +345,13 @@ data_summary <- function(x) {
   return(c(y=m,ymin=ymin,ymax=ymax))
 }
 
-ggplot(multiverse[[2]][[2]][[2]], aes(t,baseline,condition, colour =condition)) +
+ggplot(multiverse[[2]][[2]][[2]] %>% filter(!is.na(bc_pupil_size)), aes(t,bc_pupil_size,condition, colour =condition)) +
                labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+
                geom_vline(xintercept = 0 )+ geom_smooth(se = T) + facet_wrap("outcome") + 
                geom_hline(yintercept = 0) +  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                                                     panel.background = element_blank(), axis.line = element_line(colour = "black"))
                                                
-ggplot(multiverse[[2]][[1]][[1]], aes(t,baseline,condition, colour =condition)) +
+ggplot(multiverse[[2]][[1]][[1]] %>% filter(!is.na(bc_pupil_size)), aes(t,bc_pupil_size,condition, colour =condition)) +
                labs(x = "time (ms)",y = "pupil size (mm)", colour = NULL)+
                geom_vline(xintercept = 0 )+ geom_smooth(se = T) + facet_wrap("outcome") + 
                geom_hline(yintercept = 0) +  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -490,16 +497,16 @@ fit_models <- function(data) {
     model1_data <- data %>%
       filter(t > 1000 & t < 6000) %>%
       group_by(participant_id, condition, outcome, age_cohort) %>%
-      dplyr::summarise(baseline_average = mean(baseline, na.rm = TRUE)) %>%
+      dplyr::summarise(bc_pupil_size_average = mean(bc_pupil_size, na.rm = TRUE)) %>%
       ungroup()
-    models$model1 <- tryCatch(lm(baseline_average ~ condition * outcome * age_cohort, data = model1_data), error = function(e) e)
+    models$model1 <- tryCatch(lm(bc_pupil_size_average ~ condition * outcome * age_cohort, data = model1_data), error = function(e) e)
 
     # Model 2: Linear mixed model with condition*outcome across trial time
-    models$model2 <- tryCatch(lmer(baseline ~ t * condition * outcome * age_cohort + (1 + t | participant_id), data = data), error = function(e) e)
+    models$model2 <- tryCatch(lmer(bc_pupil_size ~ t * condition * outcome * age_cohort + (1 + t | participant_id), data = data), error = function(e) e)
 
     # Model 3: Generalized additive model with smooth terms
     models$model3 <- tryCatch(
-      bam(baseline ~ condition * outcome * age_cohort + 
+      bam(bc_pupil_size ~ condition * outcome * age_cohort + 
       s(t, by = lab_id, k=7) +
       s(t, by = condition, k=20) +
       s(t, by = outcome, k=20) + 
