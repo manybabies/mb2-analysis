@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  4 JUL 2024 16:01
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  5 AUG 2024 18:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1038,21 +1038,23 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png>
 
-Overfull \hbox (21.66663pt too wide) in paragraph at lines 561--562
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 561--562
  [][] 
  []
 
-[32] [33]
-Underfull \vbox (badness 3179) has occurred while \output is active []
-
-[34] [35] [36] [37] [38]
+[32]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[39] [40]
+[33] [34] [35] [36] [37] [38]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 737--738
+ [][] 
+ []
+
+[39] [40] [41]
 Underfull \vbox (badness 1028) has occurred while \output is active []
-
-[41]
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [42]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1066,14 +1068,17 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [45]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[46] AED endfloat: Processing end Figures and Tables [47] (./mb2-paper.ttt [48
+[46]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[47] AED endfloat: Processing end Figures and Tables [48] (./mb2-paper.ttt [49
 
 
-] [49] [50
+] [50] [51
 
-] [51] [52
+] [52] [53
 
-]) [53
+]) [54
 
 ] (./mb2-paper.aux)
  ***********
@@ -1085,12 +1090,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22046 strings out of 476662
- 414529 string characters out of 5798323
+ 22070 strings out of 476662
+ 416099 string characters out of 5798323
  1947403 words of memory out of 5000000
- 43799 multiletter control sequences out of 15000+600000
+ 43822 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  90i,12n,121p,2740b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (53 pages).
+Output written on mb2-paper.pdf (54 pages).

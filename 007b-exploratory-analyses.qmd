@@ -1202,7 +1202,7 @@ compute_shifts_and_fixation_times <- function(data) {
   return(results)
 }
 
-# Apply the function to the dataset for both conditions
+# Apply the function to the dataset for both conditions and center age_cohort
 d_location_change <- compute_shifts_and_fixation_times(test_data) %>% 
   mutate(
     age_cohort_c = case_when(
@@ -1223,7 +1223,7 @@ summarize_overall_test_shifts <- d_location_change %>%
 
 saveRDS(summarize_overall_test_shifts, file=here(RESULTS_FOLDER,"summarize_overall_test_shifts.rds"))
 
-ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
+overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
   geom_point(position = position_jitter(seed = 2, width = 0.4)) +
   geom_violin(alpha = 0.5) +
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
@@ -1232,6 +1232,29 @@ ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
   ylab("Number of shifts between mouse and bear")
+
+ overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
+  geom_quasirandom(method = "pseudorandom", alpha=0.2)+
+  #geom_beeswarm(alpha=0.2,cex=0.5)+
+  geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=age_cohort),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(d_location_change,age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0, color="darkblue")+
+  geom_half_boxplot(data=filter(d_location_change,age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F, , outlier.alpha = 0, color="darkred")+
+  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
+  #theme_cowplot()+
+  theme_set(theme_cowplot(font_size=24))+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  scale_y_continuous(breaks=seq(0,11,1))+
+  #facet_wrap(~age_cohort)+
+  theme(legend.position="none")+
+  xlab("")+
+  ylab("Number of shifts between mouse and bear")
+
+overall_shifts_location_change
+ggsave(here(plot_path,"overall_shifts_location_change.png"),bg="white",width=9,height=9)
+ggsave(here(paper_path,"Figure6.png"),bg="white",width=14, height=9)
+
 ```
 
 ```{r}
@@ -1281,10 +1304,95 @@ Alternate Bayes factor approach
 ```{r}
 null_test_shifts_age_cohort <-  update(bm_test_shifts_age_cohort, formula = ~ .-age_cohort_c)
 summary(null_test_shifts_age_cohort)
-brms::bayes_factor(bm_test_shifts_age_cohort, null_test_shifts_age_cohort)
+test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, null_test_shifts_age_cohort)
+
+saveRDS(test_m_comparison_shifts_age_cohort, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_age_cohort.rds"))
 ```
 
-### 5.2. Fixation times of bear and mouse during location change of mouse as a function of AL
+### 5.2. Number of shifts during location change of mouse as a function of AL
+
+Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking bias in KNOW
+
+MSS Could this possibly be a correlation or a model that includes shift_num as fixed effect?
+```{r}
+# plotting AL and number of shifts during location change of mouse
+
+AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,num_shifts,color=condition))+
+  geom_point() +
+  geom_smooth(method='lm')+
+  facet_wrap(condition~age_cohort)+
+  theme_set(theme_cowplot(font_size=24))+
+  #scale_color_manual(values=c("#B16440", "#ECB808"))+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  scale_y_continuous(breaks=seq(0,11,1))+
+  xlab("AL in test trials")+
+  ylab("Number of shifts during location change of mouse")
+
+AL_shifts
+
+ggsave(here(plot_path,"AL_shifts.png"),bg="white",width=9,height=9)
+ggsave(here(paper_path,"Figure7.png"),bg="white",width=14, height=9)
+```
+
+```{r}
+#set the prior
+priors <-c(
+  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_test_shifts_al <- brm(prop_exit ~ 1+condition_c*num_shifts+(1+condition_c*num_shifts|participant_lab_id)+(1+condition_c*num_shifts|lab_id),
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_both_trials_lc),
+        warmup = 1000, 
+        iter = 5000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_test_shifts_al)
+prior_summary(bm_test_shifts_al)
+
+saveRDS(bm_test_shifts_al, file = here(RESULTS_FOLDER,"bm_test_shifts_al.rds"))
+```
+
+```{r}
+#get main coefficient estimate and HDI
+bm_test_shifts_al %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_test_shifts_al %>%
+  spread_draws(b_num_shifts, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_test_shifts_al %>%
+  spread_draws(`b_condition_c:num_shifts`, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+```{r}
+h_test_shifts_al <- hypothesis(bm_test_shifts_al, "num_shifts = 0")
+h_test_shifts_al 
+plot(h_test_shifts_al)
+# evidence in favor of num_shifts being different from zero?
+1/h_test_shifts_al$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_test_shifts_al <-  update(bm_test_shifts_al, formula = ~ .-num_shifts)
+summary(null_test_shifts_al)
+test_m_comparison_shifts_al <- brms::bayes_factor(bm_test_shifts_al, null_test_shifts_al)
+
+saveRDS(test_m_comparison_shifts_al, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_al.rds"))
+```
+
+### 5.3. Fixation times of bear and mouse during location change of mouse as a function of AL
 Hypothesis 2:  “Bear-trackers” have stronger looking bias in KNOW
 
 MSS What is a bear-tracker? Is that a participant whose fixation times for the bear are longer than for the mouse? Compute difference score for looking times to bear vs mouse and run model for knowledge condition with diff score as fixed-effect?
@@ -1293,9 +1401,12 @@ MSS What is a bear-tracker? Is that a participant whose fixation times for the b
 # Plotting looking times difference in looking time to mouse and bear for each age cohort and each condition
 d_location_change <- d_location_change %>% mutate(diff_mouse_bear = total_fixation_mouse - total_fixation_bear)
 
-ggplot(d_location_change,aes(condition,diff_mouse_bear,color=condition))+
-  geom_point(position = position_jitter(seed = 2, width = 0.4)) +
-  geom_violin(alpha = 0.5) +
+looking_time_location_change_diff_mouse_bear <- ggplot(d_location_change,aes(condition,diff_mouse_bear,color=condition))+
+geom_beeswarm(alpha=0.2,cex=0.2)+
+  geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(d_location_change,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0,linetype="dashed")+
   facet_wrap(~age_cohort)+
@@ -1305,7 +1416,11 @@ ggplot(d_location_change,aes(condition,diff_mouse_bear,color=condition))+
   theme(legend.position="none")+
   ylab("Difference in looking time between mouse and bear")
 
-# Plotting looking to mouse and bear for each age cohort and each condition
+looking_time_location_change_diff_mouse_bear
+
+ggsave(here(plot_path,"looking_time_location_change_diff_mouse_bear.png"),bg="white",width=9,height=9)
+
+ # Plotting looking to mouse and bear for each age cohort and each condition
 d_location_change_long <- d_location_change %>% pivot_longer(
     cols = c("total_fixation_mouse", "total_fixation_bear"),
     names_to = "target",
@@ -1313,58 +1428,220 @@ d_location_change_long <- d_location_change %>% pivot_longer(
     values_to = "looking_time",
     values_drop_na = TRUE)
 
-ggplot(d_location_change_long,aes(target,looking_time,color=target))+
-  geom_point(position = position_jitter(seed = 2, width = 0.4)) +
-  geom_violin(alpha = 0.3) +
+looking_time_location_change_bear_mouse <-  ggplot(d_location_change_long,aes(target,looking_time,color=target))+
+  geom_half_violin(data=filter(d_location_change_long,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(d_location_change_long,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(d_location_change_long,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   facet_wrap(condition~age_cohort)+
   theme_cowplot()+
   scale_color_manual(values=c("#B16440", "#ECB808"))+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
-  ylab("Difference in looking time between mouse and bear")
+  ylab("Looking times during location change of mouse (in ms)")
+
+looking_time_location_change_bear_mouse
+
+ggsave(here(plot_path,"looking_time_location_change_bear_mouse.png"),bg="white",width=9,height=9)
 ```
+
 ```{r}
 # merge AL of test phase with looking behavior during location change
 
 summarize_participant_test_both_trials_lc <- summarize_participant_test_both_trials %>% left_join(d_location_change)
 
-# plotting AL and difference in looking times to mouse and bear
+# plotting AL and difference in looking time during location change of mouse
 
-ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,diff_mouse_bear,color=condition))+
-  geom_point() +
+AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,diff_mouse_bear,color=condition))+
+  geom_point(aes(colour = cut(diff_mouse_bear, c(-Inf, 0, Inf))),
+             size = 3, alpha= 0.5) +
+  scale_color_manual(name = "diff_mouse_bear",
+                     values = c("(-Inf,0]" = "#B16440",
+                                  "(0, Inf]" = "#ECB808"),
+                     labels = c("bear looking", "mouse looking", "regression slope")) +
+  geom_smooth(method='lm')+
+  facet_wrap(condition~age_cohort)+
+  theme_set(theme_cowplot(font_size=24))+
   geom_hline(yintercept=0,linetype="dashed")+
-  geom_smooth(method='lm')+
-  facet_wrap(condition~age_cohort)+
-  theme_cowplot()+
-  #scale_color_manual(values=c("#B16440", "#ECB808"))+
   scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  xlab("AL in first test trial")+
-  ylab("Difference in looking time between mouse and bear")
+  xlab("AL in test trials")+
+  ylab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)")
 
+AL_diff_mouse_bear
+
+ggsave(here(plot_path,"AL_diff_mouse_bear.png"),bg="white",width=14,height=9)
+ggsave(here(paper_path,"Figure8.png"),bg="white",width=14, height=9)
 ```
-
-
-### 5.3. NUmber of shifts during location change of mouse as a function of AL
-
-Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking bias in KNOW
-
-MSS Could this possibly be a correlation or a model that includes shift_num as fixed effect?
 ```{r}
-# plotting AL and number of shifts during location change of mouse
+#set the prior
+priors <-c(
+  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b")) # normal distribution for fixed-effect coefficients
+ # set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+ # set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,num_shifts,color=condition))+
-  geom_point() +
-  geom_smooth(method='lm')+
-  facet_wrap(condition~age_cohort)+
-  theme_cowplot()+
-  #scale_color_manual(values=c("#B16440", "#ECB808"))+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  xlab("AL in first test trial")+
-  ylab("Number of shifts during location change of mouse")
+bm_test_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c*diff_mouse_bear+(1|lab_id)+(1|participant_lab_id), 
+         family=gaussian,
+         prior = priors,
+         save_pars = save_pars(all = TRUE),
+        filter(summarize_participant_test_both_trials_lc),
+        warmup = 1000, 
+        iter = 5000, 
+        chains = 4, 
+        cores = 4,
+        seed = 123,
+        sample_prior=TRUE)
+summary(bm_test_diff_mouse_bear_al)
+prior_summary(bm_test_diff_mouse_bear_al)
+
+saveRDS(bm_test_diff_mouse_bear_al, file = here(RESULTS_FOLDER,"bm_test_diff_mouse_bear_al.rds"))
 ```
+```{r}
+#get main coefficient estimate and HDI
+bm_test_diff_mouse_bear_al %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_test_diff_mouse_bear_al %>%
+  spread_draws(b_diff_mouse_bear, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+bm_test_diff_mouse_bear_al %>%
+  spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
+  mean_hdi(.width = 0.95)
+```
+
+```{r}
+h_test_diff_mouse_bear_al <- hypothesis(bm_test_diff_mouse_bear_al, "diff_mouse_bear = 0")
+h_test_diff_mouse_bear_al 
+plot(h_test_diff_mouse_bear_al)
+# evidence in favor of condition being different from zero
+1/h_test_diff_mouse_bear_al$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_test_diff_mouse_bear_al <-  update(bm_test_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
+summary(null_test_diff_mouse_bear_al)
+test_m_comparison_diff_mouse_bear_al <- brms::bayes_factor(bm_test_diff_mouse_bear_al, null_test_diff_mouse_bear_al)
+
+saveRDS(test_m_comparison_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_al.rds"))
+```
+
 
 Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of distraction; similarly, more looking at the mouse during change in ign compared to know cond
 
+## 6. “Fatigue”-effect: new dependent variable “overall amount of AL (irrespective of target or distractor)”
+Do Toddlers and Adults differ in overall amount of AL over trials?
+
+## 7. Analyze sub-intervals of anticipatory period: 1st half vs. 2nd half
+run confirmatory analyses per time window
+
+## 8. AOI “box”
+compare looks to target box between KNOW and IG: difference in “reality bias” between conditions (also informs hypothesis above about interactive context (No.9)
+
+## 9. Latency of first look to target AOI (longer latency as indicator of uncertainty)
+Hypothesis: Longer latency  in KNOW vs. IG
+
+```{r}
+#compute N and mean per age_cohort and group
+summarize_overall_test_first_look_latency_correct <- summarize_participant_test_first_look %>%
+  group_by(age_cohort,condition) %>%
+  summarize(
+    N = sum(!is.na(average_rt_correct)),
+    average_target_rt = mean(average_rt_correct,na.rm=T)) 
+
+saveRDS(summarize_overall_test_first_look_latency_correct, file=here(RESULTS_FOLDER,"summarize_overall_test_first_look_latency_correct.rds"))
+
+latency_first_look_target_AOI <- ggplot(summarize_participant_test_first_look,aes(condition,average_rt_correct,color=condition))+
+  geom_beeswarm(alpha=0.2,cex=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_look,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_look,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
+  theme_set(theme_cowplot(font_size=24))+
+  facet_wrap(~age_cohort)+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Latency of First Look to Target Exit")
+
+latency_first_look_target_AOI
+
+ggsave(here(plot_path,"latency_first_look_target_AOI.png"),bg="white",width=9,height=9)
+```
+
+
+## 10. Absolute looking scores
+
+Compute absolute looking scores to target and distractor
+
+```{r}
+summarize_participant_test_first_trial_absolute <- summarize_participant_test_first_trial %>% 
+  group_by(participant_lab_id, condition) %>%
+  mutate(absolute_target_looking=sum_target_exit*40,
+         absolute_distractor_looking=sum_distractor_exit*40,
+         diff_target_distractor_looking=absolute_target_looking-absolute_distractor_looking)
+
+summarize_overall_test_first_trial_absolute <- summarize_participant_test_first_trial_absolute %>% 
+  group_by(age_cohort, condition) %>%
+  summarise(n=length(unique(participant_lab_id)),
+         average_absolute_target_looking=mean(absolute_target_looking),
+         average_absolute_distractor_looking=mean(absolute_distractor_looking),
+         average_diff_target_distractor_looking=mean(diff_target_distractor_looking))
+
+test_first_trial_absolute_target_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,absolute_target_looking,color=condition))+
+  geom_beeswarm(alpha=0.2,cex=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
+  theme_set(theme_cowplot(font_size=24))+
+  facet_wrap(~age_cohort)+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Looking Time to Target Exit (in ms)")
+
+test_first_trial_absolute_target_looking
+ggsave(here(plot_path,"test_first_trial_absolute_target_looking.png"),bg="white",width=9,height=9)
+
+test_first_trial_absolute_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,absolute_distractor_looking,color=condition))+
+  geom_beeswarm(alpha=0.2,cex=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
+  theme_set(theme_cowplot(font_size=24))+
+  facet_wrap(~age_cohort)+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Looking Time to Distractor Exit (in ms)")
+
+test_first_trial_absolute_distractor_looking
+ggsave(here(plot_path,"test_first_trial_absolute_distractor_looking.png"),bg="white",width=9,height=9)
+
+test_first_trial_diff_target_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,diff_target_distractor_looking,color=condition))+
+  geom_beeswarm(alpha=0.2,cex=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
+  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme_set(theme_cowplot(font_size=24))+
+  facet_wrap(~age_cohort)+
+  scale_color_brewer(palette="Set1")+
+  scale_fill_brewer(palette="Set1")+
+  theme(legend.position="none")+
+  ylab("Difference in Looking Time to\nTarget and Distractor Exit (in ms)")
+
+test_first_trial_diff_target_distractor_looking
+ggsave(here(plot_path,"test_first_trial_diff_target_distractor_looking.png"),bg="white",width=9,height=9)
+```

@@ -1584,5 +1584,5 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
                                          nrow = 2,
                                          align = "v")
 
-ggsave(here(paper_path,"Figure5.png"),bg="white",width=16, height=9)
+ggsave(here(paper_path,"Figure5.png"),bg="white",width=14, height=8)
 ```
