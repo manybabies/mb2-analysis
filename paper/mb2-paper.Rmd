@@ -638,13 +638,6 @@ fixed_effect_summary_shifts_age_cohort <- posterior_summary(bm_test_shifts_age_c
 # Extract the mean estimate
 b_age_cohort_c_estimate_shifts <- fixed_effect_summary_shifts_age_cohort[1, "Estimate"]
 ```
-#### Comparing the looking patterns of toddlers and adults during the location change of the mouse.
-We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab_id. The fixed effect of age cohort on number of shifts is estimated to be `r round(b_num_shifts_estimate_shifts, 3)`, suggesting a higher number of shifts for adults compared to toddlers (see Figure 6). Comparing this model to a simpler model without age cohort, a Bayes Factor of `r printnum(test_m_comparison_shifts_al$bf)` was computed. This provides extremely strong evidence in favor of including age cohort in the model.
-
-```{r fig6, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults.", fig.align="center", out.width = "6.8in"}
-include_graphics(here("paper","Figure6.png"),rel_path=FALSE)
-```
-
 ```{r Fixed effect for number of shifts on AL, warning=FALSE}
 # Extract summary for the specific fixed effect
 fixed_effect_summary_shifts <- posterior_summary(bm_test_shifts_al, pars = "b_num_shifts")
@@ -652,6 +645,15 @@ fixed_effect_summary_shifts <- posterior_summary(bm_test_shifts_al, pars = "b_nu
 # Extract the mean estimate
 b_num_shifts_estimate_shifts <- fixed_effect_summary_shifts[1, "Estimate"]
 ```
+
+#### Comparing the looking patterns of toddlers and adults during the location change of the mouse.
+We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab_id. The fixed effect of age cohort on number of shifts is estimated to be `r round(b_num_shifts_estimate_shifts, 3)`, suggesting a higher number of shifts for adults compared to toddlers (see Figure 6). Comparing this model to a simpler model without age cohort, a Bayes Factor of `r printnum(test_m_comparison_shifts_al$bf)` was computed. This provides extremely strong evidence in favor of including age cohort in the model.
+
+```{r fig6, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults.", fig.align="center", out.width = "6.8in"}
+include_graphics(here("paper","Figure6.png"),rel_path=FALSE)
+```
+
+
 
 #### Number of gaze shifts between mouse and bear during location change as a function of AL.
 In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on number of shifts is estimated to be `r round(b_age_cohort_c_estimate_shifts, 3)`, suggesting a higher number of shifts for adults compared to toddlers (see Figure 6). Comparing this model to a simpler model without age cohort, a Bayes Factor of `r printnum(test_m_comparison_shifts_age_cohort$bf)` was computed. This provides extremely strong evidence in favor of including age cohort in the model.
