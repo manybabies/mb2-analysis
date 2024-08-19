@@ -364,7 +364,7 @@ assert_that(length(unique(num_test_first_trials$n))==1) # all elements are equal
 #now summarize all data
 summarize_participant_test_first_trial <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
-           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type) %>%
+           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type, trial_num) %>%
   #filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
@@ -380,10 +380,14 @@ summarize_participant_test_first_trial <- test_data_first_trial %>%
     sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
     prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
     sum_target_exit = sum(aoi=="target_exit",na.rm=T),
+    sum_target_box = sum(aoi=="target_box",na.rm=T),
     sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
+    sum_distractor_box = sum(aoi=="distractor_box",na.rm=T),
     prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
+    prop_box = sum_target_box/(sum_target_box+sum_distractor_box),
     N_general = sum_target_general+sum_distractor_general,
-    N_exit = sum_target_exit+sum_distractor_exit
+    N_exit = sum_target_exit+sum_distractor_exit,
+    N_box = sum_target_box+sum_distractor_box
   ) %>%
   ungroup() %>%
   #center age, condition, and method

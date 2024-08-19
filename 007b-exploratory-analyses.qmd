@@ -1264,8 +1264,8 @@ overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_sh
   #geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=age_cohort),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0, color="darkblue")+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0, color="darkred")+
+  geom_half_boxplot(data=filter(d_location_change,age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
+  geom_half_boxplot(data=filter(d_location_change,age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
   stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
   #theme_cowplot()+
   theme_set(theme_cowplot(font_size=24))+
@@ -1702,11 +1702,12 @@ test_first_trial_half <- ggplot(summarize_participant_test_first_trial_half,aes(
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
-  ylab("Latency of First Look to Target Exit")
+  xlab("Analysis window")+
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 
 test_first_trial_half
 
-ggsave(here(plot_path,"latency_first_look_target_AOI.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path,"test_first_trial_half.png"),bg="white",width=9,height=9)
 ```
 
 ## 8. AOI “box”
