@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  5 AUG 2024 18:04
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.5.8)  4 SEP 2024 10:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1045,40 +1045,84 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 561--562
 [32]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[33] [34] [35] [36] [37] [38]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6.png>
+[33] [34]
+Underfull \vbox (badness 3907) has occurred while \output is active []
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 737--738
+[35]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[36] [37] [38] [39]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
+
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 746--747
  [][] 
  []
 
-[39] [40] [41]
-Underfull \vbox (badness 1028) has occurred while \output is active []
+[40] [41]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-[42]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 773--774
+ [][] 
+ []
 
-[43]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+[42] [43]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 806--807
+ [][] 
+ []
 
 [44]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 822--823
+ [][] 
+ []
+
+
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [45]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 1163) has occurred while \output is active []
 
 [46]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 836--837
+ [][] 
+ []
+
+[47] [48]
+Underfull \vbox (badness 1028) has occurred while \output is active []
+
+[49]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[47] AED endfloat: Processing end Figures and Tables [48] (./mb2-paper.ttt [49
+[50]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[51]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[52]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[53]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[54] AED endfloat: Processing end Figures and Tables [55] (./mb2-paper.ttt [56
 
 
-] [50] [51
+] [57] [58
 
-] [52] [53
+] [59] [60
 
-]) [54
+]) [61
 
 ] (./mb2-paper.aux)
  ***********
@@ -1090,12 +1134,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22070 strings out of 476662
- 416099 string characters out of 5798323
+ 22164 strings out of 476662
+ 422698 string characters out of 5798323
  1947403 words of memory out of 5000000
- 43822 multiletter control sequences out of 15000+600000
+ 43912 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 90i,12n,121p,2740b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,11n,121p,2740b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (54 pages).
+Output written on mb2-paper.pdf (61 pages).

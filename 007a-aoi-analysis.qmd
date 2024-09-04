@@ -185,7 +185,7 @@ summarize_fam_aoi_overall <- summarize_participant_familiarization %>%
 summarize_fam_aoi_overall %>%
   knitr::kable()
 
-saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summarize_fam_aoi_overall.rds"))
+saveRDS(summarize_fam_aoi_overall, file=here(RESULTS_FOLDER,"summary_fam_aoi_overall.rds"))
 ```
 
 By individual trial
@@ -533,7 +533,7 @@ summarize_test_aoi <- summarize_participant_test_first_trial %>%
 summarize_test_aoi %>%
   knitr::kable()
 
-saveRDS(summarize_test_aoi, file = here(RESULTS_FOLDER,"summarize_test_aoi.rds"))
+saveRDS(summarize_test_aoi, file = here(RESULTS_FOLDER,"summary_test_aoi_overall.rds"))
 ```
 
 ### Main Model
@@ -550,7 +550,7 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -617,9 +617,30 @@ Alternate Bayes factor approach
 ```{r}
 null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
 summary(null_aoi_toddlers)
-brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
+test_m_comparison_PTL_toddlers <- brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
+
+saveRDS(test_m_comparison_PTL_toddlers, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers.rds"))
 ```
 
+Hypothesis test/ compute Bayes Factor
+
+```{r}
+h_aoi_toddlers_interaction <- hypothesis(bm_aoi_toddlers, "condition_c*age_mo_c = 0", class="b")
+h_aoi_toddlers_interaction
+plot(h_aoi_toddlers_interaction)
+# evidence in favor of condition being different from zero
+1/h_aoi_toddlers_interaction$hypothesis$Evid.Ratio
+```
+
+Alternate Bayes factor approach
+
+```{r}
+null_aoi_toddlers_interaction <-  update(bm_aoi_toddlers, formula = ~ .-condition_c*age_mo_c)
+summary(null_aoi_toddlers_interaction)
+test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers_interaction)
+
+saveRDS(test_m_comparison_PTL_toddlers_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_interaction.rds"))
+```
 #### Adults
 
 ```{r}
@@ -661,7 +682,9 @@ Alternate Bayes factor approach
 ```{r}
 null_aoi_adults <-  update(bm_aoi_adults, formula = ~ .-condition_c)
 summary(null_aoi_adults)
-brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
+test_m_comparison_PTL_adults <- brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
+
+saveRDS(test_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_adults.rds"))
 ```
 
 # Timecourse extension
@@ -1142,7 +1165,7 @@ ggplot(filter(d_anticipatory_fam,!is.na(first_look)),aes(trial_num,fill=first_lo
 summarize_overall_familiarization_first_look %>%
   knitr::kable()
 
-saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summarize_overall_familiarization_first_look.rds"))
+saveRDS(summarize_overall_familiarization_first_look, file=here(RESULTS_FOLDER,"summary_fam_fl_overall.rds"))
 
 #summarize across trials
 summarize_participant_familiarization_first_look_across_trials <- d_anticipatory_fam %>%
@@ -1221,7 +1244,7 @@ summarize_overall_test_first_look <- summarize_participant_test_first_look %>%
     upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
   ) 
 
-saveRDS(summarize_overall_test_first_look, file=here(RESULTS_FOLDER,"summarize_overall_test_first_look.rds"))
+saveRDS(summarize_overall_test_first_look, file=here(RESULTS_FOLDER,"summary_test_fl_overall.rds"))
 
 ggplot(filter(d_anticipatory_test,!is.na(first_look)),aes(condition,fill=first_look))+
   geom_bar(position="fill")+
@@ -1459,7 +1482,7 @@ priors <-c(
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_test_first_look_toddlers <- brm(
-  correct_first_look ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+  correct_first_look ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
   family=bernoulli(link = "logit"),
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -1508,7 +1531,9 @@ Alternate Bayes factor approach
 ```{r}
 null_first_look_toddlers <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
 summary(null_first_look_toddlers)
-brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
+test_m_comparison_FL_toddlers <- brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
+
+saveRDS(test_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,"test_m_comparison_FL_toddlers.rds"))
 ```
 
 #### Adults
@@ -1557,7 +1582,9 @@ Alternate Bayes factor approach
 ```{r}
 null_first_look_adults <-  update(bm_test_first_look_adults, formula = ~ .-condition_c)
 summary(null_first_look_adults)
-brms::bayes_factor(bm_test_first_look_adults, null_first_look_adults)
+test_m_comparison_FL_adults <- brms::bayes_factor(bm_test_first_look_adults, null_first_look_adults)
+
+saveRDS(test_m_comparison_FL_adults, file = here(RESULTS_FOLDER,"test_m_comparison_FL_adults.rds"))
 ```
 
 ## Plotting PTL and First Look for familiarization and test
