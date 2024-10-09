@@ -17,12 +17,17 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
 Basic cleaning:
-1. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right`.
-2. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
+1. Remove all web-based data.
+2. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right`.
+3. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
 ```{r}
 data_pupillometry <- data_preprocessed_post_exclusions |> 
-  mutate(pupil_size = rowMeans(bind_cols(pupil_left, pupil_right), na.rm = TRUE),
-         pupil_size = ifelse(is.na(x) & is.na(y), NA, pupil_size))
+  filter(data_type=="in-lab") |> 
+  mutate(pupil_left = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_left should be NA, not 0
+                          ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
+         pupil_right = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_right should be NA, not 0
+                          ifelse(is.na(pupil_right), pupil_left, pupil_right))) # If pupil_right is NA, take value of pupil_left
+                  
 ```
 
 Sanity check.
@@ -31,7 +36,15 @@ Some EyeLink labs have long right tails; Nijmegen also has some density in the v
 data_pupillometry |> 
   filter(age_cohort == "adults") |> 
   ggplot() +
-  geom_density(aes(x = pupil_size, col = lab_id)) +
+  geom_density(aes(x = pupil_left, col = lab_id)) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  facet_wrap(~ lab_id, scales = "free")
+
+data_pupillometry |> 
+  filter(age_cohort == "adults") |> 
+  ggplot() +
+  geom_density(aes(x = pupil_right, col = lab_id)) +
   theme_classic() +
   theme(legend.position = "none") +
   facet_wrap(~ lab_id, scales = "free")
@@ -41,7 +54,15 @@ data_pupillometry |>
 data_pupillometry |> 
   filter(age_cohort == "toddlers") |> 
   ggplot() +
-  geom_density(aes(x = pupil_size, col = lab_id)) +
+  geom_density(aes(x = pupil_left, col = lab_id)) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  facet_wrap(~ lab_id, scales = "free")
+
+data_pupillometry |> 
+  filter(age_cohort == "toddlers") |> 
+  ggplot() +
+  geom_density(aes(x = pupil_right, col = lab_id)) +
   theme_classic() +
   theme(legend.position = "none") +
   facet_wrap(~ lab_id, scales = "free")
@@ -76,15 +97,9 @@ data_pupillometry <- data_pupillometry |>
 assert_that(sum(is.na(data_pupillometry$valid_second_test_trial)) == 0)
 ```
 
-Merge in eyetracker info
+Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
 ```{r}
-dataset_sheet <- read_csv(here("metadata", "dataset_sheet.csv"))
-
 data_pupillometry <- data_pupillometry |> 
-  mutate(data_id = glue("{lab_id}_{age_cohort}")) |> 
-  left_join(dataset_sheet |> select(data_id, tracker_type),
-            by = join_by(data_id)) |> 
-  select(-data_id) |> 
-  mutate(tracker_type = str_remove(tracker_type, " .*"))
+  mutate(eyetracker_type = str_remove(tracker_type, " .*"))
 ```
 
