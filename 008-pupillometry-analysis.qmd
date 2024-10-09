@@ -7,9 +7,84 @@ format: html
 ```{r}
 library(tidyverse)
 library(here)
+library(glue)
+library(assertthat)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
+
+Basic cleaning:
+1. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right`.
+2. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
+```{r}
+data_pupillometry <- data_preprocessed_post_exclusions |> 
+  mutate(pupil_size = rowMeans(bind_cols(pupil_left, pupil_right), na.rm = TRUE),
+         pupil_size = ifelse(is.na(x) & is.na(y), NA, pupil_size))
+```
+
+Sanity check.
+Some EyeLink labs have long right tails; Nijmegen also has some density in the very low sizes that might be artefactual.
+```{r}
+data_pupillometry |> 
+  filter(age_cohort == "adults") |> 
+  ggplot() +
+  geom_density(aes(x = pupil_size, col = lab_id)) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  facet_wrap(~ lab_id, scales = "free")
+```
+
+```{r}
+data_pupillometry |> 
+  filter(age_cohort == "toddlers") |> 
+  ggplot() +
+  geom_density(aes(x = pupil_size, col = lab_id)) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  facet_wrap(~ lab_id, scales = "free")
+```
+
+Might need to consider deblinking and detransienting to remove artifacts (a lot of the low-value responses are surrounding NA instances); perhaps with a window of 25ms or 50ms.
+
+Examining for second test trial---all included participants also have a valid second test trial :)
+```{r}
+summarized_valid_second_test_trials <- data_pupillometry |> 
+  filter(condition %in% c("ignorance","knowledge"),
+         trial_num == 6) |> 
+  mutate(
+    valid_second_test_trial = case_when(
+      trial_error == "no" ~ 1,
+      trial_error == "yes" ~ 0,
+      TRUE ~ NA
+    )
+  ) |> 
+  select(lab_id, participant_lab_id, participant_id, 
+         age_cohort, valid_second_test_trial) |> 
+  distinct()
+
+data_pupillometry <- data_pupillometry |> 
+  left_join(summarized_valid_second_test_trials,
+            by = join_by(participant_lab_id, participant_id, 
+                         lab_id, age_cohort)) |> 
+  mutate(valid_second_test_trial = ifelse(is.na(valid_second_test_trial), 
+                                          0, valid_second_test_trial))
+
+# validate
+assert_that(sum(is.na(data_pupillometry$valid_second_test_trial)) == 0)
+```
+
+Merge in eyetracker info
+```{r}
+dataset_sheet <- read_csv(here("metadata", "dataset_sheet.csv"))
+
+data_pupillometry <- data_pupillometry |> 
+  mutate(data_id = glue("{lab_id}_{age_cohort}")) |> 
+  left_join(dataset_sheet |> select(data_id, tracker_type),
+            by = join_by(data_id)) |> 
+  select(-data_id) |> 
+  mutate(tracker_type = str_remove(tracker_type, " .*"))
+```
+
