@@ -66,20 +66,6 @@ test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
 ```
 
-<!-- Splitting the data into familiarization data and test data. -->
-
-<!-- ```{r} -->
-
-<!-- fam_data <- fam_data %>% -->
-
-<!--   filter(method=="In-lab") -->
-
-<!-- test_data <- test_data %>% -->
-
-<!--    filter(method=="In-lab") -->
-
-<!-- ``` -->
-
 # AOI Proportion Looking
 
 ## Familiarization Data
@@ -218,13 +204,13 @@ priors <-c(
   set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
 
+# priors_null<-c(
+#   set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
+#   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
+#   set_prior("lkj(2)", class = "L"))
 
-priors_null<-c(
-  set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L"))
 #shift trial number coding
 #From the RR:
 #Our key question of interest is whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we will code trial number so that the last trial before the test trials (trial 4) is set to the intercept
@@ -233,22 +219,22 @@ summarize_participant_familiarization <- summarize_participant_familiarization %
   unite(participant_lab_id,lab_id,participant_id,remove=F) %>% # making sure that participant ids are not accidentally combined across labs
   mutate(prop_exit_adj = prop_exit-0.5) #adjusting for chance
 
-
 bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_familiarization,age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 5000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_fam_aoi_toddlers)
 prior_summary(bm_fam_aoi_toddlers)
 
-saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_fam_aoi_toddlers.rds"))
+saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -261,6 +247,8 @@ Intercept
 bm_fam_aoi_toddlers %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#TO DO: cache
 ```
 
 Trial Number
@@ -271,6 +259,9 @@ Trial Number
 bm_fam_aoi_toddlers %>%
   spread_draws(b_familiarization_trial_num_4, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#TO DO: cache
+
 ```
 
 Compute Bayes factor approach
@@ -548,7 +539,7 @@ priors <-c(
   set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
 
 bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
          family=gaussian,
@@ -1326,13 +1317,13 @@ priors <-c(
   set_prior("normal(0, 2)",class = "Intercept"), #uniform distribution for intercept
   set_prior("normal(0, 2)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .1)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
 
 d_anticipatory_fam <- d_anticipatory_fam %>%
   mutate(familiarization_trial_num_4=trial_num-4)
 
 
-bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+bm_fam_first_look_toddlers_less_inf <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=bernoulli(link = "logit"),
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -1617,3 +1608,21 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
 
 ggsave(here(paper_path,"Figure5.png"),bg="white",width=14, height=8)
 ```
+
+## Main model with a less informative prior
+
+Because the BF is sensitive to the choice of prior, we will also run a secondary analysis with a less informative prior: fixed effect coefficients chosen from a normal distribution with mean 0 and SD of 3, and random effect standard deviations drawn from a normal prior with a mean of 0 and SD of 0.5.
+
+### Familiarization Data
+
+#### Toddlers
+
+```{r}
+#set the prior
+priors_less_informative <-c(
+  set_prior("normal(0, 3)",class = "Intercept"), #uniform distribution for intercept
+  set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
+
+
