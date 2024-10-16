@@ -1,0 +1,60 @@
+---
+title: "Analyze Design Analysis"
+author: "MB2 Team"
+date: "12/23/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+## Analyze design analysis
+
+
+```{r }
+
+d = read_csv("bayes_factor_design_analysis_diff.csv", 
+             col_names = c("bf", "cond1", "cond2", "lower", "upper"))
+
+mutate(d, bf = ifelse(bf > 100, 100, bf)) %>%
+  ggplot(data=., aes(x=bf)) + geom_histogram(binwidth = 100) +
+  ylim(0, 100)
+
+
+d %>%
+  ggplot(data=., aes(x=bf)) + geom_density() +
+  theme_bw() +
+  scale_x_log10()
+
+print(nrow(d))
+print(mutate(d, bf = ifelse(bf > 100, 100, bf)) %>%
+  ggplot(data=., aes(x=bf)) + geom_histogram() +
+  theme_bw() +
+  scale_x_log10())
+
+```
+```{r}
+roundmean = function(x) {return (round(mean(x), 2))}
+print(nrow(d))
+print(roundmean(d$bf > 10))
+print(roundmean(d$bf < 10 & d$bf > 3))
+print(roundmean(d$bf < 3 & d$bf > 1/3))
+print(roundmean(d$bf < 1/3 & d$bf > 1/10))
+print(roundmean(d$bf < 1/10))
+
+```
+
+Look at 95% CIs on the effect size:
+
+```{r}
+arrange(d, lower + upper) %>%
+  mutate(r=1:n()) %>%
+  ggplot(data=., aes(x=r ,ymin=lower,ymax=upper)) +
+  geom_errorbar(alpha=.3) +
+  coord_flip() + 
+  theme_bw() +
+  ylab("95% credible interval for condition effect, acoss simulations") +
+  xlab("simulation (ordered by effect size)") +
+  theme(axis.text.y = element_blank())
+```
