@@ -585,7 +585,7 @@ PTL toddlers & Intercept & 0.12 & 0.02 & 0.09 & 0.15\\
 PTL toddlers & Trial number & -0.05 & 0.01 & -0.06 & -0.03\\
 PTL adults & Intercept & 0.26 & 0.02 & 0.23 & 0.29\\
 PTL adults & Trial number & 0.10 & 0.01 & 0.09 & 0.11\\
-First Look toddlers & Intercept & 0.44 & 0.09 & 0.27 & 0.62\\
+First Look toddlers & Intercept & 0.44 & 0.09 & 0.27 & 0.61\\
 First Look toddlers & Trial number & -0.22 & 0.05 & -0.32 & -0.12\\
 First Look adults & Intercept & 1.03 & 0.09 & 0.86 & 1.20\\
 First Look adults & Trial number & 0.38 & 0.04 & 0.30 & 0.47\\
@@ -614,17 +614,17 @@ model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1
 \midrule
 \endhead
 PTL toddlers & Intercept & 0.61 & 0.02 & 0.58 & 0.65\\
-PTL toddlers & Condition & 0.10 & 0.03 & 0.03 & 0.16\\
+PTL toddlers & Condition & 0.10 & 0.03 & 0.03 & 0.17\\
 PTL toddlers & Age & 0.01 & 0.01 & -0.01 & 0.02\\
 PTL toddlers & Condition x Age & -0.01 & 0.02 & -0.04 & 0.02\\
 PTL adults & Intercept & 0.48 & 0.02 & 0.45 & 0.51\\
 PTL adults & Condition & -0.20 & 0.03 & -0.26 & -0.15\\
-First Look toddlers & Intercept & 0.52 & 0.11 & 0.32 & 0.72\\
-First Look toddlers & Condition & 0.53 & 0.21 & 0.11 & 0.93\\
-First Look toddlers & Age & 0.06 & 0.04 & -0.03 & 0.14\\
-First Look toddlers & Condition x Age & -0.13 & 0.09 & -0.31 & 0.05\\
-First Look adults & Intercept & 0.05 & 0.09 & -0.13 & 0.22\\
-First Look adults & Condition & -0.89 & 0.17 & -1.21 & -0.56\\
+First Look toddlers & Intercept & 0.52 & 0.11 & 0.32 & 0.73\\
+First Look toddlers & Condition & 0.53 & 0.21 & 0.12 & 0.94\\
+First Look toddlers & Age & 0.06 & 0.05 & -0.03 & 0.15\\
+First Look toddlers & Condition x Age & -0.13 & 0.09 & -0.30 & 0.04\\
+First Look adults & Intercept & 0.05 & 0.09 & -0.12 & 0.22\\
+First Look adults & Condition & -0.89 & 0.17 & -1.22 & -0.56\\
 \bottomrule
 \end{longtable}
 
@@ -664,7 +664,7 @@ Next, we used a Bayesian mixed effects model to predict PTL based on trial numbe
 \subparagraph{Toddlers}\label{toddlers-1}}
 
 Investigating proportion of first looks to the target location for toddlers, we again used a Bayesian mixed effects model to predict whether toddlers first look was to the target exit based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each.
-The Bayes factor comparing the full model to the simpler model was estimated to be \textgreater{} 1000, strongly favoring the full model over the null model.
+The Bayes factor comparing the full model to the simpler model was estimated to be BF = 7.9, strongly favoring the full model over the null model.
 The model also provided support for an effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials.
 
 \hypertarget{adults-1}{%
@@ -693,7 +693,7 @@ It is important to note that in the case of a null effect, there are two main ex
 \hypertarget{toddlers-2}{%
 \subparagraph{Toddlers}\label{toddlers-2}}
 
-As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF = 33.3, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
+As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF = 22.7, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
 
 \hypertarget{adults-2}{%
 \subparagraph{Adults}\label{adults-2}}
@@ -706,7 +706,7 @@ Next, we used a Bayesian mixed effects model to predict PTL based on condition f
 \hypertarget{toddlers-3}{%
 \subparagraph{Toddlers}\label{toddlers-3}}
 
-Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.7, providing no substantial evidence in favor of the full model over the null model.
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.5, providing no substantial evidence in favor of the full model over the null model.
 
 \hypertarget{adults-3}{%
 \subparagraph{Adults}\label{adults-3}}

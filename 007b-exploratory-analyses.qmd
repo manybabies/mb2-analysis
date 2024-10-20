@@ -113,8 +113,6 @@ overall_p_test_both <- ggplot(summarize_participant_test_both_trials, aes(x=cond
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_both_trials,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -203,11 +201,12 @@ bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_m
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials,age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 4000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
@@ -232,35 +231,7 @@ bm_aoi_toddlers_both %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_toddlers_both %>%
-  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_toddlers_model_coefficients_both.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_toddlers_both <- hypothesis(bm_aoi_toddlers_both, "condition_c = 0", class="b")
-h_aoi_toddlers_both
-plot(h_aoi_toddlers_both)
-# evidence in favor of condition being different from zero
-1/h_aoi_toddlers_both$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_toddlers_both <-  update(bm_aoi_toddlers_both, formula = ~ .-condition_c)
@@ -282,11 +253,12 @@ bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+co
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials,age_cohort=="adults"),
         warmup = 1000, 
-        iter = 4000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE, 
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_both)
 
 saveRDS(bm_aoi_adults_both, file = here(RESULTS_FOLDER,"bm_aoi_adults_both.rds"))
@@ -299,33 +271,7 @@ bm_aoi_adults_both %>%
   mean_hdi(.width = 0.95)
 ```
 
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_adults_both <- hypothesis(bm_aoi_adults_both, "condition_c = 0")
-h_aoi_adults_both 
-plot(h_aoi_adults_both)
-# evidence in favor of condition being different from zero
-1/h_aoi_adults_both$hypothesis$Evid.Ratio
-```
-Visualize model coefficients
-
-```{r}
-bm_aoi_adults_both %>%
-  spread_draws(b_condition_c, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c"),labels=c("Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_adults_model_coefficients_both.png"),bg="white",width=9,height=6)
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_adults_both <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
@@ -373,11 +319,12 @@ bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+cond
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials, age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
 
@@ -402,35 +349,7 @@ bm_aoi_toddlers_both_order %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_toddlers_both_order %>%
-  spread_draws(b_condition_c,b_test_trial_num,`b_condition_c:test_trial_num`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:test_trial_num","b_test_trial_num","b_condition_c"),labels=c("Condition x Test Trial","Test Trial","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_toddlers_model_coefficients_both_order.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_toddlers_both_order <- hypothesis(bm_aoi_toddlers_both_order, "test_trial_num = 0", class="b")
-h_aoi_toddlers_both_order
-plot(h_aoi_toddlers_both_order)
-# evidence in favor of condition being different from zero
-1/h_aoi_toddlers_both_order$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_toddlers_both_order <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
@@ -449,11 +368,12 @@ bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condit
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials,age_cohort=="adults"),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_both_order)
 
 saveRDS(bm_aoi_adults_both_order, file = here(RESULTS_FOLDER,"bm_aoi_adults_both_order.rds"))
@@ -474,35 +394,8 @@ bm_aoi_adults_both_order %>%
   spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
 ```
-Visualize model coefficients
 
-```{r}
-bm_aoi_adults_both_order %>%
-  spread_draws(b_condition_c,b_test_trial_num,`b_condition_c:test_trial_num`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:test_trial_num","b_test_trial_num","b_condition_c"),labels=c("Condition x Test Trial","Test Trial","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_adults_model_coefficients_both_order.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_adults_both_order <- hypothesis(bm_aoi_adults_both_order, "condition_c:test_trial_num = 0")
-h_aoi_adults_both_order 
-plot(h_aoi_adults_both_order)
-# evidence in favor of condition being different from zero
-1/h_aoi_adults_both_order$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_adults_both_order <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
@@ -547,8 +440,6 @@ overall_p_correct_final_fam_trial <- ggplot(filter(summarize_participant_test_fi
   geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -599,11 +490,12 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial,age_cohort=="toddlers"&correct_first_look_final_fam_trial==1),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
@@ -627,35 +519,7 @@ bm_aoi_toddlers_correct_final_fam_trial %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_toddlers_model_coefficients_correct_final_fam_trial.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_toddlers_correct_final_fam_trial <- hypothesis(bm_aoi_toddlers_correct_final_fam_trial, "condition_c = 0", class="b")
-h_aoi_toddlers_correct_final_fam_trial
-plot(h_aoi_toddlers_correct_final_fam_trial)
-# evidence in favor of condition being different from zero
-1/h_aoi_toddlers_correct_final_fam_trial$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_toddlers_correct_final_fam_trial <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
@@ -664,6 +528,7 @@ test_m_comparison_aoi_toddlers_correct_final_fam_trial <-  brms::bayes_factor(bm
 
 saveRDS(test_m_comparison_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
+
 ##### Adults
 
 ```{r}
@@ -673,11 +538,12 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial,age_cohort=="adults"&correct_first_look_final_fam_trial==1),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_correct_final_fam_trial)
 
 saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
@@ -690,17 +556,7 @@ bm_aoi_adults_correct_final_fam_trial %>%
   mean_hdi(.width = 0.95)
 ```
 
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_adults_correct_final_fam_trial <- hypothesis(bm_aoi_adults_correct_final_fam_trial, "condition_c = 0", class="b")
-h_aoi_adults_correct_final_fam_trial
-plot(h_aoi_adults_correct_final_fam_trial)
-# evidence in favor of condition being different from zero
-1/h_aoi_adults_correct_final_fam_trial$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_adults_correct_final_fam_trial <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
@@ -727,8 +583,6 @@ overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_tes
   geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -778,11 +632,12 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial, age_cohort=="toddlers" & fam_prop_exit>0.5),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
@@ -806,35 +661,7 @@ bm_aoi_toddlers_sufficient_fam_prop_looking %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_toddlers_sufficient_fam_prop_looking %>%
-  spread_draws(b_condition_c,b_age_mo_c,`b_condition_c:age_mo_c`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:age_mo_c","b_age_mo_c","b_condition_c"),labels=c("Condition x Age","Age","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_toddlers_model_coefficients_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_toddlers_sufficient_fam_prop_looking <- hypothesis(bm_aoi_toddlers_sufficient_fam_prop_looking, "condition_c = 0", class="b")
-h_aoi_toddlers_sufficient_fam_prop_looking
-plot(h_aoi_toddlers_sufficient_fam_prop_looking)
-# evidence in favor of condition being different from zero
-1/h_aoi_toddlers_sufficient_fam_prop_looking$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_toddlers_sufficient_fam_prop_looking <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
@@ -854,11 +681,12 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+co
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial,age_cohort=="adults"&fam_prop_exit>=0.5),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
 saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_adults_sufficient_fam_prop_looking.rds"))
@@ -871,17 +699,7 @@ bm_aoi_adults_sufficient_fam_prop_looking %>%
   mean_hdi(.width = 0.95)
 ```
 
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_adults_sufficient_fam_prop_looking <- hypothesis(bm_aoi_adults_sufficient_fam_prop_looking, "condition_c = 0", class="b")
-h_aoi_adults_sufficient_fam_prop_looking
-plot(h_aoi_adults_sufficient_fam_prop_looking)
-# evidence in favor of condition being different from zero
-1/h_aoi_adults_sufficient_fam_prop_looking$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_adults_sufficient_fam_prop_looking <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
@@ -1011,11 +829,12 @@ bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*met
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial,age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
 
@@ -1040,35 +859,7 @@ bm_aoi_toddlers_method %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_toddlers_method %>%
-  spread_draws(b_condition_c,b_method_c,`b_condition_c:method_c`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:method_c","b_method_c","b_condition_c"),labels=c("Condition x Method","Method","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_toddlers_model_coefficients_method.png"),bg="white",width=9,height=6)
-```
-
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_toddlers_method <- hypothesis(bm_aoi_toddlers_method, "condition_c:method_c = 0", class="b")
-h_aoi_toddlers_method
-plot(h_aoi_toddlers_method)
-# evidence in favor of condition being different from zero
-1/h_aoi_toddlers_method$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_toddlers_method <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c:method_c)
@@ -1088,11 +879,12 @@ bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*me
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_first_trial,age_cohort=="adults"),
         warmup = 1000, 
-        iter = 2000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_method)
 
 saveRDS(bm_aoi_adults_method, file = here(RESULTS_FOLDER,"bm_aoi_adults_method.rds"))
@@ -1114,34 +906,7 @@ bm_aoi_adults_method %>%
   mean_hdi(.width = 0.95)
 ```
 
-Visualize model coefficients
-
-```{r}
-bm_aoi_adults_method %>%
-  spread_draws(b_condition_c,b_method_c,`b_condition_c:method_c`, sigma) %>%
-  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
-  ggplot(aes(x = coefficient,y=b)) +
-  stat_halfeye()+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_cowplot()+
-  scale_x_discrete(limits=c("b_condition_c:method_c","b_method_c","b_condition_c"),labels=c("Condition x Method","Method","Condition"))+
-  ylab("Model Coefficient Estimate")+
-  xlab("Model Predictor")+
-  coord_flip()
-ggsave(here(plot_path,"test_adults_model_coefficients_method.png"),bg="white",width=9,height=6)
-```
-
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_aoi_adults_method <- hypothesis(bm_aoi_adults_method, "condition_c:method_c = 0")
-h_aoi_adults_method 
-plot(h_aoi_adults_method)
-# evidence in favor of condition being different from zero
-1/h_aoi_adults_method$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_aoi_adults_method <-  update(bm_aoi_adults_method, formula = ~ .-condition_c:method_c)
@@ -1164,8 +929,6 @@ overall_p_test_box <- ggplot(summarize_participant_test_first_trial, aes(x=condi
   geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -1329,8 +1092,6 @@ overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_sh
   #geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=age_cohort),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
   stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
   #theme_cowplot()+
   theme_set(theme_cowplot(font_size=24))+
@@ -1354,8 +1115,6 @@ ggsave(here(paper_path,"Figure6.png"),bg="white",width=14, height=9)
   #geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="toddlers"),side="r",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
-  geom_half_boxplot(data=filter(d_location_change,age_cohort=="adults"),side="l",nudge=0.15,width=0.4,errorbar.draw=F, outlier.alpha = 0)+
   stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
   #theme_cowplot()+
   theme_set(theme_cowplot(font_size=24))+
@@ -1392,11 +1151,12 @@ bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+conditi
          save_pars = save_pars(all = TRUE),
         filter(d_location_change),
         warmup = 1000, 
-        iter = 5000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
 
@@ -1418,17 +1178,7 @@ bm_test_shifts_age_cohort %>%
   mean_hdi(.width = 0.95)
 ```
 
-Hypothesis test/ compute Bayes Factor
-
-```{r}
-h_test_shifts_age_cohort <- hypothesis(bm_test_shifts_age_cohort, "condition_c:age_cohort_c = 0")
-h_test_shifts_age_cohort 
-plot(h_test_shifts_age_cohort)
-# evidence in favor of condition being different from zero
-1/h_test_shifts_age_cohort$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_test_shifts_age_cohort <-  update(bm_test_shifts_age_cohort, formula = ~ .-condition_c:age_cohort_c)
@@ -1484,11 +1234,12 @@ bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 5000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
@@ -1510,15 +1261,7 @@ bm_test_toddlers_shifts_al %>%
   mean_hdi(.width = 0.95)
 ```
 
-```{r}
-h_test_shifts_al <- hypothesis(bm_test_toddlers_shifts_al, "condition_c:num_shifts = 0")
-h_test_shifts_al 
-plot(h_test_shifts_al)
-# evidence in favor of num_shifts being different from zero?
-1/h_test_shifts_al$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_test_toddlers_shifts_al <-  update(bm_test_toddlers_shifts_al, formula = ~ .-condition_c:num_shifts)
@@ -1544,11 +1287,12 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
         warmup = 1000, 
-        iter = 7000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
@@ -1570,15 +1314,7 @@ bm_test_adults_shifts_al %>%
   mean_hdi(.width = 0.95)
 ```
 
-```{r}
-h_test_adults_shifts_al <- hypothesis(bm_test_adults_shifts_al, "condition_c:num_shifts = 0")
-h_test_adults_shifts_al 
-plot(h_test_shifts_al)
-# evidence in favor of num_shifts being different from zero?
-1/h_test_adults_shifts_al$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_test_adults_shifts_al <-  update(bm_test_adults_shifts_al, formula = ~ .-condition_c:num_shifts)
@@ -1599,8 +1335,7 @@ looking_time_location_change_diff_mouse_bear <- ggplot(d_location_change,aes(con
 geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(d_location_change,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(d_location_change,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
+  
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0,linetype="dashed")+
   facet_wrap(~age_cohort)+
@@ -1646,13 +1381,8 @@ ggsave(here(plot_path,"looking_time_location_change_bear_mouse.png"),bg="white",
 
 # plotting AL and difference in looking time during location change of mouse
 
-AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,diff_mouse_bear,color=condition))+
-  geom_point(aes(colour = cut(diff_mouse_bear, c(-Inf, 0, Inf))),
-             size = 3, alpha= 0.5) +
-  scale_color_manual(name = "diff_mouse_bear",
-                     values = c("(-Inf,0]" = "#B16440",
-                                  "(0, Inf]" = "#ECB808"),
-                     labels = c("bear looking", "mouse looking", "regression slope")) +
+AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(diff_mouse_bear, prop_exit, color=condition))+
+  geom_point(size = 3, alpha= 0.5) +
   geom_smooth(method='lm')+
   facet_wrap(condition~age_cohort)+
   theme_set(theme_cowplot(font_size=24))+
@@ -1681,11 +1411,12 @@ bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
         warmup = 1000, 
-        iter = 8000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_toddlers_diff_mouse_bear_al)
 prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
@@ -1707,15 +1438,7 @@ bm_test_diff_mouse_bear_al %>%
   mean_hdi(.width = 0.95)
 ```
 
-```{r}
-h_test_diff_mouse_bear_al <- hypothesis(bm_test_diff_mouse_bear_al, "diff_mouse_bear = 0")
-h_test_diff_mouse_bear_al 
-plot(h_test_diff_mouse_bear_al)
-# evidence in favor of condition being different from zero
-1/h_test_diff_mouse_bear_al$hypothesis$Evid.Ratio
-```
-
-Alternate Bayes factor approach
+Bridge sampling Bayes factor approach
 
 ```{r}
 null_test_toddlers_diff_mouse_bear_al <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
@@ -1741,11 +1464,12 @@ bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_be
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
         warmup = 1000, 
-        iter = 13000, 
+        iter = 10000, 
         chains = 4, 
         cores = 4,
         seed = 123,
-        sample_prior=TRUE)
+        sample_prior=TRUE,
+        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
 
@@ -1765,14 +1489,6 @@ bm_test_adults_diff_mouse_bear_al %>%
 bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
   mean_hdi(.width = 0.95)
-```
-
-```{r}
-h_test_adults_diff_mouse_bear_al <- hypothesis(bm_test_adults_diff_mouse_bear_al, "condition_c:diff_mouse_bear = 0")
-h_test_adults_diff_mouse_bear_al 
-plot(h_test_adults_diff_mouse_bear_al)
-# evidence in favor of condition being different from zero
-1/h_test_adults_diff_mouse_bear_al$hypothesis$Evid.Ratio
 ```
 
 Alternate Bayes factor approach
@@ -1817,11 +1533,6 @@ Looking_all_trials <- ggplot(summarize_participant,aes(as.factor(trial_num),abso
     geom_half_violin(data=filter(summarize_participant,trial_num=="5"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
     geom_half_violin(data=filter(summarize_participant,trial_num=="6"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_boxplot(data=filter(summarize_participant,trial_num=="1"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="2"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="3"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="4"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="5"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="6"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   facet_wrap(~age_cohort)+
   theme_set(theme_cowplot(font_size=24))+
@@ -1888,8 +1599,6 @@ test_first_trial_half <- ggplot(summarize_participant_test_first_trial_half,aes(
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_half,analysis_window=="1"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_half,analysis_window=="2"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_half,analysis_window=="1"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_half,analysis_window=="2"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
     geom_hline(yintercept=0.5,linetype="dashed")+
   theme_cowplot()+
@@ -1925,8 +1634,6 @@ latency_first_look_target_AOI <- ggplot(summarize_participant_test_first_look,ae
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_look,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_look,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   theme_set(theme_cowplot(font_size=24))+
   facet_wrap(~age_cohort)+
@@ -1963,8 +1670,6 @@ test_first_trial_absolute_target_looking <- ggplot(summarize_participant_test_fi
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   theme_set(theme_cowplot(font_size=24))+
   facet_wrap(~age_cohort)+
@@ -1980,8 +1685,6 @@ test_first_trial_absolute_distractor_looking <- ggplot(summarize_participant_tes
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   theme_set(theme_cowplot(font_size=24))+
   facet_wrap(~age_cohort)+
@@ -1997,8 +1700,6 @@ test_first_trial_diff_target_distractor_looking <- ggplot(summarize_participant_
   geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
-  geom_half_boxplot(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   geom_hline(yintercept=0,linetype="dashed")+
   theme_set(theme_cowplot(font_size=24))+
