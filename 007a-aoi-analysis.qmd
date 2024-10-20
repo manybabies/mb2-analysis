@@ -206,11 +206,6 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
 
-# priors_null<-c(
-#   set_prior("uniform(-0.5, 0.5)", lb=-0.5,ub=0.5,class = "Intercept"), #uniform distribution for intercept
-#   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-#   set_prior("lkj(2)", class = "L"))
-
 #shift trial number coding
 #From the RR:
 #Our key question of interest is whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we will code trial number so that the last trial before the test trials (trial 4) is set to the intercept
@@ -232,9 +227,9 @@ bm_fam_aoi_toddlers <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+fami
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_fam_aoi_toddlers)
-prior_summary(bm_fam_aoi_toddlers)
+#prior_summary(bm_fam_aoi_toddlers)
 
-saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER, "bm_fam_aoi_toddlers.rds"))
+saveRDS(bm_fam_aoi_toddlers, file = here(RESULTS_FOLDER,"bayes_model_fits", "bm_fam_aoi_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -244,11 +239,12 @@ Intercept
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_aoi_toddlers %>%
+bm_fam_aoi_toddlers_intercept_effect <- bm_fam_aoi_toddlers %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#TO DO: cache
+#cache
+saveRDS(bm_fam_aoi_toddlers_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_toddlers_intercept_effect.rds"))
 ```
 
 Trial Number
@@ -256,23 +252,33 @@ Trial Number
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_aoi_toddlers %>%
+bm_fam_aoi_toddlers_trial_number_effect <- bm_fam_aoi_toddlers %>%
   spread_draws(b_familiarization_trial_num_4, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#TO DO: cache
-
+#cache
+saveRDS(bm_fam_aoi_toddlers_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_toddlers_trial_number_effect.rds"))
 ```
 
-Compute Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_fam_aoi_toddlers <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
-summary(null_fam_aoi_toddlers)
- 
-fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,null_fam_aoi_toddlers)
+bm_fam_aoi_toddlers_null <-  update(bm_fam_aoi_toddlers, formula = ~ .-1) # remove intercept
+summary(bm_fam_aoi_toddlers_null)
 
-saveRDS(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER, "fam_m_comparison_PTL_toddlers.rds"))
+saveRDS(bm_fam_aoi_toddlers_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_toddlers_null.rds"))
+ 
+fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers,bm_fam_aoi_toddlers_null)
+
+saveRDS(fam_m_comparision_PTL_toddlers, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_toddlers.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_fam_aoi_toddlers)
+rm(bm_fam_aoi_toddlers_null)
 ```
 
 #### Adults
@@ -291,9 +297,9 @@ bm_fam_aoi_adults <- brm(prop_exit_adj ~ 1+familiarization_trial_num_4+(1+famili
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_fam_aoi_adults)
-prior_summary(bm_fam_aoi_adults)
+#prior_summary(bm_fam_aoi_adults)
 
-saveRDS(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bm_fam_aoi_adults.rds"))
+saveRDS(bm_fam_aoi_adults, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults.rds"))
 ```
 
 Summarize outcomes
@@ -302,9 +308,12 @@ Intercept
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_fam_aoi_adults %>%
+bm_fam_aoi_adults_intercept_effect <- bm_fam_aoi_adults %>%
   spread_draws(b_Intercept, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_aoi_adults_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_adults_intercept_effect.rds"))
 ```
 
 Trial Number
@@ -312,19 +321,31 @@ Trial Number
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_aoi_adults %>%
+bm_fam_aoi_adults_trial_number_effect <- bm_fam_aoi_adults %>%
   spread_draws(b_familiarization_trial_num_4, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_aoi_adults_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_adults_intercept_effect.rds"))
 ```
 
 Compute Bayes factor approach
 
 ```{r}
-null_fam_aoi_adults <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
+bm_fam_aoi_adults_null <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
 summary(null_fam_aoi_adults)
-fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, null_fam_aoi_adults)
+
+saveRDS(bm_fam_aoi_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
+
+fam_m_comparison_PTL_adults <-  brms::bayes_factor(bm_fam_aoi_adults, bm_fam_aoi_adults_null)
  
-saveRDS(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER, "fam_m_comparison_PTL_adults.rds"))
+saveRDS(fam_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,"fam_m_comparison_PTL_adults.rds"))
+```
+
+```{r}
+#remove Bayes model fits
+rm(bm_fam_aoi_adults)
+rm(bm_fam_aoi_adults_null)
 ```
 
 ## Test Data
@@ -553,9 +574,9 @@ bm_aoi_toddlers <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers)
-prior_summary(bm_aoi_toddlers)
+#prior_summary(bm_aoi_toddlers)
 
-saveRDS(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bm_aoi_toddlers.rds"))
+saveRDS(bm_aoi_toddlers, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -563,17 +584,26 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers %>%
+bm_aoi_toddlers_condition_effect <- bm_aoi_toddlers %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers %>%
+#cache
+saveRDS(bm_aoi_toddlers_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_condition_effect.rds"))
+
+bm_aoi_toddlers_age_effect <-bm_aoi_toddlers %>%
   spread_draws(b_age_mo_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers %>%
+#cache
+saveRDS(bm_aoi_toddlers_age_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_age_effect.rds"))
+
+bm_aoi_toddlers_condition_age_interaction <- bm_aoi_toddlers %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_condition_age_interaction.rds"))
 ```
 
 Visualize model coefficients
@@ -593,17 +623,33 @@ bm_aoi_toddlers %>%
 ggsave(here(plot_path,"test_toddlers_model_coefficients.png"),bg="white",width=9,height=6)
 ```
 
-Alternate Bayes factor approach
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
 ```{r}
-null_aoi_toddlers <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
-summary(null_aoi_toddlers)
-test_m_comparison_PTL_toddlers <- brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers)
+bm_aoi_toddlers_condition_null <-  update(bm_aoi_toddlers, formula = ~ .-condition_c)
+summary(bm_aoi_toddlers_condition_null)
+
+saveRDS(bm_aoi_toddlers_condition_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_toddlers_condition_null.rds"))
+
+test_m_comparison_PTL_toddlers <- brms::bayes_factor(bm_aoi_toddlers, bm_aoi_toddlers_condition_null)
 
 saveRDS(test_m_comparison_PTL_toddlers, file=here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers.rds"))
 ```
 
-Hypothesis test/ compute Bayes Factor
+Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+
+```{r}
+bm_aoi_toddlers_interaction_null <-  update(bm_aoi_toddlers, formula = ~ .-condition_c*age_mo_c)
+summary(bm_aoi_toddlers_interaction_null)
+
+saveRDS(bm_aoi_toddlers_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds"))
+
+test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(bm_aoi_toddlers, bm_aoi_toddlers_interaction_null)
+
+saveRDS(test_m_comparison_PTL_toddlers_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_interaction.rds"))
+```
+
+Alternative approach to computing Bayes factor (just as a sanity check that we are using sufficient iterations - these Bayes factors should converge)
 
 ```{r}
 h_aoi_toddlers_interaction <- hypothesis(bm_aoi_toddlers, "condition_c*age_mo_c = 0", class="b")
@@ -613,15 +659,13 @@ plot(h_aoi_toddlers_interaction)
 1/h_aoi_toddlers_interaction$hypothesis$Evid.Ratio
 ```
 
-Alternate Bayes factor approach
-
 ```{r}
-null_aoi_toddlers_interaction <-  update(bm_aoi_toddlers, formula = ~ .-condition_c*age_mo_c)
-summary(null_aoi_toddlers_interaction)
-test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(bm_aoi_toddlers, null_aoi_toddlers_interaction)
-
-saveRDS(test_m_comparison_PTL_toddlers_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_interaction.rds"))
+#remove Bayes model fits
+rm(bm_aoi_toddlers)
+rm(bm_aoi_toddlers_condition_null)
+rm(bm_aoi_toddlers_interaction_null)
 ```
+
 #### Adults
 
 ```{r}
@@ -639,24 +683,37 @@ bm_aoi_adults <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults)
 
-saveRDS(bm_aoi_adults, file = here(RESULTS_FOLDER,"bm_aoi_adults.rds"))
+saveRDS(bm_aoi_adults, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_adults.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults %>%
+bm_aoi_adults_condition_effect <- bm_aoi_adults %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_condition_effect.rds"))
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
-null_aoi_adults <-  update(bm_aoi_adults, formula = ~ .-condition_c)
-summary(null_aoi_adults)
-test_m_comparison_PTL_adults <- brms::bayes_factor(bm_aoi_adults, null_aoi_adults)
+bm_aoi_adults_null <-  update(bm_aoi_adults, formula = ~ .-condition_c)
+summary(bm_aoi_adults_null)
+
+saveRDS(bm_aoi_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
+
+test_m_comparison_PTL_adults <- brms::bayes_factor(bm_aoi_adults, bm_aoi_adults_null)
 
 saveRDS(test_m_comparison_PTL_adults, file=here(RESULTS_FOLDER,  "test_m_comparison_PTL_adults.rds"))
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_adults)
+rm(bm_aoi_adults_null)
 ```
 
 # Timecourse extension
@@ -1316,9 +1373,9 @@ bm_fam_first_look_toddlers <- brm(first_look ~ 1+familiarization_trial_num_4+(1+
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_fam_first_look_toddlers)
-prior_summary(bm_fam_first_look_toddlers)
+#prior_summary(bm_fam_first_look_toddlers)
 
-saveRDS(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers.rds"))
+saveRDS(bm_fam_first_look_toddlers, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_toddlers.rds"))
 ```
 
 Summarize outcomes
@@ -1328,9 +1385,12 @@ Intercept
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_first_look_toddlers %>%
+bm_fam_first_look_toddlers_intercept_effect <- bm_fam_first_look_toddlers %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_toddlers_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_toddlers_intercept_effect.rds"))
 ```
 
 Trial Number
@@ -1338,18 +1398,24 @@ Trial Number
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_first_look_toddlers %>%
+bm_fam_first_look_toddlers_trial_number_effect <- bm_fam_first_look_toddlers %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_toddlers_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_toddlers_trial_number_effect.rds"))
 ```
 
 Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-null_fam_first_look_toddlers <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
-summary(null_fam_first_look_toddlers)
-fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, null_fam_first_look_toddlers)
+bm_fam_first_look_toddlers_null <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
+summary(bm_fam_first_look_toddlers_null)
+
+saveRDS(bm_fam_first_look_toddlers_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_toddlers_null.rds"))
+
+fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, bm_fam_first_look_toddlers_null)
 
 saveRDS(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_toddlers.rds"))
 ```
@@ -1359,19 +1425,15 @@ Because the BF is sensitive to the choice of prior, we will also run a secondary
 
 ```{r}
 # 2nd set of priors
-priors2 <-c(
+priors_less_informative <-c(
   set_prior("normal(0, 3)",class = "Intercept"), #uniform distribution for intercept
   set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
 
-d_anticipatory_fam <- d_anticipatory_fam %>%
-  mutate(familiarization_trial_num_4=trial_num-4)
-
-
-bm_fam_first_look_toddlers2 <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+bm_fam_first_look_toddlers_less_inf_prior <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=bernoulli(link = "logit"),
-         prior = priors2,
+         prior = priors_less_informative ,
          save_pars = save_pars(all = TRUE),
         filter(d_anticipatory_fam,age_cohort=="toddlers"),
         warmup = 1000, 
@@ -1381,10 +1443,10 @@ bm_fam_first_look_toddlers2 <- brm(first_look ~ 1+familiarization_trial_num_4+(1
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
-summary(bm_fam_first_look_toddlers2)
-prior_summary(bm_fam_first_look_toddlers2)
+summary(bm_fam_first_look_toddlers_less_inf_prior)
+#prior_summary(bm_fam_first_look_toddlers_less_inf_prior)
 
-saveRDS(bm_fam_first_look_toddlers2, file = here(RESULTS_FOLDER,"bm_fam_first_look_toddlers2.rds"))
+saveRDS(bm_fam_first_look_toddlers_less_inf_prior, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -1394,9 +1456,12 @@ Intercept
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_first_look_toddlers2 %>%
+bm_fam_first_look_toddlers_less_inf_prior_intercept_effect <- bm_fam_first_look_toddlers_less_inf_prior %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_toddlers_less_inf_prior_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_toddlers_less_inf_prior_intercept_effect.rds"))
 ```
 
 Trial Number
@@ -1404,21 +1469,34 @@ Trial Number
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_first_look_toddlers2 %>%
+bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect <- bm_fam_first_look_toddlers_less_inf_prior %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect , file=here(RESULTS_FOLDER,"bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect.rds"))
 ```
 
 Compute Bayes factor approach
 
 ```{r}
 #this seems broken at the moment
-null_fam_first_look_toddlers2 <-  update(bm_fam_first_look_toddlers2, formula = ~ .-1) # remove intercept
-summary(null_fam_first_look_toddlers2)
-fam_m_comparison_FL_toddlers2 <- brms::bayes_factor(bm_fam_first_look_toddlers2, null_fam_first_look_toddlers2)
+bm_fam_first_look_toddlers_less_inf_prior_null <-  update(bm_fam_first_look_toddlers_less_inf_prior, formula = ~ .-1) # remove intercept
+summary(bm_fam_first_look_toddlers_less_inf_prior_null)
 
-saveRDS(fam_m_comparison_FL_toddlers2, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_toddlers2.rds"))
+saveRDS(bm_fam_first_look_toddlers_less_inf_prior_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_toddlers_less_inf_prior_null.rds"))
+
+fam_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(bm_fam_first_look_toddlers_less_inf_prior, bm_fam_first_look_toddlers_less_inf_prior_null)
+
+saveRDS(fam_m_comparison_FL_toddlers_less_inf_prior, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_toddlers_less_inf_prior.rds"))
 ```
+
+```{r}
+#remove Bayes model fits
+rm(bm_fam_first_look_toddlers_less_inf_prior)
+rm(bm_fam_first_look_toddlers_less_inf_prior_null)
+```
+
 #### Adults
 
 ```{r}
@@ -1435,9 +1513,9 @@ bm_fam_first_look_adults <- brm(first_look ~ 1+familiarization_trial_num_4+(1+fa
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_fam_first_look_adults)
-prior_summary(bm_fam_first_look_adults)
+#prior_summary(bm_fam_first_look_adults)
 
-saveRDS(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults.rds"))
+saveRDS(bm_fam_first_look_adults, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults.rds"))
 ```
 
 Summarize outcomes
@@ -1446,9 +1524,12 @@ Intercept
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_fam_first_look_adults %>%
+bm_fam_first_look_adults_intercept_effect <- bm_fam_first_look_adults %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_adults_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_adults_intercept_effect.rds"))
 ```
 
 Trial Number
@@ -1456,33 +1537,39 @@ Trial Number
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_fam_first_look_adults %>%
+bm_fam_first_look_adults_trial_number_effect <- bm_fam_first_look_adults %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_adults_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_adults_trial_number_effect.rds"))
 ```
 
 Compute Bayes factor approach
 
 ```{r}
-#this seems broken at the moment
-null_fam_first_look_adults <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
-summary(null_fam_first_look_adults)
+bm_fam_first_look_adults_null <-  update(bm_fam_first_look_adults, formula = ~ .-1) #remove intercept
+summary(bm_fam_first_look_adults_null)
+
+saveRDS(bm_fam_first_look_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults_null.rds"))
+
 fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
  
 saveRDS(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_adults.rds"))
 ```
 
-2nd set of priors
 ```{r}
-priors2 <-c(
-  set_prior("normal(0, 3)",class = "Intercept"), #uniform distribution for intercept
-  set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
+#remove Bayes model fits
+rm(bm_fam_first_look_adults)
+rm(bm_fam_first_look_adults_null)
+```
 
-bm_fam_first_look_adults2 <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
+Less informative prior as a robustness check
+
+```{r}
+bm_fam_first_look_adults_less_inf_prior <- brm(first_look ~ 1+familiarization_trial_num_4+(1+familiarization_trial_num_4|lab_id)+(1+familiarization_trial_num_4|participant_lab_id),
          family=bernoulli(link = "logit"),
-         prior = priors2,
+         prior = priors_less_informative,
          save_pars = save_pars(all = TRUE),
         filter(d_anticipatory_fam,age_cohort=="adults"),
         warmup = 1000, 
@@ -1495,7 +1582,7 @@ bm_fam_first_look_adults2 <- brm(first_look ~ 1+familiarization_trial_num_4+(1+f
 summary(bm_fam_first_look_adults2)
 prior_summary(bm_fam_first_look_adults2)
 
-saveRDS(bm_fam_first_look_adults2, file = here(RESULTS_FOLDER,"bm_fam_first_look_adults2.rds"))
+saveRDS(bm_fam_first_look_adults_less_inf_prior, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -1504,29 +1591,45 @@ Intercept
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_fam_first_look_adults2 %>%
+bm_fam_first_look_adults_less_inf_prior_intercept_effect <- bm_fam_first_look_adults_less_inf_prior %>%
   spread_draws(b_Intercept) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_adults_less_inf_prior_intercept_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_adults_less_inf_prior_intercept_effect.rds"))
 ```
 
 Trial Number
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_fam_first_look_adults2 %>%
+bm_fam_first_look_adults_less_inf_prior_trial_number_effect <- bm_fam_first_look_adults_less_inf_prior %>%
   spread_draws(b_familiarization_trial_num_4) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_fam_first_look_adults_less_inf_prior_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_first_look_adults_less_inf_prior_trial_number_effect.rds"))
 ```
 
 Compute Bayes factor approach
 
 ```{r}
-null_fam_first_look_adults2 <-  update(bm_fam_first_look_adults2, formula = ~ .-1) #remove intercept
-summary(null_fam_first_look_adults2)
-fam_m_comparison_FL_adults2 <-  brms::bayes_factor(bm_fam_first_look_adults2, null_fam_first_look_adults2)
+bm_fam_first_look_adults_less_inf_prior_null <-  update(bm_fam_first_look_adults_less_inf_prior, formula = ~ .-1) #remove intercept
+summary(bm_fam_first_look_adults_less_inf_prior_null)
+
+saveRDS(bm_fam_first_look_adults_less_inf_prior_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults_less_inf_prior_null.rds"))
+
+fam_m_comparison_FL_adults_less_inf_prior <-  brms::bayes_factor(bm_fam_first_look_adults_less_inf_prior, bm_fam_first_look_adults_less_inf_prior_null)
  
-saveRDS(fam_m_comparison_FL_adults2, file=here(RESULTS_FOLDER, "fam_m_comparison_FL_adults2.rds"))
+saveRDS(fam_m_comparison_FL_adults_less_inf_prior, file=here(RESULTS_FOLDER, "fam_m_comparison_FL_adults_less_inf_prior.rds"))
 ```
+
+```{r}
+#remove Bayes model fits
+rm(bm_fam_first_look_adults_less_inf_prior)
+rm(bm_fam_first_look_adults_less_inf_prior_null)
+```
+
 ### Test Data
 
 Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial first looks during the anticipatory window.
@@ -1588,9 +1691,9 @@ bm_test_first_look_toddlers <- brm(
   sample_prior=TRUE,
   control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_first_look_toddlers)
-prior_summary(bm_test_first_look_toddlers)
+#prior_summary(bm_test_first_look_toddlers)
 
-saveRDS(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers.rds"))
+saveRDS(bm_test_first_look_toddlers, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_toddlers.rds"))
 ```
 
 ```{r}
@@ -1605,35 +1708,42 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_test_first_look_toddlers %>%
+bm_test_first_look_toddlers_intercept_effect <- bm_test_first_look_toddlers %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_toddlers_intercept_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_intercept_effect.rds"))
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
-null_first_look_toddlers <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
-summary(null_first_look_toddlers)
-test_m_comparison_FL_toddlers <- brms::bayes_factor(bm_test_first_look_toddlers, null_first_look_toddlers)
+bm_test_first_look_toddlers_null <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
+summary(bm_test_first_look_toddlers_null)
+
+#cache
+saveRDS(bm_test_first_look_toddlers_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_toddlers_null.rds"))
+
+test_m_comparison_FL_toddlers <- brms::bayes_factor(bm_test_first_look_toddlers, bm_test_first_look_toddlers_null)
 
 saveRDS(test_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers.rds"))
 ```
 
-2nd set of priors
+```{r}
+#remove Bayes model fits
+rm(bm_test_first_look_toddlers)
+rm(bm_test_first_look_toddlers_null)
+```
+
+
+Less informative priors
 
 ```{r}
-#set the prior
-priors2 <-c(
-  set_prior("normal(0, 3)",class = "Intercept"), #uniform distribution for intercept
-  set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
-
-bm_test_first_look_toddlers2 <- brm(
+bm_test_first_look_toddlers_less_inf_prior <- brm(
   correct_first_look ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
   family=bernoulli(link = "logit"),
-  prior = priors2,
+  prior = priors_less_informative,
   save_pars = save_pars(all = TRUE),
   filter(test_first_look_first_trial,age_cohort=="toddlers"),
   warmup = 1000,
@@ -1643,10 +1753,10 @@ bm_test_first_look_toddlers2 <- brm(
   seed = 123,
   sample_prior=TRUE,
   control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
-summary(bm_test_first_look_toddlers2)
-prior_summary(bm_test_first_look_toddlers2)
+summary(bm_test_first_look_toddlers_less_inf_prior)
+#prior_summary(bm_test_first_look_toddlers_less_inf_prior)
 
-saveRDS(bm_test_first_look_toddlers2, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers2.rds"))
+saveRDS(bm_test_first_look_toddlers_less_inf_prior, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 ```{r}
@@ -1661,20 +1771,33 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_test_first_look_toddlers2 %>%
+bm_test_first_look_toddlers_less_inf_prior_condition_effect <- bm_test_first_look_toddlers_less_inf_prior %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_toddlers_less_inf_prior_condition_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_less_inf_prior_condition_effect.rds"))
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
-null_first_look_toddlers2 <-  update(bm_test_first_look_toddlers2, formula = ~ .-condition_c)
-summary(null_first_look_toddlers2)
-test_m_comparison_FL_toddlers2 <- brms::bayes_factor(bm_test_first_look_toddlers2, null_first_look_toddlers2)
+bm_test_first_look_toddlers_less_inf_prior_null <-  update(bm_test_first_look_toddlers_less_inf_prior, formula = ~ .-condition_c)
+summary(bm_test_first_look_toddlers_less_inf_prior_null)
 
-saveRDS(test_m_comparison_FL_toddlers2, file=here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers2.rds"))
+saveRDS(bm_test_first_look_toddlers_less_inf_prior_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
+
+test_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(bm_test_first_look_toddlers_less_inf_prior, bm_test_first_look_toddlers_less_inf_prior_null)
+
+saveRDS(test_m_comparison_FL_toddlers_less_inf_prior, file=here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_less_inf_prior.rds"))
 ```
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_first_look_toddlers_less_inf_prior)
+rm(bm_test_first_look_toddlers_less_inf_prior_null)
+```
+
 
 #### Adults
 
@@ -1693,9 +1816,9 @@ bm_test_first_look_adults <- brm(
   sample_prior=TRUE,
   control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_test_first_look_adults)
-prior_summary(bm_test_first_look_adults)
+#prior_summary(bm_test_first_look_adults)
 
-saveRDS(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bm_test_first_look_adults.rds"))
+saveRDS(bm_test_first_look_adults, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_adults.rds"))
 ```
 
 Summarize outcomes
@@ -1703,28 +1826,40 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_test_first_look_adults %>%
+bm_test_first_look_adults_condition_effect <- bm_test_first_look_adults %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_adults_condition_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_adults_condition_effect.rds"))
 ```
 
-Alternate Bayes factor approach
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
 ```{r}
-null_first_look_adults <-  update(bm_test_first_look_adults, formula = ~ .-condition_c)
-summary(null_first_look_adults)
-test_m_comparison_FL_adults <- brms::bayes_factor(bm_test_first_look_adults, null_first_look_adults)
+bm_test_first_look_adults_null <-  update(bm_test_first_look_adults, formula = ~ .-condition_c)
+summary(bm_test_first_look_adults_null)
+
+saveRDS(bm_test_first_look_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_adults_null.rds"))
+
+test_m_comparison_FL_adults <- brms::bayes_factor(bm_test_first_look_adults, bm_test_first_look_adults_null)
 
 saveRDS(test_m_comparison_FL_adults, file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults.rds"))
 ```
 
-2nd set of priors
+```{r}
+#remove Bayes model fits
+rm(bm_test_first_look_adults)
+rm(bm_test_first_look_adults_null)
+```
+
+Less informative priors
 
 ```{r}
-bm_test_first_look_adults2 <- brm(
+bm_test_first_look_adults_less_inf_prior <- brm(
   correct_first_look ~ 1+condition_c+(1+condition_c|lab_id),
   family=bernoulli(link = "logit"),
-  prior = priors2,
+  prior = priors_less_informative,
   save_pars = save_pars(all = TRUE),
   filter(test_first_look_first_trial,age_cohort=="adults"),
   warmup = 1000,
@@ -1734,10 +1869,10 @@ bm_test_first_look_adults2 <- brm(
   seed = 123,
   sample_prior=TRUE,
   control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
-summary(bm_test_first_look_adults2)
-prior_summary(bm_test_first_look_adults2)
+summary(bm_test_first_look_adults_less_inf_prior)
+#prior_summary(bm_test_first_look_adults_less_inf_prior)
 
-saveRDS(bm_test_first_look_adults2, file = here(RESULTS_FOLDER,"bm_test_first_look_adults2.rds"))
+saveRDS(bm_test_first_look_adults_less_inf_prior, file = here(RESULTS_FOLDER,"bm_test_first_look_adults_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -1745,20 +1880,33 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_test_first_look_adults %>%
+bm_test_first_look_adults_less_inf_prior_condition_effect <- bm_test_first_look_adults_less_inf_prior %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_adults_less_inf_prior_condition_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_adults_less_inf_prior_condition_effect.rds"))
 ```
 
-Alternate Bayes factor approach
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
 ```{r}
-null_first_look_adults2 <-  update(bm_test_first_look_adults2, formula = ~ .-condition_c)
-summary(null_first_look_adults2)
-test_m_comparison_FL_adults2 <- brms::bayes_factor(bm_test_first_look_adults2, null_first_look_adults2)
+bm_test_first_look_adults_less_inf_prior_null <-  update(bm_test_first_look_adults_less_inf_prior, formula = ~ .-condition_c)
+summary(bm_test_first_look_adults_less_inf_prior_null)
 
-saveRDS(test_m_comparison_FL_adults2, file = here(RESULTS_FOLDER,  "test_m_comparison_FL_adults2.rds"))
+saveRDS(bm_test_first_look_adults_less_inf_prior_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_adults_less_inf_prior_nulll.rds"))
+
+test_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(bm_test_first_look_adults_less_inf_prior, bm_test_first_look_adults_less_inf_prior_null)
+
+saveRDS(test_m_comparison_FL_adults_less_inf_prior, file = here(RESULTS_FOLDER,  "test_m_comparison_FL_adults_less_inf_prior.rds"))
 ```
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_first_look_adults_less_inf_prior)
+rm(bm_test_first_look_adults_less_inf_prior_null)
+```
+
 ## Plotting PTL and First Look for familiarization and test
 
 ```{r}
@@ -1789,21 +1937,3 @@ figure_fam_test_p_fl <- cowplot::plot_grid(overall_p_fam +
 
 ggsave(here(paper_path,"Figure5.png"),bg="white",width=14, height=8)
 ```
-
-## Main model with a less informative prior
-
-Because the BF is sensitive to the choice of prior, we will also run a secondary analysis with a less informative prior: fixed effect coefficients chosen from a normal distribution with mean 0 and SD of 3, and random effect standard deviations drawn from a normal prior with a mean of 0 and SD of 0.5.
-
-### Familiarization Data
-
-#### Toddlers
-
-```{r}
-#set the prior
-priors_less_informative <-c(
-  set_prior("normal(0, 3)",class = "Intercept"), #uniform distribution for intercept
-  set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
-```
-
