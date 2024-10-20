@@ -1624,5 +1624,5 @@ priors_less_informative <-c(
   set_prior("normal(0, 3)", class = "b"), # normal distribution for fixed-effect coefficients
   set_prior("normal(0, .5)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor
-
+```
 
