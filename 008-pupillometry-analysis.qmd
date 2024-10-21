@@ -101,5 +101,54 @@ Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
 ```{r}
 data_pupillometry <- data_pupillometry |> 
   mutate(eyetracker_type = str_remove(tracker_type, " .*"))
+
+#subsetting to Tobii data for now
+data_pupillometry <- data_pupillometry %>%
+  filter(eyetracker_type=="Tobii")
 ```
 
+Saving first pupillometry data set of Tobii eyetrackers to use for multiverse
+```{r}
+save(data_pupillometry, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
+```
+
+Creating heatmaps for 5s-window after the point of disambiguation
+```{r}
+library(png)
+img.r <- as.raster(readPNG(here('helper', 'stim.png')),interpolate=F)
+
+MB2P_DIR <- here('MB2P')
+CHECKING_DIR <- here(MB2P_DIR, 'manual_data_checking_pupil')
+CHECKING_HEATMAP_DIR <- here(CHECKING_DIR, 'heatmaps_for_pupil')
+
+data_pupillometry %>% 
+  filter((trial_num %in% c('6'))) %>% 
+  filter(t_norm>=0 & t_norm<=5000)  %>%
+  group_by(lab_id, media_name) %>%
+  group_walk(function(data, grouping){
+    print(grouping$lab_id)
+    
+    #if(!(grouping$lab_id %in% labs_to_check)){
+    #  return(NA)
+    #}
+    
+    labdir = here(CHECKING_HEATMAP_DIR, grouping$lab_id)
+    dir.create(labdir, showWarnings = FALSE)
+    tryCatch(
+    ggsave(
+      here(labdir, paste0(grouping$media_name, '__', grouping$lab_id, '.png')),
+      plot = 
+        ggplot(data, aes(x,y)) + 
+          annotation_raster(img.r, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
+          stat_density2d(geom = "polygon", aes(fill=..level.., alpha = ..level..), size= 20, bins= 500) + 
+          scale_fill_gradient(low="blue",high="red") +
+          scale_alpha_continuous(range=c(0.01,1.0), guide = FALSE) +
+          scale_x_continuous(limits=c(0,dim(img.r)[2]),expand=c(0,0))+
+          scale_y_continuous(limits=c(0,dim(img.r)[1]),expand=c(0,0))+
+          coord_fixed(),
+      width = 7,
+      height = 5,
+      units = "in"
+      ), error = function(e) print(e))
+  })
+```
