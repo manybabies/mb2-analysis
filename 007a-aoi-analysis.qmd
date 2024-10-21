@@ -333,7 +333,7 @@ Compute Bayes factor approach
 
 ```{r}
 bm_fam_aoi_adults_null <-  update(bm_fam_aoi_adults, formula = ~ .-1) #remove intercept
-summary(null_fam_aoi_adults)
+summary(bm_fam_aoi_adults_null)
 
 saveRDS(bm_fam_aoi_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
 
@@ -1409,7 +1409,6 @@ saveRDS(bm_fam_first_look_toddlers_trial_number_effect, file=here(RESULTS_FOLDER
 Compute Bayes factor approach
 
 ```{r}
-#this seems broken at the moment
 bm_fam_first_look_toddlers_null <-  update(bm_fam_first_look_toddlers, formula = ~ .-1) # remove intercept
 summary(bm_fam_first_look_toddlers_null)
 
@@ -1419,6 +1418,13 @@ fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, b
 
 saveRDS(fam_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_toddlers.rds"))
 ```
+
+```{r}
+#remove Bayes model fits
+rm(bm_fam_first_look_toddlers)
+rm(bm_fam_first_look_toddlers_null)
+```
+
 
 Because the BF is sensitive to the choice of prior, we will also run a secondary analysis with a less informative prior: fixed effect coefficients chosen from a normal distribution with mean 0 and SD of 3, and random effect standard deviations drawn from a normal prior with a mean of 0 and SD of 0.5. 
 
@@ -1480,7 +1486,6 @@ saveRDS(bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect , file=her
 Compute Bayes factor approach
 
 ```{r}
-#this seems broken at the moment
 bm_fam_first_look_toddlers_less_inf_prior_null <-  update(bm_fam_first_look_toddlers_less_inf_prior, formula = ~ .-1) # remove intercept
 summary(bm_fam_first_look_toddlers_less_inf_prior_null)
 
@@ -1553,7 +1558,7 @@ summary(bm_fam_first_look_adults_null)
 
 saveRDS(bm_fam_first_look_adults_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults_null.rds"))
 
-fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, null_fam_first_look_adults)
+fam_m_comparison_FL_adults <-  brms::bayes_factor(bm_fam_first_look_adults, bm_fam_first_look_adults_null)
  
 saveRDS(fam_m_comparison_FL_adults, file=here(RESULTS_FOLDER,  "fam_m_comparison_FL_adults.rds"))
 ```
@@ -1579,8 +1584,8 @@ bm_fam_first_look_adults_less_inf_prior <- brm(first_look ~ 1+familiarization_tr
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
-summary(bm_fam_first_look_adults2)
-prior_summary(bm_fam_first_look_adults2)
+summary(bm_fam_first_look_adults_less_inf_prior)
+#prior_summary(bm_fam_first_look_adults_less_inf_prior)
 
 saveRDS(bm_fam_first_look_adults_less_inf_prior, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_first_look_adults_less_inf_prior.rds"))
 ```
@@ -1756,7 +1761,7 @@ bm_test_first_look_toddlers_less_inf_prior <- brm(
 summary(bm_test_first_look_toddlers_less_inf_prior)
 #prior_summary(bm_test_first_look_toddlers_less_inf_prior)
 
-saveRDS(bm_test_first_look_toddlers_less_inf_prior, file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers_less_inf_prior.rds"))
+saveRDS(bm_test_first_look_toddlers_less_inf_prior, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 ```{r}
@@ -1872,7 +1877,7 @@ bm_test_first_look_adults_less_inf_prior <- brm(
 summary(bm_test_first_look_adults_less_inf_prior)
 #prior_summary(bm_test_first_look_adults_less_inf_prior)
 
-saveRDS(bm_test_first_look_adults_less_inf_prior, file = here(RESULTS_FOLDER,"bm_test_first_look_adults_less_inf_prior.rds"))
+saveRDS(bm_test_first_look_adults_less_inf_prior, file = here(RESULTS_FOLDER,"bayes_model_fits","bm_test_first_look_adults_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
