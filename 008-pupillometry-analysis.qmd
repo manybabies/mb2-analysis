@@ -101,10 +101,12 @@ Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
 ```{r}
 data_pupillometry <- data_pupillometry |> 
   mutate(eyetracker_type = str_remove(tracker_type, " .*"))
+```
 
-#subsetting to Tobii data for now
-data_pupillometry <- data_pupillometry %>%
-  filter(eyetracker_type=="Tobii")
+Create new variable that contains outcome info: congruent, incongruent
+```{r}
+data_pupillometry$outcome <- ifelse(grepl("_CON$", data_pupillometry$media_name), "congruent",
+                     ifelse(grepl("_INC$", data_pupillometry$media_name), "incongruent", NA))
 ```
 
 Saving first pupillometry data set of Tobii eyetrackers to use for multiverse
