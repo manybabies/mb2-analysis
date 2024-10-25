@@ -33,6 +33,7 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 rds_files <- list.files(RESULTS_FOLDER, pattern = "\\.rds$", full.names = TRUE)
 
 # Load each RDS file as a separate variable in the global environment
+# This doesn't work for me anymore - not sure why
 for (file in rds_files) {
   rds_name <- tools::file_path_sans_ext(basename(file))
   assign(rds_name, readRDS(file))
@@ -210,37 +211,56 @@ bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_m
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
-saveRDS(bm_aoi_toddlers_both, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_both.rds"))
+saveRDS(bm_aoi_toddlers_both, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers)
+#get_variables(bm_aoi_toddlers_both)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers_both %>%
+bm_aoi_toddlers_both_condition_effect <- bm_aoi_toddlers_both %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_both %>%
+#cache
+saveRDS(bm_aoi_toddlers_both_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_effect.rds"))
+
+bm_aoi_toddlers_both_age_effect <- bm_aoi_toddlers_both %>%
   spread_draws(b_age_mo_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_both %>%
+#cache
+saveRDS(bm_aoi_toddlers_both_age_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_age_effect.rds"))
+
+bm_aoi_toddlers_both_condition_age_interaction <- bm_aoi_toddlers_both %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_both_condition_age_interaction, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_age_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_toddlers_both <-  update(bm_aoi_toddlers_both, formula = ~ .-condition_c)
-summary(null_aoi_toddlers_both)
-test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, null_aoi_toddlers_both)
+bm_aoi_toddlers_both_null <-  update(bm_aoi_toddlers_both, formula = ~ .-condition_c)
+summary(bm_aoi_toddlers_both_null)
+
+saveRDS(bm_aoi_toddlers_both_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_toddlers_null.rds"))
+
+test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, bm_aoi_toddlers_both_null)
 
 saveRDS(test_comparison_aoi_toddlers_both, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both.rds"))
 ```
 
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_toddlers_both)
+rm(bm_aoi_toddlers_both_null)
+```
 
 #### Adults
 
@@ -266,19 +286,33 @@ saveRDS(bm_aoi_adults_both, file = here(RESULTS_FOLDER,"bm_aoi_adults_both.rds")
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_both %>%
+bm_aoi_adults_both_condition_effect <- bm_aoi_adults_both %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_both_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_adults_both_condition_effect.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_adults_both <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
-summary(null_aoi_adults_both)
-test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, null_aoi_adults_both)
+bm_aoi_adults_both_null <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
+summary(bm_aoi_adults_both_null)
+
+saveRDS(bm_aoi_adults_both_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
+
+test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, bm_aoi_adults_both_null)
 
 saveRDS(test_comparison_aoi_adults_both, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_adults_both)
+rm(bm_aoi_adults_both_null)
 ```
 
 ## 1.b. whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect)
@@ -328,7 +362,7 @@ bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+cond
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
 
-saveRDS(bm_aoi_toddlers_both_order, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_both_order.rds"))
+saveRDS(bm_aoi_toddlers_both_order, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both_order.rds"))
 ```
 
 Summarize outcomes
@@ -336,27 +370,47 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers_both_order %>%
+bm_aoi_toddlers_both_order_condition_effect <- bm_aoi_toddlers_both_order %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_both_order %>%
+#cache
+saveRDS(bm_aoi_toddlers_both_order_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_effect.rds"))
+
+bm_aoi_toddlers_both_order_trial_num_effect <- bm_aoi_toddlers_both_order %>%
   spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_both_order %>%
+#cache
+saveRDS(bm_aoi_toddlers_both_order_trial_num_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_trial_num_effect.rds"))
+
+bm_aoi_toddlers_both_order_condition_trial_num_interaction <- bm_aoi_toddlers_both_order %>%
   spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_both_order_condition_trial_num_interaction, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_trial_num_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_toddlers_both_order <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
-summary(null_aoi_toddlers_both_order)
-test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, null_aoi_toddlers_both_order)
+bm_aoi_toddlers_both_order_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
+summary(bm_aoi_toddlers_both_order_null)
+
+saveRDS(bm_aoi_toddlers_both_order_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_both_order_null.rds"))
+
+test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_null)
 
 saveRDS(test_comparison_aoi_toddlers_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both_order.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_toddlers_both_order)
+rm(bm_aoi_toddlers_both_order_null)
 ```
 
 #### Adults
@@ -376,33 +430,53 @@ bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condit
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_both_order)
 
-saveRDS(bm_aoi_adults_both_order, file = here(RESULTS_FOLDER,"bm_aoi_adults_both_order.rds"))
+saveRDS(bm_aoi_adults_both_order, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_both_order.rds"))
 ```
 
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_both_order %>%
+bm_aoi_adults_both_order_condition_effect <- bm_aoi_adults_both_order %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_adults_both_order %>%
+#cache
+saveRDS(bm_aoi_adults_both_order_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_condition_effect.rds"))
+
+bm_aoi_adults_both_order_trial_num_effect <- bm_aoi_adults_both_order %>%
   spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_adults_both_order %>%
+#cache
+saveRDS(bm_aoi_adults_both_order_trial_num_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_trial_num_effect.rds"))
+
+bm_aoi_adults_both_order_condition_trial_num_interaction <- bm_aoi_adults_both_order %>%
   spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_both_order_condition_trial_num_interaction, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_condition_trial_num_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_adults_both_order <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
-summary(null_aoi_adults_both_order)
-test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, null_aoi_adults_both_order)
+bm_aoi_adults_both_order_null <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
+summary(bm_aoi_adults_both_order_null)
+
+saveRDS(bm_aoi_adults_both_order_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_adults_both_order_null.rds"))
+
+test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_null)
 
 saveRDS(test_comparison_aoi_adults_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both_order.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_adults_both_order)
+rm(bm_aoi_adults_both_order_null)
 ```
 
 ## 2. Connections between familiarization and test
@@ -498,7 +572,7 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
 Summarize outcomes
@@ -506,27 +580,47 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers_correct_final_fam_trial %>%
+bm_aoi_toddlers_correct_final_fam_trial_condition_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_correct_final_fam_trial %>%
+#cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_condition_effect.rds"))
+
+bm_aoi_toddlers_correct_final_fam_trial_age_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(b_age_mo_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_correct_final_fam_trial %>%
+#cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_age_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_age_effect.rds"))
+
+bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction <- bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_toddlers_correct_final_fam_trial <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
-summary(null_aoi_toddlers_correct_final_fam_trial)
-test_m_comparison_aoi_toddlers_correct_final_fam_trial <-  brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, null_aoi_toddlers_correct_final_fam_trial)
+bm_aoi_toddlers_correct_final_fam_trial_null <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
+summary(bm_aoi_toddlers_correct_final_fam_trial_null)
+
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
+
+test_m_comparison_aoi_toddlers_correct_final_fam_trial <-  brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, bm_aoi_toddlers_correct_final_fam_trial_null)
 
 saveRDS(test_m_comparison_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_toddlers_correct_final_fam_trial)
+rm(bm_aoi_toddlers_correct_final_fam_trial_null)
 ```
 
 ##### Adults
@@ -546,24 +640,38 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_correct_final_fam_trial)
 
-saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_correct_final_fam_trial.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_correct_final_fam_trial %>%
+bm_aoi_adults_correct_final_fam_trial_condition_effect <- bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial_condition_effect.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_adults_correct_final_fam_trial <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
-summary(null_aoi_adults_correct_final_fam_trial)
-test_m_comparison_aoi_adults_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, null_aoi_adults_correct_final_fam_trial)
+bm_aoi_adults_correct_final_fam_trial_null <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
+summary(bm_aoi_adults_correct_final_fam_trial_null)
+
+saveRDS(bm_aoi_adults_correct_final_fam_trial_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_adults_correct_final_fam_trial_null.rds"))
+
+test_m_comparison_aoi_adults_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, bm_aoi_adults_correct_final_fam_trial_null)
 
 saveRDS(test_m_comparison_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_correct_final_fam_trial.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_adults_correct_final_fam_trial)
+rm(bm_aoi_adults_correct_final_fam_trial_null)
 ```
 
 ### 2.b. Only >50% looking to target during familiarization trials
@@ -640,7 +748,7 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
 ```
 
 Summarize outcomes
@@ -648,28 +756,48 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+#cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect.rds"))
+
+bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
   spread_draws(b_age_mo_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+#cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect.rds"))
+
+bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_toddlers_sufficient_fam_prop_looking <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
-summary(null_aoi_toddlers_sufficient_fam_prop_looking)
+bm_aoi_toddlers_sufficient_fam_prop_looking_null <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+summary(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_sufficient_fam_prop_looking_null.rds"))
+
 test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking <- 
-brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, null_aoi_toddlers_sufficient_fam_prop_looking)
+brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
 saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_toddlers_sufficient_fam_prop_looking)
+rm(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 ```
 
 ##### Adults
@@ -689,24 +817,38 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+co
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"bm_aoi_adults_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_sufficient_fam_prop_looking %>%
+bm_aoi_adults_sufficient_fam_prop_looking_condition_effect <- bm_aoi_adults_sufficient_fam_prop_looking %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_sufficient_fam_prop_looking_condition_effect.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_adults_sufficient_fam_prop_looking <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
-summary(null_aoi_adults_sufficient_fam_prop_looking)
-test_m_comparison_aoi_adults_sufficient_fam_prop_looking <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking, null_aoi_adults_sufficient_fam_prop_looking)
+bm_aoi_adults_sufficient_fam_prop_looking_null <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+summary(bm_aoi_adults_sufficient_fam_prop_looking_null)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_sufficient_fam_prop_looking_null.rds"))
+
+test_m_comparison_aoi_adults_sufficient_fam_prop_looking <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking, bm_aoi_adults_sufficient_fam_prop_looking_null)
 
 saveRDS(test_m_comparison_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_sufficient_fam_prop_looking.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_adults_sufficient_fam_prop_looking)
+rm(bm_aoi_adults_sufficient_fam_prop_looking_null)
 ```
 
 ### 2.c. Correlation between familiarization and test
@@ -838,7 +980,7 @@ bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*met
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
 
-saveRDS(bm_aoi_toddlers_method, file = here(RESULTS_FOLDER,"bm_aoi_toddlers_method.rds"))
+saveRDS(bm_aoi_toddlers_method, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_method.rds"))
 ```
 
 Summarize outcomes
@@ -846,29 +988,48 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_aoi_toddlers_method %>%
+bm_aoi_toddlers_method_condition_effect <- bm_aoi_toddlers_method %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_method %>%
+#cache
+saveRDS(bm_aoi_toddlers_method_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_condition_effect.rds"))
+
+bm_aoi_toddlers_method_method_effect <- bm_aoi_toddlers_method %>%
   spread_draws(b_method_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_toddlers_method %>%
+#cache
+saveRDS(bm_aoi_toddlers_method_method_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_method_effect.rds"))
+
+bm_aoi_toddlers_method_condition_method_interaction <- bm_aoi_toddlers_method %>%
   spread_draws(`b_condition_c:method_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_toddlers_method_condition_method_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_condition_method_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_toddlers_method <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c:method_c)
-summary(null_aoi_toddlers_method)
-test_m_comparison_aoi_toddlers_method <- brms::bayes_factor(bm_aoi_toddlers_method, null_aoi_toddlers_method)
+bm_aoi_toddlers_method_null <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c:method_c)
+summary(bm_aoi_toddlers_method_null)
+
+saveRDS(bm_aoi_toddlers_method_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_method_null.rds"))
+
+test_m_comparison_aoi_toddlers_method <- brms::bayes_factor(bm_aoi_toddlers_method, bm_aoi_toddlers_method_null)
 
 saveRDS(test_m_comparison_aoi_toddlers_method, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_method.rds"))
 ```
 
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_toddlers_method)
+rm(bm_aoi_toddlers_method_null)
+```
 
 #### Adults
 
@@ -887,35 +1048,54 @@ bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*me
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_adults_method)
 
-saveRDS(bm_aoi_adults_method, file = here(RESULTS_FOLDER,"bm_aoi_adults_method.rds"))
+saveRDS(bm_aoi_adults_method, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_method.rds"))
 ```
 Summarize outcomes
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_aoi_adults_method %>%
+bm_aoi_adults_method_condition_effect <- bm_aoi_adults_method %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_adults_method %>%
+#cache
+saveRDS(bm_aoi_adults_method_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_condition_effect.rds"))
+
+bm_aoi_adults_method_method_effect <- bm_aoi_adults_method %>%
   spread_draws(b_method_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_aoi_adults_method %>%
+#cache
+saveRDS(bm_aoi_adults_method_method_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_method_effect.rds"))
+
+bm_aoi_adults_method_condition_method_interaction <- bm_aoi_adults_method %>%
   spread_draws(`b_condition_c:method_c`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_aoi_adults_method_condition_method_interaction, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_condition_method_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute the Bayes factor using bridge sampling
 
 ```{r}
-null_aoi_adults_method <-  update(bm_aoi_adults_method, formula = ~ .-condition_c:method_c)
-summary(null_aoi_adults_method)
-test_m_comparison_aoi_adults_method <- brms::bayes_factor(bm_aoi_adults_method, null_aoi_adults_method)
+bm_aoi_adults_method_null <-  update(bm_aoi_adults_method, formula = ~ .-condition_c:method_c)
+summary(bm_aoi_adults_method_null)
+
+saveRDS(bm_aoi_adults_method_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_method_null.rds"))
+
+test_m_comparison_aoi_adults_method <- brms::bayes_factor(bm_aoi_adults_method, bm_aoi_adults_method_null)
 
 saveRDS(test_m_comparison_aoi_adults_method, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_method.rds"))
 ```
 
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_aoi_adults_method)
+rm(bm_aoi_adults_method_null)
+```
 
 ## 4. If we observe substantial looking (defined *post hoc* by evaluating scatter plot videos of gaze data) to the boxes as well as the tunnel exit AOIs, we will conduct an exploratory analysis using tighter AOIs around tunnel exits and boxes, asking whether box and tunnel looking vary separately by age or by condition. In particular, we expect that the difference in AL between the two conditions will be bigger for the tunnel exits than for the box (as looks to the correct box might indicate looks to the target, which is in the same box for both conditions, rather than action anticipation).
 
@@ -963,6 +1143,9 @@ ggsave(here(plot_path,"kids_proportion_first_trial_target_box_looking_by_age.png
 
 Difference in PTL between conditions for boxes smaller than for exits?
 ```{r}
+#something doesn't work in loading all Results RDSs, loading it manually for now here
+summarize_participant_test_first_trial <- readRDS(file=here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
+
 diff_box_exit <- summarize_participant_test_first_trial %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
   summarize(
@@ -1093,7 +1276,7 @@ overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_sh
   geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=age_cohort),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
-  #theme_cowplot()+
+  theme_cowplot()+
   theme_set(theme_cowplot(font_size=24))+
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
@@ -1160,32 +1343,52 @@ bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+conditi
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
 
-saveRDS(bm_test_shifts_age_cohort, file = here(RESULTS_FOLDER,"bm_test_shifts_age_cohort.rds"))
+saveRDS(bm_test_shifts_age_cohort, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_shifts_age_cohort.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_test_shifts_age_cohort %>%
+bm_test_shifts_age_cohort_age_cohort_effect <- bm_test_shifts_age_cohort %>%
   spread_draws(b_age_cohort_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_shifts_age_cohort %>%
+#cache
+saveRDS(bm_test_shifts_age_cohort_age_cohort_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_effect.rds"))
+
+bm_test_shifts_age_cohort_condition_effect <- bm_test_shifts_age_cohort %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_shifts_age_cohort %>%
+#cache
+saveRDS(bm_test_shifts_age_cohort_condition_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_condition_effect.rds"))
+
+bm_test_shifts_age_cohort_age_cohort_condition_interaction <- bm_test_shifts_age_cohort %>%
   spread_draws(b_condition_c:age_cohort_c, sigma) %>%
-  mean_hdi(.width = 0.95)
+  mean_hdi(.width = 0.95) ### currently giving me an NA here
+
+#cache
+saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_condition_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute Bayes Factor using bridge sampling
 
 ```{r}
-null_test_shifts_age_cohort <-  update(bm_test_shifts_age_cohort, formula = ~ .-condition_c:age_cohort_c)
-summary(null_test_shifts_age_cohort)
-test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, null_test_shifts_age_cohort)
+bm_test_shifts_age_cohort_null <-  update(bm_test_shifts_age_cohort, formula = ~ .-condition_c:age_cohort_c)
+summary(bm_test_shifts_age_cohort_null)
+
+saveRDS(bm_test_shifts_age_cohort_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_test_shifts_age_cohort_null.rds"))
+
+test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, bm_test_shifts_age_cohort_null)
 
 saveRDS(test_m_comparison_shifts_age_cohort, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_age_cohort.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_shifts_age_cohort)
+rm(bm_test_shifts_age_cohort_null)
 ```
 
 ### 5.2. Number of shifts during location change of mouse as a function of AL
@@ -1201,7 +1404,7 @@ summarize_participant_test_both_trials_lc <- summarize_participant_test_both_tri
 
 # plotting AL and number of shifts during location change of mouse
 
-AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,num_shifts,color=condition))+
+AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(num_shifts, prop_exit, color=condition))+
   geom_point() +
   geom_smooth(method='lm')+
   facet_wrap(condition~age_cohort)+
@@ -1210,8 +1413,8 @@ AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(prop_exit,num_s
   scale_y_continuous(breaks=seq(0,11,1))+
   theme_set(theme_cowplot(font_size=24))+
   theme(legend.position="none")+
-  xlab("AL in test trials")+
-  ylab("Number of shifts during location change of mouse")
+  xlab("Number of shifts during location change of mouse")+
+  ylab("AL in test trials")
 
 AL_shifts
 
@@ -1243,32 +1446,54 @@ bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
-saveRDS(bm_test_toddlers_shifts_al, file = here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al.rds"))
+saveRDS(bm_test_toddlers_shifts_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_shifts_al.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_test_toddlers_shifts_al %>%
+bm_test_toddlers_shifts_al_condition_effect <- bm_test_toddlers_shifts_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_toddlers_shifts_al %>%
+#cache
+saveRDS(bm_test_toddlers_shifts_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_condition_effect.rds"))
+
+bm_test_toddlers_shifts_al_num_shifts_effect <- bm_test_toddlers_shifts_al %>%
   spread_draws(b_num_shifts, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_toddlers_shifts_al %>%
+#cache
+saveRDS(bm_test_toddlers_shifts_al_num_shifts_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_num_shifts_effect.rds"))
+
+bm_test_toddlers_shifts_al_condition_num_shifts_interaction <- bm_test_toddlers_shifts_al %>%
   spread_draws(`b_condition_c:num_shifts`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_toddlers_shifts_al_condition_num_shifts_interaction, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_condition_num_shifts_interaction.rds"))
 ```
 
 Bridge sampling Bayes factor approach
 
 ```{r}
-null_test_toddlers_shifts_al <-  update(bm_test_toddlers_shifts_al, formula = ~ .-condition_c:num_shifts)
-summary(null_test_toddlers_shifts_al)
-test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, null_test_toddlers_shifts_al)
+bm_test_toddlers_shifts_al_null <-  update(bm_test_toddlers_shifts_al, formula = ~ .-condition_c:num_shifts)
+summary(bm_test_toddlers_shifts_al_null)
+
+saveRDS(bm_test_toddlers_shifts_al_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_test_toddlers_shifts_al_null.rds"))
+
+test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, bm_test_toddlers_shifts_al_null)
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. 
+#Estimate might be more variable than usual.
 
 saveRDS(test_m_comparison_toddlers_shifts_al, file=here(RESULTS_FOLDER,"test_m_comparison_toddlers_shifts_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_toddlers_shifts_al)
+rm(bm_test_toddlers_shifts_al_null)
 ```
 
 #### Adults
@@ -1287,7 +1512,7 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
          save_pars = save_pars(all = TRUE),
         filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
         warmup = 1000, 
-        iter = 10000, 
+        iter = 15000, 
         chains = 4, 
         cores = 4,
         seed = 123,
@@ -1296,32 +1521,53 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
-saveRDS(bm_test_adults_shifts_al, file = here(RESULTS_FOLDER,"bm_test_adults_shifts_al.rds"))
+saveRDS(bm_test_adults_shifts_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_shifts_al.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_test_adults_shifts_al %>%
+bm_test_adults_shifts_al_condition_effect <- bm_test_adults_shifts_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_adults_shifts_al %>%
+#cache
+saveRDS(bm_test_adults_shifts_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_condition_effect.rds"))
+
+bm_test_adults_shifts_al_num_shifts_effect <- bm_test_adults_shifts_al %>%
   spread_draws(b_num_shifts, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_adults_shifts_al %>%
+#cache
+saveRDS(bm_test_adults_shifts_al_num_shifts_effect, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_num_shifts_effect.rds"))
+
+bm_test_adults_shifts_al_condition_num_shits_interaction <- bm_test_adults_shifts_al %>%
   spread_draws(`b_condition_c:num_shifts`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_condition_num_shits_interaction.rds"))
 ```
 
-Bridge sampling Bayes factor approach
+Compute Bayes factor using bridge sampling
 
 ```{r}
-null_test_adults_shifts_al <-  update(bm_test_adults_shifts_al, formula = ~ .-condition_c:num_shifts)
-summary(null_test_adults_shifts_al)
-test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, null_test_adults_shifts_al)
+bm_test_adults_shifts_al_null <-  update(bm_test_adults_shifts_al, formula = ~ .-condition_c:num_shifts)
+summary(bm_test_adults_shifts_al_null)
 
+saveRDS(bm_test_adults_shifts_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_shifts_al_null.rds"))
+
+test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, bm_test_adults_shifts_al_null)
+# Warning: Infinite value in iterative scheme, returning NA. (for 10000 iterations)
+# Try rerunning with more samples.
 saveRDS(test_m_comparison_adults_shifts_al, file=here(RESULTS_FOLDER,"test_m_comparison_adults_shifts_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_adults_shifts_al)
+rm(bm_test_adults_shifts_al_null)
 ```
 
 ### 5.3. Fixation times of bear and mouse during location change of mouse as a function of AL
@@ -1335,7 +1581,6 @@ looking_time_location_change_diff_mouse_bear <- ggplot(d_location_change,aes(con
 geom_beeswarm(alpha=0.2,cex=0.2)+
   geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  
   stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
   geom_hline(yintercept=0,linetype="dashed")+
   facet_wrap(~age_cohort)+
@@ -1388,8 +1633,8 @@ AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(diff_m
   theme_set(theme_cowplot(font_size=24))+
   geom_hline(yintercept=0,linetype="dashed")+
   scale_fill_brewer(palette="Set1")+
-  xlab("AL in test trials")+
-  ylab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)")
+  xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)")+
+  ylab("AL in test trials")
 
 AL_diff_mouse_bear
 
@@ -1417,35 +1662,58 @@ bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+#Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
+#https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+#Warning: Examine the pairs() plot to diagnose sampling problems
 summary(bm_test_toddlers_diff_mouse_bear_al)
 prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
-saveRDS(bm_test_toddlers_diff_mouse_bear_al, file = here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_toddlers_diff_mouse_bear_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_test_diff_mouse_bear_al %>%
+bm_test_toddlers_diff_mouse_bear_al_condition_effect <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_diff_mouse_bear_al %>%
+#cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_condition_effect.rds"))
+
+bm_test_toddlers_diff_mouse_bear_al_diff_effect <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(b_diff_mouse_bear, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_diff_mouse_bear_al %>%
+#cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_diff_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_diff_effect.rds"))
+
+bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction.rds"))
 ```
 
 Bridge sampling Bayes factor approach
 
 ```{r}
-null_test_toddlers_diff_mouse_bear_al <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
-summary(null_test_toddlers_diff_mouse_bear_al)
-test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, null_test_toddlers_diff_mouse_bear_al)
+bm_test_toddlers_diff_mouse_bear_al_null <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
+summary(bm_test_toddlers_diff_mouse_bear_al_null)
+
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
+
+test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, bm_test_toddlers_diff_mouse_bear_al_null)
 
 saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_toddlers_diff_mouse_bear_al)
+rm(bm_test_toddlers_diff_mouse_bear_al_null)
 ```
 
 #### Adults
@@ -1473,32 +1741,53 @@ bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_be
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
 
-saveRDS(bm_test_toddlers_adults_diff_mouse_bear_al, file = here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_adults_diff_mouse_bear_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
-bm_test_adults_diff_mouse_bear_al %>%
+bm_test_adults_diff_mouse_bear_al_condition_effect <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_adults_diff_mouse_bear_al %>%
+#cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_condition_effect.rds"))
+
+bm_test_adults_diff_mouse_bear_al_diff_effect <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(b_diff_mouse_bear, sigma) %>%
   mean_hdi(.width = 0.95)
 
-bm_test_adults_diff_mouse_bear_al %>%
+#cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_diff_effect, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_diff_effect.rds"))
+
+bm_test_adults_diff_mouse_bear_al_condition_diff_interaction <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
   mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_condition_diff_interaction.rds"))
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
-null_test_adults_diff_mouse_bear_al <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
+bm_test_adults_diff_mouse_bear_al_null <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
 summary(null_test_adults_diff_mouse_bear_al)
-test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, null_test_adults_diff_mouse_bear_al)
+
+saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_diff_mouse_bear_al_null.rds"))
+
+test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_adults_diff_mouse_bear_al.rds"))
+```
+
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+#remove Bayes model fits
+rm(bm_test_adults_diff_mouse_bear_al)
+rm(bm_test_adults_diff_mouse_bear_al_null)
 ```
 
 Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of distraction; similarly, more looking at the mouse during change in ign compared to know cond
@@ -1532,7 +1821,6 @@ Looking_all_trials <- ggplot(summarize_participant,aes(as.factor(trial_num),abso
     geom_half_violin(data=filter(summarize_participant,trial_num=="4"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
     geom_half_violin(data=filter(summarize_participant,trial_num=="5"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
     geom_half_violin(data=filter(summarize_participant,trial_num=="6"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_boxplot(data=filter(summarize_participant,trial_num=="1"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
   stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
   facet_wrap(~age_cohort)+
   theme_set(theme_cowplot(font_size=24))+
@@ -1552,6 +1840,11 @@ ggsave(here(plot_path,"Looking_all_trials.png"),bg="white",width=14,height=9)
 run confirmatory analyses per time window
 
 ```{r}
+#filter to first trials
+test_data_first_trial <- test_data %>%
+  #filter to first trial only
+  filter(trial_num==5)
+
 summarize_participant_test_first_trial_half <- test_data_first_trial %>%
   group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
            bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type, trial_num) %>%
@@ -1640,7 +1933,7 @@ latency_first_look_target_AOI <- ggplot(summarize_participant_test_first_look,ae
   scale_color_brewer(palette="Set1")+
   scale_fill_brewer(palette="Set1")+
   theme(legend.position="none")+
-  ylab("Latency of First Look to Target Exit")
+  ylab("Latency of First Look to Target Exit (in ms)")
 
 latency_first_look_target_AOI
 
