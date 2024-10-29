@@ -76,7 +76,9 @@ all <- data_pupillometry
 all$step <- "implausible"
 summary(all)
 
-plausible <- data_pupillometry[data_pupillometry$average>2 & data_pupillometry$average<8,] #RH: Does it matter that the number of rows is reduced as opposed to creating NAs and keeping number of rows the same? #GC in terms of computational problems there are no differences 
+plausible <- data_pupillometry |> 
+  mutate(average = ifelse(average > 2 | average < 8, NA, average))
+# plausible <- data_pupillometry[data_pupillometry$average>2 & data_pupillometry$average<8,] #RH: Does it matter that the number of rows is reduced as opposed to creating NAs and keeping number of rows the same? #GC in terms of computational problems there are no differences 
 
 plausible$step <- "plausible"
 summary(plausible)
@@ -85,7 +87,10 @@ all_plausible <- list(all, plausible)
 
 all$pupil_left = as.numeric(as.character(all$pupil_left))
 all$pupil_right = as.numeric(as.character(all$pupil_right))
-all = all[all$pupil_left >0 & all$pupil_right>0,] # MSS this currently creates rows with NAs resulting in the next plot to also have NAs as age_cohort facet
+all <- all |> 
+  mutate(pupil_left = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_left),
+         pupil_right = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_right))
+# all = all[all$pupil_left >0 & all$pupil_right>0,] # MSS this currently creates rows with NAs resulting in the next plot to also have NAs as age_cohort facet
 
 all %>% mutate(Color = ifelse(pupil_left <=2 | pupil_left >=8 | pupil_right <=2 | pupil_right >=8,"blue", "red")) %>%
   ggplot(aes(x = pupil_left, y= pupil_right, color = Color))+
@@ -131,8 +136,8 @@ apply_moving_average <- function(data, window_size = 5) {
   data %>%
     group_by(participant_id, Trial) %>%
     mutate(
-      pupil_left_MA = zoo::rollapply(pupil_left, width = window_size, FUN = mean, fill = NA, align = 'right'),
-      pupil_right_MA = zoo::rollapply(pupil_right, width = window_size, FUN = mean, fill = NA, align = 'right')
+      pupil_left_MA = zoo::rollapply(pupil_left, width = window_size, FUN = mean, na.rm = TRUE, fill = NA, align = 'right'),
+      pupil_right_MA = zoo::rollapply(pupil_right, width = window_size, FUN = mean, na.rm = TRUE, fill = NA, align = 'right')
     ) %>%
     ungroup()
 }
