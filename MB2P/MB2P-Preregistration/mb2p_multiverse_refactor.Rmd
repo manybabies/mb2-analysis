@@ -17,6 +17,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(zoo)
+library(lme4)
+library(mgcv)
 library(here)
 library(tidyverse)
 library(stringi)
@@ -97,7 +99,7 @@ data_pupillometry |>
 
 ```{r DF2 area of interest, echo=TRUE, include=TRUE, out.width='90%'}
 data_within <- data_df1 |> 
-  mutate(data = lapply(data, \(d) {
+  mutate(data = map(data, \(d) {
     d |> 
       mutate(x = ifelse(x <= 0 | x >= 1280, NA, x),
              y = ifelse(y <= 0 | y >= 960, NA, y))
@@ -118,7 +120,7 @@ data_pupillometry |>
 WINDOW_SIZE = 5
 
 data_avg <- data_df2 |> 
-  mutate(data = lapply(data, \(d) {
+  mutate(data = map(data, \(d) {
     d |> 
       group_by(participant_id, trial_num) |> 
       mutate(pupil_left = rollapply(pupil_left, width = WINDOW_SIZE, 
@@ -148,22 +150,22 @@ We consider three possible baseline correction all performed by subtracting the 
 # FIXME: note suggests median, but actual code uses mean
 baseline_correct <- function(data, TIME_WINDOW = 1000) {
   data |> 
-      group_by(participant_id, condition, outcome, lab_id) |> 
-      mutate(average = {
-        avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
-        avg_mean <- mean(avg_filtered, na.rm = TRUE)
-        average - avg_mean
-      })
+    group_by(participant_id, condition, outcome, lab_id) |> 
+    mutate(average = {
+      avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
+      avg_mean <- mean(avg_filtered, na.rm = TRUE)
+      average - avg_mean
+    })
 }
 
 data_baseline_1 <- data_df3 |> 
-  mutate(data = lapply(data, partial(baseline_correct, TIME_WINDOW = 1000)),
+  mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 1000)),
          df4_baseline_correction = "1s", .before = "data")
 data_baseline_0.5 <- data_df3 |> 
-  mutate(data = lapply(data, partial(baseline_correct, TIME_WINDOW = 500)),
+  mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 500)),
          df4_baseline_correction = "0.5s", .before = "data")
 data_baseline_0.25 <- data_df3 |> 
-  mutate(data = lapply(data, partial(baseline_correct, TIME_WINDOW = 250)),
+  mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 250)),
          df4_baseline_correction = "0.25s", .before = "data")
 
 data_df4 <- bind_rows(
@@ -176,7 +178,7 @@ data_df4 <- bind_rows(
 data_df4 |> 
   pull(data) |> 
   (`[`)(value = c(2,7)) |> # arbitrarily select two universes to visualise
-  lapply(\(d) {
+  map(\(d) {
     ggplot(d |> filter(!is.na(average),
                        t_norm >= 0 & t_norm < 5000), 
            aes(x = t_norm, y = average, col = condition)) +
@@ -205,11 +207,11 @@ valid_both_ids <- data_pupillometry |>
   unique()
 
 data_valid_second <- data_df4 |> 
-  mutate(data = lapply(data, \(d) {
+  mutate(data = map(data, \(d) {
     d |> filter(participant_lab_id %in% valid_second_ids)
   }))
 data_valid_both <- data_df4 |> 
-  mutate(data = lapply(data, \(d) {
+  mutate(data = map(data, \(d) {
     d |> filter(participant_lab_id %in% valid_both_ids)
   }))
 
@@ -236,133 +238,36 @@ As a final step, we investigated (1) the averaged interaction effect Condition x
 
 For the analysis of pupillary data, we utilized generalized additive mixed modeling (GAMM, Wood, 2011). GAMMs combine the flexibility of generalized additive models (GAMs) with the ability to incorporate random effects, which are essential for accounting for correlations among observations within clusters or groups. This includes the use of smooth functions that handle both continuous and categorical predictors. The random effects component facilitates the inclusion of hierarchical structures, such as nested or repeated measures within the data, making GAMMs useful for a wide range of data types, including time series, spatial, and longitudinal data. The model is estimated using penalized regression techniques, which help to avoid overfitting and produce more reliable predictions.
 
-```{r, SETTING MODEL, FUNCTIONS, echo=TRUE,include=TRUE, out.width='90%'}
-# Inspect the structure of megaverse
-str(megaverse, max.level = 3)
-
-extract_data_frame <- function(data) {
-  while (is.list(data) && length(data) == 1) {
-    data <- data[[1]]
-  }
-  return(data)
-}
-
-library(dplyr)
-library(lme4)
-library(mgcv)
-library(purrr)
-
-# Function to check if all dataset are a data frame
-is_valid_dataset <- function(data) {
-  return(is.data.frame(data))
-}
-
-# Pre-validation: Validate all datasets in megaverse with debug information
-validate_megaverse <- function(megaverse) {
-  validation_results <- map2(megaverse, seq_along(megaverse), function(sublist, i) {
-    if (is.list(sublist)) {
-      return(map2(sublist, seq_along(sublist), function(innerlist, j) {
-        if (is.list(innerlist)) {
-          return(map2(innerlist, seq_along(innerlist), function(innermostlist, k) {
-            if (is.list(innermostlist)) {
-              return(map2(innermostlist, seq_along(innermostlist), function(dataset, l) {
-                dataset <- extract_data_frame(dataset)
-                cat(sprintf("Validating dataset at [%d][%d][%d][%d]: Type = %s\n", i, j, k, l, class(dataset)))
-                if (!is_valid_dataset(dataset)) {
-                  warning(sprintf("Dataset at [%d][%d][%d][%d] is not a valid data frame. Type: %s", i, j, k, l, class(dataset)))
-                  return(NULL) # Mark invalid datasets as NULL
-                }
-                cat(sprintf("Structure of dataset at [%d][%d][%d][%d]:\n", i, j, k, l))
-                print(str(dataset))
-                return(TRUE) # Mark valid datasets
-              }))
-            } else {
-              warning(sprintf("Expected list of lists at [%d][%d][%d], but found: %s", i, j, k, class(innermostlist)))
-              return(NULL)
-            }
-          }))
-        } else {
-          warning(sprintf("Expected list of lists at [%d][%d], but found: %s", i, j, class(innerlist)))
-          return(NULL)
-        }
-      }))
-    } else {
-      warning(sprintf("Expected list of lists at index %d, but found: %s", i, class(sublist)))
-      return(NULL)
-    }
-  })
-  return(validation_results)
-}
-
-# Define the function to fit the models to a dataset
-fit_models <- function(data) {
-  models <- list()
-  if (is_valid_dataset(data)) {
-    # Model 1: Linear model with condition*outcome
-    model1_data <- data |>
-      filter(t_norm > 0 & t_norm < 5000) |>
-      group_by(participant_id, condition, outcome, age_cohort) |>
-      dplyr::summarise(bc_pupil_size_average = mean(bc_pupil_size, na.rm = TRUE)) |>
-      ungroup()
-    models$model1 <- tryCatch(lm(bc_pupil_size_average ~ condition * outcome * age_cohort, data = model1_data), error = function(e) e)
-
-    # Model 2: Linear mixed model with condition*outcome across trial time
-    models$model2 <- tryCatch(lmer(bc_pupil_size ~ t_norm * condition * outcome * age_cohort + (1 + t | participant_id), data = data), error = function(e) e)
-
-    # Model 3: Generalized additive model with smooth terms
-    models$model3 <- tryCatch(
-      bam(
-        bc_pupil_size ~ condition * outcome * age_cohort +
-          s(t_norm, by = lab_id, k = 7) +
-          s(t_norm, by = condition, k = 20) +
-          s(t_norm, by = outcome, k = 20) +
-          s(t_norm, participant_id, bs = "fs", m = 1),
-        data = data, discrete = TRUE, nthreads = 40
-      ),
-      error = function(e) e
-    )
-  } else {
-    models$error <- "Provided data is not a valid data frame."
-  }
-  return(models)
-}
-
-# Model fitting: Process valid datasets in megaverse
-fit_models_to_valid_datasets <- function(megaverse, validation_results) {
-  model_results <- map2(megaverse, validation_results, function(sublist, valid_sublist) {
-    if (is.list(sublist) && !is.null(valid_sublist)) {
-      return(map2(sublist, valid_sublist, function(innerlist, valid_innerlist) {
-        if (is.list(innerlist) && !is.null(valid_innerlist)) {
-          return(map2(innerlist, valid_innerlist, function(innermostlist, valid_innermostlist) {
-            if (is.list(innermostlist) && !is.null(valid_innermostlist)) {
-              return(map2(innermostlist, valid_innermostlist, function(dataset, is_valid) {
-                dataset <- extract_data_frame(dataset)
-                if (is.null(is_valid)) {
-                  return(list(error = "Invalid data frame. Skipped processing."))
-                }
-                return(fit_models(dataset))
-              }))
-            }
-            return(NULL)
-          }))
-        }
-        return(NULL)
-      }))
-    }
-    return(NULL)
-  })
-  return(model_results)
-}
-
-# Validate all datasets first
-validation_results <- validate_megaverse(megaverse)
-
-# Fit models to only valid datasets
-megaverse_model_results <- fit_models_to_valid_datasets(megaverse, validation_results)
-
-# Print the results (or handle them as needed)
-cat("Model fitting results:\n")
-print(megaverse_model_results)
+```{r modelling, echo=TRUE, include=TRUE, out.width='90%'}
+data_analysis <- data_df5 |> 
+  mutate(
+    model_lm = map(data, \(d) {
+      lm(average ~ condition * outcome * age_cohort, 
+         data = d |> 
+           filter(t_norm > 0 & t_norm < 5000) |> 
+           group_by(participant_id, condition, outcome, age_cohort) |> 
+           summarise(average = mean(average, na.rm = TRUE),
+                     .groups = "drop"))
+    }),
+    model_lmer = map(data, \(d) {
+      lmer(average ~ condition * outcome * age_cohort * t_norm +
+             (1 + t | participant_id),
+           data = d)
+    }),
+    model_gam = map(data, \(d) {
+      bam(average ~ condition * outcome * age_cohort +
+            s(t_norm, by = lab_id, k = 7) +
+            s(t_norm, by = condition, k = 20) +
+            s(t_norm, by = outcome, k = 20) +
+            s(t_norm, participant_id, bs = "fs", m = 1),
+          data = d |> 
+            mutate(lab_id = as.factor(lab_id),
+                   condition = as.factor(condition),
+                   outcome = as.factor(outcome),
+                   participant_id = as.factor(participant_id)), 
+          discrete = TRUE, 
+          nthreads = 40)
+    }))
 ```
 To select the best model based on the lowest BIC, lowest AIC, and highest R-squared (Calignano et al., 2024), we computed the aboved cited statistics for each model and then compare them. We create a function to extract these metrics, identify the best model based on each criterion, and then plot the effects of the best model.
 
@@ -390,23 +295,23 @@ extract_model_metrics <- function(model) {
 # Function to compare models and select the best based on AIC, BIC, and R-squared
 compare_models <- function(models_list) {
   model_metrics <- map(models_list, ~ map(.x, extract_model_metrics))
-
+  
   best_models <- list()
   best_models$AIC <- model_metrics |>
     map_df(~ map_df(.x, ~ data.frame(AIC = .x$AIC)), .id = "model") |>
     arrange(AIC) |>
     slice(1)
-
+  
   best_models$BIC <- model_metrics |>
     map_df(~ map_df(.x, ~ data.frame(BIC = .x$BIC)), .id = "model") |>
     arrange(BIC) |>
     slice(1)
-
+  
   best_models$R_squared <- model_metrics |>
     map_df(~ map_df(.x, ~ data.frame(R_squared = .x$R_squared)), .id = "model") |>
     arrange(desc(R_squared)) |>
     slice(1)
-
+  
   return(best_models)
 }
 
