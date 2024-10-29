@@ -97,9 +97,14 @@ data_pupillometry <- data_pupillometry |>
 assert_that(sum(is.na(data_pupillometry$valid_second_test_trial)) == 0)
 ```
 
-Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
+Merge in eyetracker info + Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
 ```{r}
+dataset_sheet <- read_csv(here("metadata", "dataset_sheet.csv"))
 data_pupillometry <- data_pupillometry |> 
+  mutate(data_id = glue("{lab_id}_{age_cohort}")) |> 
+  left_join(dataset_sheet |> select(data_id, tracker_type),
+            by = join_by(data_id)) |> 
+  select(-data_id) |> 
   mutate(eyetracker_type = str_remove(tracker_type, " .*"))
 ```
 
@@ -109,7 +114,7 @@ data_pupillometry$outcome <- ifelse(grepl("_CON$", data_pupillometry$media_name)
                      ifelse(grepl("_INC$", data_pupillometry$media_name), "incongruent", NA))
 ```
 
-Saving first pupillometry data set of Tobii eyetrackers to use for multiverse
+Saving pupillometry dataset to use for multiverse
 ```{r}
 save(data_pupillometry, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 ```
