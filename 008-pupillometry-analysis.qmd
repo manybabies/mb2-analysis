@@ -104,8 +104,13 @@ data_pupillometry <- data_pupillometry |>
   mutate(data_id = glue("{lab_id}_{age_cohort}")) |> 
   left_join(dataset_sheet |> select(data_id, tracker_type),
             by = join_by(data_id)) |> 
-  select(-data_id) |> 
-  mutate(eyetracker_type = str_remove(tracker_type, " .*"))
+  select(-data_id)
+  # The above creates two columns, tracker_type.x & tracker_type.y
+  # Check that they are identical:
+  identical(data_pupillometry[['tracker_type.y']],data_pupillometry[['tracker_type.x']])
+  # Then use one of them:
+  data_pupillometry <- data_pupillometry |>
+  mutate(eyetracker_type = str_remove(tracker_type.y, " .*"))
 ```
 
 Create new variable that contains outcome info: congruent, incongruent
