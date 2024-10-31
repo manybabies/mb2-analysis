@@ -16,14 +16,21 @@ library(tidybayes)
 library(knitr)
 library(corrr)
 library(ggpubr)
+library(StanHeaders)
+library(QuickJSR)
+library(rstan)
+#remotes::install_github("stan-dev/cmdstanr")
+library(cmdstanr)
 
 source(here('helper','ensure_repo_structure.R'))
+source(here('helper','analysis_helper.R'))
 plot_path <- here("plots")
 paper_path <- here("paper")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
+
 
 # Load data
 
@@ -43,11 +50,74 @@ for (file in rds_files) {
 Splitting the data into familiarization data and test data.
 
 ```{r}
-fam_data <- data_preprocessed_post_exclusions %>%
-  filter(condition %in% c("familiarization"))
+
+d_anticipatory_fam <- data_preprocessed_post_exclusions %>% 
+  filter(condition %in% c("familiarization")) %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  reframe(lengths = rle(aoi)$lengths, 
+            values = rle(aoi)$values) %>%
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  nest() %>%
+  mutate(data = lapply(data, get_first_look)) %>%
+  unnest(cols = c(data)) %>%
+  mutate(familiarization_trial_num_4=trial_num-4)
+
 
 test_data <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("knowledge","ignorance"))
+
+summarize_participant_test_first_look_first_trial  <- test_data %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  reframe(lengths = rle(aoi)$lengths, 
+            values = rle(aoi)$values) %>%
+  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  nest() %>%
+  mutate(data = lapply(data, get_first_look)) %>%
+  unnest(cols = c(data)) %>%
+  filter(trial_num==5) %>%
+  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
+  summarize(
+    N = n(),
+    prop_correct_first_look = mean(first_look =="target_exit"),
+    average_rt = mean(first_look_rt),
+    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
+  ) 
+
+
+```
+
+```{r}
+summarize_participant <- data_preprocessed_post_exclusions %>%
+  group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
+  filter(t_norm<=120 & t_norm>=-3880) %>%
+  mutate(
+    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+  ) %>%
+  summarize(
+    t_min=min(t_norm),
+    t_max=max(t_norm),
+    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
+    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
+    N_exit = sum_target_exit+sum_distractor_exit,
+    absolute_looking = N_exit*40
+  )
+
+rm(data_preprocessed_post_exclusions)
+gc()
+```
+
+```{r}
+n_cores = parallel::detectCores() - 1
+options(mc.cores = n_cores)
+rstan_options(auto_write = TRUE)
+
+# Optimize Stan compilation
+Sys.setenv(LOCAL_CPPFLAGS = '-O3')
+
+cmdstanr::install_cmdstan()
+use_cmdstan = TRUE
 ```
 
 # Exploratory analyses
@@ -196,22 +266,32 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
+
 bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c|participant_lab_id)+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials,age_cohort=="toddlers"),
+        filter(summarize_participant_test_both_trials,age_cohort=="toddlers") %>%
+          select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
-saveRDS(bm_aoi_toddlers_both, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both.rds"))
+model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
+
+# Create directory if it doesn't exist
+if (!dir.exists(model_fits_dir)) {
+  dir.create(model_fits_dir, recursive = TRUE)
+}
+
+saveRDS(bm_aoi_toddlers_both, file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
 ```
 
 Summarize outcomes
@@ -260,6 +340,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_toddlers_both)
 rm(bm_aoi_toddlers_both_null)
+gc()
 ```
 
 #### Adults
@@ -274,8 +355,9 @@ bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+co
         filter(summarize_participant_test_both_trials,age_cohort=="adults"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE, 
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -313,6 +395,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_adults_both)
 rm(bm_aoi_adults_both_null)
+gc()
 ```
 
 ## 1.b. whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect)
@@ -354,8 +437,9 @@ bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+cond
         filter(summarize_participant_test_both_trials, age_cohort=="toddlers"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -411,6 +495,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_toddlers_both_order)
 rm(bm_aoi_toddlers_both_order_null)
+gc()
 ```
 
 #### Adults
@@ -423,8 +508,9 @@ bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condit
         filter(summarize_participant_test_both_trials,age_cohort=="adults"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -477,6 +563,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_adults_both_order)
 rm(bm_aoi_adults_both_order_null)
+gc()
 ```
 
 ## 2. Connections between familiarization and test
@@ -487,6 +574,7 @@ We will explore whether condition differences vary for participants who show hig
 
 ```{r}
 #first, find the participants who anticipate correctly on the last trial
+
 summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
   group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition,trial_num) %>%
   summarize(
@@ -565,8 +653,9 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         filter(summarize_participant_test_first_trial,age_cohort=="toddlers"&correct_first_look_final_fam_trial==1),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -621,6 +710,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_toddlers_correct_final_fam_trial)
 rm(bm_aoi_toddlers_correct_final_fam_trial_null)
+gc()
 ```
 
 ##### Adults
@@ -633,8 +723,9 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         filter(summarize_participant_test_first_trial,age_cohort=="adults"&correct_first_look_final_fam_trial==1),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -672,6 +763,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_adults_correct_final_fam_trial)
 rm(bm_aoi_adults_correct_final_fam_trial_null)
+gc()
 ```
 
 ### 2.b. Only >50% looking to target during familiarization trials
@@ -741,8 +833,9 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age
         filter(summarize_participant_test_first_trial, age_cohort=="toddlers" & fam_prop_exit>0.5),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -798,6 +891,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking)
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
+gc()
 ```
 
 ##### Adults
@@ -810,8 +904,9 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+co
         filter(summarize_participant_test_first_trial,age_cohort=="adults"&fam_prop_exit>=0.5),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -849,6 +944,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_adults_sufficient_fam_prop_looking)
 rm(bm_aoi_adults_sufficient_fam_prop_looking_null)
+gc()
 ```
 
 ### 2.c. Correlation between familiarization and test
@@ -917,6 +1013,8 @@ saveRDS(correlation_fam_test_by_age, file = here(RESULTS_FOLDER,"correlation_fam
 #### Summary Statistics
 
 ```{r}
+## TODO this breaks because the grouping variables data_type, method_c are missing
+## The ordering of the summarize_participant_* declarations is messed up, so I give up for now
 summarize_test_aoi_method <- summarize_participant_test_first_trial %>%
   group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition,condition_c,data_type,method_c) %>%
   summarize(
@@ -972,8 +1070,9 @@ bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*met
         filter(summarize_participant_test_first_trial,age_cohort=="toddlers"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1029,6 +1128,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_toddlers_method)
 rm(bm_aoi_toddlers_method_null)
+gc()
 ```
 
 #### Adults
@@ -1041,8 +1141,9 @@ bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*me
         filter(summarize_participant_test_first_trial,age_cohort=="adults"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1095,6 +1196,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_aoi_adults_method)
 rm(bm_aoi_adults_method_null)
+gc()
 ```
 
 ## 4. If we observe substantial looking (defined *post hoc* by evaluating scatter plot videos of gaze data) to the boxes as well as the tunnel exit AOIs, we will conduct an exploratory analysis using tighter AOIs around tunnel exits and boxes, asking whether box and tunnel looking vary separately by age or by condition. In particular, we expect that the difference in AL between the two conditions will be bigger for the tunnel exits than for the box (as looks to the correct box might indicate looks to the target, which is in the same box for both conditions, rather than action anticipation).
@@ -1335,8 +1437,9 @@ bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+conditi
         filter(d_location_change),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1389,6 +1492,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_test_shifts_age_cohort)
 rm(bm_test_shifts_age_cohort_null)
+gc()
 ```
 
 ### 5.2. Number of shifts during location change of mouse as a function of AL
@@ -1438,8 +1542,9 @@ bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition
         filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1494,6 +1599,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_test_toddlers_shifts_al)
 rm(bm_test_toddlers_shifts_al_null)
+gc()
 ```
 
 #### Adults
@@ -1513,8 +1619,9 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
         filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
         warmup = 1000, 
         iter = 15000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1568,6 +1675,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_test_adults_shifts_al)
 rm(bm_test_adults_shifts_al_null)
+gc()
 ```
 
 ### 5.3. Fixation times of bear and mouse during location change of mouse as a function of AL
@@ -1657,8 +1765,9 @@ bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_
         filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1714,6 +1823,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_test_toddlers_diff_mouse_bear_al)
 rm(bm_test_toddlers_diff_mouse_bear_al_null)
+gc()
 ```
 
 #### Adults
@@ -1733,8 +1843,9 @@ bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_be
         filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
         warmup = 1000, 
         iter = 10000, 
-        chains = 4, 
-        cores = 4,
+        chains = 4,
+        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
         control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
@@ -1788,6 +1899,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 #remove Bayes model fits
 rm(bm_test_adults_diff_mouse_bear_al)
 rm(bm_test_adults_diff_mouse_bear_al_null)
+gc()
 ```
 
 Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of distraction; similarly, more looking at the mouse during change in ign compared to know cond
@@ -1795,22 +1907,6 @@ Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of di
 ## 6. “Fatigue”-effect: new dependent variable “overall amount of AL (irrespective of target or distractor)”
 Do Toddlers and Adults differ in overall amount of AL over trials?
 
-```{r}
-summarize_participant <- data_preprocessed_post_exclusions %>%
-  group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>%
-  mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
-  ) %>%
-  summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    N_exit = sum_target_exit+sum_distractor_exit,
-    absolute_looking = N_exit*40
-  ) 
-```
 
 ```{r}
 Looking_all_trials <- ggplot(summarize_participant,aes(as.factor(trial_num),absolute_looking))+
