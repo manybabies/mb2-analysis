@@ -14,6 +14,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+# Clear workspace:
+rm(list = ls())
+
 knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(zoo)
@@ -54,26 +57,65 @@ Let's assume that we have 10s worth of data per participant which starts at 1s b
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
 
 ```{r preprocess}
+# Check Nijmegen-lab
+#data.ni <- data_pupillometry |> 
+#  filter(lab_id == "babylabNijmegen",
+#  trial_num == 6,                   
+#  t_norm >= -1000 & t_norm < 5000)
+# hist(data.ni$pupil_right)
+# head(data.ni$pupil_left)
+# -> Looks like values need to be divided by 100 to transform to mm.
+
 data_pupillometry <- data_pupillometry |> 
-  filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
+  filter(#eyetracker_type == "Tobii",       # pending resolution for Eyelink
          lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
          trial_num == 6,                   # filter to second test trial only (data reduction)
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
 
 data_pupillometry <- data_pupillometry |> 
   mutate(age_cohort <- as.factor(age_cohort),
-         average = (pupil_left + pupil_right) / 2)
-```
+         average = (pupil_left + pupil_right) / 2) #This a strict average but it should be liberal average according to prereg.
 
+```
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
 data_pupillometry <- data_pupillometry |> 
   mutate(pupil_left = ifelse(pupil_left < 0, NA, pupil_left),
          pupil_right = ifelse(pupil_right < 0, NA, pupil_right))
 
-# plausible data range ]2, 8[
-data_plausible <- data_pupillometry |> 
+### The following is a temporary workaround to include the Eyelink-data by calculating those values which would correspond to 2mm and 8mm, i.e., the mm-values for the first degree of freedom in the multiverse.
+
+data_plausible.SMI.Tobii <- data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink")
+#
+pupil.vector <- data_plausible.SMI.Tobii[!is.na(data_plausible.SMI.Tobii$average),]$average
+sum(pupil.vector<=2)/length(pupil.vector)
+sum(pupil.vector>8)/length(pupil.vector)
+range(pupil.vector)
+quantile(pupil.vector)
+# -> 2mm and 8mm correspond to 0.001568934 and 1
+data_plausible.Eyelink <- data_pupillometry |> 
+  filter(eyetracker_type == "EyeLink")
+#
+pupil.vector <- data_plausible.Eyelink[!is.na(data_plausible.Eyelink$average),]$average
+range(pupil.vector)
+quantile(pupil.vector, probs=c(0.001568934, 1))
+# -> corresponds to 52 and 3008
+
+###
+
+# plausible data range ]2, 8[ for SMI and Tobii
+data_plausible.SMI.Tobii <- data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
   mutate(average = ifelse(average < 2 | average > 8, NA, average))
+
+# plausible data range ]52, 3008[ for Eyelink
+data_plausible.Eyelink <- data_pupillometry |> 
+  filter(eyetracker_type == "EyeLink") |>
+    mutate(average = ifelse(average < 52 | average > 3008, NA, average))
+
+
+data_plausible <- bind_rows(data_plausible.SMI.Tobii, data_plausible.Eyelink)
 
 data_df1 <- bind_rows(
   data_pupillometry |> 
@@ -84,6 +126,7 @@ data_df1 <- bind_rows(
 
 # scatterplot
 data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
   mutate(plausibility = ifelse(pupil_left <= 2 | pupil_left >= 8 | 
                                  pupil_right <= 2 | pupil_right >= 8,
                                "implausible", "plausible")) |> 
@@ -154,7 +197,7 @@ baseline_correct <- function(data, TIME_WINDOW = 1000) {
     mutate(average = {
       avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
-      average - avg_mean
+      (average - avg_mean)/avg_mean # Changed to calculate relative change.
     })
 }
 
@@ -175,19 +218,21 @@ data_df4 <- bind_rows(
 )
 
 # plotting
+# RH: Changed the color and facet to show condition within panel.
+
 data_df4 |> 
   pull(data) |> 
   (`[`)(value = c(2,7)) |> # arbitrarily select two universes to visualise
   map(\(d) {
     ggplot(d |> filter(!is.na(average),
                        t_norm >= 0 & t_norm < 5000), 
-           aes(x = t_norm, y = average, col = condition)) +
+           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
       labs(x = "Time (ms)",
            y = "Pupil size (mm)") +
       geom_vline(xintercept = 0) +
       geom_hline(yintercept = 0) +
       geom_smooth(se = TRUE) +
-      facet_wrap(outcome ~ age_cohort)
+      facet_grid(condition ~ eyetracker_type)
   })
 ```
 

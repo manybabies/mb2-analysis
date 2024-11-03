@@ -3,8 +3,10 @@ title: "MB2 Pupillometry Analysis"
 format: html
 ---
 
-
 ```{r}
+# Clear workspace:
+rm(list = ls())
+
 library(tidyverse)
 library(here)
 library(glue)
@@ -27,7 +29,6 @@ data_pupillometry <- data_preprocessed_post_exclusions |>
                           ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
          pupil_right = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_right should be NA, not 0
                           ifelse(is.na(pupil_right), pupil_left, pupil_right))) # If pupil_right is NA, take value of pupil_left
-                  
 ```
 
 Sanity check.
