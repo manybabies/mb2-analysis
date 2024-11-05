@@ -73,8 +73,10 @@ data_pupillometry <- data_pupillometry |>
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
 
 data_pupillometry <- data_pupillometry |> 
-  mutate(age_cohort <- as.factor(age_cohort),
-         average = (pupil_left + pupil_right) / 2) #This a strict average but it should be liberal average according to prereg.
+  mutate(age_cohort <- as.factor(age_cohort)) |> 
+  rowwise() |> 
+  mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
+  ungroup()
 
 ```
 
@@ -171,9 +173,10 @@ data_avg <- data_df2 |>
                                     fill = NA, align = "right"),
              pupil_right = rollapply(pupil_right, width = WINDOW_SIZE, 
                                      FUN = mean, na.rm = TRUE, 
-                                     fill = NA, align = "right"),
-             average = (pupil_left + pupil_right) / 2) |> # NEW: need to update average after applying rolling average
-      ungroup()
+                                     fill = NA, align = "right")) |> 
+      rowwise() |> 
+      mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # NEW: need to update average after applying rolling average; switched to liberal avg
+      ungroup() 
   }))
 
 data_df3 <- bind_rows(
