@@ -54,8 +54,6 @@ The following script specifies the preprocessing and analysis steps of the multi
 
 Let's assume that we have 10s worth of data per participant which starts at 1s before the resolution until 9s after the resolution. The crucial time-window for our analyses is the 5s after the bear exits the tubes, i.e,. from 1s to 6s in this dataset.
 
-# First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
-
 ```{r preprocess}
 # Check Nijmegen-lab
 #data.ni <- data_pupillometry |> 
@@ -78,7 +76,16 @@ data_pupillometry <- data_pupillometry |>
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
   ungroup()
 
+# Merging in AL data (variable prop_exit)
+
+summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
+
+data_pupillometry_test <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
+
+rm(summarize_participant_test_first_trial)
 ```
+
+# First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
 data_pupillometry <- data_pupillometry |> 

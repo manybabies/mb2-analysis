@@ -467,7 +467,7 @@ We define two primary dependent variables:
 # Custom function to format Bayes Factors
 format_bayes_factor <- function(bf) {
   if (bf > 1000) {
-    return(" > 1000")
+    return("BF > 1000")
   } else {
     return(sprintf("BF = %.1f", bf))  # Keep two decimal places
   }
@@ -490,58 +490,58 @@ library(broom)
 library(broom.mixed)
 
 # Extract results
-e_bm_fam_aoi_toddlers <- tidy(bm_fam_aoi_toddlers, effects = "fixed")
-e_bm_fam_aoi_adults <- tidy(bm_fam_aoi_adults, effects = "fixed")
-e_bm_fam_first_look_toddlers <- tidy(bm_fam_first_look_toddlers, effects = "fixed")
-e_bm_fam_first_look_adults <- tidy(bm_fam_first_look_adults, effects = "fixed")
-e_bm_aoi_toddlers <- tidy(bm_aoi_toddlers, effects = "fixed")
-e_bm_aoi_adults <- tidy(bm_aoi_adults, effects = "fixed")
-e_bm_test_first_look_toddlers <- tidy(bm_test_first_look_toddlers, effects = "fixed")
-e_bm_test_first_look_adults <- tidy(bm_test_first_look_adults, effects = "fixed")
-
-# Add model names
-e_bm_fam_aoi_toddlers <- e_bm_fam_aoi_toddlers %>% mutate(model = "PTL toddlers")
-e_bm_fam_aoi_adults <- e_bm_fam_aoi_adults %>% mutate(model = "PTL adults")
-e_bm_fam_first_look_toddlers <- e_bm_fam_first_look_toddlers %>% mutate(model = "First Look toddlers")
-e_bm_fam_first_look_adults <-  e_bm_fam_first_look_adults %>% mutate(model = "First Look adults")
-e_bm_aoi_toddlers <- e_bm_aoi_toddlers %>% mutate(model = "PTL toddlers")
-e_bm_aoi_adults <- e_bm_aoi_adults %>% mutate(model = "PTL adults")
-e_bm_test_first_look_toddlers <- e_bm_test_first_look_toddlers %>% mutate(model = "First Look toddlers")
-e_bm_test_first_look_adults <- e_bm_test_first_look_adults %>% mutate(model = "First Look adults")
-
-combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
-
-combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
-
-library(kableExtra)
-
-# Create the table
-combined_brm_results_fam <- combined_brm_results_fam %>%
-  select(model, term, estimate, std.error, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "familiarization_trial_num_4" ~ "Trial number",
-      term == "(Intercept)" ~ "Intercept"))
-
-combined_brm_results_test <- combined_brm_results_test %>%
-  select(model, term, estimate, std.error, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "condition_c" ~ "Condition",
-      term == "age_mo_c" ~ "Age",
-      term == "condition_c:age_mo_c" ~ "Condition x Age",
-      term == "(Intercept)" ~ "Intercept"))
-  
-
-papaja::apa_table(combined_brm_results_fam,
-                  caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
-                  format.args = list(digits = 2),
-                  longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c","c"))
-
-papaja::apa_table(combined_brm_results_test,
-                  caption = "Results of the Bayesian mixed effects models for the test trials.",
-                  format.args = list(digits = 2),
-                  longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c","c"))
+# e_bm_fam_aoi_toddlers <- tidy(bm_fam_aoi_toddlers, effects = "fixed")
+# e_bm_fam_aoi_adults <- tidy(bm_fam_aoi_adults, effects = "fixed")
+# e_bm_fam_first_look_toddlers <- tidy(bm_fam_first_look_toddlers, effects = "fixed")
+# e_bm_fam_first_look_adults <- tidy(bm_fam_first_look_adults, effects = "fixed")
+# e_bm_aoi_toddlers <- tidy(bm_aoi_toddlers, effects = "fixed")
+# e_bm_aoi_adults <- tidy(bm_aoi_adults, effects = "fixed")
+# e_bm_test_first_look_toddlers <- tidy(bm_test_first_look_toddlers, effects = "fixed")
+# e_bm_test_first_look_adults <- tidy(bm_test_first_look_adults, effects = "fixed")
+# 
+# # Add model names
+# e_bm_fam_aoi_toddlers <- e_bm_fam_aoi_toddlers %>% mutate(model = "PTL toddlers")
+# e_bm_fam_aoi_adults <- e_bm_fam_aoi_adults %>% mutate(model = "PTL adults")
+# e_bm_fam_first_look_toddlers <- e_bm_fam_first_look_toddlers %>% mutate(model = "First Look toddlers")
+# e_bm_fam_first_look_adults <-  e_bm_fam_first_look_adults %>% mutate(model = "First Look adults")
+# e_bm_aoi_toddlers <- e_bm_aoi_toddlers %>% mutate(model = "PTL toddlers")
+# e_bm_aoi_adults <- e_bm_aoi_adults %>% mutate(model = "PTL adults")
+# e_bm_test_first_look_toddlers <- e_bm_test_first_look_toddlers %>% mutate(model = "First Look toddlers")
+# e_bm_test_first_look_adults <- e_bm_test_first_look_adults %>% mutate(model = "First Look adults")
+# 
+# combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
+# 
+# combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
+# 
+# library(kableExtra)
+# 
+# # Create the table
+# combined_brm_results_fam <- combined_brm_results_fam %>%
+#   select(model, term, estimate, std.error, conf.low, conf.high) %>%
+#   mutate(term = case_when(
+#       term == "familiarization_trial_num_4" ~ "Trial number",
+#       term == "(Intercept)" ~ "Intercept"))
+# 
+# combined_brm_results_test <- combined_brm_results_test %>%
+#   select(model, term, estimate, std.error, conf.low, conf.high) %>%
+#   mutate(term = case_when(
+#       term == "condition_c" ~ "Condition",
+#       term == "age_mo_c" ~ "Age",
+#       term == "condition_c:age_mo_c" ~ "Condition x Age",
+#       term == "(Intercept)" ~ "Intercept"))
+#   
+# 
+# papaja::apa_table(combined_brm_results_fam,
+#                   caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
+#                   format.args = list(digits = 2),
+#                   longtable = TRUE,font_size="footnotesize",
+#                   align=c("l","l","c","c","c","c"))
+# 
+# papaja::apa_table(combined_brm_results_test,
+#                   caption = "Results of the Bayesian mixed effects models for the test trials.",
+#                   format.args = list(digits = 2),
+#                   longtable = TRUE,font_size="footnotesize",
+#                   align=c("l","l","c","c","c","c"))
 
 ```
 
@@ -672,31 +672,18 @@ We will conduct an exploratory analysis using tighter AOIs around tunnel exits a
 
 ### Looking patterns during mouse's change of location.
 ```{r Fixed effect for number of shifts by cohort model, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_shifts_age_cohort <- posterior_summary(bm_test_shifts_age_cohort, pars = "b_age_cohort_c")
-
 # Extract the mean estimate
-b_age_cohort_c_estimate_shifts <- fixed_effect_summary_shifts_age_cohort[1, "Estimate"]
-
-custom_notation <- function(x) {
-  if (x > 1000) {
-    ">1000"
-  } else {
-    as.character(x)
-  }
-}
+b_age_cohort_c_estimate_shifts <- bm_test_shifts_age_cohort_age_cohort_effect[["b_age_cohort_c"]]
 ```
 
 ```{r Fixed effect for number of shifts on AL, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_shifts <- posterior_summary(bm_test_shifts_al, pars = "b_num_shifts")
 
 # Extract the mean estimate
-b_num_shifts_estimate_shifts <- fixed_effect_summary_shifts[1, "Estimate"]
+#b_num_shifts_estimate_shifts <- bm_test_shifts_al[["b_num_shifts"]]
 ```
 
 #### Comparing the number of shifts of toddlers and adults during the location change of the mouse.
-We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the the number of shifts was higherfor adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed. This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
+We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed. This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
 
 ```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
@@ -712,16 +699,14 @@ include_graphics(here("paper","Figure7.png"),rel_path=FALSE)
 ```
 
 ```{r Fixed effect for difference in mouse-bear looking on AL, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_diff_mouse_bear <- posterior_summary(bm_test_diff_mouse_bear_al, pars = "b_diff_mouse_bear")
 
 # Extract the mean estimate
-b_diff_mouse_bear_estimate_diff_mouse_bear <- fixed_effect_summary_diff_mouse_bear[1, "Estimate"]
+b_diff_mouse_bear_estimate_diff_mouse_bear <- bm_test_toddlers_diff_mouse_bear_al_diff_effect[["b_diff_mouse_bear"]]
 ```
 
 #### Differential fixation times of bear and mouse during location change of mouse as a function of AL
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be `r round(b_diff_mouse_bear_estimate_diff_mouse_bear, 3)`. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of `r format_bayes_factor(test_m_comparison_diff_mouse_bear_al$bf)` was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be `r round(b_diff_mouse_bear_estimate_diff_mouse_bear, 3)`. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_diff_mouse_bear_al$bf)` was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
 
 ```{r fig10, fig.cap="Difference in looking time to mouse and bear during location change of mouse (in ms) as a function of AL for each age cohort and each condition. Higher looking times at mouse are colored in yellow, and higher looking times at bear are colored in brown.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure8.png"),rel_path=FALSE)
