@@ -48,6 +48,30 @@ for (file in rds_files) {
 
 ```
 
+
+```{r}
+#set some general parameters for fitting Bayesian models
+n_cores = parallel::detectCores() - 1
+options(mc.cores = n_cores)
+rstan_options(auto_write = TRUE)
+
+# Optimize Stan compilation
+Sys.setenv(LOCAL_CPPFLAGS = '-O3')
+
+#cmdstanr::install_cmdstan()
+use_cmdstan = TRUE
+
+#set backend to use
+#need to set control parameters simultaneously, because rstan does not allow for a step_size parameter
+if (use_cmdstan) {
+  cur_backend = "cmdstanr"
+  default_control_list = list(adapt_delta=0.99,step_size=.1,max_treedepth=12)
+  } else {
+    cur_backend = "rstan"
+    default_control_list = list(adapt_delta=0.99,max_treedepth=12)
+  }
+```
+
 Splitting the data into familiarization data and test data.
 
 ```{r}
@@ -109,17 +133,6 @@ rm(data_preprocessed_post_exclusions)
 gc()
 ```
 
-```{r}
-n_cores = parallel::detectCores() - 1
-options(mc.cores = n_cores)
-rstan_options(auto_write = TRUE)
-
-# Optimize Stan compilation
-Sys.setenv(LOCAL_CPPFLAGS = '-O3')
-
-cmdstanr::install_cmdstan()
-use_cmdstan = TRUE
-```
 
 # Exploratory analyses
 
@@ -267,7 +280,6 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-
 bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c|participant_lab_id)+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -277,11 +289,11 @@ bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_m
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        backend = cur_backend,
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
@@ -357,11 +369,11 @@ bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+co
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        backend = cur_backend,
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE, 
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_both)
 
 saveRDS(bm_aoi_adults_both, file = here(model_fits_dir,"bm_aoi_adults_both.rds"))
@@ -439,11 +451,11 @@ bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+cond
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
 
@@ -510,11 +522,11 @@ bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condit
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_both_order)
 
 saveRDS(bm_aoi_adults_both_order, file = here(model_fits_dir, "bm_aoi_adults_both_order.rds"))
@@ -655,11 +667,11 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial.rds"))
@@ -725,11 +737,11 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_correct_final_fam_trial)
 
 saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial.rds"))
@@ -835,11 +847,11 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
@@ -906,11 +918,11 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+co
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
 saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
@@ -1072,11 +1084,11 @@ bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*met
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
 
@@ -1143,11 +1155,11 @@ bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*me
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_method)
 
 saveRDS(bm_aoi_adults_method, file = here(model_fits_dir, "bm_aoi_adults_method.rds"))
@@ -1439,11 +1451,11 @@ bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+conditi
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
 
@@ -1544,11 +1556,11 @@ bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
@@ -1621,11 +1633,11 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
         warmup = 1000, 
         iter = 15000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
@@ -1767,11 +1779,11 @@ bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 #Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
 #https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
 #Warning: Examine the pairs() plot to diagnose sampling problems
@@ -1845,11 +1857,11 @@ bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_be
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,step_size=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
 
