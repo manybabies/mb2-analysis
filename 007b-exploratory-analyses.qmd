@@ -1479,8 +1479,9 @@ bm_test_shifts_age_cohort_condition_effect <- bm_test_shifts_age_cohort %>%
 saveRDS(bm_test_shifts_age_cohort_condition_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_condition_effect.rds"))
 
 bm_test_shifts_age_cohort_age_cohort_condition_interaction <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_condition_c:age_cohort_c, sigma) %>%
-  mean_hdi(.width = 0.95) ### currently giving me an NA here
+  #need to use backticks here to extract the interaction term
+  spread_draws(`b_condition_c:age_cohort_c`, sigma) %>%
+  mean_hdi(.width = 0.95) 
 
 #cache
 saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_condition_interaction.rds"))
@@ -1896,7 +1897,7 @@ Alternate Bayes factor approach
 
 ```{r}
 bm_test_adults_diff_mouse_bear_al_null <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
-summary(null_test_adults_diff_mouse_bear_al)
+summary(bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
 
