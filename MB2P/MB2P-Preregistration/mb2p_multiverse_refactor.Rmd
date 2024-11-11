@@ -23,6 +23,7 @@ library(zoo)
 library(lme4)
 library(mgcv)
 library(here)
+library(dplyr)
 library(tidyverse)
 library(stringi)
 library(gridExtra)
@@ -66,7 +67,7 @@ Let's assume that we have 10s worth of data per participant which starts at 1s b
 
 data_pupillometry <- data_pupillometry |> 
   filter(#eyetracker_type == "Tobii",       # pending resolution for Eyelink
-         lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
+         #lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
          trial_num == 6,                   # filter to second test trial only (data reduction)
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
 
@@ -80,9 +81,9 @@ data_pupillometry <- data_pupillometry |>
 
 summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
 
-data_pupillometry_test <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
+data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
 
-rm(summarize_participant_test_first_trial)
+rm(summarize_participant_test_both_trials)
 ```
 
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
@@ -251,16 +252,36 @@ data_df4 |>
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
 ```{r DF5 participant exclusion, echo=TRUE, include=TRUE, out.width='90%'}
+
+no_exclusions <- data_pupillometry |> 
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1) |> 
+  pull(participant_lab_id) |> 
+  unique()
 valid_second_ids <- data_pupillometry |> 
-  filter(valid_second_test_trial == 1) |> 
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1,
+      valid_second_test_trial == 1) |> 
   pull(participant_lab_id) |> 
   unique()
 valid_both_ids <- data_pupillometry |> 
-  filter(valid_second_test_trial == 1,
-         valid_first_test_trial == 1) |> 
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1,
+      valid_second_test_trial == 1,
+      valid_first_test_trial == 1) |> 
   pull(participant_lab_id) |> 
   unique()
 
+data_no_exclusions <- data_df4 |> 
+  mutate(data = map(data, \(d) {
+    d |> filter(participant_lab_id %in% no_exclusions)
+  }))
 data_valid_second <- data_df4 |> 
   mutate(data = map(data, \(d) {
     d |> filter(participant_lab_id %in% valid_second_ids)
@@ -271,7 +292,7 @@ data_valid_both <- data_df4 |>
   }))
 
 data_df5 <- bind_rows(
-  data_df4 |> mutate(df5_ppt_exclusion = "no exclusion", .before = "data"),
+  data_no_exclusions |> mutate(df5_ppt_exclusion = "no exclusion", .before = "data"),
   data_valid_second |> mutate(df5_ppt_exclusion = "second test trial valid", .before = "data"),
   data_valid_both |> mutate(df5_ppt_exclusion = "both test trials valid", .before = "data")
 )
