@@ -3,23 +3,21 @@
 \PassOptionsToPackage{hyphens}{url}
 %
 \documentclass[
-  english,
   man,floatsintext]{apa6}
-\title{Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults}
-\author{The ManyBabies2 Consortium\textsuperscript{1}}
-\date{}
-
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -38,16 +36,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults},
-  pdfauthor={The ManyBabies2 Consortium1},
-  pdflang={en-EN},
-  pdfkeywords={anticipatory looking; spontaneous Theory of Mind; replication},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -74,29 +62,48 @@
   \let\oldsubparagraph\subparagraph
   \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
 \newlength{\cslhangindent}
 \setlength{\cslhangindent}{1.5em}
 \newlength{\csllabelwidth}
 \setlength{\csllabelwidth}{3em}
-\newlength{\cslentryspacingunit} % times entry-spacing
-\setlength{\cslentryspacingunit}{\parskip}
-\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
- {% don't indent paragraphs
-  \setlength{\parindent}{0pt}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
   % turn on hanging indent if param 1 is 1
   \ifodd #1
-  \let\oldpar\par
-  \def\par{\hangindent=\cslhangindent\oldpar}
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
   \fi
   % set entry spacing
-  \setlength{\parskip}{#2\cslentryspacingunit}
- }%
- {}
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
 \usepackage{calc}
-\newcommand{\CSLBlock}[1]{#1\hfill\break}
-\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+\babelprovide[main,import]{english}
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
 % Manuscript styling
 \usepackage{upgreek}
 \captionsetup{font=singlespacing,justification=justified}
@@ -173,19 +180,23 @@
 \linenumbers
 \usepackage{csquotes}
 \usepackage{caption}
-\ifXeTeX
-  % Load polyglossia as late as possible: uses bidi with RTL langages (e.g. Hebrew, Arabic)
-  \usepackage{polyglossia}
-  \setmainlanguage[]{english}
-\else
-  \usepackage[main=english]{babel}
-% get rid of language-specific shorthands (see #6817):
-\let\LanguageShortHands\languageshorthands
-\def\languageshorthands#1{}
-\fi
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults},
+  pdfauthor={The ManyBabies2 Consortium1},
+  pdflang={en-EN},
+  pdfkeywords={anticipatory looking; spontaneous Theory of Mind; replication},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults}
+\author{The ManyBabies2 Consortium\textsuperscript{1}}
+\date{}
 
 
 \shorttitle{EPISTEMIC STATE-BASED ACTION ANTICIPATION}
@@ -213,8 +224,7 @@ The capacity to represent epistemic states, known as Theory of Mind (ToM) or men
 
 In the following sections we first establish the background and scientific context of this study, namely the reliability and replicability of spontaneous ToM measures. We then introduce a novel way to approach these issues: a large-scale collaborative project targeting the replicability of ToM findings. Finally, we outline the rationale of the present study which uses an AL paradigm to test whether infants and adults distinguish between two basic forms of an agent's epistemic state: knowledge and ignorance.
 
-\hypertarget{spontaneous-theory-of-mind-tasks}{%
-\subsection{Spontaneous Theory of Mind tasks}\label{spontaneous-theory-of-mind-tasks}}
+\subsection{Spontaneous Theory of Mind tasks}\label{spontaneous-theory-of-mind-tasks}
 
 Humans are proficient at interpreting and predicting others' intentional actions. Adults as well as infants expect agents to act persistently towards the goal they pursue Woodward \& Sommerville (2000), and anticipate others' actions based on their goals even before goals are achieved - that is, humans engage in goal-based action anticipation (for review, see Elsner \& Adam, 2021; but see Ganglmayer, Attig, Daum, \& Paulus, 2019). To predict others' actions, however, it is essential to consider their epistemic state: what they perceive, know, or believe. A number of seminal studies using non-verbal spontaneous measures have suggested that infants, toddlers, older children, and adults show action anticipation and action understanding not only based on other agents' goals (what they want) but also on the basis of their epistemic status (what they perceive, know, or believe). These studies suggest that from infancy onwards, humans spontaneously engage in ToM or mentalizing. For example, studies using violation of expectation methods have demonstrated that infants look longer in response to events in which an agent acts in ways that are incompatible with their (true or false) beliefs, compared to events in which they act in belief-congruent ways (Onishi \& Baillargeon, 2005; Surian, Caldi, \& Sperber, 2007; Träuble, Marinović, \& Pauen, 2010). Other studies have employed more interactive tasks requiring the child to play, communicate, or cooperate with experimenters and, for example, give an experimenter one of several objects as a function of their epistemic status. Such studies have shown that toddlers spontaneously adjust their behavior to the experimenter's beliefs (D. Buttelmann, Carpenter, \& Tomasello, 2009; Király, Oláh, Csibra, \& Kovács, 2018; Knudsen \& Liszkowski, 2012; Southgate, Johnson, Karoui, \& Csibra, 2010).
 
@@ -224,64 +234,56 @@ Across the different measures, the majority of early works on spontaneous ToM in
 
 Recently, however, a number of studies have raised uncertainty regarding the empirical foundations of the early-emergence theories, as we review below. In the following sections, we present an overview of the current empirical picture of early understanding of epistemic states and then introduce ManyBabies2 (MB2), a large-scale collaborative project exploring the replicability of ToM in infancy, of which the current study constitutes the first step.
 
-\hypertarget{replicability-of-spontaneous-theory-of-mind-tasks}{%
-\subsection{Replicability of Spontaneous Theory of Mind Tasks}\label{replicability-of-spontaneous-theory-of-mind-tasks}}
+\subsection{Replicability of Spontaneous Theory of Mind Tasks}\label{replicability-of-spontaneous-theory-of-mind-tasks}
 
 A number of failures to replicate findings from spontaneous ToM tasks have recently been published with infants, toddlers, and adults Kulke \& Rakoczy (2019). Besides conceptual replications, many of these studies involve more direct replication attempts with the original stimuli and procedures. One of these was a two-lab replication attempt of one of the most influential AL studies (Southgate, Senju, \& Csibra, 2007). This failure to replicate is especially notable not only because of the influence of the original finding of the field, but also because of the large sample size and the involvement of some of the original authors (Kampis et al., 2021). Additional unpublished replication failures have also been reported. Kulke and Rakoczy (2018) examined 65 published and non-published studies including 36 AL studies (replications of Schneider et al., 2012; Southgate et al., 2007; Surian \& Geraci, 2012; and Low \& Watts, 2013), as well as studies using other paradigms, and classified them as a successful, partial, or non-replication, depending on whether all, some, or none of the original main effects were found. Although no formal analysis of effect size was carried out, overall, non-replications and partial replications outnumbered successful replications, regardless of the method used.
-In addition to the failure to replicate spontaneous anticipation of agents' behaviors based on their beliefs, many of the replication studies revealed an even more fundamental problem of spontaneous AL procedures: a failure to adequately anticipate an agent's action in the absence of a belief. That is, researchers did not find evidence for spontaneous anticipation of agents' behaviors based on their goals, even in the initial familiarization trials of the experiments, where the agent's beliefs do not play any role yet (e.g., Kampis et al., 2020; Kulke et al., 2018; Schuwerk et al., 2018). The familiarization trials are designed to convey the goal of the agent, as well as the general timing and structure of events, to set up participants' expectations in the test trials where the agent's epistemic state is then manipulated. Typically, the last familiarization trial can also be used to probe participants' spontaneous action anticipation; and test trials can only be meaningfully interpreted if there is evidence of above-chance anticipation in the familiarization trials. In several AL studies many participants had to be excluded from the main analyses for failing to demonstrate robust action anticipation during the familiarization trials (e.g., Kampis et al., 2020; Kulke et al., 2018; Schuwerk et al., 2018; Southgate et al., 2007). This raises the possibility that these paradigms may not be suitable for reliably eliciting spontaneous action prediction in the first place (for discussion see Baillargeon et al., 2018).
+In addition to the failure to replicate spontaneous anticipation of agents' behaviors based on their beliefs, many of the replication studies revealed an even more fundamental problem of spontaneous AL procedures: a failure to adequately anticipate an agent's action in the absence of a belief. That is, researchers did not find evidence for spontaneous anticipation of agents' behaviors based on their goals, even in the initial familiarization trials of the experiments, where the agent's beliefs do not play any role yet (e.g., Kampis et al., 2020; Kulke, Reiß, et al., 2018; Schuwerk et al., 2018). The familiarization trials are designed to convey the goal of the agent, as well as the general timing and structure of events, to set up participants' expectations in the test trials where the agent's epistemic state is then manipulated. Typically, the last familiarization trial can also be used to probe participants' spontaneous action anticipation; and test trials can only be meaningfully interpreted if there is evidence of above-chance anticipation in the familiarization trials. In several AL studies many participants had to be excluded from the main analyses for failing to demonstrate robust action anticipation during the familiarization trials (e.g., Kampis et al., 2020; Kulke, Reiß, et al., 2018; Schuwerk et al., 2018; Southgate et al., 2007). This raises the possibility that these paradigms may not be suitable for reliably eliciting spontaneous action prediction in the first place (for discussion see Baillargeon et al., 2018).
 In sum, in light of the complex and mixed state of the evidence, it currently remains unclear whether infants, toddlers, and adults engage in spontaneous ToM. This calls for systematic, large-scale, a priori designed multi-lab study that stringently tests for the robustness, reliability, and replicability of spontaneous measures of ToM.
 
-\hypertarget{general-rationale-of-mb2}{%
-\subsection{General Rationale of MB2}\label{general-rationale-of-mb2}}
+\subsection{General Rationale of MB2}\label{general-rationale-of-mb2}
 
 To this end, ManyBabies 2 (MB2) was established as an international consortium dedicated to investigating infants' and toddlers' ToM skills. The main aim is to test the replicability and thus reliability of findings from spontaneous ToM tasks. In the long-term, MB2 will build on the initial findings and the aim will be extended to include testing the validity of these experimental designs and addressing theoretical accounts of spontaneous ToM. MB2 operates under the general umbrella of ManyBabies (MB), a large-scale international research consortium founded with the aim of probing the reliability of central findings from infancy research. In particular, MB projects bring together large and theoretically diverse groups of researchers to tackle pressing questions of infant cognitive development, by collaboratively designing and implementing methodologies and pre-registered analysis plans (Frank et al., 2017). The MB2 consortium involves authors of original studies as well as authors of both successful and failed replication studies, and researchers from very different theoretical backgrounds. It thus presents a case of true ``adversarial collaboration'' (Mellers, Hertwig, \& Kahneman, 2001).
 
-\hypertarget{rationale-of-the-present-study}{%
-\subsection{Rationale of the Present Study}\label{rationale-of-the-present-study}}
+\subsection{Rationale of the Present Study}\label{rationale-of-the-present-study}
 
 Based on both theoretical and practical considerations, the current paper presents the first foundational step in MB2, focusing on AL measures. It investigates whether toddlers and adults anticipate (in their looking behavior) how other agents will act based on their goals (i.e., what they want) and epistemic status (i.e., what they know or do not know). From a practical perspective, we focus on AL since it is a child-friendly and widely used method that is also suitable for humans across the lifespan and even other species. Additionally, as AL is screen-based and standardizable, identical stimuli can be presented in different labs. From a theoretical perspective, given the mixed findings with AL tasks reviewed in the previous section, we take a systematic and bottom-up approach.
 First, we probe whether AL measures are suitable for measuring spontaneous goal-directed action anticipation. With the aim to improve the low overall rates of anticipatory looks in recent studies, we designed new, engaging stimuli to test whether these are successful in eliciting spontaneous action anticipation. Second, in case reliably elicited action anticipation can be found: we probe whether toddlers and adults take into account the agent's epistemic status in their spontaneous goal-based action anticipation. That is, do they track whether the agent saw or did not see a crucial event, and therefore whether this agent does or does not know something? In the current study we focus on the most basic form of tracking the epistemic status of agents: considering whether they had access to relevant information, and whether they are thus \emph{knowledgeable} or \emph{ignorant}. We reasoned that only after establishing whether a context can elicit spontaneous tracking of an agent's epistemic status in a more basic sense (i.e., the agent's knowledge vs.~ignorance) is it eventually meaningful to ask whether this context also elicits more complex epistemic state tracking (i.e., the agent's beliefs).
 Answering these first two questions in the present study will allow us, in the long run, to address a third set of questions in subsequent studies, probing the nature of the representations and cognitive mechanisms involved in infant ToM. Do toddlers and adults engage in full-fledged belief-ascription in their spontaneous goal-based action anticipation? What \emph{kind} of epistemic states do toddlers and adults spontaneously attribute to others in their action anticipation (e.g., Horschler, MacLean, \& Santos, 2020; Phillips et al., 2021)? Do the results that prove replicable really assess ToM, or can they be interpreted in alternative ways such as behavioral rules, associations, or simple perceptual preferences (see, e.g., Heyes, 2014; Perner \& Ruffman, 2005)? The present study lays the foundation for investigating these questions.
 Regarding the knowledge-ignorance distinction, many accounts in developmental and comparative ToM research have argued for the ontogenetic and evolutionary primacy of representing \emph{what} agents witness and represent, relative to more sophisticated ways of representing \emph{how} agents represent (and potentially mis-represent) objects and situations (e.g., Apperly \& Butterfill, 2009; Flavell, 1988; Kaminski, Call, \& Tomasello, 2008; Martin \& Santos, 2016; Perner, 1991; Phillips et al., 2021). For example, it is often assumed that young children and non-human primates may be capable of so-called ``Level I perspective-taking'' (understanding \emph{who} sees \emph{what}) but only human children from around age 4 may finally develop capacities for ``Level II perspective-taking'' {[}understanding \emph{how} a given situation may appear to different agents; Flavell, Everett, Croft, and Flavell (1981){]}. Empirically, many studies using verbal and/or interactive measures have indicated that children may engage in knowledge-ignorance and related distinctions before they engage in more complex forms of meta-representation (e.g., Flavell et al., 1981; Hogrefe, Wimmer, \& Perner, 1986; Moll \& Tomasello, 2006; O'Neill, 1996; F. Buttelmann \& Kovács, 2019; F. Buttelmann, Suhrke, \& Buttelmann, 2015; Kampis et al., 2020; though for some findings indicating Level II perspective-taking at an early age see Scott \& Baillargeon, 2009; Scott, Richman, \& Baillargeon, 2015), and that non-human primates seem to master knowledge-ignorance tasks while not demonstrating any more complex, meta-representational form of ToM (e.g., Hare, Call, \& Tomasello, 2001; Kaminski et al., 2008; Karg, Schmelz, Call, \& Tomasello, 2015). The knowledge-ignorance distinction thus appears to be an ideal candidate for assessing epistemic status-based action anticipation in a wide range of populations.
-To date, however, no study has probed whether or how children's (and adults') spontaneous action anticipation, as indicated by AL, is sensitive to ascriptions of knowledge vs.~ignorance. Most studies that have addressed ToM with AL measures have targeted the more sophisticated true/false belief contrast. As reviewed above, the results of those studies yield a mixed picture regarding replicability of the findings. It has been argued that tasks that reliably replicate are ones which can be solved with the more basic knowledge-ignorance distinction, whereas tasks that do not replicate require more sophisticated belief-ascription (Powell et al., 2018)\footnote{For example, some studies have found partial replication results, with patterns of the following kind: participants showed systematic anticipation (or appropriate interactive responses) in true belief trials but showed ooking (or interactive responses) at chance level in the false belief trials (e.g., Dörrenberg, Wenzel, Proft, Rakoczy, \& Liszkowski, 2019; Kulke et al., 2018; Powell et al., 2018). Such a pattern remains ambiguous since it may merely reflect a knowledge-ignorance distinction.}, suggesting that only some but not all findings might not be replicable. Based on these considerations, the present study tests whether toddlers and adults engage in knowledge- and ignorance-based AL to probe the most basic form of spontaneous, epistemic state-based action anticipation.
+To date, however, no study has probed whether or how children's (and adults') spontaneous action anticipation, as indicated by AL, is sensitive to ascriptions of knowledge vs.~ignorance. Most studies that have addressed ToM with AL measures have targeted the more sophisticated true/false belief contrast. As reviewed above, the results of those studies yield a mixed picture regarding replicability of the findings. It has been argued that tasks that reliably replicate are ones which can be solved with the more basic knowledge-ignorance distinction, whereas tasks that do not replicate require more sophisticated belief-ascription (Powell et al., 2018)\footnote{For example, some studies have found partial replication results, with patterns of the following kind: participants showed systematic anticipation (or appropriate interactive responses) in true belief trials but showed ooking (or interactive responses) at chance level in the false belief trials (e.g., Dörrenberg, Wenzel, Proft, Rakoczy, \& Liszkowski, 2019; Kulke, Reiß, et al., 2018; Powell et al., 2018). Such a pattern remains ambiguous since it may merely reflect a knowledge-ignorance distinction.}, suggesting that only some but not all findings might not be replicable. Based on these considerations, the present study tests whether toddlers and adults engage in knowledge- and ignorance-based AL to probe the most basic form of spontaneous, epistemic state-based action anticipation.
 
-\hypertarget{design-and-predictions-of-the-present-study}{%
-\subsection{Design and Predictions of the Present Study}\label{design-and-predictions-of-the-present-study}}
+\subsection{Design and Predictions of the Present Study}\label{design-and-predictions-of-the-present-study}
 
 The current study presents 18- to 27-month-old toddlers and adults with animated scenarios while measuring their gaze behavior. Testing adults (and not just toddlers) is crucial to address debates about the validity and interpretation of AL measures of ToM throughout the lifespan (e.g., Schneider, Slaughter, \& Dux, 2017). Following the structure of previous AL paradigms, participants are first familiarized to an agent repeatedly approaching a target (familiarization trials). AL is measured during familiarization trials to probe whether participants understood the agent's goal and spontaneously anticipate their actions. Subsequently, during test trials the agent's visual access is manipulated, leading them to be either \emph{knowledgeable} or \emph{ignorant} about the location of the target. Participants' AL will be measured during test trials to determine whether or not they take into account the agent's epistemic access and adjust their action anticipation accordingly. Participants' looking patterns will be recorded using either lab-based corneal reflection eye-tracking or online recording of gaze patterns. We chose to provide the online testing option to increase the flexibility for data collection given the disruption caused by the Covid-19 pandemic. This option will also provide the opportunity to potentially compare in-lab and online testing procedures (Sheskin et al., 2020).
 Novel animated stimuli were collectively developed within the MB2 consortium on the basis of previous work (e.g., Clements \& Perner, 1994) and based on input from collaborators with experience with both successful and failed replication studies (e.g., Grosse Wiesmann et al., 2017; Surian \& Geraci, 2012). These animated 3D scenes feature a dynamic interaction aimed to optimally engage participants' attention: a chasing scenario involving two agents, a \emph{chaser} and a \emph{chasee} (see Figures 1 and 2). As part of the chase, the chasee enters from the top of an upside-down Y-shaped tunnel with two boxes at its exits. The tunnel is opaque so participants cannot see the chasee after it enters the tunnel, but can hear noises that indicate movement. The chasee eventually exits from one of the arms of the Y, and goes into the box on that side. The chaser observes the chasee exit the tunnel and go into a box, and then follows it through the tunnel. During familiarization trials, the chaser always exits the tunnel on the same side as the chasee, and approaches the box where the chasee is currently located. Thus, if participants engage in spontaneous action anticipation during familiarization trials, they should reliably anticipate during the period when the chaser is in the tunnel that it will emerge at the exit that leads to the box containing the chasee.
 During test trials, the chasee always first hides in one of the boxes but shortly thereafter leaves its initial hiding place and hides in the box at the other tunnel exit. Critically, the chaser either does (\emph{knowledge} condition) or does not (\emph{ignorance} condition) have epistemic access to the chasee's location. During \emph{knowledge} trials, the chaser observes all movements of the chasee. During \emph{ignorance} trials, the chaser observes the chasee enter the tunnel, but then leaves and only returns once the chasee is already hidden inside the second box. The event sequences in the two conditions are thus identical with the only difference between conditions pertaining to what the chaser has or has not seen. They were designed in this way with the long-term aim to implement, in a minimal contrast design, more complex conditions of false/true belief contrasts with the very same event sequences (true belief conditions will then be identical to the knowledge conditions here, but in false belief conditions the chaser witnesses the chasee's placement in the first box, but then fails to witness the re-location)\footnote{There is thus a certain asymmetry with regard to the interpretation and the consequences of potentially positive and negative results of the present knowledge-ignorance contrast: in the case of positive results, we can conclude that subjects spontaneously engage in basic epistemic state ascription and can move on to test, with the minimal contrast comparison of knowledge-ignorance vs.~false belief-true belief, whether this extends to more complex forms of epistemic state attribution. In the case of negative results, though, we cannot draw firm conclusions to the effect that subjects do not engage in spontaneous epistemic state ascription. More caution is in order since the present knowledge-ignorance contrast has been designed in order to be comparable to future belief contrasts rather than to be the simplest implementation possible. Simpler implementations would then need to be devised that involve fewer steps (i.e.~the chasee just goes to one location and this is or is not witnessed by the chasee).}.
 Participants' AL (their gaze pattern indicating where they expect the chaser to appear) will be assessed during the anticipatory period - that is, the period during which the chaser is going through the tunnel and is not visible. There will be two main dependent measures: first looks, and a differential looking score (DLS). The first look measure will be binary, indicating which of the two tunnel exits participants fixate first: the exit where the chasee is actually hiding, or the other exit. DLS is a measure of the proportion of time spent looking at the correct tunnel exit during the entire anticipatory period.
 In two pilot studies (see Methods section), we addressed the foundational question of the current study: whether these stimuli reveal spontaneous goal-directed action anticipation as measured by AL in the above-described familiarization trials (i.e., without a change of location by the chasee or manipulation of the chaser's epistemic state). We found that our paradigm indeed elicited action anticipation and exclusion rates due to lack of anticipation were significantly lower relative to previous (original and replication) AL studies. Both toddlers and adults showed reliable anticipation of the chaser's exit at the chasee's location, indicating that in contrast with many previous AL studies the current paradigm successfully elicits spontaneous goal-based action anticipation. Based on these pilot data we concluded that the paradigm is suitable for examining the second and critical question: whether toddlers and adults, in their spontaneous goal-based action anticipation, take into account the agent's epistemic state.
-We predict that if participants track the chaser's perceptual access and resulting epistemic state (knowledge/ignorance) and anticipate their actions accordingly, they should look more in anticipation to the exit at the chasee's location than the other exit in the \emph{knowledge} condition, but should not do so (or to a lesser degree; see below) in the \emph{ignorance} condition. We anticipate three potential factors that could influence participant's gaze patterns: Keeping track of the chaser's epistemic status in the \emph{ignorance} condition might either lead to no expectations as to where the chaser will look (resulting in chance level looking between the two exits) or (if participants follow an {``ignorance leads to mistakes''}-rule, see e.g., Ruffman, 1996) to an expectation that the chaser will go to the wrong location (longer looking to the exit with the empty box; e.g., Fabricius, Boyer, Weimer, \& Carroll, 2010). Either way, participants may still show a `pull of the real' even in the \emph{ignorance} condition, i.e., reveal a default tendency to look to the side where the chasee is located. But if they truly keep track of the epistemic status of the chaser (\emph{knowledge} vs.~\emph{ignorance}), they should show this tendency to look to the side where the chasee really is in the \emph{ignorance} condition to a lesser degree than in the \emph{knowledge} condition.
+We predict that if participants track the chaser's perceptual access and resulting epistemic state (knowledge/ignorance) and anticipate their actions accordingly, they should look more in anticipation to the exit at the chasee's location than the other exit in the \emph{knowledge} condition, but should not do so (or to a lesser degree; see below) in the \emph{ignorance} condition. We anticipate three potential factors that could influence participant's gaze patterns: Keeping track of the chaser's epistemic status in the \emph{ignorance} condition might either lead to no expectations as to where the chaser will look (resulting in chance level looking between the two exits) or (if participants follow an ``ignorance leads to mistakes''-rule, see e.g., Ruffman, 1996) to an expectation that the chaser will go to the wrong location {[}longer looking to the exit with the empty box; e.g., Fabricius, Boyer, Weimer, and Carroll (2010){]}. Either way, participants may still show a `pull of the real' even in the \emph{ignorance} condition, i.e., reveal a default tendency to look to the side where the chasee is located. But if they truly keep track of the epistemic status of the chaser (\emph{knowledge} vs.~\emph{ignorance}), they should show this tendency to look to the side where the chasee really is in the \emph{ignorance} condition to a lesser degree than in the \emph{knowledge} condition.
 In sum, the research questions of the present study are the following: First, can we observe in a large sample that toddlers and adults robustly anticipate agents' actions based on their goals in this paradigm, as they did in our pilot study? Second, can we find evidence that they take into account the agent's epistemic access (knowledge vs.~ignorance) and adjust their action anticipation accordingly? In addressing these questions, the present study will significantly contribute to our knowledge on spontaneous ToM. It will inform us whether the present paradigm and stimuli can elicit spontaneous goal-based and mental-state-based action anticipation in adults and toddlers, based on a large sample of about 800 participants in total from over 20 labs. In the long run, the present study will lay the foundation for future work to address broader questions of what \emph{kind} of epistemic states toddlers and adults spontaneously attribute to others in their action anticipation and what cognitive mechanisms allow them to do so.
 
-\hypertarget{methods}{%
-\section{Methods}\label{methods}}
+\section{Methods}\label{methods}
 
 All materials, and later the collected de-identified data, will be provided on the Open Science Framework (OSF; \url{https://osf.io/jmuvd/}). All analysis scripts, including the pilot data analysis and simulations for the design analysis, can be found on GitHub (\url{https://github.com/manybabies/mb2-analysis}). We report how we determined our sample size and we will report all data exclusions, all manipulations, and all measures in the study. Additional methodological details can be found in the Supplemental Material.
 
-\hypertarget{stimuli}{%
-\subsection{Stimuli}\label{stimuli}}
+\subsection{Stimuli}\label{stimuli}
 
 Figures 1 and 2 provide an overview of the paradigm. For the stimuli, 3D animations were created depicting a chasing scenario between two agents (chaser and chasee) who start in the upper part of the scene. At the very top of the scene a door leads to outside the visible scene. Below this area, a horizontal fence separates the space, and thus the lower part of the space can be reached by the Y-shaped tunnel only. Additional information on the general scene setup, events, and timings in the familiarization and the test trials, as well as trial randomization can be found in the Supplemental Material.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure1} 
 
 }
 
 \caption{Timeline of the familiarization trials.}\label{fig:fig1}
 \end{figure}
 
-\hypertarget{familiarization-trials}{%
-\subsubsection{Familiarization Trials}\label{familiarization-trials}}
+\subsubsection{Familiarization Trials}\label{familiarization-trials}
 
 All participants will view four familiarization trials (for an overview of key events see Figure 1). During familiarization trials, after a brief chasing introduction, the chasee enters an upside-down Y-shaped tunnel with a box at both of its exits. The chasee then leaves the tunnel through one of the exits and hides in the box on the corresponding side. Subsequently, the chaser enters the tunnel (to follow the chasee), and participants' AL to the tunnel exits is measured before the chaser exits on the side the chasee is hiding, as an index of their goal-based action anticipation. In these familiarization trials, if participants engage in spontaneous action anticipation, they should reliably anticipate that the chaser should emerge at the tunnel exit that leads to the box where the chasee is. After leaving the tunnel, the chaser approaches the box in which the chasee is hiding and knocks on it. Then, the chasee jumps out of the box and the two briefly interact.
 
-\hypertarget{familiarization-phase-pilot-studies.}{%
-\paragraph{Familiarization Phase Pilot Studies.}\label{familiarization-phase-pilot-studies.}}
+\paragraph{Familiarization Phase Pilot Studies.}\label{familiarization-phase-pilot-studies.}
 
 In a pilot study with 18- to 27-month-olds (\emph{n} = 65) and adults (\emph{n} = 42), seven labs used in-lab corneal reflection eye-tracking to collect data on gaze behavior in the familiarization phase. A key desideratum of our paradigm is that it should produce sufficient AL, as a low rate of AL in previous studies has led to high exclusion rates. The goals of the pilot study were to 1) estimate the level of correct goal-based action predictions in the familiarization phase, 2) determine the optimal number of familiarization trials, 3) check for issues with perceptual properties of stimuli (e.g., distracting visual saliencies), and 4) test the general procedure including preprocessing and analyzing raw gaze data from different eye-tracking systems. We found that the familiarization stimuli elicited a relatively high proportion of goal-directed action anticipations, but we were concerned about the effects of some minor properties of the stimulus (in particular, a small rectangular window in the tunnel tube that allowed participants to see the agents at one point on their path to the tunnel exits).
 In a second pilot study with 18- to 27-month-olds (\emph{n} = 12, three participating labs), slight changes of stimulus features (the removal of the window in the tube; temporal changes of auditory anticipation cue) did not cause major changes in the AL rates.
@@ -289,8 +291,7 @@ Sixty-eight percent of toddlers' first looks in the first pilot, 69\% of toddler
 Further, prototypical analysis pipelines were established for combining raw gaze data from different eye-trackers. In short, we developed a way to resample gaze data from different eye-trackers to be at a common Hz rate and to define proportionally correct AOIs for different screen dimensions with the goal to merge all raw data into one data set for inferential statistics. The established analysis procedure is described further in the Data Preprocessing section below.
 In sum, we concluded that this paradigm sufficiently elicits goal-directed action predictions, an important prerequisite for drawing any conclusion on AL behavior in the test trials of this study. A detailed description of the two pilot studies can be found in the Supplemental Material.
 
-\hypertarget{test-trials}{%
-\subsubsection{Test Trials}\label{test-trials}}
+\subsubsection{Test Trials}\label{test-trials}
 
 All participants will see two test trials, one \emph{knowledge} and one \emph{ignorance} trial. However, in line with common practice in ToM studies, the main comparison concerns the first test trial between-participants to avoid potential carryover effects. In addition, in exploratory analyses, we plan to assess whether results remain the same if both trials are taken into account and whether gaze patterns differ between the two trials (see Exploratory Analyses). If the results remain largely unchanged across the two trials, it may suggest that future studies could increase power by including multiple test trials.
 In test trials, the chasee first hides in one of the boxes, but shortly thereafter the chasee leaves this box and hides in the second box, at the other tunnel exit. Critically, the chaser either witnesses (\emph{knowledge} condition) or does not witness (\emph{ignorance} condition) from which tunnel exit the chasee exited and thus where the chasee is currently hiding (for an overview, see Figure 2). In the \emph{knowledge} trials, the chaser observes all movements of the chasee. The chaser leaves for a brief period of time after the chasee entered the tunnel, but it returns before the chasee exits the tunnel. Therefore, no events take place in the chaser's absence. In the \emph{ignorance} trials, the chaser sees the chasee enter the tunnel, but then leaves. Therefore, the chaser does not see the chasee entering either box and only returns once the chasee is already hidden in the final location. Finally, the chaser enters the tunnel but does not appear in either exit. Rather, the scene ``freezes'' for four seconds and participants' AL is measured. Thus, the \emph{knowledge} and \emph{ignorance} conditions are matched for the chaser leaving for a period of time, but they differ in whether they warrant the chaser's epistemic access to the location of the chasee. No outcome is shown in either test trials.
@@ -298,38 +299,32 @@ When designing the \emph{knowledge} and \emph{ignorance} condition, we aimed at 
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.5in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2} 
+{\centering \includegraphics[width=6.5in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure2} 
 
 }
 
 \caption{Schematic overview of stimuli and conditions of the test trials. \newline{} \textit{Note}. After the familiarization phase, participants know about the agent’s goal (chaser wants to find chasee), perceptual access (chaser can see what happens on the other side of the fence), and situational constraints (boxes can be reached by walking through the forking tunnel). In the \textit{knowledge} condition, the chaser witnesses the chasee walking through the tunnel and jumping in and out of the first box. While the chasee is in the box, the chaser briefly leaves the scene through the door in the back and returns shortly after. Subsequently, the chaser watches the chasee jumping out of the box again and hiding in the second box. In the \textit{ignorance} condition, the chaser turns around and stands on the other side of the door in the back of the scene, thus unable to witness any of the chasee’s actions. The chaser then returns and enters the tunnel to look for the chasee. During the test phase (4 seconds still frame), AL towards the end of the tunnels is measured.}\label{fig:fig2}
 \end{figure}
 
-\hypertarget{trial-randomization}{%
-\subsubsection{Trial Randomization}\label{trial-randomization}}
+\subsubsection{Trial Randomization}\label{trial-randomization}
 
 We will vary the starting location of the chasee (left or right half of the upper part of the scene) and the box the chasee ended up (left or right box) in both familiarization and test trials. The presentation of the familiarization trials will be counterbalanced in two pseudo-randomized orders. Each lab signs up for one or two sets of 16-trial-combinations, for each of their tested age groups.
 
-\hypertarget{lab-participation-details}{%
-\subsection{Lab Participation Details}\label{lab-participation-details}}
+\subsection{Lab Participation Details}\label{lab-participation-details}
 
-\hypertarget{time-frame}{%
-\subsubsection{Time-Frame}\label{time-frame}}
+\subsubsection{Time-Frame}\label{time-frame}
 
 The contributing labs will start data collection as soon as they are able to once our Registered Report receives an in-principle acceptance. The study will be submitted for Stage 2 review within one year after in-principle acceptance (i.e., post-Stage 1 review). We anticipate that this time window gives the individual labs enough flexibility to contribute the committed sample sizes; however, if this timeline needs adjusting due to the Covid-19 pandemic this decision will be made prior to any data analysis.
 
-\hypertarget{participation-criterion}{%
-\subsubsection{Participation Criterion}\label{participation-criterion}}
+\subsubsection{Participation Criterion}\label{participation-criterion}
 
 The participating labs were recruited from the MB2 consortium. In July 2020, we asked via the MB2 listserv which labs plan to contribute how many participants for the respective age group (toddlers and/or adults). The Supplemental Material provides an overview of participating labs. Each lab made a commitment to collecting data from at least 16 participants (toddlers or adults), but we will not exclude any contributed data on the basis of the total sample size contributed by that lab. Labs will be allowed to test using either in-lab eye-tracking or online methods.
 
-\hypertarget{ethics}{%
-\subsubsection{Ethics}\label{ethics}}
+\subsubsection{Ethics}\label{ethics}
 
 All labs will be responsible for obtaining ethics approval from their appropriate institutional review board. The labs will contribute de-identified data for central data analysis (i.e., eye-tracking raw data/coded gaze behavior, demographic information). Video recordings of the participants will be stored at each lab according to the approved local data handling protocol. If allowed by the local institutional review board, video recordings will be made available to other researchers via the video library DataBrary (\url{https://nyu.databrary.org/}).
 
-\hypertarget{participants}{%
-\subsubsection{Participants}\label{participants}}
+\subsubsection{Participants}\label{participants}
 
 In a preliminary expression of interest, 26 labs signed up to contribute a minimal sample size of 16 toddlers and/or adults. Based on this information, we expect to recruit a total sample of 520 toddlers (ages 18-27 months) and 408 adults (ages 18-55 years). To avoid an unbalanced age distribution in the toddlers sample, labs will sign up for testing at least one of two age bins (bin 1: 18-22 months, bin 2: 23-27 months), and will be asked to ensure approximately equal distribution of participants' age in their collected sample if possible. They will be asked to try to ensure that the mean age of their sample lies in the middle of the range of the chosen bin and that participant ages are distributed across their whole bin. Both for adults and toddlers, basic demographic data will be collected on a voluntary basis with a brief questionnaire (see Supplemental Material for details). The requested demographic information that is not used in the registered confirmatory and/or exploratory analyses of this study will be collected for further potential follow-up analyses in spin-off projects within the MB framework.
 After completing the task, adult participants will be asked to fill a funneled debriefing questionnaire. This questionnaire asks what the participant thinks the purpose of the experiment was, whether the participant had any particular goal or strategy while watching the videos, and whether the participant consciously tracked the chaser's epistemic state. Additionally, we collect details regarding each testing session (see Supplemental Material).
@@ -462,36 +457,29 @@ The average age of toddlers in the final sample was 22.49 months (\emph{SD}: 2.5
 The final sample size of included adults was \emph{N} = 703 (68.85\% female), tested in 34 labs (mean lab sample size = 20.68, \emph{SD} = 12.14, range: 8 - 65).
 Their mean age was 24.61 years (\emph{SD}: 7.36, range: 18 - 55).
 
-\hypertarget{apparatus-and-procedure}{%
-\subsection{Apparatus and Procedure}\label{apparatus-and-procedure}}
+\subsection{Apparatus and Procedure}\label{apparatus-and-procedure}
 
-\hypertarget{eye-tracking-methods}{%
-\subsubsection{Eye-tracking Methods}\label{eye-tracking-methods}}
+\subsubsection{Eye-tracking Methods}\label{eye-tracking-methods}
 
 We expect that participating labs will use one of three types of eye-tracker brands to track the participant's gaze patterns: Tobii, EyeLink, or SMI. Thus, apparatus setup will slightly vary in individual labs (e.g., different sampling rates and distances at which the participants are seated in front of the monitor). Participating labs will report their eye-tracker specifications and study procedure alongside the collected data. To minimize variation between labs, all labs using the same type of eye-tracker will use the same presentation study file specific to that eye-tracker type. The Supplemental Material will provide an overview of employed eye-trackers, stimulus presentation softwares, sampling rates and screen dimensions.
 
-\hypertarget{online-gaze-recording}{%
-\subsubsection{Online Gaze Recording}\label{online-gaze-recording}}
+\subsubsection{Online Gaze Recording}\label{online-gaze-recording}
 
 To allow for the participation of labs that do not have access to an eye-tracker, or are not able to invite participants to their facilities due to current restrictions regarding the COVID-19 pandemic, labs can choose to collect data via online testing. Specifically, labs may choose to manually code gaze direction during stimulus presentation on a frame-by-frame basis from video recordings of a camera facing the participant (e.g., a webcam). Labs that choose to collect data virtually will utilize the platform of their choice (e.g., LookIt, YouTube, Zoom, Labvanced, etc.). Further, labs may also choose to use webcam eye-tracking with tools like WebGazer.js (Papoutsaki et al., 2016). In our analyses, we control for and quantify potential sources of variability due to these different methods.
 
-\hypertarget{testing-procedure}{%
-\subsubsection{Testing Procedure}\label{testing-procedure}}
+\subsubsection{Testing Procedure}\label{testing-procedure}
 
 Toddlers will be seated either on their caregiver's lap or in a highchair. The distance from the monitor will depend on the data collection method. Caregivers will be asked to refrain from interacting with their child and close their eyes during stimulus presentation or wear a set of opaque sunglasses. Adult participants will be seated on a chair within the respective appropriate distance from the monitor. Once the participant is seated, the experimenter will initiate the eye-tracker-specific calibration procedure. Additionally, we will present another calibration stimulus before and after the presentation of the task. This allows for evaluating the accuracy of the calibration procedure across labs (cf., Frank, Vul, \& Saxe, 2012).
 
-\hypertarget{general-lab-practices}{%
-\subsection{General Lab Practices}\label{general-lab-practices}}
+\subsection{General Lab Practices}\label{general-lab-practices}
 
 To ensure standardization of procedure, materials for testing practices and instructions will be prepared and distributed to the participating labs. Each lab will be responsible for maintaining these practices and report all relevant details on testing sessions (for details see the Supplemental Material).
 
-\hypertarget{videos-of-participants}{%
-\subsubsection{Videos of Participants}\label{videos-of-participants}}
+\subsubsection{Videos of Participants}\label{videos-of-participants}
 
 As with all MB projects, we strongly encourage labs to record video data of their own lab procedures and each testing session, provided that this is in line with regulations of the respective institutional ethics review board and the given informed consent. Participating labs that cannot contribute participant videos will be asked to provide a video walk-through of their experimental set-up and procedure instead. If no institutional ethics review board restrictions occur, labs are encouraged to share video recordings of the test sessions via DataBrary.
 
-\hypertarget{design-analysis}{%
-\subsection{Design Analysis}\label{design-analysis}}
+\subsection{Design Analysis}\label{design-analysis}
 
 Here we provide a simulation of the predicted findings because a traditional frequentist power analysis is not applicable for our project for two reasons. First, we use Bayesian methods to quantify the strength of our evidence for or against our hypotheses, rather than assessing the probability of rejecting the null hypothesis. In particular, we compute a Bayes factor (BF; a likelihood ratio comparing two competing hypotheses), which allows us to compare models. Second, because of the many-labs nature of the study, the sample size will not be determined by power analysis, but by the amount of data that participating labs are able to contribute within the pre-established timeframe. Even if the effect size is much smaller than what we anticipate (e.g., less than Cohen's \emph{d} = 0.20), the results would be informative as our study is expected to be dramatically larger than any previous study in this area. If, due to unforeseen reasons, the participating labs will not be able to collect a minimum number of 300 participants per age group within the proposed time period, we plan to extend the time for data collection until this minimum number is reached. Or in contrast, if the effect size is large (e.g., more than Cohen's \emph{d} = 0.80), the resulting increased precision of our model will allow us to test a number of other theoretically and methodologically important hypotheses (see Results section).
 Although we did not determine our sample size based on power analysis, here we provide a simulation-based design analysis to demonstrate the range of BFs we might expect to see, given a plausible range of effect sizes and parameters. We focus this analysis on our key analysis of the test trials (as specified below), namely the difference in AL on the first test trial that participants saw. We describe below the simulation for the child sample, but based on our specifications, we expect that a design analysis for adult data would produce similar results.
@@ -500,16 +488,14 @@ We also ran a design analysis for the proportional looking analysis. We used the
 
 \begin{figure}
 
-\includegraphics[width=6in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure3} \hfill{}
+\includegraphics[width=6in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure3} \hfill{}
 
 \caption{Effect sizes of simulated experiments. \newline{} \textit{Note}. Ordered by effect size (from left to right), 95\% credible intervals for the key effect (in logit space) for our simulated experiments that use first look as the dependent variable.}\label{fig:fig3}
 \end{figure}
 
-\hypertarget{data-preprocessing}{%
-\subsection{Data Preprocessing}\label{data-preprocessing}}
+\subsection{Data Preprocessing}\label{data-preprocessing}
 
-\hypertarget{eye-tracking}{%
-\subsubsection{Eye-tracking}\label{eye-tracking}}
+\subsubsection{Eye-tracking}\label{eye-tracking}
 
 Raw gaze position data (x- and y-coordinates) will be extracted in the time window starting from the first frame at which the chaser enters the tunnel until the last frame before it exits the tunnel in the last familiarisation trial and in the test trial. For data collected from labs using a binocular eye-tracker, gaze positions of the left and the right eye will be averaged.
 We will use the peekds R package (\url{http://github.com/langcog/peekds}) to convert eye-tracking data from disparate trackers into a common format. Because not all eye-trackers record data with the same frequency or regularity, we will resample all data to be at a common rate of 40 Hz (samples per second).
@@ -518,38 +504,32 @@ For each monitor size, we will determine the specific AOIs and compute whether t
 
 \begin{figure}
 
-{\centering \includegraphics[width=4in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4} 
+{\centering \includegraphics[width=4in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure4} 
 
 }
 
 \caption{Illustration of Areas of Interest (AOIs) for gaze data analysis during the anticipatory period. \newline{} \textit{Note}. The light green rectangles show the dimensions of the AOIs used for the analysis of AL during the test period.}\label{fig:fig4}
 \end{figure}
 
-\hypertarget{manual-coding}{%
-\subsubsection{Manual Coding}\label{manual-coding}}
+\subsubsection{Manual Coding}\label{manual-coding}
 
 For data gathered without an eye-tracker (e.g., videos of participants gathered from online administration), precise estimation of looks to specific AOIs will not be possible. Instead, videos will be coded for whether participants are looking to the left or the right side of the screen (or ``other/off screen''). In our main analysis, during the critical anticipatory window, we will treat these looks identically to looks to the corresponding AOI. See exploratory analyses for analysis of data collected online.
 
-\hypertarget{temporal-region-of-interest}{%
-\subsubsection{Temporal Region of Interest}\label{temporal-region-of-interest}}
+\subsubsection{Temporal Region of Interest}\label{temporal-region-of-interest}
 
-For familiarization trials, we define the start of the anticipatory period (total length = 4000 ms) as starting 120 ms after the first frame after which the chaser has completely entered the tunnel and lasting until 120 ms after the first frame at which the chaser is visible again (we chose 120 ms as a conservative value for cutting off reactive saccades; cf., Yang, Bucci, \& Kapoula, 2002). For test trials, we define the start of the anticipatory period in the same way, with a total duration of 4000 ms.
+For familiarization trials, we define the start of the anticipatory period (total length = 4000 ms) as starting 120 ms after the first frame after which the chaser has completely entered the tunnel and lasting until 120 ms after the first frame at which the chaser is visible again {[}we chose 120 ms as a conservative value for cutting off reactive saccades; cf., Yang, Bucci, and Kapoula (2002){]}. For test trials, we define the start of the anticipatory period in the same way, with a total duration of 4000 ms.
 
-\hypertarget{dependent-variables}{%
-\subsubsection{Dependent Variables}\label{dependent-variables}}
+\subsubsection{Dependent Variables}\label{dependent-variables}
 
 We define two primary dependent variables:
 1. First look. First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in rayner2009eye. The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins.
 2. Proportion DLS {[}also referred to as total relative looking time; Senju et al. (2009){]}. We compute the proportion looking (p) to the correct AOI during the full 4000 ms anticipatory window (correct looking time / (correct looking time + incorrect looking time)), excluding looks outside of either AOI.
 
-\hypertarget{results}{%
-\section{Results}\label{results}}
+\section{Results}\label{results}
 
-\hypertarget{confirmatory-analyses}{%
-\subsection{Confirmatory Analyses}\label{confirmatory-analyses}}
+\subsection{Confirmatory Analyses}\label{confirmatory-analyses}
 
-\hypertarget{approach.}{%
-\subsubsection{Approach.}\label{approach.}}
+\subsubsection{Approach.}\label{approach.}
 
 As discussed in the Methods section, we adopted a Bayesian analysis strategy so as to maximize our ability to make inferences about the presence or absence of a condition effect (i.e., our key effect of interest). In particular, we fit Bayesian mixed effects regressions using the package brms in R (Bürkner, 2017). This framework allows us to estimate key effects of interest while controlling for variability across grouping units (in our case, labs).
 To facilitate interpretation of individual coefficients, we report means and credible intervals. For key inferences in our confirmatory analysis, we use the bridge sampling approach (Gronau et al., 2017) to compute BFs comparing different models. As the ratio of the likelihood of the observed data under two different models, BFs allow us to quantify the evidence that our data provide with respect to key comparisons. For example, by comparing models with and without condition effects, we can quantify the strength of the evidence for or against such effects.
@@ -558,123 +538,47 @@ For the proportional looking score analysis, we used a uniform prior on the inte
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure5} 
 
 }
 
 \caption{Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.}\label{fig:fig5}
 \end{figure}
 
-\begin{center}
-\begin{ThreePartTable}
-
-\footnotesize{
-
-\begin{longtable}{llcccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
-\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the familiarization trials.}\\
-\toprule
-model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
-\midrule
-\endfirsthead
-\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
-\toprule
-model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
-\midrule
-\endhead
-PTL toddlers & Intercept & 0.12 & 0.02 & 0.09 & 0.15\\
-PTL toddlers & Trial number & -0.05 & 0.01 & -0.06 & -0.03\\
-PTL adults & Intercept & 0.26 & 0.02 & 0.23 & 0.29\\
-PTL adults & Trial number & 0.10 & 0.01 & 0.09 & 0.11\\
-First Look toddlers & Intercept & 0.44 & 0.09 & 0.27 & 0.61\\
-First Look toddlers & Trial number & -0.22 & 0.05 & -0.32 & -0.12\\
-First Look adults & Intercept & 1.03 & 0.09 & 0.86 & 1.20\\
-First Look adults & Trial number & 0.38 & 0.04 & 0.30 & 0.47\\
-\bottomrule
-\end{longtable}
-
-}
-
-\end{ThreePartTable}
-\end{center}
-
-\begin{center}
-\begin{ThreePartTable}
-
-\footnotesize{
-
-\begin{longtable}{llcccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
-\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the test trials.}\\
-\toprule
-model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
-\midrule
-\endfirsthead
-\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
-\toprule
-model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{std.error} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
-\midrule
-\endhead
-PTL toddlers & Intercept & 0.61 & 0.02 & 0.58 & 0.65\\
-PTL toddlers & Condition & 0.10 & 0.03 & 0.03 & 0.17\\
-PTL toddlers & Age & 0.01 & 0.01 & -0.01 & 0.02\\
-PTL toddlers & Condition x Age & -0.01 & 0.02 & -0.04 & 0.02\\
-PTL adults & Intercept & 0.48 & 0.02 & 0.45 & 0.51\\
-PTL adults & Condition & -0.20 & 0.03 & -0.26 & -0.15\\
-First Look toddlers & Intercept & 0.52 & 0.11 & 0.32 & 0.73\\
-First Look toddlers & Condition & 0.53 & 0.21 & 0.12 & 0.94\\
-First Look toddlers & Age & 0.06 & 0.05 & -0.03 & 0.15\\
-First Look toddlers & Condition x Age & -0.13 & 0.09 & -0.30 & 0.04\\
-First Look adults & Intercept & 0.05 & 0.09 & -0.12 & 0.22\\
-First Look adults & Condition & -0.89 & 0.17 & -1.22 & -0.56\\
-\bottomrule
-\end{longtable}
-
-}
-
-\end{ThreePartTable}
-\end{center}
-
-\hypertarget{familiarization-trials.}{%
-\subsubsection{Familiarization Trials.}\label{familiarization-trials.}}
+\subsubsection{Familiarization Trials.}\label{familiarization-trials.}
 
 Figure 5 shows the proportion of total relative looking time (non-logit transformed) and proportion of first looks for toddlers and adults plotted across familiarization trials and test trials. Our first set of analyses examined data from the four familiarization trials and asked whether participants anticipated the chaser's reappearance at one of the tunnel exits. In our first analysis, we were interested in whether participants engage in AL during the familiarization trials. To quantify the level of familiarization, we fitted Bayesian mixed effect models predicting target looks based on trial number (1-4) with random effects for lab and participants and random slopes for trial number for each.
 In R formula notation (which we adopt here because of its relative concision compared with standard mathematical notation), our base model was as follows:
-\(measure \sim 1 + trial\_number + (trial\_number | lab) + (trial\_number | participant)\)
+\(measure \sim 1 + trial\_number +  (trial\_number | lab) + (trial\_number | participant)\)
 We fitted a total of four instances of this model, one for each age group (toddlers vs.~adults) and dependent measure (proportion looking score vs.~first look). First look models were fitted using a logistic link function. The proportion looking score models were Gaussian.
 Our key question of interest was whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we coded trial number so that the last trial before the test trials (trial 4) was set to the intercept, allowing the model intercept to encode an estimate of the proportion of correct anticipation immediately before test. We then fitted a simpler model for comparison
-\(measure \sim 0 + trial\_number + (trial\_number | lab) + (trial\_number | participant),\)
+\(measure \sim 0 + trial\_number +  (trial\_number | lab) + (trial\_number | participant),\)
 which included no intercept term. We then computed the BF comparing this model to the full model. This BF quantified the evidence for an anticipation effect for each group and measure.
 
-\hypertarget{proportion-of-total-relative-looking-time}{%
-\paragraph{Proportion of total relative looking time}\label{proportion-of-total-relative-looking-time}}
+\paragraph{Proportion of total relative looking time}\label{proportion-of-total-relative-looking-time}
 
-\hypertarget{toddlers}{%
-\subparagraph{Toddlers}\label{toddlers}}
+\subparagraph{Toddlers}\label{toddlers}
 
-As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be \textgreater{} 1000, strongly favoring the full model over the null model. See also Table 3 for regression coefficients for the base model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials.
+We used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be BF \textgreater{} 1000, strongly favoring the full model over the null model. See also Table 3 for regression coefficients for the full model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials.
 
-\hypertarget{adults}{%
-\subparagraph{Adults}\label{adults}}
+\subparagraph{Adults}\label{adults}
 
-Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor for the full model against the null model was \textgreater{} 1000, suggesting strong evidence for the full model. These results suggest a significant effect of trial number on PTL, with the positive coefficient indicating an increase in target looks across the familiarization trials.
+Next, we used a Bayesian mixed effects model to predict PTL based on trial number (1-4) for adults, again with random effects for lab and participants and random slopes for trial number for each. The Bayes factor for the full model against the null model was BF \textgreater{} 1000, suggesting strong evidence for the full model. These results suggest a significant effect of trial number on PTL, with the positive coefficient indicating an increase in target looks across the familiarization trials.
 
-\hypertarget{proportion-of-first-looks}{%
-\paragraph{Proportion of first looks}\label{proportion-of-first-looks}}
+\paragraph{Proportion of first looks}\label{proportion-of-first-looks}
 
-\hypertarget{toddlers-1}{%
-\subparagraph{Toddlers}\label{toddlers-1}}
+\subparagraph{Toddlers}\label{toddlers-1}
 
 Investigating proportion of first looks to the target location for toddlers, we again used a Bayesian mixed effects model to predict whether toddlers first look was to the target exit based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each.
-The Bayes factor comparing the full model to the simpler model was estimated to be BF = 7.9, strongly favoring the full model over the null model.
+The Bayes factor comparing the full model to the simpler model was estimated to be BF = 0.0, favoring the full model over the null model.
 The model also provided support for an effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials.
 
-\hypertarget{adults-1}{%
-\subparagraph{Adults}\label{adults-1}}
+\subparagraph{Adults}\label{adults-1}
 
-Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of \textgreater{} 1000, strongly favoring the base model over the full model.
+Comparing the Bayesian mixed effects model of adults predicting proportion of first looks based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each with the simpler model without an intercept, we computed a Bayes factor of BF \textgreater{} 1000, strongly favoring the full model over the null model.
 There was again support for an effect of trial number on proportion of first looks, with the positive coefficient indicating an increase in proportion of first target looks across the familiarization trials.
 
-\hypertarget{test-trials.}{%
-\subsubsection{Test Trials.}\label{test-trials.}}
+\subsubsection{Test Trials.}\label{test-trials.}
 
 We focused our confirmatory analysis on the first test trial (see Exploratory Analysis section for an analysis of both trials). Our primary question of interest was whether AL differs between conditions (knowledge vs.~ignorance, coded as -.5/.5) and by age (in months, centered). For child participants, we fitted models with the specification:
 \(measure ~ 1 + condition + age + condition:age + (1 + condition + age + condition:age | lab).\)
@@ -687,34 +591,27 @@ For the model of data from toddlers, we additionally were interested in whether 
 These BFs captured the evidence for age-related changes in the difference in action anticipation between the two conditions.
 It is important to note that in the case of a null effect, there are two main explanations: (1) toddlers and adults in our study do not distinguish between knowledgeable and ignorant agents when predicting their actions. (2) The method used is not appropriate to reveal knowledge/ignorance understanding. By using Bayesian analyses, we are able to better evaluate the first of these two possibilities: The BF provides a measure of our statistical confidence in the null hypothesis, i.e., no difference between experimental conditions, given the data in ways that standard null hypothesis significance testing does not. In other words, instead of merely concluding that we did not find a difference between conditions, we would be able to find no/anecdotal/moderate/strong/very strong/extreme evidence for the null hypothesis that our participants did not distinguish between knowledgeable and ignorant agents when predicting their actions (Schönbrodt \& Wagenmakers, 2018). We therefore consider this analysis an important addition to our overall analysis strategy. Yet, even our Bayesian analyses are not able to rule out the second possibility that participants may well show such knowledge/ignorance understanding with different methods, or that this ability may not be measurable with any methods available at the current time. Addressing this alternative explanation warrants follow up experiments.
 
-\hypertarget{proportion-of-total-relative-looking-time-1}{%
-\paragraph{Proportion of total relative looking time}\label{proportion-of-total-relative-looking-time-1}}
+\paragraph{Proportion of total relative looking time}\label{proportion-of-total-relative-looking-time-1}
 
-\hypertarget{toddlers-2}{%
-\subparagraph{Toddlers}\label{toddlers-2}}
+\subparagraph{Toddlers}\label{toddlers-2}
 
 As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF = 22.7, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
 
-\hypertarget{adults-2}{%
-\subparagraph{Adults}\label{adults-2}}
+\subparagraph{Adults}\label{adults-2}
 
-Next, we used a Bayesian mixed effects model to predict PTL based on condition for adults, again with random effects for lab. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be \textgreater{} 1000, strongly favoring the full model over the null model. These results suggest a significant main effect of condition on PTL, with the negative coefficient indicating a higher number of target looks for knowledge than for ignorance trials.
+Next, we used a Bayesian mixed effects model to predict PTL based on condition for adults, again with random effects for lab. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF \textgreater{} 1000, strongly favoring the full model over the null model. These results suggest a significant main effect of condition on PTL, with the negative coefficient indicating a higher number of target looks for knowledge than for ignorance trials.
 
-\hypertarget{proportion-of-first-looks-1}{%
-\paragraph{Proportion of first looks}\label{proportion-of-first-looks-1}}
+\paragraph{Proportion of first looks}\label{proportion-of-first-looks-1}
 
-\hypertarget{toddlers-3}{%
-\subparagraph{Toddlers}\label{toddlers-3}}
+\subparagraph{Toddlers}\label{toddlers-3}
 
-Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.5, providing no substantial evidence in favor of the full model over the null model.
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.6, providing no substantial evidence in favor of the full model over the null model.
 
-\hypertarget{adults-3}{%
-\subparagraph{Adults}\label{adults-3}}
+\subparagraph{Adults}\label{adults-3}
 
-We compared a Bayesian mixed-effects model predicting the proportion of first looks based on condition, including random effects for lab to a simpler model without the main effect of condition. The analysis yielded a Bayes factor of \textgreater{} 1000, providing strong evidence in favor of the full model over the null model. Results indicated that first looks to the target were significantly more frequent in the knowledge condition compared to the ignorance condition.
+We compared a Bayesian mixed-effects model predicting the proportion of first looks based on condition, including random effects for lab to a simpler model without the main effect of condition. The analysis yielded a Bayes factor of BF \textgreater{} 1000, providing strong evidence in favor of the full model over the null model. Results indicated that first looks to the target were significantly more frequent in the knowledge condition compared to the ignorance condition.
 
-\hypertarget{exploratory-analyses}{%
-\subsection{Exploratory Analyses}\label{exploratory-analyses}}
+\subsection{Exploratory Analyses}\label{exploratory-analyses}
 
 {[}WE LIST POTENTIAL EXPLORATORY ANALYSES HERE TO SIGNAL OUR INTEREST AND INTENTIONS BUT DO NOT COMMIT TO THEIR INCLUSION, DUE TO LENGTH AND OTHER CONSIDERATIONS{]}
 
@@ -732,45 +629,40 @@ We compared a Bayesian mixed-effects model predicting the proportion of first lo
   To examine whether participants monitor both the bear and the mouse during the mouse's location change, and how this may influence AL in the test phase, we define new time windows of interest (TOIs) corresponding to the mouse's location change in each condition and areas of interest (AOIs) for both the mouse and bear. We hypothesize that participants who attend to both AOIs will exhibit greater AL compared to those who predominantly track the mouse during its location change. Specifically, we will analyze the frequency of gaze shifts between the mouse and bear, as well as the duration of gaze directed toward each AOI during the mouse's location change.
 \end{enumerate}
 
-\hypertarget{spill-over}{%
-\subsubsection{Spill-over}\label{spill-over}}
+\subsubsection{Spill-over}\label{spill-over}
 
-Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of \textgreater{} 1000, providing very strong evidence in favor of the full model. The effect of condition was positive and credible, indicating PTL was higher in the igrnorance condition compared to the knowledge condition. The main effect of age was small and uncertain, suggesting minimal influence of age on PTL. The interaction between condition and age was also small and inconclusive, indicating that the effect of condition on PTL did not differ substantially with age.
+Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF = 41.4, providing very strong evidence in favor of the full model. The effect of condition was positive and credible, indicating PTL was higher in the igrnorance condition compared to the knowledge condition. The main effect of age was small and uncertain, suggesting minimal influence of age on PTL. The interaction between condition and age was also small and inconclusive, indicating that the effect of condition on PTL did not differ substantially with age.
 
-For adults, we also fitted a Bayesian mixed-effects model to predict their PTL for both test trials with the main effect of condition and random effects for participant and lab. Again, the data provided very strong evidence for the inclusion of the main effect of condition with a Bayes Factor of \textgreater{} 1000. The effect of condition was negative and credible, suggesting that PTL was significantly lower in the ignorance condition compared to the knowledge condition.
+For adults, we also fitted a Bayesian mixed-effects model to predict their PTL for both test trials with the main effect of condition and random effects for participant and lab. Again, the data provided very strong evidence for the inclusion of the main effect of condition with a Bayes Factor of BF \textgreater{} 1000. The effect of condition was negative and credible, suggesting that PTL was significantly lower in the ignorance condition compared to the knowledge condition.
 
-In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. While for toddlers, the results were inconclusive (BF = 0.6), for adults, the Bayes Factor of \textgreater{} 1000 provided strong evidence for including the interaction of condition and test trial number as fixed effect. Overall, the results demonstrate that while PTL increased over trials, this effect was moderated by the condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
+In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. While for toddlers, the results were inconclusive (BF = 0.5), for adults, the Bayes Factor of BF \textgreater{} 1000 provided strong evidence for including the interaction of condition and test trial number as fixed effect. Overall, the results demonstrate that while PTL increased over trials, this effect was moderated by the condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials} 
 
 }
 
 \caption{Proportional exit looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition.}\label{fig:fig6}
 \end{figure}
 
-\hypertarget{relationship-between-familiarization-and-test}{%
-\subsubsection{Relationship between familiarization and test}\label{relationship-between-familiarization-and-test}}
+\subsubsection{Relationship between familiarization and test}\label{relationship-between-familiarization-and-test}
 
 To investigate whether only participants that show anticipatory looking within the familiarization also display anticipatory looking in test, we explored three different measures. First, we assessed anticipatory looking for participants that successfully anticipated during the last familiarization trial, that is, whose first fixation was on the target. Second, we
 
-\hypertarget{only-anticipators-on-final-familiarization-trial}{%
-\paragraph{Only anticipators on final familiarization trial}\label{only-anticipators-on-final-familiarization-trial}}
+\paragraph{Only anticipators on final familiarization trial}\label{only-anticipators-on-final-familiarization-trial}
 
-We fitted a main Bayesian hierarchical model testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who anticipated correctly during the last familiarization trial (trial 4, first look to target) for toddlers and adults separately. The results revealed a very similar pattern to the analysis with all participants. However, for toddlers, the Bayes factor comparing this model to the simpler null model without the main effect of condition was inconclusive (BF = 0.5). For adults, the Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be \textgreater{} 1000, strongly favoring the base model over the null model. Again, this result suggests a significant main effect of condition on PTL, with the negative coefficient indicating a higher number of target looks for knowledge than for ignorance trials.
+We fitted a main Bayesian hierarchical model testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who anticipated correctly during the last familiarization trial (trial 4, first look to target) for toddlers and adults separately. The results revealed a very similar pattern to the analysis with all participants. However, for toddlers, the Bayes factor comparing this model to the simpler null model without the main effect of condition was inconclusive (BF = 0.6). For adults, the Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF \textgreater{} 1000, strongly favoring the base model over the null model. Again, this result suggests a significant main effect of condition on PTL, with the negative coefficient indicating a higher number of target looks for knowledge than for ignorance trials.
 
-\hypertarget{only-50-looking-to-target-during-familiarization-trials}{%
-\paragraph{Only \textgreater50\% looking to target during familiarization trials}\label{only-50-looking-to-target-during-familiarization-trials}}
+\paragraph{Only \textgreater50\% looking to target during familiarization trials}\label{only-50-looking-to-target-during-familiarization-trials}
 
-In addition, we fitted main Bayesian hierarchical models testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 14.9, providing evidence in favor of the full model that included the fixed effect of condition. The estimated Bayes factor in favor of the full model of adults over the null model was approximately \textgreater{} 1000, indicating that the inclusion of condition in the full model substantially improved the explanation of the observed data.
+In addition, we fitted main Bayesian hierarchical models testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 13.1, providing evidence in favor of the full model that included the fixed effect of condition. The estimated Bayes factor in favor of the full model of adults over the null model was approximately BF \textgreater{} 1000, indicating that the inclusion of condition in the full model substantially improved the explanation of the observed data.
 
-\hypertarget{correlation-between-familiarization-and-test}{%
-\paragraph{Correlation between familiarization and test}\label{correlation-between-familiarization-and-test}}
+\paragraph{Correlation between familiarization and test}\label{correlation-between-familiarization-and-test}
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/correlation_plot_fam_test} 
 
 }
 
@@ -779,372 +671,364 @@ In addition, we fitted main Bayesian hierarchical models testing the effect of c
 
 We also examined the correlation between familiarization and test performance across the two age cohorts and conditions (see Figure 7). While no significant correlations were found for adults in either condition, toddlers in the knowledge condition exhibited a significant positive correlation of anticipatory looking in familiarization and test, \emph{r}=0.15, \emph{t}(254)=2.35, \emph{p}=0.02.
 
-\hypertarget{data-collection-type-in-lab-vs.-web-based}{%
-\subsubsection{Data collection type: in-lab vs.~web-based}\label{data-collection-type-in-lab-vs.-web-based}}
+\subsubsection{Data collection type: in-lab vs.~web-based}\label{data-collection-type-in-lab-vs.-web-based}
 
-Bayesian mixed-effects model were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately BF = 0.8, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
+Bayesian mixed-effects model were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately BF = 0.7, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
 
-For adults, the main effect of method was slightly negative but uncertain, suggesting that the method had little to no clear effect on the outcome. The interaction between condition and method was negative but with a wide credible interval crossing zero, indicating uncertainty about whether the effect of condition varied by method. The estimated Bayes factor in favor of the full model over the null model was approximately BF = 3.1. This Bayes factor indicates that the evidence in favor of the model is modest but not strong. While the model is more likely than the null model to explain the observed data, the support is relatively weak, suggesting that the predictors in the model provide only a small improvement in explaining the data compared to the null model.
+For adults, the main effect of method was slightly negative but uncertain, suggesting that the method had little to no clear effect on the outcome. The interaction between condition and method was negative but with a wide credible interval crossing zero, indicating uncertainty about whether the effect of condition varied by method. The estimated Bayes factor in favor of the full model over the null model was approximately BF = 3.0. This Bayes factor indicates that the evidence in favor of the model is modest but not strong. While the model is more likely than the null model to explain the observed data, the support is relatively weak, suggesting that the predictors in the model provide only a small improvement in explaining the data compared to the null model.
 
 In sum, the analysis suggests that the method used (web-based vs.~in-lab) does not have a strong impact on anticipatory looking, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
 
-\hypertarget{box-and-tunnel-looking-vary-separately-by-age-or-by-condition}{%
-\subsubsection{Box and tunnel looking vary separately by age or by condition}\label{box-and-tunnel-looking-vary-separately-by-age-or-by-condition}}
+\subsubsection{Box and tunnel looking vary separately by age or by condition}\label{box-and-tunnel-looking-vary-separately-by-age-or-by-condition}
 
 We will conduct an exploratory analysis using tighter AOIs around tunnel exits and boxes, asking whether box and tunnel looking vary separately by age or by condition. In particular, we expect that the difference in AL between the two conditions will be bigger for the tunnel exits than for the box (as looks to the correct box might indicate looks to the target, which is in the same box for both conditions, rather than action anticipation).
 
-\hypertarget{looking-patterns-during-mouses-change-of-location.}{%
-\subsubsection{Looking patterns during mouse's change of location.}\label{looking-patterns-during-mouses-change-of-location.}}
+\subsubsection{Looking patterns during mouse's change of location.}\label{looking-patterns-during-mouses-change-of-location.}
 
-\hypertarget{comparing-the-number-of-shifts-of-toddlers-and-adults-during-the-location-change-of-the-mouse.}{%
-\paragraph{Comparing the number of shifts of toddlers and adults during the location change of the mouse.}\label{comparing-the-number-of-shifts-of-toddlers-and-adults-during-the-location-change-of-the-mouse.}}
+\paragraph{Comparing the number of shifts of toddlers and adults during the location change of the mouse.}\label{comparing-the-number-of-shifts-of-toddlers-and-adults-during-the-location-change-of-the-mouse.}
 
-We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.34, indicating that the the number of shifts was higherfor adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of BF = 694.8 was computed. This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
+We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.34, indicating that the the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8).
+This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure6b} 
 
 }
 
 \caption{Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition.}\label{fig:fig8}
 \end{figure}
 
-\hypertarget{number-of-gaze-shifts-between-mouse-and-bear-during-location-change-as-a-function-of-al}{%
-\paragraph{Number of gaze shifts between mouse and bear during location change as a function of AL}\label{number-of-gaze-shifts-between-mouse-and-bear-during-location-change-as-a-function-of-al}}
+\paragraph{Number of gaze shifts between mouse and bear during location change as a function of AL}\label{number-of-gaze-shifts-between-mouse-and-bear-during-location-change-as-a-function-of-al}
 
-In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately. The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of BF = 0.0 was computed, indicating that the data strongly favors the null model over the full model. This suggests that the predictors number of shifts and the interaction with condition included in the full model do not improve the explanation of the observed data compared to the null model.
+In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately. The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of BF \textgreater{} 1000 was computed, indicating that the data strongly favors the null model over the full model. This suggests that the predictors number of shifts and the interaction with condition included in the full model do not improve the explanation of the observed data compared to the null model.
 
-For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of condition became more negative as the number of shifts increased. The estimated Bayes factor comparing the full model to the null model was approximately \textgreater{} 1000, providing strong evidence in favor of the full model over the null model.
+For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of condition became more negative as the number of shifts increased. The estimated Bayes factor comparing the full model to the null model was approximately BF \textgreater{} 1000, providing strong evidence in favor of the full model over the null model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure7} 
 
 }
 
 \caption{Number of shifts between mouse and bear during location change of mouse as a function of AL in the test phase for toddlers and adults.}\label{fig:fig9}
 \end{figure}
 
-\hypertarget{differential-fixation-times-of-bear-and-mouse-during-location-change-of-mouse-as-a-function-of-al}{%
-\paragraph{Differential fixation times of bear and mouse during location change of mouse as a function of AL}\label{differential-fixation-times-of-bear-and-mouse-during-location-change-of-mouse-as-a-function-of-al}}
+\paragraph{Differential fixation times of bear and mouse during location change of mouse as a function of AL}\label{differential-fixation-times-of-bear-and-mouse-during-location-change-of-mouse-as-a-function-of-al}
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be 0. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of BF = 0.0 was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be 0. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of BF \textgreater{} 1000 was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8} 
+{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure8} 
 
 }
 
 \caption{Difference in looking time to mouse and bear during location change of mouse (in ms) as a function of AL for each age cohort and each condition. Higher looking times at mouse are colored in yellow, and higher looking times at bear are colored in brown.}\label{fig:fig10}
 \end{figure}
 
-\hypertarget{general-discussion}{%
-\section{General Discussion}\label{general-discussion}}
+\section{General Discussion}\label{general-discussion}
 
 The current large-scale, multi-lab study set out to examine whether toddlers and adults engage in spontaneous ToM. In particular, we used an anticipatory looking paradigm to explore whether 18- to 27-month-old toddlers and adults distinguish between two basic forms of epistemic states: knowledge and ignorance. Our call for participation resulted in contributions from 47 labs, representing a total of 809 toddlers from xyz countries and 805 adults from xyz countries, of which 1224 were included in the final sample used for analysis (see Table 1). We begin our discussion by summarizing the principal results of the study with respect to confirmatory analysis and then discuss limitations of the study as well as future directions.
 
-\hypertarget{conclusion}{%
-\subsection{Conclusion}\label{conclusion}}
+\subsection{Conclusion}\label{conclusion}
 
 \newpage
 
-\hypertarget{references}{%
-\section{References}\label{references}}
+\section{References}\label{references}
 
 \begingroup
 \setlength{\parindent}{-0.5in}
 \setlength{\leftskip}{0.5in}
 
-\hypertarget{refs}{}
+\phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
-\leavevmode\vadjust pre{\hypertarget{ref-apperly2009humans}{}}%
+\bibitem[\citeproctext]{ref-apperly2009humans}
 Apperly, I. A., \& Butterfill, S. A. (2009). Do humans have two systems to track beliefs and belief-like states? \emph{Psychological Review}, \emph{116}(4), 953.
 
-\leavevmode\vadjust pre{\hypertarget{ref-baillargeon2018invited}{}}%
+\bibitem[\citeproctext]{ref-baillargeon2018invited}
 Baillargeon, R., Buttelmann, D., \& Southgate, V. (2018). Invited commentary: Interpreting failed replications of early false-belief findings: Methodological and theoretical considerations. \emph{Cognitive Development}, \emph{46}, 112--124.
 
-\leavevmode\vadjust pre{\hypertarget{ref-baillargeon2010false}{}}%
+\bibitem[\citeproctext]{ref-baillargeon2010false}
 Baillargeon, R., Scott, R. M., \& He, Z. (2010). False-belief understanding in infants. \emph{Trends in Cognitive Sciences}, \emph{14}(3), 110--118.
 
-\leavevmode\vadjust pre{\hypertarget{ref-barone2019infants}{}}%
+\bibitem[\citeproctext]{ref-barone2019infants}
 Barone, P., Corradi, G., \& Gomila, A. (2019). Infants' performance in spontaneous-response false belief tasks: A review and meta-analysis. \emph{Infant Behavior and Development}, \emph{57}, 101350.
 
-\leavevmode\vadjust pre{\hypertarget{ref-barr2013random}{}}%
+\bibitem[\citeproctext]{ref-barr2013random}
 Barr, D. J. (2013). Random effects structure for testing interactions in linear mixed-effects models. Frontiers Media SA.
 
-\leavevmode\vadjust pre{\hypertarget{ref-burkner2017brms}{}}%
+\bibitem[\citeproctext]{ref-burkner2017brms}
 Bürkner, P.-C. (2017). Brms: An r package for bayesian multilevel models using stan. \emph{Journal of Statistical Software}, \emph{80}, 1--28.
 
-\leavevmode\vadjust pre{\hypertarget{ref-burnside2018implicit}{}}%
+\bibitem[\citeproctext]{ref-burnside2018implicit}
 Burnside, K., Ruel, A., Azar, N., \& Poulin-Dubois, D. (2018). Implicit false belief across the lifespan: Non-replication of an anticipatory looking task. \emph{Cognitive Development}, \emph{46}, 4--11.
 
-\leavevmode\vadjust pre{\hypertarget{ref-buttelmann2009eighteen}{}}%
+\bibitem[\citeproctext]{ref-buttelmann2009eighteen}
 Buttelmann, D., Carpenter, M., \& Tomasello, M. (2009). Eighteen-month-old infants show false belief understanding in an active helping paradigm. \emph{Cognition}, \emph{112}(2), 337--342.
 
-\leavevmode\vadjust pre{\hypertarget{ref-buttelmann201914}{}}%
+\bibitem[\citeproctext]{ref-buttelmann201914}
 Buttelmann, F., \& Kovács, Á. M. (2019). 14-month-olds anticipate others' actions based on their belief about an object's identity. \emph{Infancy}, \emph{24}(5), 738--751.
 
-\leavevmode\vadjust pre{\hypertarget{ref-buttelmann2015you}{}}%
+\bibitem[\citeproctext]{ref-buttelmann2015you}
 Buttelmann, F., Suhrke, J., \& Buttelmann, D. (2015). What you get is what you believe: Eighteen-month-olds demonstrate belief understanding in an unexpected-identity task. \emph{Journal of Experimental Child Psychology}, \emph{131}, 94--103.
 
-\leavevmode\vadjust pre{\hypertarget{ref-carruthers2013mindreading}{}}%
+\bibitem[\citeproctext]{ref-carruthers2013mindreading}
 Carruthers, P. (2013). Mindreading in infancy. \emph{Mind \& Language}, \emph{28}(2), 141--172.
 
-\leavevmode\vadjust pre{\hypertarget{ref-clements1994implicit}{}}%
+\bibitem[\citeproctext]{ref-clements1994implicit}
 Clements, W. A., \& Perner, J. (1994). Implicit understanding of belief. \emph{Cognitive Development}, \emph{9}(4), 377--395.
 
-\leavevmode\vadjust pre{\hypertarget{ref-csibra2007obsessed}{}}%
-Csibra, G., \& Gergely, G. (2007). {`Obsessed with goals'}: Functions and mechanisms of teleological interpretation of actions in humans. \emph{Acta Psychologica}, \emph{124}(1), 60--78.
+\bibitem[\citeproctext]{ref-csibra2007obsessed}
+Csibra, G., \& Gergely, G. (2007). {``Obsessed with goals''}: Functions and mechanisms of teleological interpretation of actions in humans. \emph{Acta Psychologica}, \emph{124}(1), 60--78.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dennett1989intentional}{}}%
+\bibitem[\citeproctext]{ref-dennett1989intentional}
 Dennett, D. C. (1989). \emph{The intentional stance}. MIT press.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dorrenberg2018not}{}}%
+\bibitem[\citeproctext]{ref-dorrenberg2018not}
 Dörrenberg, S., Rakoczy, H., \& Liszkowski, U. (2018). How (not) to measure infant theory of mind: Testing the replicability and validity of four non-verbal measures. \emph{Cognitive Development}, \emph{46}, 12--30.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dorrenberg2019reliability}{}}%
+\bibitem[\citeproctext]{ref-dorrenberg2019reliability}
 Dörrenberg, S., Wenzel, L., Proft, M., Rakoczy, H., \& Liszkowski, U. (2019). Reliability and generalizability of an acted-out false belief task in 3-year-olds. \emph{Infant Behavior and Development}, \emph{54}, 13--21.
 
-\leavevmode\vadjust pre{\hypertarget{ref-elsner2021infants}{}}%
+\bibitem[\citeproctext]{ref-elsner2021infants}
 Elsner, B., \& Adam, M. (2021). Infants' goal prediction for simple action events: The role of experience and agency cues. \emph{Topics in Cognitive Science}, \emph{13}(1), 45--62.
 
-\leavevmode\vadjust pre{\hypertarget{ref-fabricius2010true}{}}%
+\bibitem[\citeproctext]{ref-fabricius2010true}
 Fabricius, W. V., Boyer, T. W., Weimer, A. A., \& Carroll, K. (2010). True or false: Do 5-year-olds understand belief? \emph{Developmental Psychology}, \emph{46}(6), 1402.
 
-\leavevmode\vadjust pre{\hypertarget{ref-flavell1988development}{}}%
+\bibitem[\citeproctext]{ref-flavell1988development}
 Flavell, J. H. (1988). \emph{The development of children's knowledge about the mind: From cognitive connections to mental representations.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-flavell1981young}{}}%
+\bibitem[\citeproctext]{ref-flavell1981young}
 Flavell, J. H., Everett, B. A., Croft, K., \& Flavell, E. R. (1981). Young children's knowledge about visual perception: Further evidence for the level 1--level 2 distinction. \emph{Developmental Psychology}, \emph{17}(1), 99.
 
-\leavevmode\vadjust pre{\hypertarget{ref-frank2017collaborative}{}}%
+\bibitem[\citeproctext]{ref-frank2017collaborative}
 Frank, M. C., Bergelson, E., Bergmann, C., Cristia, A., Floccia, C., Gervain, J., \ldots{} Yurovsky, D. (2017). A collaborative approach to infant research: Promoting reproducibility, best practices, and theory-building. \emph{Infancy}, \emph{22}(4), 421--435. \url{https://doi.org/10.1111/infa.12182}
 
-\leavevmode\vadjust pre{\hypertarget{ref-frank2012measuring}{}}%
+\bibitem[\citeproctext]{ref-frank2012measuring}
 Frank, M. C., Vul, E., \& Saxe, R. (2012). Measuring the development of social attention using free-viewing. \emph{Infancy}, \emph{17}(4), 355--375.
 
-\leavevmode\vadjust pre{\hypertarget{ref-frith2006neural}{}}%
+\bibitem[\citeproctext]{ref-frith2006neural}
 Frith, C. D., \& Frith, U. (2006). The neural basis of mentalizing. \emph{Neuron}, \emph{50}(4), 531--534.
 
-\leavevmode\vadjust pre{\hypertarget{ref-ganglmayer2019infants}{}}%
+\bibitem[\citeproctext]{ref-ganglmayer2019infants}
 Ganglmayer, K., Attig, M., Daum, M. M., \& Paulus, M. (2019). Infants' perception of goal-directed actions: A multi-lab replication reveals that infants anticipate paths and not goals. \emph{Infant Behavior and Development}, \emph{57}, 101340.
 
-\leavevmode\vadjust pre{\hypertarget{ref-gergely2003teleological}{}}%
+\bibitem[\citeproctext]{ref-gergely2003teleological}
 Gergely, G., \& Csibra, G. (2003). Teleological reasoning in infancy: The na{ı}ve theory of rational action. \emph{Trends in Cognitive Sciences}, \emph{7}(7), 287--292.
 
-\leavevmode\vadjust pre{\hypertarget{ref-gergely1995taking}{}}%
+\bibitem[\citeproctext]{ref-gergely1995taking}
 Gergely, G., Nádasdy, Z., Csibra, G., \& Bı́ró, S. (1995). Taking the intentional stance at 12 months of age. \emph{Cognition}, \emph{56}(2), 165--193.
 
-\leavevmode\vadjust pre{\hypertarget{ref-gliga2014early}{}}%
+\bibitem[\citeproctext]{ref-gliga2014early}
 Gliga, T., Jones, E. J., Bedford, R., Charman, T., \& Johnson, M. H. (2014). From early markers to neuro-developmental mechanisms of autism. \emph{Developmental Review}, \emph{34}(3), 189--207.
 
-\leavevmode\vadjust pre{\hypertarget{ref-gronau2017tutorial}{}}%
+\bibitem[\citeproctext]{ref-gronau2017tutorial}
 Gronau, Q. F., Sarafoglou, A., Matzke, D., Ly, A., Boehm, U., Marsman, M., \ldots{} Steingroever, H. (2017). A tutorial on bridge sampling. \emph{Journal of Mathematical Psychology}, \emph{81}, 80--97.
 
-\leavevmode\vadjust pre{\hypertarget{ref-grosse2017implicit}{}}%
+\bibitem[\citeproctext]{ref-grosse2017implicit}
 Grosse Wiesmann, C., Friederici, A. D., Singer, T., \& Steinbeis, N. (2017). Implicit and explicit false belief development in preschool children. \emph{Developmental Science}, \emph{20}(5), e12445.
 
-\leavevmode\vadjust pre{\hypertarget{ref-hare2001chimpanzees}{}}%
+\bibitem[\citeproctext]{ref-hare2001chimpanzees}
 Hare, B., Call, J., \& Tomasello, M. (2001). Do chimpanzees know what conspecifics know? \emph{Animal Behaviour}, \emph{61}(1), 139--151.
 
-\leavevmode\vadjust pre{\hypertarget{ref-hayashi2020macaques}{}}%
-Hayashi, T., Akikawa, R., Kawasaki, K., Egawa, J., Minamimoto, T., Kobayashi, K., \ldots{} others. (2020). Macaques exhibit implicit gaze bias anticipating others' false-belief-driven actions via medial prefrontal cortex. \emph{Cell Reports}, \emph{30}(13), 4433--4444.
+\bibitem[\citeproctext]{ref-hayashi2020macaques}
+Hayashi, T., Akikawa, R., Kawasaki, K., Egawa, J., Minamimoto, T., Kobayashi, K., et al.others. (2020). Macaques exhibit implicit gaze bias anticipating others' false-belief-driven actions via medial prefrontal cortex. \emph{Cell Reports}, \emph{30}(13), 4433--4444.
 
-\leavevmode\vadjust pre{\hypertarget{ref-heyes2014submentalizing}{}}%
+\bibitem[\citeproctext]{ref-heyes2014submentalizing}
 Heyes, C. (2014). Submentalizing: I am not really reading your mind. \emph{Perspectives on Psychological Science}, \emph{9}(2), 131--143.
 
-\leavevmode\vadjust pre{\hypertarget{ref-hogrefe1986ignorance}{}}%
+\bibitem[\citeproctext]{ref-hogrefe1986ignorance}
 Hogrefe, G.-J., Wimmer, H., \& Perner, J. (1986). Ignorance versus false belief: A developmental lag in attribution of epistemic states. \emph{Child Development}, 567--582.
 
-\leavevmode\vadjust pre{\hypertarget{ref-horschler2020non}{}}%
+\bibitem[\citeproctext]{ref-horschler2020non}
 Horschler, D. J., MacLean, E. L., \& Santos, L. R. (2020). Do non-human primates really represent others' beliefs? \emph{Trends in Cognitive Sciences}, \emph{24}(8), 594--605.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kaminski2008chimpanzees}{}}%
+\bibitem[\citeproctext]{ref-kaminski2008chimpanzees}
 Kaminski, J., Call, J., \& Tomasello, M. (2008). Chimpanzees know what others know, but not what they believe. \emph{Cognition}, \emph{109}(2), 224--234.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kampis2020developing}{}}%
+\bibitem[\citeproctext]{ref-kampis2020developing}
 Kampis, D., Buttelmann, F., \& Kovács, Á. M. (2020). \emph{Developing a theory of mind: Are infants sensitive to how other people represent the world?}
 
-\leavevmode\vadjust pre{\hypertarget{ref-kampis2021two}{}}%
+\bibitem[\citeproctext]{ref-kampis2021two}
 Kampis, D., Karman, P., Csibra, G., Southgate, V., \& Hernik, M. (2021). A two-lab direct replication attempt of southgate, senju and csibra (2007). \emph{Royal Society Open Science}, \emph{8}(8), 210190.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kano2019great}{}}%
+\bibitem[\citeproctext]{ref-kano2019great}
 Kano, F., Krupenye, C., Hirata, S., Tomonaga, M., \& Call, J. (2019). Great apes use self-experience to anticipate an agent's action in a false-belief test. \emph{Proceedings of the National Academy of Sciences}, \emph{116}(42), 20904--20909.
 
-\leavevmode\vadjust pre{\hypertarget{ref-karg2015goggles}{}}%
+\bibitem[\citeproctext]{ref-karg2015goggles}
 Karg, K., Schmelz, M., Call, J., \& Tomasello, M. (2015). The goggles experiment: Can chimpanzees use self-experience to infer what a competitor can see? \emph{Animal Behaviour}, \emph{105}, 211--221.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kiraly2018retrospective}{}}%
+\bibitem[\citeproctext]{ref-kiraly2018retrospective}
 Király, I., Oláh, K., Csibra, G., \& Kovács, Á. M. (2018). Retrospective attribution of false beliefs in 3-year-old children. \emph{Proceedings of the National Academy of Sciences}, \emph{115}(45), 11477--11482.
 
-\leavevmode\vadjust pre{\hypertarget{ref-knudsen201218}{}}%
+\bibitem[\citeproctext]{ref-knudsen201218}
 Knudsen, B., \& Liszkowski, U. (2012). 18-month-olds predict specific action mistakes through attribution of false belief, not ignorance, and intervene accordingly. \emph{Infancy}, \emph{17}(6), 672--691.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kovacs2016belief}{}}%
+\bibitem[\citeproctext]{ref-kovacs2016belief}
 Kovács, Á. M. (2016). Belief files in theory of mind reasoning. \emph{Review of Philosophy and Psychology}, \emph{7}, 509--527.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kovacs2010social}{}}%
+\bibitem[\citeproctext]{ref-kovacs2010social}
 Kovács, Á. M., Téglás, E., \& Endress, A. D. (2010). The social sense: Susceptibility to others' beliefs in human infants and adults. \emph{Science}, \emph{330}(6012), 1830--1834.
 
-\leavevmode\vadjust pre{\hypertarget{ref-krupenye2016great}{}}%
+\bibitem[\citeproctext]{ref-krupenye2016great}
 Krupenye, C., Kano, F., Hirata, S., Call, J., \& Tomasello, M. (2016). Great apes anticipate that other individuals will act according to false beliefs. \emph{Science}, \emph{354}(6308), 110--114.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2018implicit}{}}%
+\bibitem[\citeproctext]{ref-kulke2018implicit}
 Kulke, L., Duhn, B. von, Schneider, D., \& Rakoczy, H. (2018). Is implicit theory of mind a real and robust phenomenon? Results from a systematic replication study. \emph{Psychological Science}, \emph{29}(6), 888--900.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2021implicit}{}}%
+\bibitem[\citeproctext]{ref-kulke2021implicit}
 Kulke, L., \& Hinrichs, M. A. B. (2021). Implicit theory of mind under realistic social circumstances measured with mobile eye-tracking. \emph{Scientific Reports}, \emph{11}(1), 1215.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2019can}{}}%
+\bibitem[\citeproctext]{ref-kulke2019can}
 Kulke, L., Johannsen, J., \& Rakoczy, H. (2019). Why can some implicit theory of mind tasks be replicated and others cannot? A test of mentalizing versus submentalizing accounts. \emph{PloS One}, \emph{14}(3), e0213772.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2018implicitdata}{}}%
+\bibitem[\citeproctext]{ref-kulke2018implicitdata}
 Kulke, L., \& Rakoczy, H. (2018). Implicit theory of mind--an overview of current replications and non-replications. \emph{Data in Brief}, \emph{16}, 101--104.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2019testing}{}}%
+\bibitem[\citeproctext]{ref-kulke2019testing}
 Kulke, L., \& Rakoczy, H. (2019). Testing the role of verbal narration in implicit theory of mind tasks. \emph{Journal of Cognition and Development}, \emph{20}(1), 1--14.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2018robust}{}}%
+\bibitem[\citeproctext]{ref-kulke2018robust}
 Kulke, L., Reiß, M., Krist, H., \& Rakoczy, H. (2018). How robust are anticipatory looking measures of theory of mind? Replication attempts across the life span. \emph{Cognitive Development}, \emph{46}, 97--111.
 
-\leavevmode\vadjust pre{\hypertarget{ref-kulke2019implicit}{}}%
+\bibitem[\citeproctext]{ref-kulke2019implicit}
 Kulke, L., Wübker, M., \& Rakoczy, H. (2019). Is implicit theory of mind real but hard to detect? Testing adults with different stimulus materials. \emph{Royal Society Open Science}, \emph{6}(7), 190068.
 
-\leavevmode\vadjust pre{\hypertarget{ref-leslie2005developmental}{}}%
+\bibitem[\citeproctext]{ref-leslie2005developmental}
 Leslie, A. M. (2005). Developmental parallels in understanding minds and bodies. \emph{Trends in Cognitive Sciences}, \emph{9}(10), 459--462.
 
-\leavevmode\vadjust pre{\hypertarget{ref-liszkowski2007pointing}{}}%
+\bibitem[\citeproctext]{ref-liszkowski2007pointing}
 Liszkowski, U., Carpenter, M., \& Tomasello, M. (2007). Pointing out new news, old news, and absent referents at 12 months of age. \emph{Developmental Science}, \emph{10}(2), F1--F7.
 
-\leavevmode\vadjust pre{\hypertarget{ref-low2013attributing}{}}%
+\bibitem[\citeproctext]{ref-low2013attributing}
 Low, J., \& Watts, J. (2013). Attributing false beliefs about object identity reveals a signature blind spot in humans' efficient mind-reading system. \emph{Psychological Science}, \emph{24}(3), 305--311.
 
-\leavevmode\vadjust pre{\hypertarget{ref-luo200712}{}}%
+\bibitem[\citeproctext]{ref-luo200712}
 Luo, Y., \& Baillargeon, R. (2007). Do 12.5-month-old infants consider what objects others can see when interpreting their actions? \emph{Cognition}, \emph{105}(3), 489--512.
 
-\leavevmode\vadjust pre{\hypertarget{ref-luo2010toward}{}}%
+\bibitem[\citeproctext]{ref-luo2010toward}
 Luo, Y., \& Baillargeon, R. (2010). Toward a mentalistic account of early psychological reasoning. \emph{Current Directions in Psychological Science}, \emph{19}(5), 301--307.
 
-\leavevmode\vadjust pre{\hypertarget{ref-manybabies2020quantifying}{}}%
+\bibitem[\citeproctext]{ref-manybabies2020quantifying}
 ManyBabies Consortium. (2020). Quantifying sources of variability in infancy research using the infant-directed-speech preference. \emph{Advances in Methods and Practices in Psychological Science}, \emph{3}(1), 24--52.
 
-\leavevmode\vadjust pre{\hypertarget{ref-martin2016cognitive}{}}%
+\bibitem[\citeproctext]{ref-martin2016cognitive}
 Martin, A., \& Santos, L. R. (2016). What cognitive representations support primate theory of mind? \emph{Trends in Cognitive Sciences}, \emph{20}(5), 375--382.
 
-\leavevmode\vadjust pre{\hypertarget{ref-mellers2001frequency}{}}%
+\bibitem[\citeproctext]{ref-mellers2001frequency}
 Mellers, B., Hertwig, R., \& Kahneman, D. (2001). Do frequency representations eliminate conjunction effects? An exercise in adversarial collaboration. \emph{Psychological Science}, \emph{12}(4), 269--275.
 
-\leavevmode\vadjust pre{\hypertarget{ref-meristo2012belief}{}}%
+\bibitem[\citeproctext]{ref-meristo2012belief}
 Meristo, M., Morgan, G., Geraci, A., Iozzi, L., Hjelmquist, E., Surian, L., \& Siegal, M. (2012). Belief attribution in deaf and hearing infants. \emph{Developmental Science}, \emph{15}(5), 633--640.
 
-\leavevmode\vadjust pre{\hypertarget{ref-moll2006level}{}}%
+\bibitem[\citeproctext]{ref-moll2006level}
 Moll, H., \& Tomasello, M. (2006). Level 1 perspective-taking at 24 months of age. \emph{British Journal of Developmental Psychology}, \emph{24}(3), 603--613.
 
-\leavevmode\vadjust pre{\hypertarget{ref-o1996two}{}}%
+\bibitem[\citeproctext]{ref-o1996two}
 O'Neill, D. K. (1996). Two-year-old children's sensitivity to a parent's knowledge state when making requests. \emph{Child Development}, \emph{67}(2), 659--677.
 
-\leavevmode\vadjust pre{\hypertarget{ref-onishi200515}{}}%
+\bibitem[\citeproctext]{ref-onishi200515}
 Onishi, K. H., \& Baillargeon, R. (2005). Do 15-month-old infants understand false beliefs? \emph{Science}, \emph{308}(5719), 255--258.
 
-\leavevmode\vadjust pre{\hypertarget{ref-papoutsaki2016proceedings}{}}%
+\bibitem[\citeproctext]{ref-papoutsaki2016proceedings}
 Papoutsaki, A., Sangkloy, P., Laskey, J., Daskalova, N., Huang, J., \& Hays, J. (2016). \emph{Proceedings of the 25th international joint conference on artificial intelligence (IJCAI)}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-perner1991understanding}{}}%
+\bibitem[\citeproctext]{ref-perner1991understanding}
 Perner, J. (1991). \emph{Understanding the representational mind.} The MIT Press.
 
-\leavevmode\vadjust pre{\hypertarget{ref-perner2005infants}{}}%
+\bibitem[\citeproctext]{ref-perner2005infants}
 Perner, J., \& Ruffman, T. (2005). Infants' insight into the mind: How deep? \emph{Science}, \emph{308}(5719), 214--216.
 
-\leavevmode\vadjust pre{\hypertarget{ref-phillips2021knowledge}{}}%
+\bibitem[\citeproctext]{ref-phillips2021knowledge}
 Phillips, J., Buckwalter, W., Cushman, F., Friedman, O., Martin, A., Turri, J., \ldots{} Knobe, J. (2021). Knowledge before belief. \emph{Behavioral and Brain Sciences}, \emph{44}, e140.
 
-\leavevmode\vadjust pre{\hypertarget{ref-poulin2018infants}{}}%
-Poulin-Dubois, D., Rakoczy, H., Burnside, K., Crivello, C., Dörrenberg, S., Edwards, K., \ldots{} others. (2018). Do infants understand false beliefs? We don't know yet--a commentary on baillargeon, buttelmann and southgate's commentary. \emph{Cognitive Development}, \emph{48}, 302--315.
+\bibitem[\citeproctext]{ref-poulin2018infants}
+Poulin-Dubois, D., Rakoczy, H., Burnside, K., Crivello, C., Dörrenberg, S., Edwards, K., et al.others. (2018). Do infants understand false beliefs? We don't know yet--a commentary on baillargeon, buttelmann and southgate's commentary. \emph{Cognitive Development}, \emph{48}, 302--315.
 
-\leavevmode\vadjust pre{\hypertarget{ref-powell2018replications}{}}%
+\bibitem[\citeproctext]{ref-powell2018replications}
 Powell, L. J., Hobbs, K., Bardis, A., Carey, S., \& Saxe, R. (2018). Replications of implicit theory of mind tasks with varying representational demands. \emph{Cognitive Development}, \emph{46}, 40--50.
 
-\leavevmode\vadjust pre{\hypertarget{ref-premack1978does}{}}%
+\bibitem[\citeproctext]{ref-premack1978does}
 Premack, D., \& Woodruff, G. (1978). Does the chimpanzee have a theory of mind? \emph{Behavioral and Brain Sciences}, \emph{1}(4), 515--526.
 
-\leavevmode\vadjust pre{\hypertarget{ref-priewasser2020mistaken}{}}%
+\bibitem[\citeproctext]{ref-priewasser2020mistaken}
 Priewasser, B., Fowles, F., Schweller, K., \& Perner, J. (2020). Mistaken max befriends duplo girl: No difference between a standard and an acted-out false belief task. \emph{Journal of Experimental Child Psychology}, \emph{191}, 104756.
 
-\leavevmode\vadjust pre{\hypertarget{ref-priewasser2018helping}{}}%
+\bibitem[\citeproctext]{ref-priewasser2018helping}
 Priewasser, B., Rafetseder, E., Gargitter, C., \& Perner, J. (2018). Helping as an early indicator of a theory of mind: Mentalism or teleology? \emph{Cognitive Development}, \emph{46}, 69--78.
 
-\leavevmode\vadjust pre{\hypertarget{ref-ruffman1996children}{}}%
+\bibitem[\citeproctext]{ref-ruffman1996children}
 Ruffman, T. (1996). Do children understand the mind by means of simulation or a theory? Evidence from their understanding of inference. \emph{Mind \& Language}, \emph{11}(4), 388--414.
 
-\leavevmode\vadjust pre{\hypertarget{ref-schneider2012eye}{}}%
+\bibitem[\citeproctext]{ref-schneider2012eye}
 Schneider, D., Bayliss, A. P., Becker, S. I., \& Dux, P. E. (2012). Eye movements reveal sustained implicit processing of others' mental states. \emph{Journal of Experimental Psychology: General}, \emph{141}(3), 433.
 
-\leavevmode\vadjust pre{\hypertarget{ref-schneider2013temporally}{}}%
+\bibitem[\citeproctext]{ref-schneider2013temporally}
 Schneider, D., Slaughter, V. P., Bayliss, A. P., \& Dux, P. E. (2013). A temporally sustained implicit theory of mind deficit in autism spectrum disorders. \emph{Cognition}, \emph{129}(2), 410--417.
 
-\leavevmode\vadjust pre{\hypertarget{ref-schneider2017current}{}}%
+\bibitem[\citeproctext]{ref-schneider2017current}
 Schneider, D., Slaughter, V. P., \& Dux, P. E. (2017). Current evidence for automatic theory of mind processing in adults. \emph{Cognition}, \emph{162}, 27--31.
 
-\leavevmode\vadjust pre{\hypertarget{ref-schuwerk2018robustness}{}}%
+\bibitem[\citeproctext]{ref-schuwerk2018robustness}
 Schuwerk, T., Priewasser, B., Sodian, B., \& Perner, J. (2018). The robustness and generalizability of findings on spontaneous false belief sensitivity: A replication attempt. \emph{Royal Society Open Science}, \emph{5}(5), 172273.
 
-\leavevmode\vadjust pre{\hypertarget{ref-scott2009penguin}{}}%
+\bibitem[\citeproctext]{ref-scott2009penguin}
 Scott, R. M., \& Baillargeon, R. (2009). Which penguin is this? Attributing false beliefs about object identity at 18 months. \emph{Child Development}, \emph{80}(4), 1172--1196.
 
-\leavevmode\vadjust pre{\hypertarget{ref-scott2017early}{}}%
+\bibitem[\citeproctext]{ref-scott2017early}
 Scott, R. M., \& Baillargeon, R. (2017). Early false-belief understanding. \emph{Trends in Cognitive Sciences}, \emph{21}(4), 237--249.
 
-\leavevmode\vadjust pre{\hypertarget{ref-scott2015infants}{}}%
+\bibitem[\citeproctext]{ref-scott2015infants}
 Scott, R. M., Richman, J. C., \& Baillargeon, R. (2015). Infants understand deceptive intentions to implant false beliefs about identity: New evidence for early mentalistic reasoning. \emph{Cognitive Psychology}, \emph{82}, 32--56.
 
-\leavevmode\vadjust pre{\hypertarget{ref-senju2010absence}{}}%
+\bibitem[\citeproctext]{ref-senju2010absence}
 Senju, A., Southgate, V., Miura, Y., Matsui, T., Hasegawa, T., Tojo, Y., \ldots{} Csibra, G. (2010). Absence of spontaneous action anticipation by false belief attribution in children with autism spectrum disorder. \emph{Development and Psychopathology}, \emph{22}(2), 353--360.
 
-\leavevmode\vadjust pre{\hypertarget{ref-senju201118}{}}%
+\bibitem[\citeproctext]{ref-senju201118}
 Senju, A., Southgate, V., Snape, C., Leonard, M., \& Csibra, G. (2011). Do 18-month-olds really attribute mental states to others? A critical test. \emph{Psychological Science}, \emph{22}(7), 878--880.
 
-\leavevmode\vadjust pre{\hypertarget{ref-senju2009mindblind}{}}%
+\bibitem[\citeproctext]{ref-senju2009mindblind}
 Senju, A., Southgate, V., White, S., \& Frith, U. (2009). Mindblind eyes: An absence of spontaneous theory of mind in asperger syndrome. \emph{Science}, \emph{325}(5942), 883--885.
 
-\leavevmode\vadjust pre{\hypertarget{ref-sheskin2020online}{}}%
-Sheskin, M., Scott, K., Mills, C. M., Bergelson, E., Bonawitz, E., Spelke, E. S., \ldots{} others. (2020). Online developmental science to foster innovation, access, and impact. \emph{Trends in Cognitive Sciences}, \emph{24}(9), 675--678.
+\bibitem[\citeproctext]{ref-sheskin2020online}
+Sheskin, M., Scott, K., Mills, C. M., Bergelson, E., Bonawitz, E., Spelke, E. S., et al.others. (2020). Online developmental science to foster innovation, access, and impact. \emph{Trends in Cognitive Sciences}, \emph{24}(9), 675--678.
 
-\leavevmode\vadjust pre{\hypertarget{ref-southgate2010motor}{}}%
+\bibitem[\citeproctext]{ref-southgate2010motor}
 Southgate, V., Johnson, M. H., Karoui, I. E., \& Csibra, G. (2010). Motor system activation reveals infants' on-line prediction of others' goals. \emph{Psychological Science}, \emph{21}(3), 355--359.
 
-\leavevmode\vadjust pre{\hypertarget{ref-southgate2007action}{}}%
+\bibitem[\citeproctext]{ref-southgate2007action}
 Southgate, V., Senju, A., \& Csibra, G. (2007). Action anticipation through attribution of false belief by 2-year-olds. \emph{Psychological Science}, \emph{18}(7), 587--592.
 
-\leavevmode\vadjust pre{\hypertarget{ref-southgate2014belief}{}}%
+\bibitem[\citeproctext]{ref-southgate2014belief}
 Southgate, V., \& Vernetti, A. (2014). Belief-based action prediction in preverbal infants. \emph{Cognition}, \emph{130}(1), 1--10.
 
-\leavevmode\vadjust pre{\hypertarget{ref-surian2007attribution}{}}%
+\bibitem[\citeproctext]{ref-surian2007attribution}
 Surian, L., Caldi, S., \& Sperber, D. (2007). Attribution of beliefs by 13-month-old infants. \emph{Psychological Science}, \emph{18}(7), 580--586.
 
-\leavevmode\vadjust pre{\hypertarget{ref-surian2020domain}{}}%
+\bibitem[\citeproctext]{ref-surian2020domain}
 Surian, L., \& Franchin, L. (2020). On the domain specificity of the mechanisms underpinning spontaneous anticipatory looks in false-belief tasks. \emph{Developmental Science}, \emph{23}(6), e12955.
 
-\leavevmode\vadjust pre{\hypertarget{ref-surian2012will}{}}%
+\bibitem[\citeproctext]{ref-surian2012will}
 Surian, L., \& Geraci, A. (2012). Where will the triangle look for it? Attributing false beliefs to a geometric shape at 17 months. \emph{British Journal of Developmental Psychology}, \emph{30}(1), 30--44.
 
-\leavevmode\vadjust pre{\hypertarget{ref-thoermer2012continuity}{}}%
+\bibitem[\citeproctext]{ref-thoermer2012continuity}
 Thoermer, C., Sodian, B., Vuori, M., Perst, H., \& Kristen, S. (2012). Continuity from an implicit to an explicit understanding of false belief from infancy to preschool age. \emph{British Journal of Developmental Psychology}, \emph{30}(1), 172--187.
 
-\leavevmode\vadjust pre{\hypertarget{ref-trauble2010early}{}}%
+\bibitem[\citeproctext]{ref-trauble2010early}
 Träuble, B., Marinović, V., \& Pauen, S. (2010). Early theory of mind competencies: Do infants understand others' beliefs? \emph{Infancy}, \emph{15}(4), 434--444.
 
-\leavevmode\vadjust pre{\hypertarget{ref-wellman2001theory}{}}%
+\bibitem[\citeproctext]{ref-wellman2001theory}
 Wellman, H. M., \& Cross, D. (2001). Theory of mind and conceptual change. \emph{Child Development}, \emph{72}(3), 702--707.
 
-\leavevmode\vadjust pre{\hypertarget{ref-wiesmann2018longitudinal}{}}%
+\bibitem[\citeproctext]{ref-wiesmann2018longitudinal}
 Wiesmann, C. G., Friederici, A. D., Disla, D., Steinbeis, N., \& Singer, T. (2018). Longitudinal evidence for 4-year-olds' but not 2-and 3-year-olds' false belief-related action anticipation. \emph{Cognitive Development}, \emph{46}, 58--68.
 
-\leavevmode\vadjust pre{\hypertarget{ref-woodward2000twelve}{}}%
+\bibitem[\citeproctext]{ref-woodward2000twelve}
 Woodward, A. L., \& Sommerville, J. A. (2000). Twelve-month-old infants interpret action in context. \emph{Psychological Science}, \emph{11}(1), 73--77.
 
-\leavevmode\vadjust pre{\hypertarget{ref-yang2002latency}{}}%
+\bibitem[\citeproctext]{ref-yang2002latency}
 Yang, Q., Bucci, M. P., \& Kapoula, Z. (2002). The latency of saccades, vergence, and combined eye movements in children and in adults. \emph{Investigative Ophthalmology \& Visual Science}, \emph{43}(9), 2939--2949.
 
 \end{CSLReferences}

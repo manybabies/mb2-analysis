@@ -1495,6 +1495,7 @@ summary(bm_test_shifts_age_cohort_null)
 
 saveRDS(bm_test_shifts_age_cohort_null, file=here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
 
+#MZ: bridge sampling fails here for me
 test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, bm_test_shifts_age_cohort_null)
 
 saveRDS(test_m_comparison_shifts_age_cohort, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_age_cohort.rds"))
