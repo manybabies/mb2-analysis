@@ -54,14 +54,28 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
+\makeatletter
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
-  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
   \let\oldsubparagraph\subparagraph
-  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
+\makeatother
 % definitions for citeproc citations
 \NewDocumentCommand\citeproctext{}{}
 \NewDocumentCommand\citeproc{mm}{%
@@ -272,7 +286,7 @@ Figures 1 and 2 provide an overview of the paradigm. For the stimuli, 3D animati
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure1} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1} 
 
 }
 
@@ -299,7 +313,7 @@ When designing the \emph{knowledge} and \emph{ignorance} condition, we aimed at 
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.5in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure2} 
+{\centering \includegraphics[width=6.5in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2} 
 
 }
 
@@ -488,7 +502,7 @@ We also ran a design analysis for the proportional looking analysis. We used the
 
 \begin{figure}
 
-\includegraphics[width=6in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure3} \hfill{}
+\includegraphics[width=6in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure3} \hfill{}
 
 \caption{Effect sizes of simulated experiments. \newline{} \textit{Note}. Ordered by effect size (from left to right), 95\% credible intervals for the key effect (in logit space) for our simulated experiments that use first look as the dependent variable.}\label{fig:fig3}
 \end{figure}
@@ -504,7 +518,7 @@ For each monitor size, we will determine the specific AOIs and compute whether t
 
 \begin{figure}
 
-{\centering \includegraphics[width=4in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure4} 
+{\centering \includegraphics[width=4in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4} 
 
 }
 
@@ -538,12 +552,68 @@ For the proportional looking score analysis, we used a uniform prior on the inte
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure5} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5} 
 
 }
 
 \caption{Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.}\label{fig:fig5}
 \end{figure}
+
+\begin{center}
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the familiarization trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Intercept Effect & 0.12 & 0.09 & 0.15\\
+PTL adults & Intercept Effect & 0.26 & 0.23 & 0.29\\
+First Look toddlers & Intercept Effect & 0.44 & 0.27 & 0.61\\
+First Look adults & Intercept Effect & 0.91 & 0.78 & 1.05\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\end{center}
+
+\begin{center}
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the test trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Condition Effect & 0.10 & 0.03 & 0.17\\
+PTL adults & Condition Effect & -0.20 & -0.26 & -0.15\\
+First Look toddlers & Condition Effect & 0.53 & 0.13 & 0.93\\
+First Look adults & Condition Effect & -0.89 & -1.21 & -0.56\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\end{center}
 
 \subsubsection{Familiarization Trials.}\label{familiarization-trials.}
 
@@ -570,7 +640,7 @@ Next, we used a Bayesian mixed effects model to predict PTL based on trial numbe
 \subparagraph{Toddlers}\label{toddlers-1}
 
 Investigating proportion of first looks to the target location for toddlers, we again used a Bayesian mixed effects model to predict whether toddlers first look was to the target exit based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each.
-The Bayes factor comparing the full model to the simpler model was estimated to be BF = 0.0, favoring the full model over the null model.
+The Bayes factor comparing the full model to the simpler model was estimated to be BF \textgreater{} 1000, favoring the full model over the null model.
 The model also provided support for an effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials.
 
 \subparagraph{Adults}\label{adults-1}
@@ -595,7 +665,9 @@ It is important to note that in the case of a null effect, there are two main ex
 
 \subparagraph{Toddlers}\label{toddlers-2}
 
-As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be BF = 22.7, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
+As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the interaction of condition was estimated to be BF = 22.4, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
+
+Additionally, we assessed whether toddlers' AL changed with age. Comparing our full model, which included an interaction between age and condition, with a simpler model without this interaction yielded a Bayes factor, BF = 0.4, providing modest support for the simpler model. This result suggests that the interaction between age and condition might not be a necessary predictor, as it doesn't provide substantial additional explanatory power. This implies that age-related changes in AL are likely consistent across conditions, rather than differing between them.
 
 \subparagraph{Adults}\label{adults-2}
 
@@ -605,7 +677,9 @@ Next, we used a Bayesian mixed effects model to predict PTL based on condition f
 
 \subparagraph{Toddlers}\label{toddlers-3}
 
-Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.6, providing no substantial evidence in favor of the full model over the null model.
+Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be BF = 2.5, providing no substantial evidence in favor of the full model over the null model.
+
+Again, we examined whether age influenced the difference in action anticipation between knowledge and ignorance trials. To do this, we compared the full model, which included an interaction between age and condition, with a simpler model without this interaction. The computed Bayes factor, BF = 0.0, strongly supports the simpler model, suggesting that the interaction term does not substantially improve the model's fit. This implies that age does not appear to significantly affect the difference in action anticipation between the two trial types.
 
 \subparagraph{Adults}\label{adults-3}
 
@@ -631,15 +705,17 @@ We compared a Bayesian mixed-effects model predicting the proportion of first lo
 
 \subsubsection{Spill-over}\label{spill-over}
 
-Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF = 41.4, providing very strong evidence in favor of the full model. The effect of condition was positive and credible, indicating PTL was higher in the igrnorance condition compared to the knowledge condition. The main effect of age was small and uncertain, suggesting minimal influence of age on PTL. The interaction between condition and age was also small and inconclusive, indicating that the effect of condition on PTL did not differ substantially with age.
+Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF = 0.1, providing
+strong evidence in favor of the null model.
 
 For adults, we also fitted a Bayesian mixed-effects model to predict their PTL for both test trials with the main effect of condition and random effects for participant and lab. Again, the data provided very strong evidence for the inclusion of the main effect of condition with a Bayes Factor of BF \textgreater{} 1000. The effect of condition was negative and credible, suggesting that PTL was significantly lower in the ignorance condition compared to the knowledge condition.
 
-In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. While for toddlers, the results were inconclusive (BF = 0.5), for adults, the Bayes Factor of BF \textgreater{} 1000 provided strong evidence for including the interaction of condition and test trial number as fixed effect. Overall, the results demonstrate that while PTL increased over trials, this effect was moderated by the condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
+In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. For toddlers, the Bayes factor, BF = 0.4, modestly favored the simpler null model without the interaction term, indicating that the interaction between condition and test trial number does not add substantial explanatory power to the model. These results suggest that neither condition nor its interaction with test trial number significantly impacts PTL in this sample.
+For adults, the Bayes Factor, BF = 21.7, provided strong evidence for including the interaction of condition and test trial number as fixed effect. These results indicate that while PTL increased over trials, this effect was moderated by condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials} 
 
 }
 
@@ -648,7 +724,7 @@ In order to investigate whether there's an interaction of condition and test tri
 
 \subsubsection{Relationship between familiarization and test}\label{relationship-between-familiarization-and-test}
 
-To investigate whether only participants that show anticipatory looking within the familiarization also display anticipatory looking in test, we explored three different measures. First, we assessed anticipatory looking for participants that successfully anticipated during the last familiarization trial, that is, whose first fixation was on the target. Second, we
+To investigate whether participants who show anticipatory looking during the familiarization phase also exhibit anticipatory looking during the test phase, we explored three different measures. First, we assessed anticipatory looking in participants who successfully anticipated during the final familiarization trial, defined as those whose first fixation was on the target. Second, we examined anticipatory looking in participants who consistently demonstrated anticipatory behavior across all familiarization trials, operationalized as having a PTL greater than 0.5 in each trial. Finally, we computed correlations to explore whether performance in the familiarization phase was related to performance in the test trials.
 
 \paragraph{Only anticipators on final familiarization trial}\label{only-anticipators-on-final-familiarization-trial}
 
@@ -656,13 +732,13 @@ We fitted a main Bayesian hierarchical model testing the effect of condition (ig
 
 \paragraph{Only \textgreater50\% looking to target during familiarization trials}\label{only-50-looking-to-target-during-familiarization-trials}
 
-In addition, we fitted main Bayesian hierarchical models testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 13.1, providing evidence in favor of the full model that included the fixed effect of condition. The estimated Bayes factor in favor of the full model of adults over the null model was approximately BF \textgreater{} 1000, indicating that the inclusion of condition in the full model substantially improved the explanation of the observed data.
+In addition, we fitted main Bayesian hierarchical models testing the effect of condition (ignorance vs.~knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 12.6, providing evidence in favor of the full model that included the fixed effect of condition. The estimated Bayes factor in favor of the full model of adults over the null model was approximately BF \textgreater{} 1000, indicating that the inclusion of condition in the full model substantially improved the explanation of the observed data.
 
 \paragraph{Correlation between familiarization and test}\label{correlation-between-familiarization-and-test}
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/correlation_plot_fam_test} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test} 
 
 }
 
@@ -673,11 +749,11 @@ We also examined the correlation between familiarization and test performance ac
 
 \subsubsection{Data collection type: in-lab vs.~web-based}\label{data-collection-type-in-lab-vs.-web-based}
 
-Bayesian mixed-effects model were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately BF = 0.7, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
+Bayesian mixed-effects models were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately BF = 0.7, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
 
 For adults, the main effect of method was slightly negative but uncertain, suggesting that the method had little to no clear effect on the outcome. The interaction between condition and method was negative but with a wide credible interval crossing zero, indicating uncertainty about whether the effect of condition varied by method. The estimated Bayes factor in favor of the full model over the null model was approximately BF = 3.0. This Bayes factor indicates that the evidence in favor of the model is modest but not strong. While the model is more likely than the null model to explain the observed data, the support is relatively weak, suggesting that the predictors in the model provide only a small improvement in explaining the data compared to the null model.
 
-In sum, the analysis suggests that the method used (web-based vs.~in-lab) does not have a strong impact on anticipatory looking, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
+In sum, the analysis suggests that the method used (web-based vs.~in-lab) does not have a strong impact on AL, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
 
 \subsubsection{Box and tunnel looking vary separately by age or by condition}\label{box-and-tunnel-looking-vary-separately-by-age-or-by-condition}
 
@@ -687,12 +763,13 @@ We will conduct an exploratory analysis using tighter AOIs around tunnel exits a
 
 \paragraph{Comparing the number of shifts of toddlers and adults during the location change of the mouse.}\label{comparing-the-number-of-shifts-of-toddlers-and-adults-during-the-location-change-of-the-mouse.}
 
-We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.34, indicating that the the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8).
+We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.56, indicating that the the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8).
+Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of BF \textgreater{} 1000 was computed.
 This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure6b} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b} 
 
 }
 
@@ -701,13 +778,13 @@ This provides strong evidence in favor of including the interaction of condition
 
 \paragraph{Number of gaze shifts between mouse and bear during location change as a function of AL}\label{number-of-gaze-shifts-between-mouse-and-bear-during-location-change-as-a-function-of-al}
 
-In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately. The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of BF \textgreater{} 1000 was computed, indicating that the data strongly favors the null model over the full model. This suggests that the predictors number of shifts and the interaction with condition included in the full model do not improve the explanation of the observed data compared to the null model.
+In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately. The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of BF = 0.0 was computed, indicating that the data strongly favors the null model over the full model. This suggests that the predictors number of shifts and the interaction with condition included in the full model do not improve the explanation of the observed data compared to the null model.
 
 For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of condition became more negative as the number of shifts increased. The estimated Bayes factor comparing the full model to the null model was approximately BF \textgreater{} 1000, providing strong evidence in favor of the full model over the null model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure7} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7} 
 
 }
 
@@ -720,7 +797,7 @@ In order to examine the effect of condition and the difference in looking times 
 
 \begin{figure}
 
-{\centering \includegraphics[width=6.8in]{/Users/martincz/GitHub/mb2-analysis/paper/Figure8} 
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8} 
 
 }
 

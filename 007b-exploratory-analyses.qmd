@@ -26,6 +26,7 @@ source(here('helper','ensure_repo_structure.R'))
 source(here('helper','analysis_helper.R'))
 plot_path <- here("plots")
 paper_path <- here("paper")
+model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
@@ -297,12 +298,12 @@ bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_m
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
-model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
-
 # Create directory if it doesn't exist
 if (!dir.exists(model_fits_dir)) {
   dir.create(model_fits_dir, recursive = TRUE)
 }
+
+summary(bm_aoi_toddlers_both)
 
 saveRDS(bm_aoi_toddlers_both, file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
 ```
@@ -416,7 +417,7 @@ gc()
 ## MZ this needs further discussion - I'm not sure how to parse what is in the preregistration, but my reading is that at least for (2), and perhaps for (3), we are asking about a trial number by condition effect (not the "order" as defined here)
 
 ```{r}
-# create order variable
+# create test_trial number variable
 summarize_participant_test_both_trials <- summarize_participant_test_both_trials %>% 
   ungroup() %>%
   arrange(participant_lab_id,trial_num,test_trial_num) %>%
@@ -502,12 +503,25 @@ test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_bo
 saveRDS(test_comparison_aoi_toddlers_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both_order.rds"))
 ```
 
+Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
+
+```{r}
+bm_aoi_toddlers_both_order_interaction_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-condition_c:test_trial_num)
+summary(bm_aoi_toddlers_both_order_interaction_null)
+
+saveRDS(bm_aoi_toddlers_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_toddlers_both_order_interaction_null.rds"))
+
+test_m_comparison_PTL_toddlers_both_order_interaction <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_interaction_null)
+
+saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 #remove Bayes model fits
 rm(bm_aoi_toddlers_both_order)
 rm(bm_aoi_toddlers_both_order_null)
+rm(bm_aoi_toddlers_both_order_interaction_null)
 gc()
 ```
 
@@ -569,7 +583,18 @@ test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_o
 
 saveRDS(test_comparison_aoi_adults_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both_order.rds"))
 ```
+Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
+```{r}
+bm_aoi_adults_both_order_interaction_null <-  update(bm_aoi_adults_both_order, formula = ~ .-condition_c:test_trial_num)
+summary(bm_aoi_adults_both_order_interaction_null)
+
+saveRDS(bm_aoi_adults_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_adults_both_order_interaction_null.rds"))
+
+test_m_comparison_PTL_adults_both_order_interaction <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_interaction_null)
+
+saveRDS(test_m_comparison_PTL_adults_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_adults_both_order_interaction.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
@@ -1443,8 +1468,8 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+condition_c*age_cohort_c+(1+condition_c+age_cohort_c+condition_c*age_cohort_c|lab_id),
-         family=gaussian,
+bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+condition_c*age_cohort_c+(1 + condition_c + age_cohort_c | lab_id),
+         family=poisson(),
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(d_location_change),
@@ -1465,14 +1490,14 @@ saveRDS(bm_test_shifts_age_cohort, file = here(model_fits_dir, "bm_test_shifts_a
 ```{r}
 #get main coefficient estimate and HDI
 bm_test_shifts_age_cohort_age_cohort_effect <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_age_cohort_c, sigma) %>%
+  spread_draws(b_age_cohort_c) %>%
   mean_hdi(.width = 0.95)
 
 #cache
 saveRDS(bm_test_shifts_age_cohort_age_cohort_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_effect.rds"))
 
 bm_test_shifts_age_cohort_condition_effect <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_condition_c, sigma) %>%
+  spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
 
 #cache
@@ -1480,7 +1505,7 @@ saveRDS(bm_test_shifts_age_cohort_condition_effect, file=here(RESULTS_FOLDER,"bm
 
 bm_test_shifts_age_cohort_age_cohort_condition_interaction <- bm_test_shifts_age_cohort %>%
   #need to use backticks here to extract the interaction term
-  spread_draws(`b_condition_c:age_cohort_c`, sigma) %>%
+  spread_draws(`b_condition_c:age_cohort_c`) %>%
   mean_hdi(.width = 0.95) 
 
 #cache

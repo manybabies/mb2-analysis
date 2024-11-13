@@ -326,7 +326,7 @@ bm_fam_aoi_adults_trial_number_effect <- bm_fam_aoi_adults %>%
   mean_hdi(.width = 0.95)
 
 #cache
-saveRDS(bm_fam_aoi_adults_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_adults_intercept_effect.rds"))
+saveRDS(bm_fam_aoi_adults_trial_number_effect, file=here(RESULTS_FOLDER,"bm_fam_aoi_adults_trial_number_effect.rds"))
 ```
 
 Compute Bayes factor approach
@@ -1713,15 +1713,29 @@ Summarize outcomes
 ```{r}
 #get_variables(bm_aoi_toddlers)
 #get main coefficient estimate and HDI
-bm_test_first_look_toddlers_intercept_effect <- bm_test_first_look_toddlers %>%
+bm_test_first_look_toddlers_condition_effect <- bm_test_first_look_toddlers %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
 
 #cache
-saveRDS(bm_test_first_look_toddlers_intercept_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_intercept_effect.rds"))
+saveRDS(bm_test_first_look_toddlers_condition_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_effect.rds"))
+
+bm_test_first_look_toddlers_age_effect <-bm_test_first_look_toddlers %>%
+  spread_draws(b_age_mo_c) %>%
+  mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_toddlers_age_effect, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_age_effect.rds"))
+
+bm_test_first_look_toddlers_condition_age_interaction <- bm_test_first_look_toddlers %>%
+  spread_draws(`b_condition_c:age_mo_c`) %>%
+  mean_hdi(.width = 0.95)
+
+#cache
+saveRDS(bm_test_first_look_toddlers_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_age_interaction.rds"))
 ```
 
-Alternate Bayes factor approach
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
 ```{r}
 bm_test_first_look_toddlers_null <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c)
@@ -1735,10 +1749,25 @@ test_m_comparison_FL_toddlers <- brms::bayes_factor(bm_test_first_look_toddlers,
 saveRDS(test_m_comparison_FL_toddlers, file=here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers.rds"))
 ```
 
+Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+
+```{r}
+bm_test_first_look_toddlers_interaction_null <-  update(bm_test_first_look_toddlers, formula = ~ .-condition_c*age_mo_c)
+summary(bm_test_first_look_toddlers_interaction_null)
+
+saveRDS(bm_test_first_look_toddlers_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
+
+test_m_comparison_FL_toddlers_interaction <- brms::bayes_factor(bm_test_first_look_toddlers, bm_test_first_look_toddlers_interaction_null)
+
+saveRDS(test_m_comparison_FL_toddlers_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_FL_toddlers_interaction.rds"))
+```
+
 ```{r}
 #remove Bayes model fits
 rm(bm_test_first_look_toddlers)
 rm(bm_test_first_look_toddlers_null)
+rm(bm_test_first_look_interaction_null)
+
 ```
 
 
