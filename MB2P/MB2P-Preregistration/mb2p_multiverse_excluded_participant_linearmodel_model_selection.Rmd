@@ -1,6 +1,6 @@
 ---
-title: "MB2-P - Multiverse Data Simulation and Statistical Analysis"
-author: "Rmarkdown by  "
+title: "MB2-P - Multiverse preprocessing and linear modeling"
+author: "Rmarkdown by Giulia Calignano, Melli Schreiner, Alvin Tan, Robert Hepach "
 date: "`r Sys.Date()`"
 output:
   html_document:
