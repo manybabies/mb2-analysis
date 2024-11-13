@@ -26,6 +26,7 @@ source(here('helper','ensure_repo_structure.R'))
 source(here('helper','analysis_helper.R'))
 plot_path <- here("plots")
 paper_path <- here("paper")
+model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
@@ -45,6 +46,31 @@ for (file in rds_files) {
   rds_name <- tools::file_path_sans_ext(basename(file))
   assign(rds_name, readRDS(file))
 }
+
+```
+
+
+```{r}
+#set some general parameters for fitting Bayesian models
+n_cores = parallel::detectCores() - 1
+options(mc.cores = n_cores)
+rstan_options(auto_write = TRUE)
+
+# Optimize Stan compilation
+Sys.setenv(LOCAL_CPPFLAGS = '-O3')
+
+#cmdstanr::install_cmdstan()
+use_cmdstan = TRUE
+
+#set backend to use
+#need to set control parameters simultaneously, because rstan does not allow for a step_size parameter
+if (use_cmdstan) {
+  cur_backend = "cmdstanr"
+  default_control_list = list(adapt_delta=0.99,step_size=.1,max_treedepth=12)
+  } else {
+    cur_backend = "rstan"
+    default_control_list = list(adapt_delta=0.99,max_treedepth=12)
+  }
 ```
 
 Splitting the data into familiarization data and test data.
@@ -108,17 +134,6 @@ rm(data_preprocessed_post_exclusions)
 gc()
 ```
 
-```{r}
-n_cores = parallel::detectCores() - 1
-options(mc.cores = n_cores)
-rstan_options(auto_write = TRUE)
-
-# Optimize Stan compilation
-Sys.setenv(LOCAL_CPPFLAGS = '-O3')
-
-cmdstanr::install_cmdstan()
-use_cmdstan = TRUE
-```
 
 # Exploratory analyses
 
@@ -169,7 +184,7 @@ summarize_participant_test_both_trials <- test_data %>%
     test_trial_num = trial_num-4
   )
 
-
+saveRDS(summarize_participant_test_both_trials, file = here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
 ```
 
 ### Overall Plots
@@ -266,7 +281,6 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-
 bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c|participant_lab_id)+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
          family=gaussian,
          prior = priors,
@@ -276,20 +290,20 @@ bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_m
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        backend = cur_backend,
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
-
-model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
 
 # Create directory if it doesn't exist
 if (!dir.exists(model_fits_dir)) {
   dir.create(model_fits_dir, recursive = TRUE)
 }
+
+summary(bm_aoi_toddlers_both)
 
 saveRDS(bm_aoi_toddlers_both, file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
 ```
@@ -327,7 +341,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_toddlers_both_null <-  update(bm_aoi_toddlers_both, formula = ~ .-condition_c)
 summary(bm_aoi_toddlers_both_null)
 
-saveRDS(bm_aoi_toddlers_both_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_toddlers_null.rds"))
+saveRDS(bm_aoi_toddlers_both_null, file=here(model_fits_dir, "bm_fam_aoi_toddlers_null.rds"))
 
 test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, bm_aoi_toddlers_both_null)
 
@@ -356,14 +370,14 @@ bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+co
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan",
+        backend = cur_backend,
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE, 
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_both)
 
-saveRDS(bm_aoi_adults_both, file = here(RESULTS_FOLDER,"bm_aoi_adults_both.rds"))
+saveRDS(bm_aoi_adults_both, file = here(model_fits_dir,"bm_aoi_adults_both.rds"))
 ```
 
 ```{r}
@@ -382,7 +396,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_adults_both_null <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
 summary(bm_aoi_adults_both_null)
 
-saveRDS(bm_aoi_adults_both_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_fam_aoi_adults_null.rds"))
+saveRDS(bm_aoi_adults_both_null, file=here(model_fits_dir,"bm_fam_aoi_adults_null.rds"))
 
 test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, bm_aoi_adults_both_null)
 
@@ -403,7 +417,7 @@ gc()
 ## MZ this needs further discussion - I'm not sure how to parse what is in the preregistration, but my reading is that at least for (2), and perhaps for (3), we are asking about a trial number by condition effect (not the "order" as defined here)
 
 ```{r}
-# create order variable
+# create test_trial number variable
 summarize_participant_test_both_trials <- summarize_participant_test_both_trials %>% 
   ungroup() %>%
   arrange(participant_lab_id,trial_num,test_trial_num) %>%
@@ -438,15 +452,15 @@ bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+cond
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
 
-saveRDS(bm_aoi_toddlers_both_order, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both_order.rds"))
+saveRDS(bm_aoi_toddlers_both_order, file = here(model_fits_dir, "bm_aoi_toddlers_both_order.rds"))
 ```
 
 Summarize outcomes
@@ -482,19 +496,32 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_toddlers_both_order_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
 summary(bm_aoi_toddlers_both_order_null)
 
-saveRDS(bm_aoi_toddlers_both_order_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_both_order_null.rds"))
+saveRDS(bm_aoi_toddlers_both_order_null, file=here(model_fits_dir,"bm_aoi_toddlers_both_order_null.rds"))
 
 test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_null)
 
 saveRDS(test_comparison_aoi_toddlers_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both_order.rds"))
 ```
 
+Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
+
+```{r}
+bm_aoi_toddlers_both_order_interaction_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-condition_c:test_trial_num)
+summary(bm_aoi_toddlers_both_order_interaction_null)
+
+saveRDS(bm_aoi_toddlers_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_toddlers_both_order_interaction_null.rds"))
+
+test_m_comparison_PTL_toddlers_both_order_interaction <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_interaction_null)
+
+saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 #remove Bayes model fits
 rm(bm_aoi_toddlers_both_order)
 rm(bm_aoi_toddlers_both_order_null)
+rm(bm_aoi_toddlers_both_order_interaction_null)
 gc()
 ```
 
@@ -509,14 +536,14 @@ bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condit
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_both_order)
 
-saveRDS(bm_aoi_adults_both_order, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_both_order.rds"))
+saveRDS(bm_aoi_adults_both_order, file = here(model_fits_dir, "bm_aoi_adults_both_order.rds"))
 ```
 
 
@@ -550,13 +577,24 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_adults_both_order_null <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
 summary(bm_aoi_adults_both_order_null)
 
-saveRDS(bm_aoi_adults_both_order_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_adults_both_order_null.rds"))
+saveRDS(bm_aoi_adults_both_order_null, file=here(model_fits_dir,"bm_aoi_adults_both_order_null.rds"))
 
 test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_null)
 
 saveRDS(test_comparison_aoi_adults_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both_order.rds"))
 ```
+Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
+```{r}
+bm_aoi_adults_both_order_interaction_null <-  update(bm_aoi_adults_both_order, formula = ~ .-condition_c:test_trial_num)
+summary(bm_aoi_adults_both_order_interaction_null)
+
+saveRDS(bm_aoi_adults_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_adults_both_order_interaction_null.rds"))
+
+test_m_comparison_PTL_adults_both_order_interaction <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_interaction_null)
+
+saveRDS(test_m_comparison_PTL_adults_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_adults_both_order_interaction.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
@@ -654,14 +692,14 @@ bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
 Summarize outcomes
@@ -697,7 +735,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_toddlers_correct_final_fam_trial_null <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
 summary(bm_aoi_toddlers_correct_final_fam_trial_null)
 
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, file=here(model_fits_dir,"bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
 
 test_m_comparison_aoi_toddlers_correct_final_fam_trial <-  brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, bm_aoi_toddlers_correct_final_fam_trial_null)
 
@@ -724,14 +762,14 @@ bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condit
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_correct_final_fam_trial)
 
-saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial.rds"))
 ```
 
 ```{r}
@@ -750,7 +788,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_adults_correct_final_fam_trial_null <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
 summary(bm_aoi_adults_correct_final_fam_trial_null)
 
-saveRDS(bm_aoi_adults_correct_final_fam_trial_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_adults_correct_final_fam_trial_null.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial_null, file=here(model_fits_dir,"bm_aoi_adults_correct_final_fam_trial_null.rds"))
 
 test_m_comparison_aoi_adults_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, bm_aoi_adults_correct_final_fam_trial_null)
 
@@ -834,14 +872,14 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
 ```
 
 Summarize outcomes
@@ -877,7 +915,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_toddlers_sufficient_fam_prop_looking_null <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_aoi_toddlers_sufficient_fam_prop_looking_null.rds"))
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, file=here(model_fits_dir,"bm_aoi_toddlers_sufficient_fam_prop_looking_null.rds"))
 
 test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking <- 
 brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, bm_aoi_toddlers_sufficient_fam_prop_looking_null)
@@ -905,14 +943,14 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+co
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
 ```
 
 ```{r}
@@ -931,7 +969,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_adults_sufficient_fam_prop_looking_null <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
 summary(bm_aoi_adults_sufficient_fam_prop_looking_null)
 
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_sufficient_fam_prop_looking_null.rds"))
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, file=here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_null.rds"))
 
 test_m_comparison_aoi_adults_sufficient_fam_prop_looking <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking, bm_aoi_adults_sufficient_fam_prop_looking_null)
 
@@ -1071,15 +1109,15 @@ bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*met
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
 
-saveRDS(bm_aoi_toddlers_method, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_method.rds"))
+saveRDS(bm_aoi_toddlers_method, file = here(model_fits_dir, "bm_aoi_toddlers_method.rds"))
 ```
 
 Summarize outcomes
@@ -1115,7 +1153,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_toddlers_method_null <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c:method_c)
 summary(bm_aoi_toddlers_method_null)
 
-saveRDS(bm_aoi_toddlers_method_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_method_null.rds"))
+saveRDS(bm_aoi_toddlers_method_null, file=here(model_fits_dir, "bm_aoi_toddlers_method_null.rds"))
 
 test_m_comparison_aoi_toddlers_method <- brms::bayes_factor(bm_aoi_toddlers_method, bm_aoi_toddlers_method_null)
 
@@ -1142,14 +1180,14 @@ bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*me
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_aoi_adults_method)
 
-saveRDS(bm_aoi_adults_method, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_method.rds"))
+saveRDS(bm_aoi_adults_method, file = here(model_fits_dir, "bm_aoi_adults_method.rds"))
 ```
 Summarize outcomes
 
@@ -1183,7 +1221,7 @@ Compute the Bayes factor using bridge sampling
 bm_aoi_adults_method_null <-  update(bm_aoi_adults_method, formula = ~ .-condition_c:method_c)
 summary(bm_aoi_adults_method_null)
 
-saveRDS(bm_aoi_adults_method_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_method_null.rds"))
+saveRDS(bm_aoi_adults_method_null, file=here(model_fits_dir, "bm_aoi_adults_method_null.rds"))
 
 test_m_comparison_aoi_adults_method <- brms::bayes_factor(bm_aoi_adults_method, bm_aoi_adults_method_null)
 
@@ -1430,44 +1468,45 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+condition_c*age_cohort_c+(1+condition_c+age_cohort_c+condition_c*age_cohort_c|lab_id),
-         family=gaussian,
+bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+condition_c*age_cohort_c+(1 + condition_c + age_cohort_c | lab_id),
+         family=poisson(),
          prior = priors,
          save_pars = save_pars(all = TRUE),
         filter(d_location_change),
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
 
-saveRDS(bm_test_shifts_age_cohort, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_shifts_age_cohort.rds"))
+saveRDS(bm_test_shifts_age_cohort, file = here(model_fits_dir, "bm_test_shifts_age_cohort.rds"))
 ```
 
 ```{r}
 #get main coefficient estimate and HDI
 bm_test_shifts_age_cohort_age_cohort_effect <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_age_cohort_c, sigma) %>%
+  spread_draws(b_age_cohort_c) %>%
   mean_hdi(.width = 0.95)
 
 #cache
 saveRDS(bm_test_shifts_age_cohort_age_cohort_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_effect.rds"))
 
 bm_test_shifts_age_cohort_condition_effect <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_condition_c, sigma) %>%
+  spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
 
 #cache
 saveRDS(bm_test_shifts_age_cohort_condition_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_condition_effect.rds"))
 
 bm_test_shifts_age_cohort_age_cohort_condition_interaction <- bm_test_shifts_age_cohort %>%
-  spread_draws(b_condition_c:age_cohort_c, sigma) %>%
-  mean_hdi(.width = 0.95) ### currently giving me an NA here
+  #need to use backticks here to extract the interaction term
+  spread_draws(`b_condition_c:age_cohort_c`) %>%
+  mean_hdi(.width = 0.95) 
 
 #cache
 saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_condition_interaction.rds"))
@@ -1479,8 +1518,9 @@ Compute Bayes Factor using bridge sampling
 bm_test_shifts_age_cohort_null <-  update(bm_test_shifts_age_cohort, formula = ~ .-condition_c:age_cohort_c)
 summary(bm_test_shifts_age_cohort_null)
 
-saveRDS(bm_test_shifts_age_cohort_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_test_shifts_age_cohort_null.rds"))
+saveRDS(bm_test_shifts_age_cohort_null, file=here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
 
+#MZ: bridge sampling fails here for me
 test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, bm_test_shifts_age_cohort_null)
 
 saveRDS(test_m_comparison_shifts_age_cohort, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_age_cohort.rds"))
@@ -1543,11 +1583,11 @@ bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
@@ -1584,7 +1624,7 @@ Bridge sampling Bayes factor approach
 bm_test_toddlers_shifts_al_null <-  update(bm_test_toddlers_shifts_al, formula = ~ .-condition_c:num_shifts)
 summary(bm_test_toddlers_shifts_al_null)
 
-saveRDS(bm_test_toddlers_shifts_al_null, file=here(RESULTS_FOLDER,"bayes_model_fits","bm_test_toddlers_shifts_al_null.rds"))
+saveRDS(bm_test_toddlers_shifts_al_null, file=here(model_fits_dir,"bm_test_toddlers_shifts_al_null.rds"))
 
 test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, bm_test_toddlers_shifts_al_null)
 # Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. 
@@ -1620,15 +1660,15 @@ bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c
         warmup = 1000, 
         iter = 15000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
-saveRDS(bm_test_adults_shifts_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_shifts_al.rds"))
+saveRDS(bm_test_adults_shifts_al, file = here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
 ```
 
 ```{r}
@@ -1661,7 +1701,7 @@ Compute Bayes factor using bridge sampling
 bm_test_adults_shifts_al_null <-  update(bm_test_adults_shifts_al, formula = ~ .-condition_c:num_shifts)
 summary(bm_test_adults_shifts_al_null)
 
-saveRDS(bm_test_adults_shifts_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_shifts_al_null.rds"))
+saveRDS(bm_test_adults_shifts_al_null, file=here(model_fits_dir, "bm_test_adults_shifts_al_null.rds"))
 
 test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, bm_test_adults_shifts_al_null)
 # Warning: Infinite value in iterative scheme, returning NA. (for 10000 iterations)
@@ -1766,18 +1806,18 @@ bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 #Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
 #https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
 #Warning: Examine the pairs() plot to diagnose sampling problems
 summary(bm_test_toddlers_diff_mouse_bear_al)
 prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
-saveRDS(bm_test_toddlers_diff_mouse_bear_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_toddlers_diff_mouse_bear_al, file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
@@ -1810,7 +1850,7 @@ Bridge sampling Bayes factor approach
 bm_test_toddlers_diff_mouse_bear_al_null <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
 summary(bm_test_toddlers_diff_mouse_bear_al_null)
 
-saveRDS(bm_test_toddlers_diff_mouse_bear_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
 
 test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, bm_test_toddlers_diff_mouse_bear_al_null)
 
@@ -1844,15 +1884,15 @@ bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_be
         warmup = 1000, 
         iter = 10000, 
         chains = 4,
-        backend = if (use_cmdstan) "cmdstanr" else "rstan", 
+        backend = cur_backend, 
         cores = n_cores,
         seed = 123,
         sample_prior=TRUE,
-        control = list(adapt_delta=0.99,stepsize=.1, max_treedepth=12))
+        control = default_control_list)
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
 
-saveRDS(bm_test_adults_diff_mouse_bear_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_adults_diff_mouse_bear_al, file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
@@ -1883,9 +1923,9 @@ Alternate Bayes factor approach
 
 ```{r}
 bm_test_adults_diff_mouse_bear_al_null <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
-summary(null_test_adults_diff_mouse_bear_al)
+summary(bm_test_adults_diff_mouse_bear_al_null)
 
-saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_diff_mouse_bear_al_null.rds"))
+saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
 
 test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_null)
 

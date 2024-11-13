@@ -99,4 +99,73 @@ gertlabLancaster & 21 & 17 & 8 & 23.03 & In-lab\\
 infantcogUBC & 26 & 19 & 8 & 24.39 & In-lab\\
 irlConcordia & 19 & 12 & 5 & 22.47 & In-lab\\
 kidsdevUniofNewcastle & 16 & 14 & 9 & 22.36 & In-lab\\
-kokuHamburg & 19 & 14 & 7 & 25.99 & In
+kokuHamburg & 19 & 14 & 7 & 25.99 & In-lab\\
+labUNAM & 18 & 12 & 7 & 22.68 & In-lab\\
+lmuMunich & 48 & 24 & 16 & 22.68 & In-lab\\
+mecdmpihcbs & 25 & 12 & 8 & 23.58 & In-lab\\
+mpievaCCP & 22 & 18 & 10 & 23.33 & In-lab\\
+saxelab & 31 & 15 & 2 & 23.13 & web-based\\
+socallabUCSD & 47 & 15 & 4 & 22.09 & web-based\\
+tauccd & 15 & 12 & 8 & 22.99 & In-lab\\
+unicph & 43 & 29 & 16 & 21.50 & In-lab\\
+Total & 809 & 521 & 256 & 22.48 & \\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\efloatseparator
+ 
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the familiarization trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Intercept Effect & 0.12 & 0.09 & 0.15\\
+PTL adults & Intercept Effect & 0.26 & 0.23 & 0.29\\
+First Look toddlers & Intercept Effect & 0.44 & 0.27 & 0.61\\
+First Look adults & Intercept Effect & 0.91 & 0.78 & 1.05\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\efloatseparator
+ 
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llccc}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the test trials.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{conf.low} & \multicolumn{1}{c}{conf.high}\\
+\midrule
+\endhead
+PTL toddlers & Condition Effect & 0.10 & 0.03 & 0.17\\
+PTL adults & Condition Effect & -0.20 & -0.26 & -0.15\\
+First Look toddlers & Condition Effect & 0.53 & 0.13 & 0.93\\
+First Look adults & Condition Effect & -0.89 & -1.21 & -0.56\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}

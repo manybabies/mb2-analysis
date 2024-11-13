@@ -467,7 +467,7 @@ We define two primary dependent variables:
 # Custom function to format Bayes Factors
 format_bayes_factor <- function(bf) {
   if (bf > 1000) {
-    return(" > 1000")
+    return("BF > 1000")
   } else {
     return(sprintf("BF = %.1f", bf))  # Keep two decimal places
   }
@@ -486,62 +486,99 @@ include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
 ```{r Results table of Bayesian regression models, warning=FALSE}
-library(broom)
-library(broom.mixed)
 
-# Extract results
-e_bm_fam_aoi_toddlers <- tidy(bm_fam_aoi_toddlers, effects = "fixed")
-e_bm_fam_aoi_adults <- tidy(bm_fam_aoi_adults, effects = "fixed")
-e_bm_fam_first_look_toddlers <- tidy(bm_fam_first_look_toddlers, effects = "fixed")
-e_bm_fam_first_look_adults <- tidy(bm_fam_first_look_adults, effects = "fixed")
-e_bm_aoi_toddlers <- tidy(bm_aoi_toddlers, effects = "fixed")
-e_bm_aoi_adults <- tidy(bm_aoi_adults, effects = "fixed")
-e_bm_test_first_look_toddlers <- tidy(bm_test_first_look_toddlers, effects = "fixed")
-e_bm_test_first_look_adults <- tidy(bm_test_first_look_adults, effects = "fixed")
-
+ 
 # Add model names
-e_bm_fam_aoi_toddlers <- e_bm_fam_aoi_toddlers %>% mutate(model = "PTL toddlers")
-e_bm_fam_aoi_adults <- e_bm_fam_aoi_adults %>% mutate(model = "PTL adults")
-e_bm_fam_first_look_toddlers <- e_bm_fam_first_look_toddlers %>% mutate(model = "First Look toddlers")
-e_bm_fam_first_look_adults <-  e_bm_fam_first_look_adults %>% mutate(model = "First Look adults")
-e_bm_aoi_toddlers <- e_bm_aoi_toddlers %>% mutate(model = "PTL toddlers")
-e_bm_aoi_adults <- e_bm_aoi_adults %>% mutate(model = "PTL adults")
-e_bm_test_first_look_toddlers <- e_bm_test_first_look_toddlers %>% mutate(model = "First Look toddlers")
-e_bm_test_first_look_adults <- e_bm_test_first_look_adults %>% mutate(model = "First Look adults")
+e_bm_fam_aoi_toddlers <- bm_fam_aoi_toddlers_intercept_effect %>% transmute(
+    model = "PTL toddlers",
+    term = "Intercept Effect",
+    estimate = b_Intercept,
+    conf.low = b_Intercept.lower,
+    conf.high = b_Intercept.upper
+  )
+e_bm_fam_aoi_adults <- bm_fam_aoi_adults_intercept_effect %>% transmute(
+    model = "PTL adults",
+    term = "Intercept Effect",
+    estimate = b_Intercept,
+    conf.low = b_Intercept.lower,
+    conf.high = b_Intercept.upper
+  )
+e_bm_fam_first_look_toddlers <- bm_fam_first_look_toddlers_intercept_effect %>% transmute(
+    model = "First Look toddlers",
+    term = "Intercept Effect",
+    estimate = b_Intercept,
+    conf.low = .lower,
+    conf.high = .upper
+  )
+e_bm_fam_first_look_adults <-  bm_fam_first_look_adults_intercept_effect %>% transmute(
+    model = "First Look adults",
+    term = "Intercept Effect",
+    estimate = b_Intercept,
+    conf.low = .lower,
+    conf.high = .upper
+  )
+e_bm_aoi_toddlers <- bm_aoi_toddlers_condition_effect  %>% transmute(
+    model = "PTL toddlers",
+    term = "Condition Effect",
+    estimate = b_condition_c,
+    conf.low = b_condition_c.lower,
+    conf.high = b_condition_c.upper
+  )
+e_bm_aoi_adults <- bm_aoi_adults_condition_effect %>% transmute(
+    model = "PTL adults",
+    term = "Condition Effect",
+    estimate = b_condition_c,
+    conf.low = b_condition_c.lower,
+    conf.high = b_condition_c.upper
+)
+e_bm_test_first_look_toddlers <- bm_test_first_look_toddlers_condition_effect %>% transmute(
+    model = "First Look toddlers",
+    term = "Condition Effect",
+    estimate = b_condition_c,
+    conf.low = .lower,
+    conf.high = .upper
+  )
+e_bm_test_first_look_adults <- bm_test_first_look_adults_condition_effect %>% transmute(
+    model = "First Look adults",
+    term = "Condition Effect",
+    estimate = b_condition_c,
+    conf.low = .lower,
+    conf.high = .upper
+  )
 
 combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
 
 combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
 
 library(kableExtra)
+# 
+# # Create the table
+# combined_brm_results_fam <- combined_brm_results_fam %>%
+#   select(model, term, estimate, conf.low, conf.high) %>%
+#   mutate(term = case_when(
+#       term == "familiarization_trial_num_4" ~ "Trial number",
+#       term == "(Intercept)" ~ "Intercept"))
+# 
+# combined_brm_results_test <- combined_brm_results_test %>%
+#   select(model, term, estimate, conf.low, conf.high) %>%
+#   mutate(term = case_when(
+#       term == "condition_c" ~ "Condition",
+#       term == "age_mo_c" ~ "Age",
+#       term == "condition_c:age_mo_c" ~ "Condition x Age",
+#       term == "(Intercept)" ~ "Intercept"))
 
-# Create the table
-combined_brm_results_fam <- combined_brm_results_fam %>%
-  select(model, term, estimate, std.error, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "familiarization_trial_num_4" ~ "Trial number",
-      term == "(Intercept)" ~ "Intercept"))
-
-combined_brm_results_test <- combined_brm_results_test %>%
-  select(model, term, estimate, std.error, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "condition_c" ~ "Condition",
-      term == "age_mo_c" ~ "Age",
-      term == "condition_c:age_mo_c" ~ "Condition x Age",
-      term == "(Intercept)" ~ "Intercept"))
-  
 
 papaja::apa_table(combined_brm_results_fam,
                   caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
                   format.args = list(digits = 2),
                   longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c","c"))
+                  align=c("l","l","c","c","c"))
 
 papaja::apa_table(combined_brm_results_test,
                   caption = "Results of the Bayesian mixed effects models for the test trials.",
                   format.args = list(digits = 2),
                   longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c","c"))
+                  align=c("l","l","c","c","c"))
 
 ```
 
@@ -558,7 +595,7 @@ which included no intercept term. We then computed the BF comparing this model t
 
 ##### Toddlers
 
-As first model, we used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r format_bayes_factor(fam_m_comparison_PTL_toddlers$bf)`, strongly favoring the full model over the null model. See also Table 3 for regression coefficients for the full model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials.
+We used a Bayesian mixed effects models to predict PTL based on trial number (1-4) for toddlers, with random effects for lab and participants and random slopes for trial number for each. The Bayes factor comparing this model to the simpler null model without the intercept was estimated to be `r format_bayes_factor(fam_m_comparison_PTL_toddlers$bf)`, strongly favoring the full model over the null model. See also Table 3 for regression coefficients for the full model. These results suggest a significant effect of trial number on PTL, with the negative coefficient indicating a decrease in PTL across the familiarization trials.
 
 ##### Adults
 
@@ -593,7 +630,9 @@ It is important to note that in the case of a null effect, there are two main ex
 
 ##### Toddlers
 
-As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the main effect of condition was estimated to be `r format_bayes_factor(test_m_comparison_PTL_toddlers$bf)`, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
+As first model, we used a Bayesian mixed effects models to predict toddlers' PTL based on condition, age, and the interaction of condition and age, while accounting for variability across labs. The Bayes factor comparing this model to the simpler null model without the interaction of condition was estimated to be `r format_bayes_factor(test_m_comparison_PTL_toddlers$bf)`, favoring the full model over the null model. Table 4 shows the statistics for regression coefficients of the full model. These results suggest a significant effect of condition on PTL, with the positive coefficient indicating higher PTL for ignorance trials compared to knowledge trials.
+
+Additionally, we assessed whether toddlers' AL changed with age. Comparing our full model, which included an interaction between age and condition, with a simpler model without this interaction yielded a Bayes factor, `r format_bayes_factor(test_m_comparison_PTL_toddlers_interaction$bf)`, providing modest support for the simpler model. This result suggests that the interaction between age and condition might not be a necessary predictor, as it doesn’t provide substantial additional explanatory power. This implies that age-related changes in AL are likely consistent across conditions, rather than differing between them.
 
 ##### Adults
 
@@ -604,6 +643,8 @@ Next, we used a Bayesian mixed effects model to predict PTL based on condition f
 ##### Toddlers
 
 Investigating proportion of first looks for toddlers, we again used a Bayesian mixed effects model to predict target looks based on condition, with random effects for lab. The Bayes factor comparing the full model to the simpler model was estimated to be `r format_bayes_factor(test_m_comparison_FL_toddlers$bf)`, providing no substantial evidence in favor of the full model over the null model.
+
+Again, we examined whether age influenced the difference in action anticipation between knowledge and ignorance trials. To do this, we compared the full model, which included an interaction between age and condition, with a simpler model without this interaction. The computed Bayes factor, `r format_bayes_factor(test_m_comparison_FL_toddlers_interaction$bf)`,  strongly supports the simpler model, suggesting that the interaction term does not substantially improve the model’s fit. This implies that age does not appear to significantly affect the difference in action anticipation between the two trial types.
 
 ##### Adults
 
@@ -625,11 +666,13 @@ We compared a Bayesian mixed-effects model predicting the proportion of first lo
 
 ### Spill-over
 
-Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of `r format_bayes_factor(test_comparison_aoi_toddlers_both$bf)`, providing very strong evidence in favor of the full model. The effect of condition was positive and credible, indicating PTL was higher in the igrnorance condition compared to the knowledge condition. The main effect of age was small and uncertain, suggesting minimal influence of age on PTL. The interaction between condition and age was also small and inconclusive, indicating that the effect of condition on PTL did not differ substantially with age.
+Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of `r format_bayes_factor(test_comparison_aoi_toddlers_both$bf)`, providing 
+strong evidence in favor of the null model.
 
 For adults, we also fitted a Bayesian mixed-effects model to predict their PTL for both test trials with the main effect of condition and random effects for participant and lab. Again, the data provided very strong evidence for the inclusion of the main effect of condition with a Bayes Factor of `r format_bayes_factor(test_comparison_aoi_adults_both$bf)`. The effect of condition was negative and credible, suggesting that PTL was significantly lower in the ignorance condition compared to the knowledge condition.
 
-In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. While for toddlers, the results were inconclusive (`r format_bayes_factor(test_comparison_aoi_toddlers_both_order$bf)`), for adults, the Bayes Factor of `r format_bayes_factor(test_comparison_aoi_adults_both_order$bf)` provided strong evidence for including the interaction of condition and test trial number as fixed effect. Overall, the results demonstrate that while PTL increased over trials, this effect was moderated by the condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
+In order to investigate whether there's an interaction of condition and test trial number, we fitted Bayesian mixed-effects model to predict PTL with fixed effects for condition, test trial number, and their interaction, along with random intercepts and slopes for these variables across labs, for toddlers and adults separately. For toddlers, the Bayes factor, `r format_bayes_factor(test_m_comparison_PTL_toddlers_both_order_interaction$bf)`,  modestly favored the simpler null model without the interaction term, indicating that the interaction between condition and test trial number does not add substantial explanatory power to the model. These results suggest that neither condition nor its interaction with test trial number significantly impacts PTL in this sample.
+For adults, the Bayes Factor, `r format_bayes_factor(test_m_comparison_PTL_adults_both_order_interaction$bf)`, provided strong evidence for including the interaction of condition and test trial number as fixed effect. These results indicate that while PTL increased over trials, this effect was moderated by condition, with the ignorance condition showing a slower rate of increase compared to the knowledge condition.
 
 ```{r fig6, fig.cap="Proportional exit looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure_PTL_bothtrials.png"),rel_path=FALSE)
@@ -638,8 +681,7 @@ include_graphics(here("paper","Figure_PTL_bothtrials.png"),rel_path=FALSE)
 
 ### Relationship between familiarization and test
 
-To investigate whether only participants that show anticipatory looking within the familiarization also display anticipatory looking in test, we explored three different measures. First, we assessed anticipatory looking for participants that successfully anticipated during the last familiarization trial, that is, whose first fixation was on the target. Second, we 
-
+To investigate whether participants who show anticipatory looking during the familiarization phase also exhibit anticipatory looking during the test phase, we explored three different measures. First, we assessed anticipatory looking in participants who successfully anticipated during the final familiarization trial, defined as those whose first fixation was on the target. Second, we examined anticipatory looking in participants who consistently demonstrated anticipatory behavior across all familiarization trials, operationalized as having a PTL greater than 0.5 in each trial. Finally, we computed correlations to explore whether performance in the familiarization phase was related to performance in the test trials.
 
 #### Only anticipators on final familiarization trial
 
@@ -660,11 +702,11 @@ We also examined the correlation between familiarization and test performance ac
 
 ### Data collection type: in-lab vs. web-based
 
-Bayesian mixed-effects model were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately `r format_bayes_factor(test_m_comparison_aoi_toddlers_method$bf)`, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
+Bayesian mixed-effects models were used to evaluate the effects of condition, method, and their interaction on anticipatory looking. The models included fixed effects for condition, method, and their interaction. For toddlers, the effect of method was small and uncertain, with the credible interval including zero, indicating no clear effect of method. The interaction between condition and method was minimal and also uncertain, suggesting no strong evidence that the effect of condition varied by method. The estimated Bayes factor comparing the full model to the null model was approximately `r format_bayes_factor(test_m_comparison_aoi_toddlers_method$bf)`, which indicates that the data slightly favors the null model over the full model. This suggests that the predictors included in the full model do not substantially improve the explanation of the observed data compared to the null model.
 
 For adults, the main effect of method was slightly negative but uncertain, suggesting that the method had little to no clear effect on the outcome. The interaction between condition and method was negative but with a wide credible interval crossing zero, indicating uncertainty about whether the effect of condition varied by method. The estimated Bayes factor in favor of the full model over the null model was approximately `r format_bayes_factor(test_m_comparison_aoi_adults_method$bf)`. This Bayes factor indicates that the evidence in favor of the model is modest but not strong. While the model is more likely than the null model to explain the observed data, the support is relatively weak, suggesting that the predictors in the model provide only a small improvement in explaining the data compared to the null model.
 
-In sum, the analysis suggests that the method used (web-based vs. in-lab) does not have a strong impact on anticipatory looking, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
+In sum, the analysis suggests that the method used (web-based vs. in-lab) does not have a strong impact on AL, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
 
 ### Box and tunnel looking vary separately by age or by condition
 
@@ -672,31 +714,21 @@ We will conduct an exploratory analysis using tighter AOIs around tunnel exits a
 
 ### Looking patterns during mouse's change of location.
 ```{r Fixed effect for number of shifts by cohort model, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_shifts_age_cohort <- posterior_summary(bm_test_shifts_age_cohort, pars = "b_age_cohort_c")
-
 # Extract the mean estimate
-b_age_cohort_c_estimate_shifts <- fixed_effect_summary_shifts_age_cohort[1, "Estimate"]
-
-custom_notation <- function(x) {
-  if (x > 1000) {
-    ">1000"
-  } else {
-    as.character(x)
-  }
-}
+b_age_cohort_c_estimate_shifts <- bm_test_shifts_age_cohort_age_cohort_effect[["b_age_cohort_c"]]
 ```
 
 ```{r Fixed effect for number of shifts on AL, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_shifts <- posterior_summary(bm_test_shifts_al, pars = "b_num_shifts")
 
 # Extract the mean estimate
-b_num_shifts_estimate_shifts <- fixed_effect_summary_shifts[1, "Estimate"]
+#b_num_shifts_estimate_shifts <- bm_test_shifts_al[["b_num_shifts"]]
 ```
 
 #### Comparing the number of shifts of toddlers and adults during the location change of the mouse.
-We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the the number of shifts was higherfor adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed. This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
+We fitted a Bayesian mixed-effects model to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). 
+<!-- MZ: commenting for now because of an issue with estimating the bayes factor - MSS: should work now-->
+ Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed.
+This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
 
 ```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
@@ -712,16 +744,14 @@ include_graphics(here("paper","Figure7.png"),rel_path=FALSE)
 ```
 
 ```{r Fixed effect for difference in mouse-bear looking on AL, warning=FALSE}
-# Extract summary for the specific fixed effect
-fixed_effect_summary_diff_mouse_bear <- posterior_summary(bm_test_diff_mouse_bear_al, pars = "b_diff_mouse_bear")
 
 # Extract the mean estimate
-b_diff_mouse_bear_estimate_diff_mouse_bear <- fixed_effect_summary_diff_mouse_bear[1, "Estimate"]
+b_diff_mouse_bear_estimate_diff_mouse_bear <- bm_test_toddlers_diff_mouse_bear_al_diff_effect[["b_diff_mouse_bear"]]
 ```
 
 #### Differential fixation times of bear and mouse during location change of mouse as a function of AL
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be `r round(b_diff_mouse_bear_estimate_diff_mouse_bear, 3)`. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of `r format_bayes_factor(test_m_comparison_diff_mouse_bear_al$bf)` was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between participants. The fixed effect of difference in mouse-bear looking on anticipatory looking is estimated to be `r round(b_diff_mouse_bear_estimate_diff_mouse_bear, 3)`. Comparing this model to a simpler model without the difference in mouse-bear looking, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_diff_mouse_bear_al$bf)` was computed. This provides extremely strong evidence against including the difference in mouse-bear looking in the model.
 
 ```{r fig10, fig.cap="Difference in looking time to mouse and bear during location change of mouse (in ms) as a function of AL for each age cohort and each condition. Higher looking times at mouse are colored in yellow, and higher looking times at bear are colored in brown.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure8.png"),rel_path=FALSE)
