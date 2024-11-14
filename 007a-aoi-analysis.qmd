@@ -279,7 +279,9 @@ summary(bm_fam_aoi_toddlers_null)
 saveRDS(bm_fam_aoi_toddlers_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds"))
 
-fam_m_comparision_PTL_toddlers <- brms::bayes_factor(bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null)
+fam_m_comparision_PTL_toddlers <- brms::bayes_factor(
+  bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null
+)
 
 saveRDS(fam_m_comparision_PTL_toddlers, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_PTL_toddlers.rds"))
@@ -357,7 +359,9 @@ summary(bm_fam_aoi_adults_null)
 saveRDS(bm_fam_aoi_adults_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds"))
 
-fam_m_comparison_PTL_adults <- brms::bayes_factor(bm_fam_aoi_adults, bm_fam_aoi_adults_null)
+fam_m_comparison_PTL_adults <- brms::bayes_factor(
+  bm_fam_aoi_adults, bm_fam_aoi_adults_null
+)
 
 saveRDS(fam_m_comparison_PTL_adults, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_PTL_adults.rds"))
@@ -622,8 +626,9 @@ priors <- c(
   set_prior("lkj(2)", class = "L")
 ) # lkj distribution for covariance matrix/Cholesky Factor
 
-bm_aoi_toddlers <- brm(prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
-                         (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+bm_aoi_toddlers <- brm(
+  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -701,7 +706,9 @@ summary(bm_aoi_toddlers_condition_null)
 saveRDS(bm_aoi_toddlers_condition_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_condition_null.rds"))
 
-test_m_comparison_PTL_toddlers <- brms::bayes_factor(bm_aoi_toddlers, bm_aoi_toddlers_condition_null)
+test_m_comparison_PTL_toddlers <- brms::bayes_factor(
+  bm_aoi_toddlers, bm_aoi_toddlers_condition_null
+)
 
 saveRDS(test_m_comparison_PTL_toddlers, 
         file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers.rds"))
@@ -716,7 +723,9 @@ summary(bm_aoi_toddlers_interaction_null)
 saveRDS(bm_aoi_toddlers_interaction_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds"))
 
-test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(bm_aoi_toddlers, bm_aoi_toddlers_interaction_null)
+test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
+  bm_aoi_toddlers, bm_aoi_toddlers_interaction_null
+)
 
 saveRDS(test_m_comparison_PTL_toddlers_interaction, 
         file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_interaction.rds"))
@@ -742,7 +751,8 @@ rm(bm_aoi_toddlers_interaction_null)
 #### Adults
 
 ```{r}
-bm_aoi_adults <- brm(prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
+bm_aoi_adults <- brm(
+  prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -781,7 +791,9 @@ summary(bm_aoi_adults_null)
 saveRDS(bm_aoi_adults_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds"))
 
-test_m_comparison_PTL_adults <- brms::bayes_factor(bm_aoi_adults, bm_aoi_adults_null)
+test_m_comparison_PTL_adults <- brms::bayes_factor(
+  bm_aoi_adults, bm_aoi_adults_null
+)
 
 saveRDS(test_m_comparison_PTL_adults, 
         file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults.rds"))
@@ -1599,7 +1611,9 @@ summary(bm_fam_first_look_toddlers_null)
 saveRDS(bm_fam_first_look_toddlers_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_null.rds"))
 
-fam_m_comparison_FL_toddlers <- brms::bayes_factor(bm_fam_first_look_toddlers, bm_fam_first_look_toddlers_null)
+fam_m_comparison_FL_toddlers <- brms::bayes_factor(
+  bm_fam_first_look_toddlers, bm_fam_first_look_toddlers_null
+)
 
 saveRDS(fam_m_comparison_FL_toddlers, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_FL_toddlers.rds"))
@@ -1686,7 +1700,10 @@ summary(bm_fam_first_look_toddlers_less_inf_prior_null)
 saveRDS(bm_fam_first_look_toddlers_less_inf_prior_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior_null.rds"))
 
-fam_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(bm_fam_first_look_toddlers_less_inf_prior, bm_fam_first_look_toddlers_less_inf_prior_null)
+fam_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
+  bm_fam_first_look_toddlers_less_inf_prior, 
+  bm_fam_first_look_toddlers_less_inf_prior_null
+)
 
 saveRDS(fam_m_comparison_FL_toddlers_less_inf_prior, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_FL_toddlers_less_inf_prior.rds"))
@@ -1762,7 +1779,9 @@ summary(bm_fam_first_look_adults_null)
 saveRDS(bm_fam_first_look_adults_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_null.rds"))
 
-fam_m_comparison_FL_adults <- brms::bayes_factor(bm_fam_first_look_adults, bm_fam_first_look_adults_null)
+fam_m_comparison_FL_adults <- brms::bayes_factor(
+  bm_fam_first_look_adults, bm_fam_first_look_adults_null
+)
 
 saveRDS(fam_m_comparison_FL_adults, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_FL_adults.rds"))
@@ -1837,7 +1856,10 @@ summary(bm_fam_first_look_adults_less_inf_prior_null)
 saveRDS(bm_fam_first_look_adults_less_inf_prior_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior_null.rds"))
 
-fam_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(bm_fam_first_look_adults_less_inf_prior, bm_fam_first_look_adults_less_inf_prior_null)
+fam_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
+  bm_fam_first_look_adults_less_inf_prior, 
+  bm_fam_first_look_adults_less_inf_prior_null
+)
 
 saveRDS(fam_m_comparison_FL_adults_less_inf_prior, 
         file = here(RESULTS_FOLDER, "fam_m_comparison_FL_adults_less_inf_prior.rds"))
@@ -1937,7 +1959,7 @@ bm_test_first_look_toddlers_condition_effect <- bm_test_first_look_toddlers %>%
 
 # cache
 saveRDS(bm_test_first_look_toddlers_condition_effect, 
-        file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_effect.rds"))
+        file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_effect.rds"))
 
 bm_test_first_look_toddlers_age_effect <- bm_test_first_look_toddlers %>%
   spread_draws(b_age_mo_c) %>%
@@ -1945,7 +1967,7 @@ bm_test_first_look_toddlers_age_effect <- bm_test_first_look_toddlers %>%
 
 # cache
 saveRDS(bm_test_first_look_toddlers_age_effect, 
-        file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_age_effect.rds"))
+        file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers_age_effect.rds"))
 
 bm_test_first_look_toddlers_condition_age_interaction <- bm_test_first_look_toddlers %>%
   spread_draws(`b_condition_c:age_mo_c`) %>%
@@ -1953,7 +1975,7 @@ bm_test_first_look_toddlers_condition_age_interaction <- bm_test_first_look_todd
 
 # cache
 saveRDS(bm_test_first_look_toddlers_condition_age_interaction, 
-        file=here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_age_interaction.rds"))
+        file = here(RESULTS_FOLDER,"bm_test_first_look_toddlers_condition_age_interaction.rds"))
 ```
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
@@ -1966,7 +1988,9 @@ summary(bm_test_first_look_toddlers_null)
 saveRDS(bm_test_first_look_toddlers_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_null.rds"))
 
-test_m_comparison_FL_toddlers <- brms::bayes_factor(bm_test_first_look_toddlers, bm_test_first_look_toddlers_null)
+test_m_comparison_FL_toddlers <- brms::bayes_factor(
+  bm_test_first_look_toddlers, bm_test_first_look_toddlers_null
+)
 
 saveRDS(test_m_comparison_FL_toddlers, 
         file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers.rds"))
@@ -1980,7 +2004,10 @@ summary(bm_test_first_look_toddlers_interaction_null)
 
 saveRDS(bm_test_first_look_toddlers_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
 
-test_m_comparison_FL_toddlers_interaction <- brms::bayes_factor(bm_test_first_look_toddlers, bm_test_first_look_toddlers_interaction_null)
+test_m_comparison_FL_toddlers_interaction <- brms::bayes_factor(
+  bm_test_first_look_toddlers, 
+  bm_test_first_look_toddlers_interaction_null
+)
 
 saveRDS(test_m_comparison_FL_toddlers_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_FL_toddlers_interaction.rds"))
 ```
@@ -2048,7 +2075,10 @@ summary(bm_test_first_look_toddlers_less_inf_prior_null)
 saveRDS(bm_test_first_look_toddlers_less_inf_prior_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds"))
 
-test_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(bm_test_first_look_toddlers_less_inf_prior, bm_test_first_look_toddlers_less_inf_prior_null)
+test_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
+  bm_test_first_look_toddlers_less_inf_prior, 
+  bm_test_first_look_toddlers_less_inf_prior_null
+)
 
 saveRDS(test_m_comparison_FL_toddlers_less_inf_prior, 
         file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_less_inf_prior.rds"))
@@ -2108,7 +2138,9 @@ summary(bm_test_first_look_adults_null)
 saveRDS(bm_test_first_look_adults_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_null.rds"))
 
-test_m_comparison_FL_adults <- brms::bayes_factor(bm_test_first_look_adults, bm_test_first_look_adults_null)
+test_m_comparison_FL_adults <- brms::bayes_factor(
+  bm_test_first_look_adults, bm_test_first_look_adults_null
+)
 
 saveRDS(test_m_comparison_FL_adults, 
         file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults.rds"))
@@ -2167,7 +2199,10 @@ summary(bm_test_first_look_adults_less_inf_prior_null)
 saveRDS(bm_test_first_look_adults_less_inf_prior_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_nulll.rds"))
 
-test_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(bm_test_first_look_adults_less_inf_prior, bm_test_first_look_adults_less_inf_prior_null)
+test_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
+  bm_test_first_look_adults_less_inf_prior, 
+  bm_test_first_look_adults_less_inf_prior_null
+)
 
 saveRDS(test_m_comparison_FL_adults_less_inf_prior, 
         file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults_less_inf_prior.rds"))
