@@ -684,7 +684,7 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1 + condition_c +   (1 + condition_c | lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -713,20 +713,6 @@ bm_aoi_toddlers_correct_final_fam_trial_condition_effect <- bm_aoi_toddlers_corr
 
 #cache
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_condition_effect.rds"))
-
-bm_aoi_toddlers_correct_final_fam_trial_age_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(b_age_mo_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-#cache
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_age_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_age_effect.rds"))
-
-bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction <- bm_aoi_toddlers_correct_final_fam_trial %>%
-  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-#cache
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_condition_age_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
@@ -864,7 +850,7 @@ priors <-c(
   set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
   set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c*age_mo_c+(1+condition_c*age_mo_c|lab_id),
+bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
          family=gaussian,
          prior = priors,
          save_pars = save_pars(all = TRUE),
@@ -893,20 +879,6 @@ bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect <- bm_aoi_toddlers_
 
 #cache
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect.rds"))
-
-bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
-  spread_draws(b_age_mo_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-#cache
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_age_effect.rds"))
-
-bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
-  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-#cache
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_condition_age_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
@@ -1535,7 +1507,7 @@ rm(bm_test_shifts_age_cohort_null)
 gc()
 ```
 
-### 5.2. Number of shifts during location change of mouse as a function of AL
+### 5.2. Anticipatory looking as a function of the number of gaze shifts during location change of the mouse
 
 Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking bias in KNOW
 
@@ -1553,8 +1525,10 @@ AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(num_shifts, pro
   geom_smooth(method='lm')+
   facet_wrap(condition~age_cohort)+
   #scale_color_manual(values=c("#B16440", "#ECB808"))+
+  geom_hline(yintercept=0.5,linetype="dashed")+
   scale_fill_brewer(palette="Set1")+
-  scale_y_continuous(breaks=seq(0,11,1))+
+  scale_x_continuous(breaks=seq(0,11,1))+
+  scale_y_continuous(breaks=seq(0,1,0.25))+
   theme_set(theme_cowplot(font_size=24))+
   theme(legend.position="none")+
   xlab("Number of shifts during location change of mouse")+
@@ -1718,7 +1692,7 @@ rm(bm_test_adults_shifts_al_null)
 gc()
 ```
 
-### 5.3. Fixation times of bear and mouse during location change of mouse as a function of AL
+### 5.3. Anticipatory looking as a function of fixation times of bear and mouse during location change of the mouse
 Hypothesis 2:  “Bear-trackers” have stronger looking bias in KNOW
 
 MSS What is a bear-tracker? Is that a participant whose fixation times for the bear are longer than for the mouse? Compute difference score for looking times to bear vs mouse and run model for knowledge condition with diff score as fixed-effect?
@@ -1779,7 +1753,7 @@ AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(diff_m
   geom_smooth(method='lm')+
   facet_wrap(condition~age_cohort)+
   theme_set(theme_cowplot(font_size=24))+
-  geom_hline(yintercept=0,linetype="dashed")+
+  geom_hline(yintercept=0.5,linetype="dashed")+
   scale_fill_brewer(palette="Set1")+
   xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)")+
   ylab("AL in test trials")
@@ -1847,7 +1821,7 @@ saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction, file=her
 Bridge sampling Bayes factor approach
 
 ```{r}
-bm_test_toddlers_diff_mouse_bear_al_null <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-diff_mouse_bear)
+bm_test_toddlers_diff_mouse_bear_al_null <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear, cores = 4)
 summary(bm_test_toddlers_diff_mouse_bear_al_null)
 
 saveRDS(bm_test_toddlers_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
@@ -1922,11 +1896,14 @@ saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction, file=here(
 Alternate Bayes factor approach
 
 ```{r}
+# Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
+See https://mc-stan.org/misc/warnings for details.
 bm_test_adults_diff_mouse_bear_al_null <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
 summary(bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
 
+#Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
 test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_adults_diff_mouse_bear_al.rds"))

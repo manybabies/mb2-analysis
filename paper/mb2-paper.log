@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.8)  13 NOV 2024 15:02
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.8)  15 NOV 2024 13:18
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1121,30 +1121,30 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 772--773
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 787--788
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 789--790
  [][] 
  []
 
 
 
 [46]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[47]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 800--801
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 811--812
  [][] 
  []
 
 
 
-[47]
-
 [48]
 
 [49]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [50]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1176,24 +1176,29 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[56] AED endfloat: Processing end Figures and Tables
+[56]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[57] (./mb2-paper.ttt [58
+
+
+[57] AED endfloat: Processing end Figures and Tables
+
+[58] (./mb2-paper.ttt [59
 
 
 ]
 
-[59] [60
+[60] [61
 
 ]
 
-[61]
+[62]
 
-[62
+[63
 
 ])
 
-[63
+[64
 
 ] (./mb2-paper.aux)
  ***********
@@ -1206,11 +1211,11 @@ LaTeX Warning: There were multiply-defined labels.
  ) 
 Here is how much of TeX's memory you used:
  22344 strings out of 475994
- 421799 string characters out of 5778099
- 985704 words of memory out of 5000000
+ 421803 string characters out of 5778099
+ 985604 words of memory out of 5000000
  44795 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,11n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (63 pages).
+Output written on mb2-paper.pdf (64 pages).
