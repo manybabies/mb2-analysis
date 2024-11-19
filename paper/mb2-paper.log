@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.8)  15 NOV 2024 13:18
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.8)  19 NOV 2024 13:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1024,41 +1024,35 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [26]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure3.jpg Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure3.jpg>
-
 
 [27]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg>
+
+Underfull \vbox (badness 2189) has occurred while \output is active []
 
 
 
 [28]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 2818) has occurred while \output is active []
 
 
 
 [29]
 
 [30]
-
-[31]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 555--556
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
  [][] 
  []
 
 
 
+[31]
+
 [32]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [33]
 
@@ -1067,65 +1061,59 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [35]
 
 [36]
-Underfull \vbox (badness 4156) has occurred while \output is active []
-
-
 
 [37]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
+
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 698--699
+ [][] 
+ []
+
+
 
 [38]
 
 [39]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
-
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 718--719
- [][] 
- []
-
-
 
 [40]
-
-[41]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 741--742
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 723--724
  [][] 
  []
 
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[41]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 744--745
+ [][] 
+ []
 
 
 
 [42]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 2088) has occurred while \output is active []
 
 
 
 [43]
-
-[44]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
-
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 772--773
- [][] 
- []
-
-
-
-[45]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 789--790
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 761--762
  [][] 
  []
 
 
+
+[44]
+
+[45]
 
 [46]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1133,18 +1121,19 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [47]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure8.png>
-
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 811--812
- [][] 
- []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [48]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [49]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [50]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1161,44 +1150,24 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[53]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+[53] AED endfloat: Processing end Figures and Tables
 
-
-
-[54]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
-
-[55]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
-
-[56]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
-
-[57] AED endfloat: Processing end Figures and Tables
-
-[58] (./mb2-paper.ttt [59
+[54] (./mb2-paper.ttt [55
 
 
 ]
 
-[60] [61
+[56] [57
 
 ]
 
-[62]
+[58]
 
-[63
+[59
 
 ])
 
-[64
+[60
 
 ] (./mb2-paper.aux)
  ***********
@@ -1210,12 +1179,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22344 strings out of 475994
- 421803 string characters out of 5778099
- 985604 words of memory out of 5000000
- 44795 multiletter control sequences out of 15000+600000
+ 22292 strings out of 475994
+ 418470 string characters out of 5778099
+ 984831 words of memory out of 5000000
+ 44745 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,11n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (64 pages).
+Output written on mb2-paper.pdf (60 pages).
