@@ -19,11 +19,11 @@ library(ggpubr)
 library(StanHeaders)
 library(QuickJSR)
 library(rstan)
-#remotes::install_github("stan-dev/cmdstanr")
+# remotes::install_github("stan-dev/cmdstanr")
 library(cmdstanr)
 
-source(here('helper','ensure_repo_structure.R'))
-source(here('helper','analysis_helper.R'))
+source(here("helper", "ensure_repo_structure.R"))
+source(here("helper", "analysis_helper.R"))
 plot_path <- here("plots")
 paper_path <- here("paper")
 model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
@@ -46,88 +46,98 @@ for (file in rds_files) {
   rds_name <- tools::file_path_sans_ext(basename(file))
   assign(rds_name, readRDS(file))
 }
-
 ```
 
 
 ```{r}
-#set some general parameters for fitting Bayesian models
-n_cores = parallel::detectCores() - 1
+# set some general parameters for fitting Bayesian models
+n_cores <- parallel::detectCores() - 1
 options(mc.cores = n_cores)
 rstan_options(auto_write = TRUE)
 
 # Optimize Stan compilation
-Sys.setenv(LOCAL_CPPFLAGS = '-O3')
+Sys.setenv(LOCAL_CPPFLAGS = "-O3")
 
-#cmdstanr::install_cmdstan()
-use_cmdstan = TRUE
+# cmdstanr::install_cmdstan()
+use_cmdstan <- TRUE
 
-#set backend to use
-#need to set control parameters simultaneously, because rstan does not allow for a step_size parameter
+# set backend to use
+# need to set control parameters simultaneously, because rstan does not allow for a step_size parameter
 if (use_cmdstan) {
-  cur_backend = "cmdstanr"
-  default_control_list = list(adapt_delta=0.99,step_size=.1,max_treedepth=12)
-  } else {
-    cur_backend = "rstan"
-    default_control_list = list(adapt_delta=0.99,max_treedepth=12)
-  }
+  cur_backend <- "cmdstanr"
+  default_control_list <- list(adapt_delta = 0.99, step_size = .1, max_treedepth = 12)
+} else {
+  cur_backend <- "rstan"
+  default_control_list <- list(adapt_delta = 0.99, max_treedepth = 12)
+}
 ```
 
 Splitting the data into familiarization data and test data.
 
 ```{r}
-
-d_anticipatory_fam <- data_preprocessed_post_exclusions %>% 
+d_anticipatory_fam <- data_preprocessed_post_exclusions %>%
   filter(condition %in% c("familiarization")) %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  reframe(lengths = rle(aoi)$lengths, 
-            values = rle(aoi)$values) %>%
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+  filter(t_norm <= 120 & t_norm >= -3880) %>% # only pass data in anticipatory window
+  group_by(age_cohort, age_mo, age_years_n, 
+           participant_lab_id, lab_id, participant_id, 
+           participant_trial_id, trial_num, condition) %>%
+  reframe(
+    lengths = rle(aoi)$lengths,
+    values = rle(aoi)$values
+  ) %>%
+  group_by(age_cohort, age_mo, age_years_n, 
+           participant_lab_id, lab_id, participant_id, 
+           participant_trial_id, trial_num, condition) %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data)) %>%
-  mutate(familiarization_trial_num_4=trial_num-4)
+  mutate(familiarization_trial_num_4 = trial_num - 4)
 
 
 test_data <- data_preprocessed_post_exclusions %>%
-  filter(condition %in% c("knowledge","ignorance"))
+  filter(condition %in% c("knowledge", "ignorance"))
 
-summarize_participant_test_first_look_first_trial  <- test_data %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>% # only pass data in anticipatory window
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
-  reframe(lengths = rle(aoi)$lengths, 
-            values = rle(aoi)$values) %>%
-  group_by(age_cohort,age_mo,age_years_n,participant_lab_id,lab_id,participant_id,participant_trial_id, trial_num,condition) %>%
+summarize_participant_test_first_look_first_trial <- test_data %>%
+  filter(t_norm <= 120 & t_norm >= -3880) %>% # only pass data in anticipatory window
+  group_by(age_cohort, age_mo, age_years_n, 
+           participant_lab_id, lab_id, participant_id, 
+           participant_trial_id, trial_num, condition) %>%
+  reframe(
+    lengths = rle(aoi)$lengths,
+    values = rle(aoi)$values
+  ) %>%
+  group_by(age_cohort, age_mo, age_years_n, 
+           participant_lab_id, lab_id, participant_id, 
+           participant_trial_id, trial_num, condition) %>%
   nest() %>%
   mutate(data = lapply(data, get_first_look)) %>%
   unnest(cols = c(data)) %>%
-  filter(trial_num==5) %>%
-  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition) %>%
+  filter(trial_num == 5) %>%
+  group_by(age_cohort, participant_lab_id, lab_id, participant_id, condition) %>%
   summarize(
     N = n(),
-    prop_correct_first_look = mean(first_look =="target_exit"),
+    prop_correct_first_look = mean(first_look == "target_exit"),
     average_rt = mean(first_look_rt),
-    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
-  ) 
-
-
+    average_rt_correct = mean(first_look_rt[first_look == "target_exit"])
+  )
 ```
 
 ```{r}
 summarize_participant <- data_preprocessed_post_exclusions %>%
-  group_by(lab_id,age_cohort,condition,participant_lab_id,participant_id,participant_trial_id,trial_num,point_of_disambiguation,video_duration_ms) %>%
-  filter(t_norm<=120 & t_norm>=-3880) %>%
+  group_by(lab_id, age_cohort, condition, 
+           participant_lab_id, participant_id, participant_trial_id, 
+           trial_num, point_of_disambiguation, video_duration_ms) %>%
+  filter(t_norm <= 120 & t_norm >= -3880) %>%
   mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+    aoi_diff = c(0, diff(as.numeric(as.factor(aoi))))
   ) %>%
   summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    N_exit = sum_target_exit+sum_distractor_exit,
-    absolute_looking = N_exit*40
+    t_min = min(t_norm),
+    t_max = max(t_norm),
+    sum_target_exit = sum(aoi == "target_exit", na.rm = T),
+    sum_distractor_exit = sum(aoi == "distractor_exit", na.rm = T),
+    N_exit = sum_target_exit + sum_distractor_exit,
+    absolute_looking = N_exit * 40
   )
 
 rm(data_preprocessed_post_exclusions)
@@ -146,45 +156,52 @@ Spill-over: we will analyze within-participants data from the second test trial 
 ### Summarize all test data
 
 ```{r}
-#now summarize test data for each trial
+# now summarize test data for each trial
 summarize_participant_test_both_trials <- test_data %>%
-  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_num,trial_file_name,
-           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type) %>%
-  #filter to relevant anticipatory window
+  group_by(lab_id, age_cohort, age_mo, age_years_n, 
+           participant_lab_id, participant_id, participant_trial_id, 
+           trial_num, trial_file_name,
+           bear_not_visible_ms, point_of_disambiguation, video_duration_ms, 
+           condition, data_type
+  ) %>%
+  # filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
-  filter(t_norm<=120 & t_norm>=-3880) %>%
+  filter(t_norm <= 120 & t_norm >= -3880) %>%
   mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+    aoi_diff = c(0, diff(as.numeric(as.factor(aoi))))
   ) %>%
   summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_general = sum(aoi=="target_general",na.rm=T),
-    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
-    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
-    N_general = sum_target_general+sum_distractor_general,
-    N_exit = sum_target_exit+sum_distractor_exit
+    t_min = min(t_norm),
+    t_max = max(t_norm),
+    sum_target_general = sum(aoi == "target_general", na.rm = T),
+    sum_distractor_general = sum(aoi == "distractor_general", na.rm = T),
+    prop_general = sum_target_general / (sum_target_general + sum_distractor_general),
+    sum_target_exit = sum(aoi == "target_exit", na.rm = T),
+    sum_distractor_exit = sum(aoi == "distractor_exit", na.rm = T),
+    prop_exit = sum_target_exit / (sum_target_exit + sum_distractor_exit),
+    N_general = sum_target_general + sum_distractor_general,
+    N_exit = sum_target_exit + sum_distractor_exit
   ) %>%
   ungroup() %>%
-  #center age, condition, and method
+  # center age, condition, and method
   mutate(
-    age_mo_c = age_mo - mean(age_mo,na.rm=TRUE),
+    age_mo_c = age_mo - mean(age_mo, na.rm = TRUE),
     condition_c = case_when(
-      condition=="knowledge" ~ -0.5,
-      condition=="ignorance" ~ 0.5),
-    method_c = case_when( 
-      data_type=="web-based" ~ -0.5,
-      data_type=="in-lab" ~ 0.5)
+      condition == "knowledge" ~ -0.5,
+      condition == "ignorance" ~ 0.5
+    ),
+    method_c = case_when(
+      data_type == "web-based" ~ -0.5,
+      data_type == "in-lab" ~ 0.5
+    )
   ) %>%
   mutate(
-    test_trial_num = trial_num-4
+    test_trial_num = trial_num - 4
   )
 
-saveRDS(summarize_participant_test_both_trials, file = here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
+saveRDS(summarize_participant_test_both_trials,
+        file = here(RESULTS_FOLDER, "summarize_participant_test_both_trials.rds"))
 ```
 
 ### Overall Plots
@@ -192,77 +209,91 @@ saveRDS(summarize_participant_test_both_trials, file = here(RESULTS_FOLDER,"summ
 Proportional looking measure on the target exit during the anticipatory window for both test trials.
 
 ```{r}
-#plot average proportion looking
-overall_p_test_both <- ggplot(summarize_participant_test_both_trials, aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_both_trials,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(age_cohort~test_trial_num)+
-  theme(legend.position="none")+
-  #ggtitle("Test")+
-  theme(plot.title = element_text(hjust= 0.5, face="bold"))+
+# plot average proportion looking
+overall_p_test_both <- ggplot(summarize_participant_test_both_trials, 
+                              aes(x = condition, y = prop_exit, color = condition)) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_both_trials, condition == "ignorance"), 
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_both_trials, condition == "knowledge"), 
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(age_cohort ~ test_trial_num) +
+  theme(legend.position = "none") +
+  # ggtitle("Test")+
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")
 overall_p_test_both
-ggsave(here(plot_path,"overall_proportion_both_trials_target_exit_looking.png"),bg="white",width=9,height=9)
-ggsave(here(paper_path,"Figure_PTL_bothtrials.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "overall_proportion_both_trials_target_exit_looking.png"), 
+       bg = "white", width = 9, height = 9)
+ggsave(here(paper_path, "Figure_PTL_bothtrials.png"), 
+       bg = "white", width = 9, height = 9)
 ```
 
 Plot the effect by age
 
 ```{r}
-kid_prop_by_age_both <- ggplot(filter(summarize_participant_test_both_trials,N_exit>=5&age_cohort=="toddlers"),aes(x=age_mo,y=prop_exit,color=condition))+
-  geom_hline(yintercept=0.5, linetype="dashed")+
-  geom_point(alpha=0.4)+
-  geom_smooth(method="lm")+
-  xlab("Age (in months)")+
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")+
-  theme_cowplot()+
-  facet_wrap(~test_trial_num)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")
+kid_prop_by_age_both <- ggplot(filter(summarize_participant_test_both_trials, 
+                                      N_exit >= 5 & age_cohort == "toddlers"), 
+                               aes(x = age_mo, y = prop_exit, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm") +
+  xlab("Age (in months)") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)") +
+  theme_cowplot() +
+  facet_wrap(~test_trial_num) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
 kid_prop_by_age_both
-ggsave(here(plot_path,"kids_proportion_both_trials_target_exit_looking_by_age.png"),bg="white", width = 9, height = 6)
+ggsave(here(plot_path, "kids_proportion_both_trials_target_exit_looking_by_age.png"), 
+       bg = "white", width = 9, height = 6)
 ```
 
 ### Summary Statistics
 
 ```{r}
 summarize_test_aoi_both <- summarize_participant_test_both_trials %>%
-  group_by(age_cohort,condition,trial_num,test_trial_num) %>%
+  group_by(age_cohort, condition, trial_num, test_trial_num) %>%
   summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
-     t_test = list(broom::tidy(t.test(prop_exit, alternative = "two.sided", mu=0.5)))) %>%
+    participant_num = sum(!is.na(prop_exit)),
+    mean_target_looking = mean(prop_exit, na.rm = T),
+    sd_target_looking = sd(prop_exit, na.rm = T),
+    t_test = list(broom::tidy(t.test(prop_exit, alternative = "two.sided", mu = 0.5)))
+  ) %>%
   mutate(
-    #95% CIs
-    lower_ci_target_looking = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    upper_ci_target_looking = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    #mean_target_looking_general = mean(prop_general, na.rm=T),
-   # sd_target_looking_general=sd(prop_general,na.rm=T),
-    lower_ci_target_looking_general = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    upper_ci_target_looking_general = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    p.value = purrr::map(t_test, ~select(.x, c('p.value', 'parameter','statistic')))
+    # 95% CIs
+    lower_ci_target_looking = mean_target_looking - 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking = mean_target_looking + 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    # mean_target_looking_general = mean(prop_general, na.rm=T),
+    # sd_target_looking_general=sd(prop_general,na.rm=T),
+    lower_ci_target_looking_general = mean_target_looking - 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking_general = mean_target_looking + 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
   ) %>%
   select(-t_test) %>%
   unnest(p.value) %>%
   rename(
-    tval=statistic,
-    df=parameter
+    tval = statistic,
+    df = parameter
   )
-  
+
 
 summarize_test_aoi_both %>%
   knitr::kable()
 
-saveRDS(summarize_test_aoi_both, file = here(RESULTS_FOLDER,"summarize_test_aoi_both.rds"))
+saveRDS(summarize_test_aoi_both,
+        file = here(RESULTS_FOLDER, "summarize_test_aoi_both.rds"))
 ```
 
 ### Main Model
@@ -274,27 +305,32 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_both <- brm(prop_exit ~ 1+condition_c+age_mo_c+condition_c*age_mo_c+(1+condition_c|participant_lab_id)+(1+condition_c+age_mo_c+condition_c*age_mo_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials,age_cohort=="toddlers") %>%
-          select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend,
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_toddlers_both <- brm(
+  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials, age_cohort == "toddlers") %>%
+    select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
 
@@ -305,53 +341,59 @@ if (!dir.exists(model_fits_dir)) {
 
 summary(bm_aoi_toddlers_both)
 
-saveRDS(bm_aoi_toddlers_both, file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
+saveRDS(bm_aoi_toddlers_both, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers_both)
-#get main coefficient estimate and HDI
+# get_variables(bm_aoi_toddlers_both)
+# get main coefficient estimate and HDI
 bm_aoi_toddlers_both_condition_effect <- bm_aoi_toddlers_both %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_effect.rds"))
 
 bm_aoi_toddlers_both_age_effect <- bm_aoi_toddlers_both %>%
   spread_draws(b_age_mo_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_age_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_age_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_age_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_age_effect.rds"))
 
 bm_aoi_toddlers_both_condition_age_interaction <- bm_aoi_toddlers_both %>%
   spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_condition_age_interaction, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_age_interaction.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_condition_age_interaction,
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_condition_age_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_both_null <-  update(bm_aoi_toddlers_both, formula = ~ .-condition_c)
+bm_aoi_toddlers_both_null <- update(bm_aoi_toddlers_both, formula = ~ . - condition_c)
 summary(bm_aoi_toddlers_both_null)
 
-saveRDS(bm_aoi_toddlers_both_null, file=here(model_fits_dir, "bm_fam_aoi_toddlers_null.rds"))
+saveRDS(bm_aoi_toddlers_both_null, 
+        file = here(model_fits_dir, "bm_fam_aoi_toddlers_null.rds"))
 
 test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, bm_aoi_toddlers_both_null)
 
-saveRDS(test_comparison_aoi_toddlers_both, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both.rds"))
+saveRDS(test_comparison_aoi_toddlers_both, 
+        file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_toddlers_both)
 rm(bm_aoi_toddlers_both_null)
 gc()
@@ -362,51 +404,59 @@ gc()
 ## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
 
 ```{r}
-bm_aoi_adults_both <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id)+(1+condition_c|participant_lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials,age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend,
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE, 
-        control = default_control_list)
+bm_aoi_adults_both <- brm(
+  prop_exit ~ 1 + condition_c + 
+    (1 + condition_c | lab_id) + 
+    (1 + condition_c | participant_lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_adults_both)
 
-saveRDS(bm_aoi_adults_both, file = here(model_fits_dir,"bm_aoi_adults_both.rds"))
+saveRDS(bm_aoi_adults_both, 
+        file = here(model_fits_dir, "bm_aoi_adults_both.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_aoi_adults_both_condition_effect <- bm_aoi_adults_both %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_both_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_adults_both_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_both_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_both_condition_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_both_null <-  update(bm_aoi_adults_both, formula = ~ .-condition_c)
+bm_aoi_adults_both_null <- update(bm_aoi_adults_both, formula = ~ . - condition_c)
 summary(bm_aoi_adults_both_null)
 
-saveRDS(bm_aoi_adults_both_null, file=here(model_fits_dir,"bm_fam_aoi_adults_null.rds"))
+saveRDS(bm_aoi_adults_both_null, 
+        file = here(model_fits_dir, "bm_fam_aoi_adults_null.rds"))
 
 test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, bm_aoi_adults_both_null)
 
-saveRDS(test_comparison_aoi_adults_both, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both.rds"))
+saveRDS(test_comparison_aoi_adults_both, 
+        file = here(RESULTS_FOLDER, "test_comparison_aoi_adults_both.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_adults_both)
 rm(bm_aoi_adults_both_null)
 gc()
@@ -418,16 +468,17 @@ gc()
 
 ```{r}
 # create test_trial number variable
-summarize_participant_test_both_trials <- summarize_participant_test_both_trials %>% 
+summarize_participant_test_both_trials <- summarize_participant_test_both_trials %>%
   ungroup() %>%
-  arrange(participant_lab_id,trial_num,test_trial_num) %>%
+  arrange(participant_lab_id, trial_num, test_trial_num) %>%
   group_by(participant_lab_id) %>%
   mutate(conditions = paste0(condition, collapse = "_")) %>%
   ungroup() %>%
- mutate(test_trial=case_when(
-     trial_num==5 ~ 1, 
-     trial_num==6 ~ 2,
-     TRUE ~ NA))
+  mutate(test_trial = case_when(
+    trial_num == 5 ~ 1,
+    trial_num == 6 ~ 2,
+    TRUE ~ NA
+  ))
 ```
 
 ### Main Model
@@ -437,88 +488,100 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #### Toddlers
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condition_c*test_trial_num+(1+condition_c+ test_trial_num+condition_c*test_trial_num|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials, age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_toddlers_both_order <- brm(
+  prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
+    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
 
-saveRDS(bm_aoi_toddlers_both_order, file = here(model_fits_dir, "bm_aoi_toddlers_both_order.rds"))
+saveRDS(bm_aoi_toddlers_both_order, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_both_order.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers)
-#get main coefficient estimate and HDI
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI
 bm_aoi_toddlers_both_order_condition_effect <- bm_aoi_toddlers_both_order %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_order_condition_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_order_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_effect.rds"))
 
 bm_aoi_toddlers_both_order_trial_num_effect <- bm_aoi_toddlers_both_order %>%
   spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_order_trial_num_effect, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_trial_num_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_order_trial_num_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_trial_num_effect.rds"))
 
 bm_aoi_toddlers_both_order_condition_trial_num_interaction <- bm_aoi_toddlers_both_order %>%
   spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_both_order_condition_trial_num_interaction, file=here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_trial_num_interaction.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_both_order_condition_trial_num_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_both_order_condition_trial_num_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_both_order_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-test_trial_num)
+bm_aoi_toddlers_both_order_null <- update(bm_aoi_toddlers_both_order, formula = ~ . - test_trial_num)
 summary(bm_aoi_toddlers_both_order_null)
 
-saveRDS(bm_aoi_toddlers_both_order_null, file=here(model_fits_dir,"bm_aoi_toddlers_both_order_null.rds"))
+saveRDS(bm_aoi_toddlers_both_order_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_both_order_null.rds"))
 
 test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_null)
 
-saveRDS(test_comparison_aoi_toddlers_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_toddlers_both_order.rds"))
+saveRDS(test_comparison_aoi_toddlers_both_order, 
+        file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both_order.rds"))
 ```
 
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r}
-bm_aoi_toddlers_both_order_interaction_null <-  update(bm_aoi_toddlers_both_order, formula = ~ .-condition_c:test_trial_num)
+bm_aoi_toddlers_both_order_interaction_null <- update(bm_aoi_toddlers_both_order, formula = ~ . - condition_c:test_trial_num)
 summary(bm_aoi_toddlers_both_order_interaction_null)
 
-saveRDS(bm_aoi_toddlers_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_toddlers_both_order_interaction_null.rds"))
+saveRDS(bm_aoi_toddlers_both_order_interaction_null, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both_order_interaction_null.rds"))
 
 test_m_comparison_PTL_toddlers_both_order_interaction <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_interaction_null)
 
-saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
+saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
 ```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_toddlers_both_order)
 rm(bm_aoi_toddlers_both_order_null)
 rm(bm_aoi_toddlers_both_order_interaction_null)
@@ -528,77 +591,88 @@ gc()
 #### Adults
 
 ```{r}
-bm_aoi_adults_both_order <- brm(prop_exit ~ 1+condition_c+ test_trial_num+condition_c*test_trial_num+(1+condition_c+ test_trial_num+condition_c*test_trial_num|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials,age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_adults_both_order <- brm(
+  prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
+    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_adults_both_order)
 
-saveRDS(bm_aoi_adults_both_order, file = here(model_fits_dir, "bm_aoi_adults_both_order.rds"))
+saveRDS(bm_aoi_adults_both_order, 
+        file = here(model_fits_dir, "bm_aoi_adults_both_order.rds"))
 ```
 
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_aoi_adults_both_order_condition_effect <- bm_aoi_adults_both_order %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_both_order_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_both_order_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_both_order_condition_effect.rds"))
 
 bm_aoi_adults_both_order_trial_num_effect <- bm_aoi_adults_both_order %>%
   spread_draws(b_test_trial_num, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_both_order_trial_num_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_trial_num_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_both_order_trial_num_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_both_order_trial_num_effect.rds"))
 
 bm_aoi_adults_both_order_condition_trial_num_interaction <- bm_aoi_adults_both_order %>%
   spread_draws(`b_condition_c:test_trial_num`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_both_order_condition_trial_num_interaction, file=here(RESULTS_FOLDER,"bm_aoi_adults_both_order_condition_trial_num_interaction.rds"))
+# cache
+saveRDS(bm_aoi_adults_both_order_condition_trial_num_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_both_order_condition_trial_num_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_both_order_null <-  update(bm_aoi_adults_both_order, formula = ~ .-test_trial_num)
+bm_aoi_adults_both_order_null <- update(bm_aoi_adults_both_order, formula = ~ . - test_trial_num)
 summary(bm_aoi_adults_both_order_null)
 
-saveRDS(bm_aoi_adults_both_order_null, file=here(model_fits_dir,"bm_aoi_adults_both_order_null.rds"))
+saveRDS(bm_aoi_adults_both_order_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_both_order_null.rds"))
 
 test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_null)
 
-saveRDS(test_comparison_aoi_adults_both_order, file=here(RESULTS_FOLDER,"test_comparison_aoi_adults_both_order.rds"))
+saveRDS(test_comparison_aoi_adults_both_order, 
+        file = here(RESULTS_FOLDER, "test_comparison_aoi_adults_both_order.rds"))
 ```
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r}
-bm_aoi_adults_both_order_interaction_null <-  update(bm_aoi_adults_both_order, formula = ~ .-condition_c:test_trial_num)
+bm_aoi_adults_both_order_interaction_null <- update(bm_aoi_adults_both_order, formula = ~ . - condition_c:test_trial_num)
 summary(bm_aoi_adults_both_order_interaction_null)
 
-saveRDS(bm_aoi_adults_both_order_interaction_null, file=here(RESULTS_FOLDER,"bayes_model_fits", "bm_aoi_adults_both_order_interaction_null.rds"))
+saveRDS(bm_aoi_adults_both_order_interaction_null, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_both_order_interaction_null.rds"))
 
 test_m_comparison_PTL_adults_both_order_interaction <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_interaction_null)
 
-saveRDS(test_m_comparison_PTL_adults_both_order_interaction, file=here(RESULTS_FOLDER,"test_m_comparison_PTL_adults_both_order_interaction.rds"))
+saveRDS(test_m_comparison_PTL_adults_both_order_interaction, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_both_order_interaction.rds"))
 ```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_adults_both_order)
 rm(bm_aoi_adults_both_order_null)
 gc()
@@ -611,59 +685,63 @@ We will explore whether condition differences vary for participants who show hig
 ### 2.a. Only anticipators on final familiarization trial
 
 ```{r}
-#first, find the participants who anticipate correctly on the last trial
+# first, find the participants who anticipate correctly on the last trial
 
 summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
-  group_by(age_cohort,participant_lab_id,lab_id,participant_id,condition,trial_num) %>%
+  group_by(age_cohort, participant_lab_id, lab_id, participant_id, condition, trial_num) %>%
   summarize(
-    prop_correct_first_look = mean(first_look =="target_exit"),
+    prop_correct_first_look = mean(first_look == "target_exit"),
     average_rt = mean(first_look_rt),
-    average_rt_correct = mean(first_look_rt[first_look =="target_exit"])
+    average_rt_correct = mean(first_look_rt[first_look == "target_exit"])
   )
 correct_first_looks_final_fam_trial <- summarize_first_looks_fam_trials %>%
-  filter(!is.na(prop_correct_first_look)&trial_num==4) %>%
+  filter(!is.na(prop_correct_first_look) & trial_num == 4) %>%
   ungroup() %>%
-  select(age_cohort,lab_id, participant_id, participant_lab_id,prop_correct_first_look) %>%
-  rename(correct_first_look_final_fam_trial=prop_correct_first_look)
+  select(age_cohort, lab_id, participant_id, participant_lab_id, prop_correct_first_look) %>%
+  rename(correct_first_look_final_fam_trial = prop_correct_first_look)
 
-#join in to test trial
+# join in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
   left_join(correct_first_looks_final_fam_trial)
 summarize_participant_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
   left_join(correct_first_looks_final_fam_trial)
 
 # overall plot
-#plot average proportion looking
-overall_p_correct_final_fam_trial <- ggplot(filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,correct_first_look_final_fam_trial==1&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
+# plot average proportion looking
+overall_p_correct_final_fam_trial <- ggplot(filter(summarize_participant_test_first_trial, correct_first_look_final_fam_trial == 1),
+                                            aes(x = condition, y = prop_exit, color = condition)) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, correct_first_look_final_fam_trial == 1 & condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, correct_first_look_final_fam_trial == 1 & condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p_correct_final_fam_trial
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_correct_final_fam_first_look.png"),bg="white",width=9,height=6)
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_correct_final_fam_first_look.png"),
+       bg = "white", width = 9, height = 6)
 ```
 
 #### Summary Statistics
 
 ```{r}
 summarize_test_aoi_correct_final_fam_trial <- summarize_participant_test_first_trial %>%
-  filter(correct_first_look_final_fam_trial==1) %>%
-  group_by(age_cohort,condition) %>%
+  filter(correct_first_look_final_fam_trial == 1) %>%
+  group_by(age_cohort, condition) %>%
   summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
-    mean_target_looking_general = mean(prop_general, na.rm=T),
-    sd_target_looking_general=sd(prop_general,na.rm=T),
+    participant_num = sum(!is.na(prop_exit)),
+    mean_target_looking = mean(prop_exit, na.rm = T),
+    sd_target_looking = sd(prop_exit, na.rm = T),
+    mean_target_looking_general = mean(prop_general, na.rm = T),
+    sd_target_looking_general = sd(prop_general, na.rm = T),
   )
 
 summarize_test_aoi_correct_final_fam_trial %>%
@@ -677,61 +755,69 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ##### Toddlers
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_correct_final_fam_trial <- brm(prop_exit ~ 1 + condition_c +   (1 + condition_c | lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="toddlers"&correct_first_look_final_fam_trial==1),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_toddlers_correct_final_fam_trial <- brm(
+  prop_exit ~ 1 + condition_c +
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers" & correct_first_look_final_fam_trial == 1),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers)
-#get main coefficient estimate and HDI
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI
 bm_aoi_toddlers_correct_final_fam_trial_condition_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_correct_final_fam_trial_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_correct_final_fam_trial_null <-  update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ .-condition_c)
+bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ . - condition_c)
 summary(bm_aoi_toddlers_correct_final_fam_trial_null)
 
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, file=here(model_fits_dir,"bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
 
-test_m_comparison_aoi_toddlers_correct_final_fam_trial <-  brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, bm_aoi_toddlers_correct_final_fam_trial_null)
+test_m_comparison_aoi_toddlers_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, bm_aoi_toddlers_correct_final_fam_trial_null)
 
-saveRDS(test_m_comparison_aoi_toddlers_correct_final_fam_trial, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
+saveRDS(test_m_comparison_aoi_toddlers_correct_final_fam_trial, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_toddlers_correct_final_fam_trial)
 rm(bm_aoi_toddlers_correct_final_fam_trial_null)
 gc()
@@ -740,51 +826,58 @@ gc()
 ##### Adults
 
 ```{r}
-bm_aoi_adults_correct_final_fam_trial <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="adults"&correct_first_look_final_fam_trial==1),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_adults_correct_final_fam_trial <- brm(
+  prop_exit ~ 1 + condition_c +
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults" & correct_first_look_final_fam_trial == 1),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_adults_correct_final_fam_trial)
 
-saveRDS(bm_aoi_adults_correct_final_fam_trial, file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial, 
+        file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_aoi_adults_correct_final_fam_trial_condition_effect <- bm_aoi_adults_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_correct_final_fam_trial_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_condition_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_correct_final_fam_trial_null <-  update(bm_aoi_adults_correct_final_fam_trial, formula = ~ .-condition_c)
+bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, formula = ~ . - condition_c)
 summary(bm_aoi_adults_correct_final_fam_trial_null)
 
-saveRDS(bm_aoi_adults_correct_final_fam_trial_null, file=here(model_fits_dir,"bm_aoi_adults_correct_final_fam_trial_null.rds"))
+saveRDS(bm_aoi_adults_correct_final_fam_trial_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial_null.rds"))
 
 test_m_comparison_aoi_adults_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, bm_aoi_adults_correct_final_fam_trial_null)
 
-saveRDS(test_m_comparison_aoi_adults_correct_final_fam_trial, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_correct_final_fam_trial.rds"))
+saveRDS(test_m_comparison_aoi_adults_correct_final_fam_trial, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_correct_final_fam_trial.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_adults_correct_final_fam_trial)
 rm(bm_aoi_adults_correct_final_fam_trial_null)
 gc()
@@ -795,42 +888,46 @@ gc()
 #### Plot
 
 ```{r}
-#join overall familiarization looking in to test trial
+# join overall familiarization looking in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
   left_join(summarize_participant_familiarization_overall)
 
 # overall plot
-#plot average proportion looking
-overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_test_first_trial,fam_prop_exit>0.5), aes(x=condition, y=prop_exit,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,fam_prop_exit>0.5&condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
+# plot average proportion looking
+overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5), 
+                                                aes(x = condition, y = prop_exit, color = condition)) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5 & condition == "ignorance"), 
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5 & condition == "knowledge"), 
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 overall_p_sufficient_fam_prop_looking
-ggsave(here(plot_path,"overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"),bg="white",width=9,height=6)
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"), 
+       bg = "white", width = 9, height = 6)
 ```
 
 #### Summary Statistics
 
 ```{r}
 summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
-  filter(fam_prop_exit>0.5) %>%
-  group_by(age_cohort,condition) %>%
+  filter(fam_prop_exit > 0.5) %>%
+  group_by(age_cohort, condition) %>%
   summarize(
-    participant_num=sum(!is.na(prop_exit)),
-    mean_target_looking=mean(prop_exit,na.rm=T),
-    sd_target_looking=sd(prop_exit,na.rm=T),
-    mean_target_looking_general = mean(prop_general, na.rm=T),
-    sd_target_looking_general=sd(prop_general,na.rm=T),
+    participant_num = sum(!is.na(prop_exit)),
+    mean_target_looking = mean(prop_exit, na.rm = T),
+    sd_target_looking = sd(prop_exit, na.rm = T),
+    mean_target_looking_general = mean(prop_general, na.rm = T),
+    sd_target_looking_general = sd(prop_general, na.rm = T),
   )
 
 summarize_test_aoi_sufficient_fam_prop_looking %>%
@@ -843,62 +940,70 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ##### Toddlers
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial, age_cohort=="toddlers" & fam_prop_exit>0.5),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(
+  prop_exit ~ 1 + condition_c +
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers" & fam_prop_exit > 0.5),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking,
+        file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers)
-#get main coefficient estimate and HDI
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI
 bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_sufficient_fam_prop_looking_null <-  update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+bm_aoi_toddlers_sufficient_fam_prop_looking_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ . - condition_c)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, file=here(model_fits_dir,"bm_aoi_toddlers_sufficient_fam_prop_looking_null.rds"))
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking_null.rds"))
 
-test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking <- 
-brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, bm_aoi_toddlers_sufficient_fam_prop_looking_null)
+test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking <-
+  brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking, bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
-saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking.rds"))
+saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking)
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 gc()
@@ -907,51 +1012,58 @@ gc()
 ##### Adults
 
 ```{r}
-bm_aoi_adults_sufficient_fam_prop_looking <- brm(prop_exit ~ 1+condition_c+(1+condition_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="adults"&fam_prop_exit>=0.5),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_adults_sufficient_fam_prop_looking <- brm(
+  prop_exit ~ 1 + condition_c + 
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults" & fam_prop_exit >= 0.5),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking, 
+        file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_aoi_adults_sufficient_fam_prop_looking_condition_effect <- bm_aoi_adults_sufficient_fam_prop_looking %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_sufficient_fam_prop_looking_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_condition_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_sufficient_fam_prop_looking_null <-  update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ .-condition_c)
+bm_aoi_adults_sufficient_fam_prop_looking_null <- update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ . - condition_c)
 summary(bm_aoi_adults_sufficient_fam_prop_looking_null)
 
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, file=here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_null.rds"))
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_null.rds"))
 
 test_m_comparison_aoi_adults_sufficient_fam_prop_looking <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking, bm_aoi_adults_sufficient_fam_prop_looking_null)
 
-saveRDS(test_m_comparison_aoi_adults_sufficient_fam_prop_looking, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_sufficient_fam_prop_looking.rds"))
+saveRDS(test_m_comparison_aoi_adults_sufficient_fam_prop_looking,
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_sufficient_fam_prop_looking.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_adults_sufficient_fam_prop_looking)
 rm(bm_aoi_adults_sufficient_fam_prop_looking_null)
 gc()
@@ -962,57 +1074,60 @@ gc()
 #### Plot 
 
 ```{r}
-correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,aes(fam_prop_exit,prop_exit,color=condition))+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  geom_point(alpha=0.25)+
-  geom_smooth(method="lm")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  xlab("Overall Proportion Target Looking during Familiarization")+
+correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,
+                                    aes(fam_prop_exit, prop_exit, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~age_cohort) +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Overall Proportion Target Looking during Familiarization") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 correlation_plot_fam_test
-ggsave(here(plot_path,"correlation_plot_fam_test.png"),bg="white",width=9,height=6)
+ggsave(here(plot_path, "correlation_plot_fam_test.png"), 
+       bg = "white", width = 9, height = 6)
 
-#correlation function
-compute_correlation <- function(data){
-  result <- cor.test(data$fam_prop_exit,data$prop_exit)
-  #return the estimate, p-value,df, and test statistic of cor.test
+# correlation function
+compute_correlation <- function(data) {
+  result <- cor.test(data$fam_prop_exit, data$prop_exit)
+  # return the estimate, p-value,df, and test statistic of cor.test
   
   return(data.frame(
-    correlation_estimate=result$estimate,
+    correlation_estimate = result$estimate,
     correlation_df = result$parameter,
-    correlation_p_value=result$p.value,
-    correlation_statistic=result$statistic))
+    correlation_p_value = result$p.value,
+    correlation_statistic = result$statistic
+  ))
 }
-#correlation between familiarization and test
+# correlation between familiarization and test
 correlation_fam_test_overall <- summarize_participant_test_first_trial %>%
-  select(age_cohort,fam_prop_exit,prop_exit) %>%
+  select(age_cohort, fam_prop_exit, prop_exit) %>%
   group_by(age_cohort) %>%
   nest() %>%
-  #use map to compute correlation
-  summarize(correlation=map(data,compute_correlation)) %>%
-  #extract the correlation values into tidy data frame
+  # use map to compute correlation
+  summarize(correlation = map(data, compute_correlation)) %>%
+  # extract the correlation values into tidy data frame
   unnest(correlation)
 
 correlation_fam_test_overall %>%
   knitr::kable()
 
 correlation_fam_test_by_age <- summarize_participant_test_first_trial %>%
-  select(age_cohort,condition,fam_prop_exit,prop_exit) %>%
-  group_by(age_cohort,condition) %>%
+  select(age_cohort, condition, fam_prop_exit, prop_exit) %>%
+  group_by(age_cohort, condition) %>%
   nest() %>%
-  #use map to compute correlation
-  summarize(correlation=map(data,compute_correlation)) %>%
-  #extract the correlation values into tidy data frame
+  # use map to compute correlation
+  summarize(correlation = map(data, compute_correlation)) %>%
+  # extract the correlation values into tidy data frame
   unnest(correlation)
 
 correlation_fam_test_by_age %>%
   knitr::kable()
 
-saveRDS(correlation_fam_test_by_age, file = here(RESULTS_FOLDER,"correlation_fam_test_by_age.rds"))
-
+saveRDS(correlation_fam_test_by_age, 
+        file = here(RESULTS_FOLDER, "correlation_fam_test_by_age.rds"))
 ```
 
 
@@ -1026,34 +1141,41 @@ saveRDS(correlation_fam_test_by_age, file = here(RESULTS_FOLDER,"correlation_fam
 ## TODO this breaks because the grouping variables data_type, method_c are missing
 ## The ordering of the summarize_participant_* declarations is messed up, so I give up for now
 summarize_test_aoi_method <- summarize_participant_test_first_trial %>%
-  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition,condition_c,data_type,method_c) %>%
+  group_by(age_cohort, lab_id, 
+           participant_lab_id, participant_id, 
+           condition, condition_c, data_type, method_c) %>%
   summarize(
-    n=n(),
-    mean_subj_prop_exit=mean(prop_exit,na.rm=T)
+    n = n(),
+    mean_subj_prop_exit = mean(prop_exit, na.rm = T)
   ) %>%
-  group_by(age_cohort,condition,condition_c, data_type, method_c) %>%
+  group_by(age_cohort, condition, condition_c, data_type, method_c) %>%
   summarize(
-    participant_num=sum(!is.na(mean_subj_prop_exit)),
-    mean_target_looking=mean(mean_subj_prop_exit,na.rm=T),
-    sd_target_looking=sd(mean_subj_prop_exit,na.rm=T),
-     t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu=0.5)))) %>%
+    participant_num = sum(!is.na(mean_subj_prop_exit)),
+    mean_target_looking = mean(mean_subj_prop_exit, na.rm = T),
+    sd_target_looking = sd(mean_subj_prop_exit, na.rm = T),
+    t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu = 0.5)))
+  ) %>%
   mutate(
-    #95% CIs
-    lower_ci_target_looking = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    upper_ci_target_looking = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    #mean_target_looking_general = mean(prop_general, na.rm=T),
-   # sd_target_looking_general=sd(prop_general,na.rm=T),
-    lower_ci_target_looking_general = mean_target_looking - qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    upper_ci_target_looking_general = mean_target_looking + qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking/sqrt(participant_num),
-    p.value = purrr::map(t_test, ~select(.x, c('p.value', 'parameter','statistic')))
+    # 95% CIs
+    lower_ci_target_looking = mean_target_looking - 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking = mean_target_looking +
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    # mean_target_looking_general = mean(prop_general, na.rm=T),
+    # sd_target_looking_general=sd(prop_general,na.rm=T),
+    lower_ci_target_looking_general = mean_target_looking - 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking_general = mean_target_looking + 
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
   ) %>%
   select(-t_test) %>%
   unnest(p.value) %>%
   rename(
-    tval=statistic,
-    df=parameter
+    tval = statistic,
+    df = parameter
   )
-  
+
 
 summarize_test_aoi_method %>%
   knitr::kable()
@@ -1066,76 +1188,86 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #### Toddlers
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_aoi_toddlers_method <- brm(prop_exit ~ 1+condition_c+method_c+condition_c*method_c+(1+condition_c+method_c+condition_c*method_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_toddlers_method <- brm(
+  prop_exit ~ 1 + condition_c + method_c + condition_c * method_c + 
+    (1 + condition_c + method_c + condition_c * method_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
 
-saveRDS(bm_aoi_toddlers_method, file = here(model_fits_dir, "bm_aoi_toddlers_method.rds"))
+saveRDS(bm_aoi_toddlers_method, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_method.rds"))
 ```
 
 Summarize outcomes
 
 ```{r}
-#get_variables(bm_aoi_toddlers)
-#get main coefficient estimate and HDI
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI
 bm_aoi_toddlers_method_condition_effect <- bm_aoi_toddlers_method %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_method_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_method_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_method_condition_effect.rds"))
 
 bm_aoi_toddlers_method_method_effect <- bm_aoi_toddlers_method %>%
   spread_draws(b_method_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_method_method_effect, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_method_effect.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_method_method_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_method_method_effect.rds"))
 
 bm_aoi_toddlers_method_condition_method_interaction <- bm_aoi_toddlers_method %>%
   spread_draws(`b_condition_c:method_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_toddlers_method_condition_method_interaction, file=here(RESULTS_FOLDER,"bm_aoi_toddlers_method_condition_method_interaction.rds"))
+# cache
+saveRDS(bm_aoi_toddlers_method_condition_method_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_method_condition_method_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_method_null <-  update(bm_aoi_toddlers_method, formula = ~ .-condition_c:method_c)
+bm_aoi_toddlers_method_null <- update(bm_aoi_toddlers_method, formula = ~ . - condition_c:method_c)
 summary(bm_aoi_toddlers_method_null)
 
-saveRDS(bm_aoi_toddlers_method_null, file=here(model_fits_dir, "bm_aoi_toddlers_method_null.rds"))
+saveRDS(bm_aoi_toddlers_method_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_method_null.rds"))
 
 test_m_comparison_aoi_toddlers_method <- brms::bayes_factor(bm_aoi_toddlers_method, bm_aoi_toddlers_method_null)
 
-saveRDS(test_m_comparison_aoi_toddlers_method, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_toddlers_method.rds"))
+saveRDS(test_m_comparison_aoi_toddlers_method, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_method.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_toddlers_method)
 rm(bm_aoi_toddlers_method_null)
 gc()
@@ -1144,66 +1276,75 @@ gc()
 #### Adults
 
 ```{r}
-bm_aoi_adults_method <- brm(prop_exit ~ 1+condition_c*method_c+(1+condition_c*method_c|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_first_trial,age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_aoi_adults_method <- brm(
+  prop_exit ~ 1 + condition_c * method_c + 
+    (1 + condition_c * method_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_aoi_adults_method)
 
-saveRDS(bm_aoi_adults_method, file = here(model_fits_dir, "bm_aoi_adults_method.rds"))
+saveRDS(bm_aoi_adults_method, 
+        file = here(model_fits_dir, "bm_aoi_adults_method.rds"))
 ```
 Summarize outcomes
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_aoi_adults_method_condition_effect <- bm_aoi_adults_method %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_method_condition_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_condition_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_method_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_method_condition_effect.rds"))
 
 bm_aoi_adults_method_method_effect <- bm_aoi_adults_method %>%
   spread_draws(b_method_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_method_method_effect, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_method_effect.rds"))
+# cache
+saveRDS(bm_aoi_adults_method_method_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_method_method_effect.rds"))
 
 bm_aoi_adults_method_condition_method_interaction <- bm_aoi_adults_method %>%
   spread_draws(`b_condition_c:method_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_aoi_adults_method_condition_method_interaction, file=here(RESULTS_FOLDER,"bm_aoi_adults_method_condition_method_interaction.rds"))
+# cache
+saveRDS(bm_aoi_adults_method_condition_method_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_method_condition_method_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_method_null <-  update(bm_aoi_adults_method, formula = ~ .-condition_c:method_c)
+bm_aoi_adults_method_null <- update(bm_aoi_adults_method, formula = ~ . - condition_c:method_c)
 summary(bm_aoi_adults_method_null)
 
-saveRDS(bm_aoi_adults_method_null, file=here(model_fits_dir, "bm_aoi_adults_method_null.rds"))
+saveRDS(bm_aoi_adults_method_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_method_null.rds"))
 
 test_m_comparison_aoi_adults_method <- brms::bayes_factor(bm_aoi_adults_method, bm_aoi_adults_method_null)
 
-saveRDS(test_m_comparison_aoi_adults_method, file = here(RESULTS_FOLDER,"test_m_comparison_aoi_adults_method.rds"))
+saveRDS(test_m_comparison_aoi_adults_method, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_method.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_aoi_adults_method)
 rm(bm_aoi_adults_method_null)
 gc()
@@ -1215,66 +1356,73 @@ gc()
 ```{r}
 # AOIs target_box and target_exit - plotting Proportional target looking to box
 
-overall_p_test_box <- ggplot(summarize_participant_test_first_trial, aes(x=condition, y=prop_box,color=condition))+
-  #geom_violin()+
-  #geom_boxplot()+
-  geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
-  ggtitle("Test")+
-  theme(plot.title = element_text(hjust= 0.5, face="bold"))+
+overall_p_test_box <- ggplot(summarize_participant_test_first_trial, 
+                             aes(x = condition, y = prop_box, color = condition)) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, condition == "ignorance"), 
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial, condition == "knowledge"), 
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
+  ggtitle("Test") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   ylab("Proportion Looking to Box\n(Anticipatory Window, First Trial)")
 overall_p_test_box
 
-ggsave(here(plot_path,"overall_p_test_box.png"),bg="white",width=14,height=9)
-#ggsave(here(paper_path,"FigureX.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "overall_p_test_box.png"),
+       bg = "white", width = 14, height = 9)
+# ggsave(here(paper_path,"FigureX.png"),bg="white",width=14, height=9)
 ```
 
 Plot the effect by age
 
 ```{r}
-kid_prop_by_age_box <- ggplot(filter(summarize_participant_test_first_trial,N_exit>=5&age_cohort=="toddlers"),aes(x=age_mo,y=prop_box,color=condition))+
-  geom_hline(yintercept=0.5, linetype="dashed")+
-  geom_point(alpha=0.4)+
-  geom_smooth(method="lm")+
-  xlab("Age (in months)")+
-  ylab("Proportion Looking to Box\n(Anticipatory Window, First Trial)")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")
+kid_prop_by_age_box <- ggplot(filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"), 
+                              aes(x = age_mo, y = prop_box, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm") +
+  xlab("Age (in months)") +
+  ylab("Proportion Looking to Box\n(Anticipatory Window, First Trial)") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
 kid_prop_by_age_box
-ggsave(here(plot_path,"kids_proportion_first_trial_target_box_looking_by_age.png"),bg="white", width = 9, height = 6)
+ggsave(here(plot_path, "kids_proportion_first_trial_target_box_looking_by_age.png"), 
+       bg = "white", width = 9, height = 6)
 ```
 
 Difference in PTL between conditions for boxes smaller than for exits?
 ```{r}
-#something doesn't work in loading all Results RDSs, loading it manually for now here
-summarize_participant_test_first_trial <- readRDS(file=here(RESULTS_FOLDER,"summarize_participant_test_first_trial.rds"))
+# something doesn't work in loading all Results RDSs, loading it manually for now here
+summarize_participant_test_first_trial <- readRDS(file = here(RESULTS_FOLDER, "summarize_participant_test_first_trial.rds"))
 
 diff_box_exit <- summarize_participant_test_first_trial %>%
-  group_by(age_cohort,lab_id,participant_lab_id,participant_id,condition) %>%
+  group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition) %>%
   summarize(
-    n=n(),
-    mean_subj_prop_exit=mean(prop_exit,na.rm=T),
-    mean_subj_prop_box=mean(prop_box,na.rm=T)
+    n = n(),
+    mean_subj_prop_exit = mean(prop_exit, na.rm = T),
+    mean_subj_prop_box = mean(prop_box, na.rm = T)
   ) %>%
-  group_by(age_cohort,condition) %>%
+  group_by(age_cohort, condition) %>%
   summarize(
-    #participant_num=sum(!is.na(mean_subj_prop_exit)),
-    mean_exit_looking=mean(mean_subj_prop_exit,na.rm=T),
-    mean_box_looking=mean(mean_subj_prop_box,na.rm=T)
-    ) %>% 
-  pivot_wider(names_from = condition, values_from = c(mean_exit_looking, mean_box_looking)) %>% 
+    # participant_num=sum(!is.na(mean_subj_prop_exit)),
+    mean_exit_looking = mean(mean_subj_prop_exit, na.rm = T),
+    mean_box_looking = mean(mean_subj_prop_box, na.rm = T)
+  ) %>%
+  pivot_wider(names_from = condition, values_from = c(mean_exit_looking, mean_box_looking)) %>%
   mutate(
-    diff_exit=mean_exit_looking_knowledge-mean_exit_looking_ignorance,
-    diff_box=mean_box_looking_knowledge-mean_box_looking_ignorance)
+    diff_exit = mean_exit_looking_knowledge - mean_exit_looking_ignorance,
+    diff_box = mean_box_looking_knowledge - mean_box_looking_ignorance
+  )
 ```
 Adults: difference between conditions for boxes larger than for exits
 Toddlers: difference between conditions for boxes slightly smaller than for exits
@@ -1305,8 +1453,7 @@ Summarizing a few key decisions:
 - For looking time computation, we compute all samples landing on mouse or bear and multiply by 25 ms (sampling rate of 40).
 
 ```{r}
-
- # Function to compute shifts and fixation times during location change (specified time intervals for each condition)
+# Function to compute shifts and fixation times during location change (specified time intervals for each condition)
 compute_shifts_and_fixation_times <- function(data) {
   # Define time intervals for each condition
   location_changes <- list(
@@ -1314,50 +1461,50 @@ compute_shifts_and_fixation_times <- function(data) {
     knowledge = c(24630, 29000)
   )
   
-   # Initialize an empty data frame to store the results
+  # Initialize an empty data frame to store the results
   results <- data.frame()
   
   # Loop over each condition
   for (condition_new in names(location_changes)) {
     # Get the time interval for the current condition
-  
-  # Get the time interval for the specified condition
-  location_change <- location_changes[[condition_new]]
-
+    
+    # Get the time interval for the specified condition
+    location_change <- location_changes[[condition_new]]
+    
     # Filter the data based on the time interval
-  filtered_data <- data %>%
-    filter(condition==condition_new) %>% 
-    filter(t_zeroed >= location_change[1] & t_zeroed <= location_change[2]) %>%
-    filter(aoi_bearmouse_special %in% c("bear", "mouse")) %>%
-    arrange(participant_lab_id, t_zeroed)
-
+    filtered_data <- data %>%
+      filter(condition == condition_new) %>%
+      filter(t_zeroed >= location_change[1] & t_zeroed <= location_change[2]) %>%
+      filter(aoi_bearmouse_special %in% c("bear", "mouse")) %>%
+      arrange(participant_lab_id, t_zeroed)
+    
     # Calculate number of shifts and fixation times on mouse and bear during location change of mouse
-  condition_results <- filtered_data %>%
-    group_by(participant_lab_id, condition, lab_id, age_cohort) %>%
-    mutate(
-      shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
-    ) %>%
-    summarise(
-      num_shifts = sum(shift, na.rm = TRUE),
-      total_fixation_bear = sum(aoi_bearmouse_special == "bear", na.rm = TRUE)*25,
-      total_fixation_mouse = sum(aoi_bearmouse_special == "mouse", na.rm = TRUE)*25
-    ) %>%
-    ungroup() %>% 
-    mutate(condition = condition_new)
+    condition_results <- filtered_data %>%
+      group_by(participant_lab_id, condition, lab_id, age_cohort) %>%
+      mutate(
+        shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
+      ) %>%
+      summarise(
+        num_shifts = sum(shift, na.rm = TRUE),
+        total_fixation_bear = sum(aoi_bearmouse_special == "bear", na.rm = TRUE) * 25,
+        total_fixation_mouse = sum(aoi_bearmouse_special == "mouse", na.rm = TRUE) * 25
+      ) %>%
+      ungroup() %>%
+      mutate(condition = condition_new)
     results <- bind_rows(results, condition_results)
-  
   }
   
   return(results)
 }
 
 # Apply the function to the dataset for both conditions and center age_cohort
-d_location_change <- compute_shifts_and_fixation_times(test_data) %>% 
+d_location_change <- compute_shifts_and_fixation_times(test_data) %>%
   mutate(
     age_cohort_c = case_when(
-      age_cohort=="toddlers" ~ -0.5,
-      age_cohort=="adults" ~ 0.5)
+      age_cohort == "toddlers" ~ -0.5,
+      age_cohort == "adults" ~ 0.5
     )
+  )
 ```
 
 ```{r}
@@ -1365,143 +1512,165 @@ summarize_overall_test_shifts <- d_location_change %>%
   group_by(age_cohort, condition) %>%
   summarize(
     N = sum(!is.na(num_shifts)),
-    average_shifts = mean(num_shifts,na.rm=T),
+    average_shifts = mean(num_shifts, na.rm = T),
     average_looking_mouse = mean(total_fixation_mouse),
     average_looking_bear = mean(total_fixation_bear)
   )
 
-saveRDS(summarize_overall_test_shifts, file=here(RESULTS_FOLDER,"summarize_overall_test_shifts.rds"))
+saveRDS(summarize_overall_test_shifts, 
+        file = here(RESULTS_FOLDER, "summarize_overall_test_shifts.rds"))
 
-overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
+overall_shifts_location_change <- ggplot(d_location_change, 
+                                         aes(age_cohort, num_shifts, color = age_cohort)) +
   geom_point(position = position_jitter(seed = 2, width = 0.4)) +
   geom_violin(alpha = 0.5) +
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Number of shifts between mouse and bear")
 
- overall_shifts_location_change <- ggplot(d_location_change,aes(age_cohort,num_shifts, color=age_cohort))+
-  geom_quasirandom(method = "pseudorandom", alpha=0.2)+
-  #geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=age_cohort),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
-  theme_cowplot()+
-  theme_set(theme_cowplot(font_size=24))+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  scale_y_continuous(breaks=seq(0,11,1))+
-  #facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
-  xlab("")+
+overall_shifts_location_change <- ggplot(d_location_change, 
+                                         aes(age_cohort, num_shifts, color = age_cohort)) +
+  geom_quasirandom(method = "pseudorandom", alpha = 0.2) +
+  # geom_beeswarm(alpha=0.2,cex=0.5)+
+  geom_half_violin(data = filter(d_location_change, age_cohort == "toddlers"), 
+                   aes(fill = age_cohort), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(d_location_change, age_cohort == "adults"), 
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  theme_cowplot() +
+  theme_set(theme_cowplot(font_size = 24)) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_y_continuous(breaks = seq(0, 11, 1)) +
+  # facet_wrap(~age_cohort)+
+  theme(legend.position = "none") +
+  xlab("") +
   ylab("Number of shifts between mouse and bear")
 
 overall_shifts_location_change
-ggsave(here(plot_path,"overall_shifts_location_change.png"),bg="white",width=9,height=9)
-ggsave(here(paper_path,"Figure6.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "overall_shifts_location_change.png"), 
+       bg = "white", width = 9, height = 9)
+ggsave(here(paper_path, "Figure6.png"), 
+       bg = "white", width = 14, height = 9)
 ```
 
 
 ```{r}
- overall_shifts_location_change_by_condition <- ggplot(d_location_change,aes(condition,num_shifts, color=condition))+
-  geom_quasirandom(method = "pseudorandom", alpha=0.2)+
-  #geom_beeswarm(alpha=0.2,cex=0.5)+
-  geom_half_violin(data=filter(d_location_change,age_cohort=="toddlers"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(d_location_change,age_cohort=="adults"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.2,color="black")+
-  #theme_cowplot()+
-  theme_set(theme_cowplot(font_size=24))+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  scale_y_continuous(breaks=seq(0,11,1))+
-  facet_wrap(~age_cohort)+
-  theme(legend.position="none")+
-  xlab("")+
+overall_shifts_location_change_by_condition <- ggplot(d_location_change, 
+                                                      aes(condition, num_shifts, color = condition)) +
+  geom_quasirandom(method = "pseudorandom", alpha = 0.2) +
+  # geom_beeswarm(alpha=0.2,cex=0.5)+
+  geom_half_violin(data = filter(d_location_change, age_cohort == "toddlers"), 
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(d_location_change, age_cohort == "adults"), 
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  # theme_cowplot()+
+  theme_set(theme_cowplot(font_size = 24)) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_y_continuous(breaks = seq(0, 11, 1)) +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
+  xlab("") +
   ylab("Number of shifts between mouse and bear")
 
 overall_shifts_location_change_by_condition
-ggsave(here(plot_path,"overall_shifts_location_change_by_condition.png"),bg="white",width=9,height=9)
-ggsave(here(paper_path,"Figure6b.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "overall_shifts_location_change_by_condition.png"), 
+       bg = "white", width = 9, height = 9)
+ggsave(here(paper_path, "Figure6b.png"), 
+       bg = "white", width = 14, height = 9)
 ```
 
 ```{r}
+d_location_change <- d_location_change %>%
+  mutate(condition_c = case_when(
+    condition == "knowledge" ~ -0.5,
+    condition == "ignorance" ~ 0.5
+  ))
 
-d_location_change <- d_location_change %>% 
-  mutate(condition_c=case_when(
-    condition=="knowledge" ~ -0.5,
-    condition=="ignorance" ~ 0.5))
-
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_shifts_age_cohort <- brm(num_shifts ~ 1+condition_c+age_cohort_c+condition_c*age_cohort_c+(1 + condition_c + age_cohort_c | lab_id),
-         family=poisson(),
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(d_location_change),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_test_shifts_age_cohort <- brm(
+  num_shifts ~ 1 + condition_c + age_cohort_c + condition_c * age_cohort_c + 
+    (1 + condition_c + age_cohort_c | lab_id),
+  family = poisson(),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(d_location_change),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
 
-saveRDS(bm_test_shifts_age_cohort, file = here(model_fits_dir, "bm_test_shifts_age_cohort.rds"))
+saveRDS(bm_test_shifts_age_cohort, 
+        file = here(model_fits_dir, "bm_test_shifts_age_cohort.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_test_shifts_age_cohort_age_cohort_effect <- bm_test_shifts_age_cohort %>%
   spread_draws(b_age_cohort_c) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_shifts_age_cohort_age_cohort_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_effect.rds"))
+# cache
+saveRDS(bm_test_shifts_age_cohort_age_cohort_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_shifts_age_cohort_age_cohort_effect.rds"))
 
 bm_test_shifts_age_cohort_condition_effect <- bm_test_shifts_age_cohort %>%
   spread_draws(b_condition_c) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_shifts_age_cohort_condition_effect, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_condition_effect.rds"))
+# cache
+saveRDS(bm_test_shifts_age_cohort_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_shifts_age_cohort_condition_effect.rds"))
 
 bm_test_shifts_age_cohort_age_cohort_condition_interaction <- bm_test_shifts_age_cohort %>%
-  #need to use backticks here to extract the interaction term
+  # need to use backticks here to extract the interaction term
   spread_draws(`b_condition_c:age_cohort_c`) %>%
-  mean_hdi(.width = 0.95) 
+  mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction, file=here(RESULTS_FOLDER,"bm_test_shifts_age_cohort_age_cohort_condition_interaction.rds"))
+# cache
+saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction, 
+        file = here(RESULTS_FOLDER, "bm_test_shifts_age_cohort_age_cohort_condition_interaction.rds"))
 ```
 
 Compute Bayes Factor using bridge sampling
 
 ```{r}
-bm_test_shifts_age_cohort_null <-  update(bm_test_shifts_age_cohort, formula = ~ .-condition_c:age_cohort_c)
+bm_test_shifts_age_cohort_null <- update(bm_test_shifts_age_cohort, formula = ~ . - condition_c:age_cohort_c)
 summary(bm_test_shifts_age_cohort_null)
 
-saveRDS(bm_test_shifts_age_cohort_null, file=here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
+saveRDS(bm_test_shifts_age_cohort_null, 
+        file = here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
 
-#MZ: bridge sampling fails here for me
+# MZ: bridge sampling fails here for me
 test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, bm_test_shifts_age_cohort_null)
 
-saveRDS(test_m_comparison_shifts_age_cohort, file=here(RESULTS_FOLDER,"test_m_comparison_shifts_age_cohort.rds"))
+saveRDS(test_m_comparison_shifts_age_cohort, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_test_shifts_age_cohort)
 rm(bm_test_shifts_age_cohort_null)
 gc()
@@ -1514,103 +1683,119 @@ Hypothesis 3: “High-Shifters” (during A to B transfer) have stronger looking
 MSS Could this possibly be a correlation or a model that includes shift_num as fixed effect?
 ```{r}
 # merge AL of test phase with looking behavior during location change
-d_location_change <- d_location_change %>% mutate(diff_mouse_bear = total_fixation_mouse - total_fixation_bear)
+d_location_change <- d_location_change %>% 
+  mutate(diff_mouse_bear = total_fixation_mouse - total_fixation_bear)
 
-summarize_participant_test_both_trials_lc <- summarize_participant_test_both_trials %>% left_join(d_location_change)
+summarize_participant_test_both_trials_lc <- summarize_participant_test_both_trials %>% 
+  left_join(d_location_change)
 
 # plotting AL and number of shifts during location change of mouse
 
-AL_shifts<- ggplot(summarize_participant_test_both_trials_lc,aes(num_shifts, prop_exit, color=condition))+
+AL_shifts <- ggplot(summarize_participant_test_both_trials_lc, 
+                    aes(num_shifts, prop_exit, color = condition)) +
   geom_point() +
-  geom_smooth(method='lm')+
-  facet_wrap(condition~age_cohort)+
-  #scale_color_manual(values=c("#B16440", "#ECB808"))+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  scale_fill_brewer(palette="Set1")+
-  scale_x_continuous(breaks=seq(0,11,1))+
-  scale_y_continuous(breaks=seq(0,1,0.25))+
-  theme_set(theme_cowplot(font_size=24))+
-  theme(legend.position="none")+
-  xlab("Number of shifts during location change of mouse")+
+  geom_smooth(method = "lm") +
+  facet_wrap(condition ~ age_cohort) +
+  # scale_color_manual(values=c("#B16440", "#ECB808"))+
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_x_continuous(breaks = seq(0, 11, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25)) +
+  theme_set(theme_cowplot(font_size = 24)) +
+  theme(legend.position = "none") +
+  xlab("Number of shifts during location change of mouse") +
   ylab("AL in test trials")
 
 AL_shifts
 
-ggsave(here(plot_path,"AL_shifts.png"),bg="white",width=9,height=9)
-ggsave(here(paper_path,"Figure7.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "AL_shifts.png"),
+       bg = "white", width = 9, height = 9)
+ggsave(here(paper_path, "Figure7.png"),
+       bg = "white", width = 14, height = 9)
 ```
 
 #### Toddlers
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_toddlers_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c*num_shifts+(1+condition_c+num_shifts+condition_c*num_shifts|participant_lab_id)+(1+condition_c+num_shifts+condition_c*num_shifts|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_test_toddlers_shifts_al <- brm(
+  prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
+    (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
+    (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
-saveRDS(bm_test_toddlers_shifts_al, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_shifts_al.rds"))
+saveRDS(bm_test_toddlers_shifts_al, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_shifts_al.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_test_toddlers_shifts_al_condition_effect <- bm_test_toddlers_shifts_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_shifts_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_condition_effect.rds"))
+# cache
+saveRDS(bm_test_toddlers_shifts_al_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_shifts_al_condition_effect.rds"))
 
 bm_test_toddlers_shifts_al_num_shifts_effect <- bm_test_toddlers_shifts_al %>%
   spread_draws(b_num_shifts, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_shifts_al_num_shifts_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_num_shifts_effect.rds"))
+# cache
+saveRDS(bm_test_toddlers_shifts_al_num_shifts_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_shifts_al_num_shifts_effect.rds"))
 
 bm_test_toddlers_shifts_al_condition_num_shifts_interaction <- bm_test_toddlers_shifts_al %>%
   spread_draws(`b_condition_c:num_shifts`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_shifts_al_condition_num_shifts_interaction, file=here(RESULTS_FOLDER,"bm_test_toddlers_shifts_al_condition_num_shifts_interaction.rds"))
+# cache
+saveRDS(bm_test_toddlers_shifts_al_condition_num_shifts_interaction, 
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_shifts_al_condition_num_shifts_interaction.rds"))
 ```
 
 Bridge sampling Bayes factor approach
 
 ```{r}
-bm_test_toddlers_shifts_al_null <-  update(bm_test_toddlers_shifts_al, formula = ~ .-condition_c:num_shifts)
+bm_test_toddlers_shifts_al_null <- update(bm_test_toddlers_shifts_al, formula = ~ . - condition_c:num_shifts)
 summary(bm_test_toddlers_shifts_al_null)
 
-saveRDS(bm_test_toddlers_shifts_al_null, file=here(model_fits_dir,"bm_test_toddlers_shifts_al_null.rds"))
+saveRDS(bm_test_toddlers_shifts_al_null, 
+        file = here(model_fits_dir, "bm_test_toddlers_shifts_al_null.rds"))
 
 test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, bm_test_toddlers_shifts_al_null)
-# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. 
-#Estimate might be more variable than usual.
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value.
+# Estimate might be more variable than usual.
 
-saveRDS(test_m_comparison_toddlers_shifts_al, file=here(RESULTS_FOLDER,"test_m_comparison_toddlers_shifts_al.rds"))
+saveRDS(test_m_comparison_toddlers_shifts_al, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_shifts_al.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_test_toddlers_shifts_al)
 rm(bm_test_toddlers_shifts_al_null)
 gc()
@@ -1619,74 +1804,85 @@ gc()
 #### Adults
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_adults_shifts_al <- brm(prop_exit ~ 1+condition_c+num_shifts+condition_c*num_shifts+(1+condition_c+num_shifts+condition_c*num_shifts|participant_lab_id)+(1+condition_c+num_shifts+condition_c*num_shifts|lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 15000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_test_adults_shifts_al <- brm(
+  prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
+    (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
+    (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials_lc, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 15000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
-saveRDS(bm_test_adults_shifts_al, file = here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
+saveRDS(bm_test_adults_shifts_al,
+        file = here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_test_adults_shifts_al_condition_effect <- bm_test_adults_shifts_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_shifts_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_condition_effect.rds"))
+# cache
+saveRDS(bm_test_adults_shifts_al_condition_effect,
+        file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_condition_effect.rds"))
 
 bm_test_adults_shifts_al_num_shifts_effect <- bm_test_adults_shifts_al %>%
   spread_draws(b_num_shifts, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_shifts_al_num_shifts_effect, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_num_shifts_effect.rds"))
+# cache
+saveRDS(bm_test_adults_shifts_al_num_shifts_effect,
+        file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_num_shifts_effect.rds"))
 
 bm_test_adults_shifts_al_condition_num_shits_interaction <- bm_test_adults_shifts_al %>%
   spread_draws(`b_condition_c:num_shifts`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction, file=here(RESULTS_FOLDER,"bm_test_adults_shifts_al_condition_num_shits_interaction.rds"))
+# cache
+saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction,
+        file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_condition_num_shits_interaction.rds"))
 ```
 
 Compute Bayes factor using bridge sampling
 
 ```{r}
-bm_test_adults_shifts_al_null <-  update(bm_test_adults_shifts_al, formula = ~ .-condition_c:num_shifts)
+bm_test_adults_shifts_al_null <- update(bm_test_adults_shifts_al, formula = ~ . - condition_c:num_shifts)
 summary(bm_test_adults_shifts_al_null)
 
-saveRDS(bm_test_adults_shifts_al_null, file=here(model_fits_dir, "bm_test_adults_shifts_al_null.rds"))
+saveRDS(bm_test_adults_shifts_al_null,
+        file = here(model_fits_dir, "bm_test_adults_shifts_al_null.rds"))
 
 test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, bm_test_adults_shifts_al_null)
 # Warning: Infinite value in iterative scheme, returning NA. (for 10000 iterations)
 # Try rerunning with more samples.
-saveRDS(test_m_comparison_adults_shifts_al, file=here(RESULTS_FOLDER,"test_m_comparison_adults_shifts_al.rds"))
+saveRDS(test_m_comparison_adults_shifts_al,
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_test_adults_shifts_al)
 rm(bm_test_adults_shifts_al_null)
 gc()
@@ -1699,142 +1895,162 @@ MSS What is a bear-tracker? Is that a participant whose fixation times for the b
 
 ```{r}
 # Plotting looking times difference in looking time to mouse and bear for each age cohort and each condition
-looking_time_location_change_diff_mouse_bear <- ggplot(d_location_change,aes(condition,diff_mouse_bear,color=condition))+
-geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(d_location_change,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(d_location_change,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  geom_hline(yintercept=0,linetype="dashed")+
-  facet_wrap(~age_cohort)+
-  theme_cowplot()+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+looking_time_location_change_diff_mouse_bear <- ggplot(d_location_change,
+                                                       aes(condition, diff_mouse_bear, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(d_location_change, condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(d_location_change, condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~age_cohort) +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Difference in looking time between mouse and bear")
 
 looking_time_location_change_diff_mouse_bear
 
-ggsave(here(plot_path,"looking_time_location_change_diff_mouse_bear.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "looking_time_location_change_diff_mouse_bear.png"),
+       bg = "white", width = 9, height = 9)
 
- # Plotting looking to mouse and bear for each age cohort and each condition
+# Plotting looking to mouse and bear for each age cohort and each condition
 d_location_change_long <- d_location_change %>% pivot_longer(
-    cols = c("total_fixation_mouse", "total_fixation_bear"),
-    names_to = "target",
-    names_prefix = "total_fixation_",
-    values_to = "looking_time",
-    values_drop_na = TRUE)
+  cols = c("total_fixation_mouse", "total_fixation_bear"),
+  names_to = "target",
+  names_prefix = "total_fixation_",
+  values_to = "looking_time",
+  values_drop_na = TRUE
+)
 
-looking_time_location_change_bear_mouse <-  ggplot(d_location_change_long,aes(target,looking_time,color=target))+
+looking_time_location_change_bear_mouse <- ggplot(d_location_change_long,
+                                                  aes(target, looking_time, color = target)) +
   geom_point(position = position_jitter(seed = 2, width = 0.4)) +
   geom_violin(alpha = 0.5) +
   # geom_half_violin(data=filter(d_location_change_long,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
   # geom_half_violin(data=filter(d_location_change_long,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
   # geom_half_boxplot(data=filter(d_location_change_long,condition=="ignorance"),side="l",nudge=0.15,width=0.4,errorbar.draw=F)+
   # geom_half_boxplot(data=filter(d_location_change_long,condition=="knowledge"),side="r",nudge=0.15,width=0.4,errorbar.draw=F)+
-  stat_summary(fun.data="mean_cl_boot",size=1.5,color="black")+
-  facet_wrap(condition~age_cohort)+
-  theme_cowplot()+
-  scale_color_manual(values=c("#B16440", "#ECB808"))+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
+  facet_wrap(condition ~ age_cohort) +
+  theme_cowplot() +
+  scale_color_manual(values = c("#B16440", "#ECB808")) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Looking times during location change of mouse (in ms)")
 
 looking_time_location_change_bear_mouse
 
-ggsave(here(plot_path,"looking_time_location_change_bear_mouse.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "looking_time_location_change_bear_mouse.png"),
+       bg = "white", width = 9, height = 9)
 ```
 
 ```{r}
-
 # plotting AL and difference in looking time during location change of mouse
 
-AL_diff_mouse_bear<- ggplot(summarize_participant_test_both_trials_lc,aes(diff_mouse_bear, prop_exit, color=condition))+
-  geom_point(size = 3, alpha= 0.5) +
-  geom_smooth(method='lm')+
-  facet_wrap(condition~age_cohort)+
-  theme_set(theme_cowplot(font_size=24))+
-  geom_hline(yintercept=0.5,linetype="dashed")+
-  scale_fill_brewer(palette="Set1")+
-  xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)")+
+AL_diff_mouse_bear <- ggplot(summarize_participant_test_both_trials_lc,
+                             aes(diff_mouse_bear, prop_exit, color = condition)) +
+  geom_point(size = 3, alpha = 0.5) +
+  geom_smooth(method = "lm") +
+  facet_wrap(condition ~ age_cohort) +
+  theme_set(theme_cowplot(font_size = 24)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)") +
   ylab("AL in test trials")
 
 AL_diff_mouse_bear
 
-ggsave(here(plot_path,"AL_diff_mouse_bear.png"),bg="white",width=14,height=9)
-ggsave(here(paper_path,"Figure8.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "AL_diff_mouse_bear.png"),
+       bg = "white", width = 14, height = 9)
+ggsave(here(paper_path, "Figure8.png"),
+       bg = "white", width = 14, height = 9)
 ```
 #### Toddlers
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_toddlers_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_bear+condition_c*diff_mouse_bear+(1+condition_c*diff_mouse_bear|lab_id)+(1+condition_c+diff_mouse_bear+condition_c*diff_mouse_bear|participant_lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_lc, age_cohort=="toddlers"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
-#Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
-#https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
-#Warning: Examine the pairs() plot to diagnose sampling problems
+bm_test_toddlers_diff_mouse_bear_al <- brm(
+  prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear + 
+    (1 + condition_c * diff_mouse_bear | lab_id) +
+    (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
+# Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12.
+# See https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+# Warning: Examine the pairs() plot to diagnose sampling problems
 summary(bm_test_toddlers_diff_mouse_bear_al)
 prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
-saveRDS(bm_test_toddlers_diff_mouse_bear_al, file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_toddlers_diff_mouse_bear_al,
+        file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_test_toddlers_diff_mouse_bear_al_condition_effect <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_condition_effect.rds"))
+# cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_effect,
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_condition_effect.rds"))
 
 bm_test_toddlers_diff_mouse_bear_al_diff_effect <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(b_diff_mouse_bear, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_diff_mouse_bear_al_diff_effect, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_diff_effect.rds"))
+# cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_diff_effect,
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_diff_effect.rds"))
 
 bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction <- bm_test_toddlers_diff_mouse_bear_al %>%
   spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction, file=here(RESULTS_FOLDER,"bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction.rds"))
+# cache
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction,
+        file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction.rds"))
 ```
 
 Bridge sampling Bayes factor approach
 
 ```{r}
-bm_test_toddlers_diff_mouse_bear_al_null <-  update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear, cores = 4)
+bm_test_toddlers_diff_mouse_bear_al_null <- update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ . - condition_c:diff_mouse_bear, cores = 4)
 summary(bm_test_toddlers_diff_mouse_bear_al_null)
 
-saveRDS(bm_test_toddlers_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_null,
+        file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
 
 test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, bm_test_toddlers_diff_mouse_bear_al_null)
 
-saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
+saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al,
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_test_toddlers_diff_mouse_bear_al)
 rm(bm_test_toddlers_diff_mouse_bear_al_null)
 gc()
@@ -1843,77 +2059,88 @@ gc()
 #### Adults
 
 ```{r}
-#set the prior
-priors <-c(
-  set_prior("uniform(0, 1)", lb=0,ub=1,class = "Intercept"), #uniform distribution for intercept
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
   set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), #normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")) # lkj distribution for covariance matrix/Cholesky Factor?
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
 
-bm_test_adults_diff_mouse_bear_al <- brm(prop_exit ~ 1+condition_c+diff_mouse_bear+condition_c*diff_mouse_bear+(1+condition_c*diff_mouse_bear|lab_id)+(1+condition_c+diff_mouse_bear+condition_c*diff_mouse_bear|participant_lab_id),
-         family=gaussian,
-         prior = priors,
-         save_pars = save_pars(all = TRUE),
-        filter(summarize_participant_test_both_trials_lc, age_cohort=="adults"),
-        warmup = 1000, 
-        iter = 10000, 
-        chains = 4,
-        backend = cur_backend, 
-        cores = n_cores,
-        seed = 123,
-        sample_prior=TRUE,
-        control = default_control_list)
+bm_test_adults_diff_mouse_bear_al <- brm(
+  prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear +
+    (1 + condition_c * diff_mouse_bear | lab_id) +
+    (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_both_trials_lc, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
 
-saveRDS(bm_test_adults_diff_mouse_bear_al, file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
+saveRDS(bm_test_adults_diff_mouse_bear_al,
+        file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
 ```
 
 ```{r}
-#get main coefficient estimate and HDI
+# get main coefficient estimate and HDI
 bm_test_adults_diff_mouse_bear_al_condition_effect <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_condition_effect.rds"))
+# cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect,
+        file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_condition_effect.rds"))
 
 bm_test_adults_diff_mouse_bear_al_diff_effect <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(b_diff_mouse_bear, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_diff_mouse_bear_al_diff_effect, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_diff_effect.rds"))
+# cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_diff_effect,
+        file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_diff_effect.rds"))
 
 bm_test_adults_diff_mouse_bear_al_condition_diff_interaction <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
   mean_hdi(.width = 0.95)
 
-#cache
-saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction, file=here(RESULTS_FOLDER,"bm_test_adults_diff_mouse_bear_al_condition_diff_interaction.rds"))
+# cache
+saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction,
+        file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_condition_diff_interaction.rds"))
 ```
 
 Alternate Bayes factor approach
 
 ```{r}
 # Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
-See https://mc-stan.org/misc/warnings for details.
-bm_test_adults_diff_mouse_bear_al_null <-  update(bm_test_adults_diff_mouse_bear_al, formula = ~ .-condition_c:diff_mouse_bear)
+# See https://mc-stan.org/misc/warnings for details.
+bm_test_adults_diff_mouse_bear_al_null <- update(bm_test_adults_diff_mouse_bear_al, formula = ~ . - condition_c:diff_mouse_bear)
 summary(bm_test_adults_diff_mouse_bear_al_null)
 
-saveRDS(bm_test_adults_diff_mouse_bear_al_null, file=here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
+saveRDS(bm_test_adults_diff_mouse_bear_al_null,
+        file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
 
-#Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
 test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_null)
 
-saveRDS(test_m_comparison_adults_diff_mouse_bear_al, file=here(RESULTS_FOLDER,"test_m_comparison_adults_diff_mouse_bear_al.rds"))
+saveRDS(test_m_comparison_adults_diff_mouse_bear_al,
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al.rds"))
 ```
 
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
-#remove Bayes model fits
+# remove Bayes model fits
 rm(bm_test_adults_diff_mouse_bear_al)
 rm(bm_test_adults_diff_mouse_bear_al_null)
 gc()
@@ -1926,98 +2153,115 @@ Do Toddlers and Adults differ in overall amount of AL over trials?
 
 
 ```{r}
-Looking_all_trials <- ggplot(summarize_participant,aes(as.factor(trial_num),absolute_looking))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant,trial_num=="1"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-    geom_half_violin(data=filter(summarize_participant,trial_num=="2"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-    geom_half_violin(data=filter(summarize_participant,trial_num=="3"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-    geom_half_violin(data=filter(summarize_participant,trial_num=="4"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-    geom_half_violin(data=filter(summarize_participant,trial_num=="5"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-    geom_half_violin(data=filter(summarize_participant,trial_num=="6"),aes(fill=age_cohort),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  facet_wrap(~age_cohort)+
-  theme_set(theme_cowplot(font_size=24))+
-  geom_hline(yintercept=0,linetype="dashed")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  xlab("Trial number")+
+Looking_all_trials <- ggplot(summarize_participant,
+                             aes(as.factor(trial_num), absolute_looking)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "1"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "2"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "3"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "4"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "5"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant, trial_num == "6"),
+                   aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  facet_wrap(~age_cohort) +
+  theme_set(theme_cowplot(font_size = 24)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  xlab("Trial number") +
   ylab("Absolute looking times to target and distractor (in ms)")
 
 Looking_all_trials
 
-ggsave(here(plot_path,"Looking_all_trials.png"),bg="white",width=14,height=9)
-#ggsave(here(paper_path,"FigureX.png"),bg="white",width=14, height=9)
+ggsave(here(plot_path, "Looking_all_trials.png"),
+       bg = "white", width = 14, height = 9)
+# ggsave(here(paper_path,"FigureX.png"),bg="white",width=14, height=9)
 ```
 
 ## 7. Analyze sub-intervals of anticipatory period: 1st half vs. 2nd half
 run confirmatory analyses per time window
 
 ```{r}
-#filter to first trials
+# filter to first trials
 test_data_first_trial <- test_data %>%
-  #filter to first trial only
-  filter(trial_num==5)
+  # filter to first trial only
+  filter(trial_num == 5)
 
 summarize_participant_test_first_trial_half <- test_data_first_trial %>%
-  group_by(lab_id,age_cohort,age_mo,age_years_n,participant_lab_id,participant_id,participant_trial_id,trial_file_name,
-           bear_not_visible_ms,point_of_disambiguation,video_duration_ms,condition, data_type, trial_num) %>%
-  #filter to relevant anticipatory window
+  group_by(
+    lab_id, age_cohort, age_mo, age_years_n, participant_lab_id, participant_id, participant_trial_id, trial_file_name,
+    bear_not_visible_ms, point_of_disambiguation, video_duration_ms, condition, data_type, trial_num
+  ) %>%
+  # filter to relevant anticipatory window
   # based on current format, t_norm == 0 is the point of disambiguation
   # so we want the 4000 ms leading up, minus 120 ms of saccade/ planning time
-  #check this!!!
-  filter(t_norm<=120 & t_norm>=-3880) %>%
+  # check this!!!
+  filter(t_norm <= 120 & t_norm >= -3880) %>%
   mutate(
-    aoi_diff = c(0,diff(as.numeric(as.factor(aoi))))
+    aoi_diff = c(0, diff(as.numeric(as.factor(aoi))))
   ) %>%
-  mutate(analysis_window=case_when(
-    t_norm>=-3880 & t_norm<=-1880 ~ 1,
-    t_norm>-1880 & t_norm<=120 ~ 2))%>%
-  group_by(lab_id,age_cohort,participant_lab_id,condition,age_mo,analysis_window, data_type) %>%
+  mutate(analysis_window = case_when(
+    t_norm >= -3880 & t_norm <= -1880 ~ 1,
+    t_norm > -1880 & t_norm <= 120 ~ 2
+  )) %>%
+  group_by(lab_id, age_cohort, participant_lab_id, condition, age_mo, analysis_window, data_type) %>%
   summarize(
-    t_min=min(t_norm),
-    t_max=max(t_norm),
-    sum_target_general = sum(aoi=="target_general",na.rm=T),
-    sum_distractor_general = sum(aoi=="distractor_general",na.rm=T),
-    prop_general = sum_target_general/(sum_target_general+sum_distractor_general),
-    sum_target_exit = sum(aoi=="target_exit",na.rm=T),
-    sum_target_box = sum(aoi=="target_box",na.rm=T),
-    sum_distractor_exit = sum(aoi=="distractor_exit",na.rm=T),
-    sum_distractor_box = sum(aoi=="distractor_box",na.rm=T),
-    prop_exit = sum_target_exit/(sum_target_exit+sum_distractor_exit),
-    prop_box = sum_target_box/(sum_target_box+sum_distractor_box),
-    N_general = sum_target_general+sum_distractor_general,
-    N_exit = sum_target_exit+sum_distractor_exit,
-    N_box = sum_target_box+sum_distractor_box
+    t_min = min(t_norm),
+    t_max = max(t_norm),
+    sum_target_general = sum(aoi == "target_general", na.rm = T),
+    sum_distractor_general = sum(aoi == "distractor_general", na.rm = T),
+    prop_general = sum_target_general / (sum_target_general + sum_distractor_general),
+    sum_target_exit = sum(aoi == "target_exit", na.rm = T),
+    sum_target_box = sum(aoi == "target_box", na.rm = T),
+    sum_distractor_exit = sum(aoi == "distractor_exit", na.rm = T),
+    sum_distractor_box = sum(aoi == "distractor_box", na.rm = T),
+    prop_exit = sum_target_exit / (sum_target_exit + sum_distractor_exit),
+    prop_box = sum_target_box / (sum_target_box + sum_distractor_box),
+    N_general = sum_target_general + sum_distractor_general,
+    N_exit = sum_target_exit + sum_distractor_exit,
+    N_box = sum_target_box + sum_distractor_box
   ) %>%
   ungroup() %>%
-  #center age, condition, and method
+  # center age, condition, and method
   mutate(
-    age_mo_c = age_mo - mean(age_mo,na.rm=TRUE),
+    age_mo_c = age_mo - mean(age_mo, na.rm = TRUE),
     condition_c = case_when(
-      condition=="knowledge" ~ -0.5,
-      condition=="ignorance" ~ 0.5),
+      condition == "knowledge" ~ -0.5,
+      condition == "ignorance" ~ 0.5
+    ),
     method_c = case_when( # MSS: why do we have two variables for method/data_type?
-      data_type=="web-based" ~ -0.5,
-      data_type=="in-lab" ~ 0.5)
+      data_type == "web-based" ~ -0.5,
+      data_type == "in-lab" ~ 0.5
+    )
   )
 
-test_first_trial_half <- ggplot(summarize_participant_test_first_trial_half,aes(as.factor(analysis_window),prop_exit,color=condition))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_half,analysis_window=="1"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_half,analysis_window=="2"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-    geom_hline(yintercept=0.5,linetype="dashed")+
-  theme_cowplot()+
-  facet_wrap(condition~age_cohort)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
-  xlab("Analysis window")+
+test_first_trial_half <- ggplot(summarize_participant_test_first_trial_half,
+                                aes(as.factor(analysis_window), prop_exit, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_half, analysis_window == "1"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_half, analysis_window == "2"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  facet_wrap(condition ~ age_cohort) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  xlab("Analysis window") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 
 test_first_trial_half
 
-ggsave(here(plot_path,"test_first_trial_half.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "test_first_trial_half.png"),
+       bg = "white", width = 9, height = 9)
 ```
 
 ## 8. AOI “box”
@@ -2027,30 +2271,36 @@ compare looks to target box between KNOW and IG: difference in “reality bias�
 Hypothesis: Longer latency  in KNOW vs. IG
 
 ```{r}
-#compute N and mean per age_cohort and group
+# compute N and mean per age_cohort and group
 summarize_overall_test_first_look_latency_correct <- summarize_participant_test_first_look %>%
-  group_by(age_cohort,condition) %>%
+  group_by(age_cohort, condition) %>%
   summarize(
     N = sum(!is.na(average_rt_correct)),
-    average_target_rt = mean(average_rt_correct,na.rm=T)) 
+    average_target_rt = mean(average_rt_correct, na.rm = T)
+  )
 
-saveRDS(summarize_overall_test_first_look_latency_correct, file=here(RESULTS_FOLDER,"summarize_overall_test_first_look_latency_correct.rds"))
+saveRDS(summarize_overall_test_first_look_latency_correct,
+        file = here(RESULTS_FOLDER, "summarize_overall_test_first_look_latency_correct.rds"))
 
-latency_first_look_target_AOI <- ggplot(summarize_participant_test_first_look,aes(condition,average_rt_correct,color=condition))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_look,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  theme_set(theme_cowplot(font_size=24))+
-  facet_wrap(~age_cohort)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+latency_first_look_target_AOI <- ggplot(summarize_participant_test_first_look,
+                                        aes(condition, average_rt_correct, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_look, condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_look, condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  theme_set(theme_cowplot(font_size = 24)) +
+  facet_wrap(~age_cohort) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Latency of First Look to Target Exit (in ms)")
 
 latency_first_look_target_AOI
 
-ggsave(here(plot_path,"latency_first_look_target_AOI.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "latency_first_look_target_AOI.png"),
+       bg = "white", width = 9, height = 9)
 ```
 
 
@@ -2059,62 +2309,78 @@ ggsave(here(plot_path,"latency_first_look_target_AOI.png"),bg="white",width=9,he
 Compute absolute looking scores to target and distractor
 
 ```{r}
-summarize_participant_test_first_trial_absolute <- summarize_participant_test_first_trial %>% 
+summarize_participant_test_first_trial_absolute <- summarize_participant_test_first_trial %>%
   group_by(participant_lab_id, condition) %>%
-  mutate(absolute_target_looking=sum_target_exit*40,
-         absolute_distractor_looking=sum_distractor_exit*40,
-         diff_target_distractor_looking=absolute_target_looking-absolute_distractor_looking)
+  mutate(
+    absolute_target_looking = sum_target_exit * 40,
+    absolute_distractor_looking = sum_distractor_exit * 40,
+    diff_target_distractor_looking = absolute_target_looking - absolute_distractor_looking
+  )
 
-summarize_overall_test_first_trial_absolute <- summarize_participant_test_first_trial_absolute %>% 
+summarize_overall_test_first_trial_absolute <- summarize_participant_test_first_trial_absolute %>%
   group_by(age_cohort, condition) %>%
-  summarise(n=length(unique(participant_lab_id)),
-         average_absolute_target_looking=mean(absolute_target_looking),
-         average_absolute_distractor_looking=mean(absolute_distractor_looking),
-         average_diff_target_distractor_looking=mean(diff_target_distractor_looking))
+  summarise(
+    n = length(unique(participant_lab_id)),
+    average_absolute_target_looking = mean(absolute_target_looking),
+    average_absolute_distractor_looking = mean(absolute_distractor_looking),
+    average_diff_target_distractor_looking = mean(diff_target_distractor_looking)
+  )
 
-test_first_trial_absolute_target_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,absolute_target_looking,color=condition))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  theme_set(theme_cowplot(font_size=24))+
-  facet_wrap(~age_cohort)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+test_first_trial_absolute_target_looking <- ggplot(summarize_participant_test_first_trial_absolute,
+                                                   aes(condition, absolute_target_looking, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  theme_set(theme_cowplot(font_size = 24)) +
+  facet_wrap(~age_cohort) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Looking Time to Target Exit (in ms)")
 
 test_first_trial_absolute_target_looking
-ggsave(here(plot_path,"test_first_trial_absolute_target_looking.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "test_first_trial_absolute_target_looking.png"),
+       bg = "white", width = 9, height = 9)
 
-test_first_trial_absolute_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,absolute_distractor_looking,color=condition))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  theme_set(theme_cowplot(font_size=24))+
-  facet_wrap(~age_cohort)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+test_first_trial_absolute_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,
+                                                       aes(condition, absolute_distractor_looking, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  theme_set(theme_cowplot(font_size = 24)) +
+  facet_wrap(~age_cohort) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Looking Time to Distractor Exit (in ms)")
 
 test_first_trial_absolute_distractor_looking
-ggsave(here(plot_path,"test_first_trial_absolute_distractor_looking.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "test_first_trial_absolute_distractor_looking.png"),
+       bg = "white", width = 9, height = 9)
 
-test_first_trial_diff_target_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,aes(condition,diff_target_distractor_looking,color=condition))+
-  geom_beeswarm(alpha=0.2,cex=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="ignorance"),aes(fill=condition),side="l",nudge=0.3,width=0.4,alpha=0.2)+
-  geom_half_violin(data=filter(summarize_participant_test_first_trial_absolute,condition=="knowledge"),aes(fill=condition),side="r",nudge=0.3,width=0.4,alpha=0.2)+
-  stat_summary(fun.data="mean_cl_boot",size=1,color="black")+
-  geom_hline(yintercept=0,linetype="dashed")+
-  theme_set(theme_cowplot(font_size=24))+
-  facet_wrap(~age_cohort)+
-  scale_color_brewer(palette="Set1")+
-  scale_fill_brewer(palette="Set1")+
-  theme(legend.position="none")+
+test_first_trial_diff_target_distractor_looking <- ggplot(summarize_participant_test_first_trial_absolute,
+                                                          aes(condition, diff_target_distractor_looking, color = condition)) +
+  geom_beeswarm(alpha = 0.2, cex = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "ignorance"),
+                   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_absolute, condition == "knowledge"),
+                   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_set(theme_cowplot(font_size = 24)) +
+  facet_wrap(~age_cohort) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
   ylab("Difference in Looking Time to\nTarget and Distractor Exit (in ms)")
 
 test_first_trial_diff_target_distractor_looking
-ggsave(here(plot_path,"test_first_trial_diff_target_distractor_looking.png"),bg="white",width=9,height=9)
+ggsave(here(plot_path, "test_first_trial_diff_target_distractor_looking.png"),
+       bg = "white", width = 9, height = 9)
 ```
