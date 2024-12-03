@@ -462,9 +462,7 @@ rm(bm_aoi_adults_both_null)
 gc()
 ```
 
-## 1.b. whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect)
-
-## MZ this needs further discussion - I'm not sure how to parse what is in the preregistration, but my reading is that at least for (2), and perhaps for (3), we are asking about a trial number by condition effect (not the "order" as defined here)
+## 1.b. whether effects are magnified or diminished on the second trial (order main effect)
 
 ```{r}
 # create test_trial number variable
@@ -678,6 +676,176 @@ rm(bm_aoi_adults_both_order_null)
 gc()
 ```
 
+### 1.c. whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect)
+
+```{r}
+# create variable for first and second trial prop exit
+
+summarize_participant_test_second_trial <-   summarize_participant_test_both_trials %>%
+  filter(test_trial_num==2) 
+
+summarize_participant_test_first_test_trial <- summarize_participant_test_both_trials %>% filter(test_trial_num==1) %>% select(age_cohort, lab_id, participant_id, participant_lab_id, prop_exit) %>%
+  rename(first_trial_prop_exit = prop_exit)
+  
+summarize_participant_test_second_trial <-  summarize_participant_test_second_trial %>%  left_join(summarize_participant_test_first_test_trial)
+```
+
+#### Main Model
+
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) and first-test trial anticipatory looking on second-trial proportion target looking during the anticipatory window for only those participants who anticipated correctly during the last familiarization trial (trial 4, first look to target).
+
+##### Toddlers
+
+```{r}
+# set the prior
+priors <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_aoi_toddlers_second_trial <- brm(
+  prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
+    (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_second_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
+summary(bm_aoi_toddlers_second_trial)
+
+saveRDS(bm_aoi_toddlers_second_trial, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_second_trial.rds"))
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI for condition effect
+bm_aoi_toddlers_second_trial_condition_effect <- bm_aoi_toddlers_second_trial %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_second_trial_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_second_trial_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for correct first look final fam trial effect
+bm_aoi_toddlers_second_trial_first_trial_prop_exit_effect <- bm_aoi_toddlers_second_trial %>%
+  spread_draws(b_first_trial_prop_exit, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_second_trial_first_trial_prop_exit_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_second_trial_first_trial_prop_exit_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_interaction <- bm_aoi_toddlers_second_trial %>%
+  spread_draws(`b_condition_c:first_trial_prop_exit`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_interaction.rds"))
+```
+
+Compute the Bayes factor using bridge sampling
+
+```{r}
+bm_aoi_toddlers_second_trial_null <- update(bm_aoi_toddlers_second_trial, formula = ~ . - condition_c * first_trial_prop_exit)
+summary(bm_aoi_toddlers_second_trial_null)
+
+saveRDS(bm_aoi_toddlers_second_trial_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_second_trial_null.rds"))
+
+test_m_comparison_aoi_toddlers_second_trial <- brms::bayes_factor(bm_aoi_toddlers_second_trial, bm_aoi_toddlers_second_trial_null)
+
+saveRDS(test_m_comparison_aoi_toddlers_second_trial, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial.rds"))
+```
+
+##### Adults
+
+```{r}
+bm_aoi_adults_second_trial <- brm(
+  prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
+    (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_second_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
+summary(bm_aoi_adults_second_trial)
+
+saveRDS(bm_aoi_adults_second_trial, 
+        file = here(model_fits_dir, "bm_aoi_adults_second_trial.rds"))
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_aoi_adults)
+# get main coefficient estimate and HDI for condition effect
+bm_aoi_adults_second_trial_condition_effect <- bm_aoi_adults_second_trial %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_second_trial_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_second_trial_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for correct first look final fam trial effect
+bm_aoi_adults_second_trial_first_trial_prop_exit_effect <- bm_aoi_adults_second_trial %>%
+  spread_draws(b_first_trial_prop_exit, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_second_trial_first_trial_prop_exit_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_second_trial_first_trial_prop_exit_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction <- bm_aoi_adults_second_trial %>%
+  spread_draws(`b_condition_c:first_trial_prop_exit`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction.rds"))
+```
+
+Compute the Bayes factor using bridge sampling
+
+```{r}
+bm_aoi_adults_second_trial_null <- update(bm_aoi_adults_second_trial, formula = ~ . - condition_c * first_trial_prop_exit)
+summary(bm_aoi_adults_second_trial_null)
+
+saveRDS(bm_aoi_adults_second_trial_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_second_trial_null.rds"))
+
+test_m_comparison_aoi_adults_second_trial <- brms::bayes_factor(bm_aoi_adults_second_trial, bm_aoi_adults_second_trial_null)
+
+saveRDS(test_m_comparison_aoi_adults_second_trial, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial.rds"))
+```
+
 ## 2. Connections between familiarization and test
 
 We will explore whether condition differences vary for participants who show higher rates of anticipation during the four familiarization trials. For example, we might group participants according to whether they did or did not show correct AL at the end of the familiarization phase, defined as overall longer looking at the correct AOI than the incorrect AOI on average in trials 3 and 4 of the familiarization phase.
@@ -703,6 +871,14 @@ correct_first_looks_final_fam_trial <- summarize_first_looks_fam_trials %>%
 # join in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
   left_join(correct_first_looks_final_fam_trial)
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  mutate(correct_first_look_final_fam_trial_c = case_when(
+    correct_first_look_final_fam_trial == 1 ~ 0.5,
+    correct_first_look_final_fam_trial == 0 ~ -0.5,
+    TRUE ~ NA
+  ))
+
+# join in to test trial
 summarize_participant_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
   left_join(correct_first_looks_final_fam_trial)
 
@@ -764,12 +940,12 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_aoi_toddlers_correct_final_fam_trial <- brm(
-  prop_exit ~ 1 + condition_c +
-    (1 + condition_c | lab_id),
+  prop_exit ~ 1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
+    (1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers" & correct_first_look_final_fam_trial == 1),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
   warmup = 1000,
   iter = 10000,
   chains = 4,
@@ -789,7 +965,7 @@ Summarize outcomes
 
 ```{r}
 # get_variables(bm_aoi_toddlers)
-# get main coefficient estimate and HDI
+# get main coefficient estimate and HDI for condition effect
 bm_aoi_toddlers_correct_final_fam_trial_condition_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
@@ -797,12 +973,30 @@ bm_aoi_toddlers_correct_final_fam_trial_condition_effect <- bm_aoi_toddlers_corr
 # cache
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_effect, 
         file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for correct first look final fam trial effect
+bm_aoi_toddlers_correct_final_fam_trial_correct_first_look_final_fam_trial_effect <- bm_aoi_toddlers_correct_final_fam_trial %>%
+  spread_draws(b_correct_first_look_final_fam_trial_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_correct_first_look_final_fam_trial_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_correct_first_look_final_fam_trial_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction <- bm_aoi_toddlers_correct_final_fam_trial %>%
+  spread_draws(`b_condition_c:correct_first_look_final_fam_trial_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ . - condition_c)
+bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ . - condition_c * correct_first_look_final_fam_trial_c)
 summary(bm_aoi_toddlers_correct_final_fam_trial_null)
 
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, 
@@ -827,12 +1021,12 @@ gc()
 
 ```{r}
 bm_aoi_adults_correct_final_fam_trial <- brm(
-  prop_exit ~ 1 + condition_c +
-    (1 + condition_c | lab_id),
+  prop_exit ~ 1 + condition_c + + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
+    (1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "adults" & correct_first_look_final_fam_trial == 1),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
   warmup = 1000,
   iter = 10000,
   chains = 4,
@@ -857,12 +1051,30 @@ bm_aoi_adults_correct_final_fam_trial_condition_effect <- bm_aoi_adults_correct_
 # cache
 saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect, 
         file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for correct first look final fam trial effect
+bm_aoi_adults_correct_final_fam_trial_correct_first_look_final_fam_trial_effect <- bm_aoi_adults_correct_final_fam_trial %>%
+  spread_draws(b_correct_first_look_final_fam_trial_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_correct_final_fam_trial_correct_first_look_final_fam_trial_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_correct_first_look_final_fam_trial_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_adults_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction <- bm_aoi_adults_correct_final_fam_trial %>%
+  spread_draws(`b_condition_c:correct_first_look_final_fam_trial_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, formula = ~ . - condition_c)
+bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, formula = ~ . - condition_c * correct_first_look_final_fam_trial_c)
 summary(bm_aoi_adults_correct_final_fam_trial_null)
 
 saveRDS(bm_aoi_adults_correct_final_fam_trial_null, 
@@ -890,7 +1102,12 @@ gc()
 ```{r}
 # join overall familiarization looking in to test trial
 summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
-  left_join(summarize_participant_familiarization_overall)
+  left_join(summarize_participant_familiarization_overall) %>%
+  mutate(successful_fam_anticipation_c = case_when(
+    fam_prop_exit > 0.5 ~ 0.5,
+    fam_prop_exit <= 0.5 ~ -0.5,
+    TRUE ~ NA
+  ))
 
 # overall plot
 # plot average proportion looking
@@ -949,12 +1166,12 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(
-  prop_exit ~ 1 + condition_c +
-    (1 + condition_c | lab_id),
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers" & fam_prop_exit > 0.5),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
   warmup = 1000,
   iter = 10000,
   chains = 4,
@@ -982,12 +1199,30 @@ bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect <- bm_aoi_toddlers_
 # cache
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, 
         file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for successful fam anticipation effect
+bm_aoi_toddlers_sufficient_fam_prop_looking_successful_fam_anticipation_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(b_successful_fam_anticipation_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_successful_fam_anticipation_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_successful_fam_anticipation_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_toddlers_sufficient_fam_prop_looking_condition_successful_fam_anticipation_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking %>%
+  spread_draws(`b_condition_c:successful_fam_anticipation_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_condition_successful_fam_anticipation_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_sufficient_fam_prop_looking_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ . - condition_c)
+bm_aoi_toddlers_sufficient_fam_prop_looking_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ . - condition_c * successful_fam_anticipation_c)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, 
@@ -1013,12 +1248,12 @@ gc()
 
 ```{r}
 bm_aoi_adults_sufficient_fam_prop_looking <- brm(
-  prop_exit ~ 1 + condition_c + 
-    (1 + condition_c | lab_id),
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "adults" & fam_prop_exit >= 0.5),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
   warmup = 1000,
   iter = 10000,
   chains = 4,
@@ -1043,12 +1278,31 @@ bm_aoi_adults_sufficient_fam_prop_looking_condition_effect <- bm_aoi_adults_suff
 # cache
 saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect, 
         file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_condition_effect.rds"))
+
+
+# get main coefficient estimate and HDI for successful fam anticipation effect
+bm_aoi_adults_sufficient_fam_prop_looking_successful_fam_anticipation_effect <- bm_aoi_adults_sufficient_fam_prop_looking %>%
+  spread_draws(b_successful_fam_anticipation_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_successful_fam_anticipation_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_successful_fam_anticipation_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_adults_sufficient_fam_prop_looking_condition_successful_fam_anticipation_effect <- bm_aoi_adults_sufficient_fam_prop_looking %>%
+  spread_draws(`b_condition_c:successful_fam_anticipation_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_condition_successful_fam_anticipation_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_sufficient_fam_prop_looking_null <- update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ . - condition_c)
+bm_aoi_adults_sufficient_fam_prop_looking_null <- update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ . - condition_c * successful_fam_anticipation_c)
 summary(bm_aoi_adults_sufficient_fam_prop_looking_null)
 
 saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, 
