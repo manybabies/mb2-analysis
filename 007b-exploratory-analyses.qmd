@@ -2299,6 +2299,8 @@ test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_todd
 
 saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
+
+# bm_test_adults_diff_mouse_bear_al <- readRDS(file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).

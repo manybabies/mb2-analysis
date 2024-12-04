@@ -1,0 +1,38 @@
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{lcll}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Overwiew eye-tracking systems}Overview of eyetracking systems, software type, and sampling rates used.}\\
+\toprule
+Eyetracking system & N & Software & Sampling rate\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Overwiew eye-tracking systems} continued}}\\
+\toprule
+Eyetracking system & N & Software & Sampling rate\\
+\midrule
+\endhead
+EyeLink 1000 & 1 & EyeLink Experiment Builder & 500 Hz\\
+EyeLink 1000 Plus & 13 & EyeLink Experiment Builder & 1000 Hz, 250 Hz, 500 Hz\\
+EyeLink Portable Duo & 1 & EyeLink Experiment Builder & 1000 Hz\\
+SMI & 1 & SMI Experiment Center & 60 Hz\\
+SMI Redn & 2 & SMI Experiment Center & 60 Hz\\
+Tobii Pro Fusion & 1 & Tobii Pro Lab & 120 Hz\\
+Tobii Pro Fusion 120 Hz & 2 & Tobii Pro Lab & 120 Hz\\
+Tobii Pro Fusion 120Hz & 7 & Tobii Pro Lab, PsychoPy & 1200 Hz, 120 Hz\\
+Tobii Pro Fusion/Tobii X3-120 & 1 & Tobii Pro Lab & 120 Hz\\
+Tobii Pro Spectrum & 12 & Tobii Pro Lab, PsychoPy & 1200 Hz, 60 Hz, 120 Hz, 300 Hz, 60-1200 Hz\\
+Tobii Pro X3–120 & 2 & Tobii Studio & 120 Hz\\
+Tobii Pro? & 1 & Tobii Pro Lab & 300 Hz\\
+Tobii T120 & 2 & Tobii Studio, Tobii Pro Lab & 120 Hz\\
+Tobii T60 & 2 & Tobii Studio & 60 Hz\\
+Tobii TX300 & 7 & Tobii Studio, Tobii Pro Lab & 300 Hz, 120 Hz\\
+Tobii X120 & 7 & Tobii Studio, Tobii Pro Lab & 120 Hz\\
+Tobii X3-120 & 1 & Tobii Pro Lab & 120 Hz\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}

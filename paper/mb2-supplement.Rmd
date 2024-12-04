@@ -25,6 +25,9 @@ library(kableExtra)
 library(here)
 library(readr)
 library(dplyr)
+
+source(here('helper','ensure_repo_structure.R'))
+
 ```
 
 This document contains supplemental material of the manuscript:
@@ -114,42 +117,25 @@ In both pilot studies we found that participants produced goal-directed action p
 
 ```{r Overwiew eye-tracking systems, warning=FALSE}
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
+eyetrackers <- read_csv(here("metadata","dataset_sheet.csv"))
 
 # tracker_type, software_type, number of labs
 
-combined_brm_results_fam <- combined_brm_results_fam %>%
-  select(data_id, tracker_type, software_type) %>% summarise(unique())
+detailed_counts <- eyetrackers %>%
+  filter(tracker_type != "web-based") %>%
+  group_by(tracker_type) %>%
+  summarize(
+    total_count = n(),
+    software_types = paste(unique(software_type), collapse = ", "),
+    sampling_rates = paste(unique(sampling_rate), collapse = ", ")
+  ) %>%
+  arrange(tracker_type)
 
-library(kableExtra)
-
-# Create the table
-combined_brm_results_fam <- combined_brm_results_fam %>%
-  select(model, term, estimate, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "familiarization_trial_num_4" ~ "Trial number",
-      term == "(Intercept)" ~ "Intercept"))
-
-combined_brm_results_test <- combined_brm_results_test %>%
-  select(model, term, estimate, conf.low, conf.high) %>%
-  mutate(term = case_when(
-      term == "condition_c" ~ "Condition",
-      term == "age_mo_c" ~ "Age",
-      term == "condition_c:age_mo_c" ~ "Condition x Age",
-      term == "(Intercept)" ~ "Intercept"))
-
-
-papaja::apa_table(combined_brm_results_fam,
-                  caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
-                  format.args = list(digits = 2),
+papaja::apa_table(detailed_counts,
+                  caption = "Overview of eyetracking systems, software type, and sampling rates used.",
                   longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c"))
-
-papaja::apa_table(combined_brm_results_test,
-                  caption = "Results of the Bayesian mixed effects models for the test trials.",
-                  format.args = list(digits = 2),
-                  longtable = TRUE,font_size="footnotesize",
-                  align=c("l","l","c","c","c"))
+                  align=c("l","c","l","l"),
+                  col.names = c("Eyetracking system","N", "Software","Sampling rate"))
 
 ```
 
