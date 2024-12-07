@@ -137,7 +137,7 @@ summarize_participant <- data_preprocessed_post_exclusions %>%
     sum_target_exit = sum(aoi == "target_exit", na.rm = T),
     sum_distractor_exit = sum(aoi == "distractor_exit", na.rm = T),
     N_exit = sum_target_exit + sum_distractor_exit,
-    absolute_looking = N_exit * 40
+    absolute_looking = N_exit * 25
   )
 
 rm(data_preprocessed_post_exclusions)
