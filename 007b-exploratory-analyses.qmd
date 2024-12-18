@@ -2697,6 +2697,12 @@ saveRDS(test_m_comparison_al_cohort,
         file = here(RESULTS_FOLDER, "test_m_comparison_al_cohort.rds"))
 ```
 
+```{r}
+rm(bm_al_cohort)
+rm(bm_al_cohort_null)
+gc()
+```
+
 
 ## 7. Analyze sub-intervals of anticipatory period: 1st half vs. 2nd half
 run confirmatory analyses per time window
