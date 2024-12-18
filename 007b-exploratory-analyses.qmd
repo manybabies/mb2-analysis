@@ -1324,6 +1324,7 @@ saveRDS(correlation_fam_test_by_age,
 ```{r}
 ## TODO this breaks because the grouping variables data_type, method_c are missing
 ## The ordering of the summarize_participant_* declarations is messed up, so I give up for now
+## AT: this works for me
 summarize_test_aoi_method <- summarize_participant_test_first_trial %>%
   group_by(age_cohort, lab_id, 
            participant_lab_id, participant_id, 
@@ -1847,58 +1848,30 @@ Summarizing a few key decisions:
 - For looking time computation, we compute all samples landing on mouse or bear and multiply by 25 ms (sampling rate of 40).
 
 ```{r}
-# Function to compute shifts and fixation times during location change (specified time intervals for each condition)
-compute_shifts_and_fixation_times <- function(data) {
-  # Define time intervals for each condition
-  location_changes <- list(
-    ignorance = c(20520, 25460),
-    knowledge = c(24630, 29000)
-  )
-  
-  # Initialize an empty data frame to store the results
-  results <- data.frame()
-  
-  # Loop over each condition
-  for (condition_new in names(location_changes)) {
-    # Get the time interval for the current condition
-    
-    # Get the time interval for the specified condition
-    location_change <- location_changes[[condition_new]]
-    
-    # Filter the data based on the time interval
-    filtered_data <- data %>%
-      filter(condition == condition_new) %>%
-      filter(t_zeroed >= location_change[1] & t_zeroed <= location_change[2]) %>%
-      filter(aoi_bearmouse_special %in% c("bear", "mouse")) %>%
-      arrange(participant_lab_id, t_zeroed)
-    
-    # Calculate number of shifts and fixation times on mouse and bear during location change of mouse
-    condition_results <- filtered_data %>%
-      group_by(participant_lab_id, condition, lab_id, age_cohort) %>%
-      mutate(
-        shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
-      ) %>%
-      summarise(
-        num_shifts = sum(shift, na.rm = TRUE),
-        total_fixation_bear = sum(aoi_bearmouse_special == "bear", na.rm = TRUE) * 25,
-        total_fixation_mouse = sum(aoi_bearmouse_special == "mouse", na.rm = TRUE) * 25
-      ) %>%
-      ungroup() %>%
-      mutate(condition = condition_new)
-    results <- bind_rows(results, condition_results)
-  }
-  
-  return(results)
-}
-
-# Apply the function to the dataset for both conditions and center age_cohort
-d_location_change <- compute_shifts_and_fixation_times(test_data) %>%
+# refactored code
+# computes shifts and fixation times during location change
+# (specified by time intervals for each condition)
+d_location_change <- test_data %>%
+  mutate(window_start = ifelse(condition == "ignorance", 20520, 24630),
+         window_end = ifelse(condition == "ignorance", 25460, 29000)) %>%
+  filter(t_zeroed >= window_start,
+         t_zeroed <= window_end,
+         aoi_bearmouse_special %in% c("bear", "mouse")) %>%
+  arrange(participant_lab_id, t_zeroed) |> 
+  group_by(participant_lab_id, condition, lab_id, age_cohort, age_mo) %>%
   mutate(
-    age_cohort_c = case_when(
-      age_cohort == "toddlers" ~ -0.5,
-      age_cohort == "adults" ~ 0.5
-    )
-  )
+    shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
+  ) %>%
+  summarise(
+    num_shifts = sum(shift, na.rm = TRUE),
+    total_fixation_bear = sum(aoi_bearmouse_special == "bear", na.rm = TRUE) * 25,
+    total_fixation_mouse = sum(aoi_bearmouse_special == "mouse", na.rm = TRUE) * 25,
+    .groups = "drop"
+  ) %>%
+  mutate(age_cohort_c = case_when(
+    age_cohort == "toddlers" ~ -0.5,
+    age_cohort == "adults" ~ 0.5
+  ))
 ```
 
 ```{r}
@@ -2031,14 +2004,17 @@ saveRDS(bm_test_shifts_age_cohort_age_cohort_condition_interaction,
 Compute Bayes Factor using bridge sampling
 
 ```{r}
-bm_test_shifts_age_cohort_null <- update(bm_test_shifts_age_cohort, formula = ~ . - condition_c:age_cohort_c)
+bm_test_shifts_age_cohort_null <- update(bm_test_shifts_age_cohort, 
+                                         formula = ~ . - condition_c:age_cohort_c,
+                                         cores = n_cores)
 summary(bm_test_shifts_age_cohort_null)
 
 saveRDS(bm_test_shifts_age_cohort_null, 
         file = here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
 
 # MZ: bridge sampling fails here for me
-test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, bm_test_shifts_age_cohort_null)
+test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, 
+                                                          bm_test_shifts_age_cohort_null)
 
 saveRDS(test_m_comparison_shifts_age_cohort, 
         file = here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort.rds"))
@@ -2138,13 +2114,16 @@ saveRDS(bm_test_toddlers_shifts_al_condition_num_shifts_interaction,
 Bridge sampling Bayes factor approach
 
 ```{r}
-bm_test_toddlers_shifts_al_null <- update(bm_test_toddlers_shifts_al, formula = ~ . - condition_c:num_shifts)
+bm_test_toddlers_shifts_al_null <- update(bm_test_toddlers_shifts_al, 
+                                          formula = ~ . - condition_c:num_shifts,
+                                          cores = n_cores)
 summary(bm_test_toddlers_shifts_al_null)
 
 saveRDS(bm_test_toddlers_shifts_al_null, 
         file = here(model_fits_dir, "bm_test_toddlers_shifts_al_null.rds"))
 
-test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, bm_test_toddlers_shifts_al_null)
+test_m_comparison_toddlers_shifts_al <- brms::bayes_factor(bm_test_toddlers_shifts_al, 
+                                                           bm_test_toddlers_shifts_al_null)
 # Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value.
 # Estimate might be more variable than usual.
 
@@ -2209,13 +2188,16 @@ saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction,
 Compute Bayes factor using bridge sampling
 
 ```{r}
-bm_test_adults_shifts_al_null <- update(bm_test_adults_shifts_al, formula = ~ . - condition_c:num_shifts)
+bm_test_adults_shifts_al_null <- update(bm_test_adults_shifts_al, 
+                                        formula = ~ . - condition_c:num_shifts,
+                                        cores = n_cores)
 summary(bm_test_adults_shifts_al_null)
 
 saveRDS(bm_test_adults_shifts_al_null,
         file = here(model_fits_dir, "bm_test_adults_shifts_al_null.rds"))
 
-test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, bm_test_adults_shifts_al_null)
+test_m_comparison_adults_shifts_al <- brms::bayes_factor(bm_test_adults_shifts_al, 
+                                                         bm_test_adults_shifts_al_null)
 # Warning: Infinite value in iterative scheme, returning NA. (for 10000 iterations)
 # Try rerunning with more samples.
 saveRDS(test_m_comparison_adults_shifts_al,
@@ -2362,13 +2344,16 @@ saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction,
 Bridge sampling Bayes factor approach
 
 ```{r}
-bm_test_toddlers_diff_mouse_bear_al_null <- update(bm_test_toddlers_diff_mouse_bear_al, formula = ~ . - condition_c:diff_mouse_bear, cores = 4)
+bm_test_toddlers_diff_mouse_bear_al_null <- update(bm_test_toddlers_diff_mouse_bear_al, 
+                                                   formula = ~ . - condition_c:diff_mouse_bear, 
+                                                   cores = n_cores)
 summary(bm_test_toddlers_diff_mouse_bear_al_null)
 
 saveRDS(bm_test_toddlers_diff_mouse_bear_al_null,
         file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_null.rds"))
 
-test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, bm_test_toddlers_diff_mouse_bear_al_null)
+test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, 
+                                                                    bm_test_toddlers_diff_mouse_bear_al_null)
 
 saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
@@ -2435,14 +2420,17 @@ Alternate Bayes factor approach
 ```{r}
 # Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
 # See https://mc-stan.org/misc/warnings for details.
-bm_test_adults_diff_mouse_bear_al_null <- update(bm_test_adults_diff_mouse_bear_al, formula = ~ . - condition_c:diff_mouse_bear)
+bm_test_adults_diff_mouse_bear_al_null <- update(bm_test_adults_diff_mouse_bear_al, 
+                                                 formula = ~ . - condition_c:diff_mouse_bear,
+                                                 cores = n_cores)
 summary(bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(bm_test_adults_diff_mouse_bear_al_null,
         file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_null.rds"))
 
 # Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
-test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_null)
+test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, 
+                                                                  bm_test_adults_diff_mouse_bear_al_null)
 
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al.rds"))
@@ -2458,7 +2446,165 @@ rm(bm_test_adults_diff_mouse_bear_al_null)
 gc()
 ```
 
+### 5.4. Distraction
 Hypothesis 4:  More looking at the bear in KNOW vs. IG → speaks in favor of distraction; similarly, more looking at the mouse during change in ign compared to know cond
+
+AT: My first interpretation is that this is a condition * bear_or_mouse interaction on bear_or_mouse_LT, to determine whether distraction is happening overall; this has been implemented below. 
+Is the intent to test specifically whether distraction is causing better/worse test performance? This would I think be equivalent to the previous model (condition * diff_bear_mouse).
+
+```{r}
+d_distraction <- d_location_change |> 
+  pivot_longer(cols = starts_with("total_fixation_"),
+               names_to = "aoi_animal",
+               names_prefix = "total_fixation_",
+               values_to = "total_fixation") |> 
+  mutate(condition_c = case_when(
+    condition == "knowledge" ~ -0.5,
+    condition == "ignorance" ~ 0.5
+  ),
+  animal_c = case_when(
+    aoi_animal == "bear" ~ 0.5,
+    aoi_animal == "mouse" ~ -0.5
+  ),
+  age_mo_c = scale(age_mo, scale = FALSE))
+```
+
+#### Toddlers
+
+```{r}
+bm_distraction_toddlers <- brm_default(
+  total_fixation ~ 1 + condition_c + animal_c + condition_c * animal_c +
+    (1 + condition_c + animal_c + condition_c * animal_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(d_distraction, age_cohort == "toddlers")
+)
+summary(bm_distraction_toddlers)
+# prior_summary(bm_distraction_toddlers)
+
+saveRDS(bm_distraction_toddlers,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_distraction_toddlers.rds")
+)
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_distraction_toddlers)
+# get main coefficient estimate and HDI
+bm_distraction_toddlers_condition_effect <- bm_distraction_toddlers %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_toddlers_condition_effect,
+  file = here(RESULTS_FOLDER, "bm_distraction_toddlers_condition_effect.rds")
+)
+
+bm_distraction_toddlers_animal_effect <- bm_distraction_toddlers %>%
+  spread_draws(b_animal_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_toddlers_animal_effect,
+  file = here(RESULTS_FOLDER, "bm_distraction_toddlers_animal_effect.rds")
+)
+
+bm_distraction_toddlers_condition_animal_interaction <- bm_distraction_toddlers %>%
+  spread_draws(`b_condition_c:animal_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_toddlers_condition_animal_interaction,
+  file = here(RESULTS_FOLDER, "bm_distraction_toddlers_condition_animal_interaction.rds")
+)
+```
+
+Compute Bayes Factor
+```{r}
+bm_distraction_toddlers_null <- update(bm_distraction_toddlers, 
+                                       formula = ~ . - condition_c:animal_c,
+                                       cores = n_cores)
+summary(bm_distraction_toddlers_null)
+
+saveRDS(bm_distraction_toddlers_null,
+        file = here(model_fits_dir, "bm_distraction_toddlers_null.rds"))
+
+test_m_comparison_toddlers_distraction <- brms::bayes_factor(bm_distraction_toddlers, 
+                                                             bm_distraction_toddlers_null)
+
+saveRDS(test_m_comparison_toddlers_distraction,
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_distraction.rds"))
+```
+
+#### Adults
+
+```{r}
+bm_distraction_adults <- brm_default(
+  total_fixation ~ 1 + condition_c + animal_c + condition_c * animal_c +
+    (1 + condition_c + animal_c + condition_c * animal_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(d_distraction, age_cohort == "adults")
+)
+summary(bm_distraction_adults)
+# prior_summary(bm_distraction_adults)
+
+saveRDS(bm_distraction_adults,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_distraction_adults.rds")
+)
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_distraction_adults)
+# get main coefficient estimate and HDI
+bm_distraction_adults_condition_effect <- bm_distraction_adults %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_adults_condition_effect,
+  file = here(RESULTS_FOLDER, "bm_distraction_adults_condition_effect.rds")
+)
+
+bm_distraction_adults_animal_effect <- bm_distraction_adults %>%
+  spread_draws(b_animal_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_adults_animal_effect,
+  file = here(RESULTS_FOLDER, "bm_distraction_adults_animal_effect.rds")
+)
+
+bm_distraction_adults_condition_animal_interaction <- bm_distraction_adults %>%
+  spread_draws(`b_condition_c:animal_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_distraction_adults_condition_animal_interaction,
+  file = here(RESULTS_FOLDER, "bm_distraction_adults_condition_animal_interaction.rds")
+)
+```
+
+Compute Bayes Factor
+```{r}
+bm_distraction_adults_null <- update(bm_distraction_adults, 
+                                       formula = ~ . - condition_c:animal_c,
+                                       cores = n_cores)
+summary(bm_distraction_adults_null)
+
+saveRDS(bm_distraction_adults_null,
+        file = here(model_fits_dir, "bm_distraction_adults_null.rds"))
+
+test_m_comparison_adults_distraction <- brms::bayes_factor(bm_distraction_adults, 
+                                                             bm_distraction_adults_null)
+
+saveRDS(test_m_comparison_adults_distraction,
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_distraction.rds"))
+```
+
 
 ## 6. “Fatigue”-effect: new dependent variable “overall amount of AL (irrespective of target or distractor)”
 Do Toddlers and Adults differ in overall amount of AL over trials?
