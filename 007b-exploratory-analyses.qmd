@@ -1964,7 +1964,7 @@ bm_test_shifts_age_cohort <- brm_default(
     (1 + condition_c + age_cohort_c | lab_id),
   family = poisson(),
   prior = priors_default,
-  data = filter(d_location_change)
+  data = d_location_change
 )
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
@@ -2609,7 +2609,6 @@ saveRDS(test_m_comparison_adults_distraction,
 ## 6. “Fatigue”-effect: new dependent variable “overall amount of AL (irrespective of target or distractor)”
 Do Toddlers and Adults differ in overall amount of AL over trials?
 
-
 ```{r}
 Looking_all_trials <- ggplot(summarize_participant,
                              aes(as.factor(trial_num), absolute_looking)) +
@@ -2641,6 +2640,63 @@ ggsave(here(plot_path, "Looking_all_trials.png"),
        bg = "white", width = 14, height = 9)
 # ggsave(here(paper_path,"FigureX.png"),bg="white",width=14, height=9)
 ```
+
+```{r}
+summarize_participant <- summarize_participant %>%
+  mutate(age_cohort_c = case_when(
+    age_cohort == "toddlers" ~ -0.5,
+    age_cohort == "adults" ~ 0.5
+  ), 
+  trial_num_fct = as.factor(trial_num))
+
+# AT: this model took ~15min to run on my M1 laptop
+bm_al_cohort <- brm_default(
+  absolute_looking ~ 1 + trial_num_fct + age_cohort_c + trial_num_fct * age_cohort_c + 
+    (1 + trial_num_fct + age_cohort_c + trial_num_fct * age_cohort_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = summarize_participant
+)
+summary(bm_al_cohort)
+# prior_summary(bm_al_cohort)
+
+saveRDS(bm_al_cohort, 
+        file = here(model_fits_dir, "bm_al_cohort.rds"))
+```
+
+AT: The estimates here are basically 0 for all predictors. This was not due to failure to converge so I'm inclined to believe that there is effectively no systematic variation in total looking overall. (I didn't bother running the null model and BF to check cuz it was gonna eat up all of my memory oops.)
+
+Summarize outcomes
+
+```{r}
+# get main coefficient estimate and HDI
+bm_al_cohort_effect <- bm_al_cohort %>%
+  spread_draws(b_age_cohort_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_al_cohort_effect,
+  file = here(RESULTS_FOLDER, "bm_al_cohort_effect.rds")
+)
+```
+
+Compute Bayes Factor
+```{r}
+bm_al_cohort_null <- update(bm_al_cohort, 
+                            formula = ~ . - age_cohort_c - trial_num_fct:age_cohort_c,
+                            cores = n_cores)
+summary(bm_al_cohort_null)
+
+saveRDS(bm_al_cohort_null,
+        file = here(model_fits_dir, "bm_al_cohort_null.rds"))
+
+test_m_comparison_al_cohort <- brms::bayes_factor(bm_al_cohort, 
+                                                  bm_al_cohort_null)
+
+saveRDS(test_m_comparison_al_cohort,
+        file = here(RESULTS_FOLDER, "test_m_comparison_al_cohort.rds"))
+```
+
 
 ## 7. Analyze sub-intervals of anticipatory period: 1st half vs. 2nd half
 run confirmatory analyses per time window
