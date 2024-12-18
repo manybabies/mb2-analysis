@@ -32,7 +32,6 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
-
 # Load data
 
 ```{r}
@@ -71,6 +70,30 @@ if (use_cmdstan) {
   default_control_list <- list(adapt_delta = 0.99, max_treedepth = 12)
 }
 ```
+
+```{r}
+# make partial version of brm with default args
+brm_default <- partial(
+  brm,
+  save_pars = save_pars(all = TRUE),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
+)
+
+priors_default <- c(
+  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
+```
+
 
 Splitting the data into familiarization data and test data.
 
@@ -151,7 +174,7 @@ gc()
 
 Spill-over: we will analyze within-participants data from the second test trial that participants saw, using exploratory models to assess whether (1) findings are consistent when both trials are included (overall condition effect), (2) whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of “spillover” - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect).
 
-## 1.a.Spill-over Analysis
+## 1.a. Spill-over Analysis
 
 ### Summarize all test data
 
@@ -305,31 +328,14 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_both <- brm(
+bm_aoi_toddlers_both <- brm_default(
   prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
     (1 + condition_c | participant_lab_id) + 
     (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials, age_cohort == "toddlers") %>%
-    select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers") %>%
+    select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id)
 )
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
@@ -378,13 +384,16 @@ saveRDS(bm_aoi_toddlers_both_condition_age_interaction,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_both_null <- update(bm_aoi_toddlers_both, formula = ~ . - condition_c)
+bm_aoi_toddlers_both_null <- update(bm_aoi_toddlers_both, 
+                                    formula = ~ . - condition_c,
+                                    cores = n_cores)
 summary(bm_aoi_toddlers_both_null)
 
 saveRDS(bm_aoi_toddlers_both_null, 
         file = here(model_fits_dir, "bm_fam_aoi_toddlers_null.rds"))
 
-test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, bm_aoi_toddlers_both_null)
+test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both, 
+                                                        bm_aoi_toddlers_both_null)
 
 saveRDS(test_comparison_aoi_toddlers_both, 
         file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both.rds"))
@@ -404,22 +413,13 @@ gc()
 ## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
 
 ```{r}
-bm_aoi_adults_both <- brm(
+bm_aoi_adults_both <- brm_default(
   prop_exit ~ 1 + condition_c + 
     (1 + condition_c | lab_id) + 
     (1 + condition_c | participant_lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials, age_cohort == "adults")
 )
 summary(bm_aoi_adults_both)
 
@@ -441,13 +441,16 @@ saveRDS(bm_aoi_adults_both_condition_effect,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_both_null <- update(bm_aoi_adults_both, formula = ~ . - condition_c)
+bm_aoi_adults_both_null <- update(bm_aoi_adults_both, 
+                                  formula = ~ . - condition_c,
+                                  cores = n_cores)
 summary(bm_aoi_adults_both_null)
 
 saveRDS(bm_aoi_adults_both_null, 
         file = here(model_fits_dir, "bm_fam_aoi_adults_null.rds"))
 
-test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, bm_aoi_adults_both_null)
+test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, 
+                                                      bm_aoi_adults_both_null)
 
 saveRDS(test_comparison_aoi_adults_both, 
         file = here(RESULTS_FOLDER, "test_comparison_aoi_adults_both.rds"))
@@ -486,29 +489,12 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #### Toddlers
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_both_order <- brm(
+bm_aoi_toddlers_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
     (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_both_order)
 prior_summary(bm_aoi_toddlers_both_order)
@@ -550,13 +536,16 @@ saveRDS(bm_aoi_toddlers_both_order_condition_trial_num_interaction,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_both_order_null <- update(bm_aoi_toddlers_both_order, formula = ~ . - test_trial_num)
+bm_aoi_toddlers_both_order_null <- update(bm_aoi_toddlers_both_order, 
+                                          formula = ~ . - test_trial_num,
+                                          cores = n_cores)
 summary(bm_aoi_toddlers_both_order_null)
 
 saveRDS(bm_aoi_toddlers_both_order_null, 
         file = here(model_fits_dir, "bm_aoi_toddlers_both_order_null.rds"))
 
-test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_null)
+test_comparison_aoi_toddlers_both_order <- brms::bayes_factor(bm_aoi_toddlers_both_order, 
+                                                              bm_aoi_toddlers_both_order_null)
 
 saveRDS(test_comparison_aoi_toddlers_both_order, 
         file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both_order.rds"))
@@ -565,13 +554,16 @@ saveRDS(test_comparison_aoi_toddlers_both_order,
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r}
-bm_aoi_toddlers_both_order_interaction_null <- update(bm_aoi_toddlers_both_order, formula = ~ . - condition_c:test_trial_num)
+bm_aoi_toddlers_both_order_interaction_null <- update(bm_aoi_toddlers_both_order, 
+                                                      formula = ~ . - condition_c:test_trial_num,
+                                                      cores = n_cores)
 summary(bm_aoi_toddlers_both_order_interaction_null)
 
 saveRDS(bm_aoi_toddlers_both_order_interaction_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_both_order_interaction_null.rds"))
 
-test_m_comparison_PTL_toddlers_both_order_interaction <- brms::bayes_factor(bm_aoi_toddlers_both_order, bm_aoi_toddlers_both_order_interaction_null)
+test_m_comparison_PTL_toddlers_both_order_interaction <- brms::bayes_factor(bm_aoi_toddlers_both_order, 
+                                                                            bm_aoi_toddlers_both_order_interaction_null)
 
 saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction, 
         file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
@@ -589,21 +581,12 @@ gc()
 #### Adults
 
 ```{r}
-bm_aoi_adults_both_order <- brm(
+bm_aoi_adults_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
     (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials, age_cohort == "adults")
 )
 summary(bm_aoi_adults_both_order)
 
@@ -642,13 +625,16 @@ saveRDS(bm_aoi_adults_both_order_condition_trial_num_interaction,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_both_order_null <- update(bm_aoi_adults_both_order, formula = ~ . - test_trial_num)
+bm_aoi_adults_both_order_null <- update(bm_aoi_adults_both_order, 
+                                        formula = ~ . - test_trial_num,
+                                        cores = n_cores)
 summary(bm_aoi_adults_both_order_null)
 
 saveRDS(bm_aoi_adults_both_order_null, 
         file = here(model_fits_dir, "bm_aoi_adults_both_order_null.rds"))
 
-test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_null)
+test_comparison_aoi_adults_both_order <- brms::bayes_factor(bm_aoi_adults_both_order, 
+                                                            bm_aoi_adults_both_order_null)
 
 saveRDS(test_comparison_aoi_adults_both_order, 
         file = here(RESULTS_FOLDER, "test_comparison_aoi_adults_both_order.rds"))
@@ -656,13 +642,16 @@ saveRDS(test_comparison_aoi_adults_both_order,
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r}
-bm_aoi_adults_both_order_interaction_null <- update(bm_aoi_adults_both_order, formula = ~ . - condition_c:test_trial_num)
+bm_aoi_adults_both_order_interaction_null <- update(bm_aoi_adults_both_order, 
+                                                    formula = ~ . - condition_c:test_trial_num,
+                                                    cores = n_cores)
 summary(bm_aoi_adults_both_order_interaction_null)
 
 saveRDS(bm_aoi_adults_both_order_interaction_null, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_both_order_interaction_null.rds"))
 
-test_m_comparison_PTL_adults_both_order_interaction <- brms::bayes_factor(bm_aoi_adults_both_order, bm_aoi_adults_both_order_interaction_null)
+test_m_comparison_PTL_adults_both_order_interaction <- brms::bayes_factor(bm_aoi_adults_both_order, 
+                                                                          bm_aoi_adults_both_order_interaction_null)
 
 saveRDS(test_m_comparison_PTL_adults_both_order_interaction, 
         file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_both_order_interaction.rds"))
@@ -680,14 +669,17 @@ gc()
 
 ```{r}
 # create variable for first and second trial prop exit
+summarize_participant_test_second_trial <- summarize_participant_test_both_trials %>%
+  filter(test_trial_num == 2) %>%
+  rename(second_trial_prop_exit = prop_exit)
 
-summarize_participant_test_second_trial <-   summarize_participant_test_both_trials %>%
-  filter(test_trial_num==2) 
-
-summarize_participant_test_first_test_trial <- summarize_participant_test_both_trials %>% filter(test_trial_num==1) %>% select(age_cohort, lab_id, participant_id, participant_lab_id, prop_exit) %>%
+summarize_participant_test_first_test_trial <- summarize_participant_test_both_trials %>%
+  filter(test_trial_num == 1) %>%
+  select(age_cohort, lab_id, participant_id, participant_lab_id, prop_exit) %>%
   rename(first_trial_prop_exit = prop_exit)
-  
-summarize_participant_test_second_trial <-  summarize_participant_test_second_trial %>%  left_join(summarize_participant_test_first_test_trial)
+
+summarize_participant_test_second_trial <- summarize_participant_test_second_trial %>% 
+  left_join(summarize_participant_test_first_test_trial)
 ```
 
 #### Main Model
@@ -697,29 +689,12 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ##### Toddlers
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_second_trial <- brm(
-  prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
+bm_aoi_toddlers_second_trial <- brm_default(
+  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
     (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_second_trial, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_second_trial, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_second_trial)
 
@@ -762,13 +737,16 @@ saveRDS(bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_inte
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_second_trial_null <- update(bm_aoi_toddlers_second_trial, formula = ~ . - condition_c * first_trial_prop_exit)
+bm_aoi_toddlers_second_trial_null <- update(bm_aoi_toddlers_second_trial, 
+                                            formula = ~ . - condition_c * first_trial_prop_exit,
+                                            cores = n_cores)
 summary(bm_aoi_toddlers_second_trial_null)
 
 saveRDS(bm_aoi_toddlers_second_trial_null, 
         file = here(model_fits_dir, "bm_aoi_toddlers_second_trial_null.rds"))
 
-test_m_comparison_aoi_toddlers_second_trial <- brms::bayes_factor(bm_aoi_toddlers_second_trial, bm_aoi_toddlers_second_trial_null)
+test_m_comparison_aoi_toddlers_second_trial <- brms::bayes_factor(bm_aoi_toddlers_second_trial, 
+                                                                  bm_aoi_toddlers_second_trial_null)
 
 saveRDS(test_m_comparison_aoi_toddlers_second_trial, 
         file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial.rds"))
@@ -777,21 +755,12 @@ saveRDS(test_m_comparison_aoi_toddlers_second_trial,
 ##### Adults
 
 ```{r}
-bm_aoi_adults_second_trial <- brm(
-  prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
+bm_aoi_adults_second_trial <- brm_default(
+  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
     (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_second_trial, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_second_trial, age_cohort == "adults")
 )
 summary(bm_aoi_adults_second_trial)
 
@@ -834,13 +803,16 @@ saveRDS(bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_intera
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_second_trial_null <- update(bm_aoi_adults_second_trial, formula = ~ . - condition_c * first_trial_prop_exit)
+bm_aoi_adults_second_trial_null <- update(bm_aoi_adults_second_trial, 
+                                          formula = ~ . - condition_c * first_trial_prop_exit,
+                                          cores = n_cores)
 summary(bm_aoi_adults_second_trial_null)
 
 saveRDS(bm_aoi_adults_second_trial_null, 
         file = here(model_fits_dir, "bm_aoi_adults_second_trial_null.rds"))
 
-test_m_comparison_aoi_adults_second_trial <- brms::bayes_factor(bm_aoi_adults_second_trial, bm_aoi_adults_second_trial_null)
+test_m_comparison_aoi_adults_second_trial <- brms::bayes_factor(bm_aoi_adults_second_trial, 
+                                                                bm_aoi_adults_second_trial_null)
 
 saveRDS(test_m_comparison_aoi_adults_second_trial, 
         file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial.rds"))
@@ -862,6 +834,7 @@ summarize_first_looks_fam_trials <- d_anticipatory_fam %>%
     average_rt = mean(first_look_rt),
     average_rt_correct = mean(first_look_rt[first_look == "target_exit"])
   )
+
 correct_first_looks_final_fam_trial <- summarize_first_looks_fam_trials %>%
   filter(!is.na(prop_correct_first_look) & trial_num == 4) %>%
   ungroup() %>%
@@ -931,29 +904,12 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ##### Toddlers
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_correct_final_fam_trial <- brm(
+bm_aoi_toddlers_correct_final_fam_trial <- brm_default(
   prop_exit ~ 1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
     (1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_correct_final_fam_trial)
 
@@ -996,7 +952,9 @@ saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_fin
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, formula = ~ . - condition_c * correct_first_look_final_fam_trial_c)
+bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, 
+                                                       formula = ~ . - condition_c * correct_first_look_final_fam_trial_c,
+                                                       cores = n_cores)
 summary(bm_aoi_toddlers_correct_final_fam_trial_null)
 
 saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, 
@@ -1020,21 +978,12 @@ gc()
 ##### Adults
 
 ```{r}
-bm_aoi_adults_correct_final_fam_trial <- brm(
+bm_aoi_adults_correct_final_fam_trial <- brm_default(
   prop_exit ~ 1 + condition_c + + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
     (1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
 )
 summary(bm_aoi_adults_correct_final_fam_trial)
 
@@ -1074,7 +1023,9 @@ saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, formula = ~ . - condition_c * correct_first_look_final_fam_trial_c)
+bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, 
+                                                     formula = ~ . - condition_c * correct_first_look_final_fam_trial_c,
+                                                     cores = n_cores)
 summary(bm_aoi_adults_correct_final_fam_trial_null)
 
 saveRDS(bm_aoi_adults_correct_final_fam_trial_null, 
@@ -1150,6 +1101,7 @@ summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_fir
 summarize_test_aoi_sufficient_fam_prop_looking %>%
   knitr::kable()
 ```
+
 #### Main Model
 
 Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial.
@@ -1157,29 +1109,12 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ##### Toddlers
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_sufficient_fam_prop_looking <- brm(
+bm_aoi_toddlers_sufficient_fam_prop_looking <- brm_default(
   prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
     (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
@@ -1222,7 +1157,9 @@ saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_condition_effect,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_sufficient_fam_prop_looking_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking, formula = ~ . - condition_c * successful_fam_anticipation_c)
+bm_aoi_toddlers_sufficient_fam_prop_looking_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking, 
+                                                           formula = ~ . - condition_c * successful_fam_anticipation_c,
+                                                           cores = n_cores)
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 
 saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_null, 
@@ -1247,21 +1184,12 @@ gc()
 ##### Adults
 
 ```{r}
-bm_aoi_adults_sufficient_fam_prop_looking <- brm(
+bm_aoi_adults_sufficient_fam_prop_looking <- brm_default(
   prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
     (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
 )
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
@@ -1302,7 +1230,9 @@ saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_condition_effect,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_sufficient_fam_prop_looking_null <- update(bm_aoi_adults_sufficient_fam_prop_looking, formula = ~ . - condition_c * successful_fam_anticipation_c)
+bm_aoi_adults_sufficient_fam_prop_looking_null <- update(bm_aoi_adults_sufficient_fam_prop_looking, 
+                                                         formula = ~ . - condition_c * successful_fam_anticipation_c,
+                                                         cores = n_cores)
 summary(bm_aoi_adults_sufficient_fam_prop_looking_null)
 
 saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_null, 
@@ -1442,29 +1372,12 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #### Toddlers
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_aoi_toddlers_method <- brm(
+bm_aoi_toddlers_method <- brm_default(
   prop_exit ~ 1 + condition_c + method_c + condition_c * method_c + 
     (1 + condition_c + method_c + condition_c * method_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_method)
 prior_summary(bm_aoi_toddlers_method)
@@ -1506,7 +1419,9 @@ saveRDS(bm_aoi_toddlers_method_condition_method_interaction,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_toddlers_method_null <- update(bm_aoi_toddlers_method, formula = ~ . - condition_c:method_c)
+bm_aoi_toddlers_method_null <- update(bm_aoi_toddlers_method, 
+                                      formula = ~ . - condition_c:method_c,
+                                      cores = n_cores)
 summary(bm_aoi_toddlers_method_null)
 
 saveRDS(bm_aoi_toddlers_method_null, 
@@ -1530,21 +1445,12 @@ gc()
 #### Adults
 
 ```{r}
-bm_aoi_adults_method <- brm(
+bm_aoi_adults_method <- brm_default(
   prop_exit ~ 1 + condition_c * method_c + 
     (1 + condition_c * method_c | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
 )
 summary(bm_aoi_adults_method)
 
@@ -1583,7 +1489,9 @@ saveRDS(bm_aoi_adults_method_condition_method_interaction,
 Compute the Bayes factor using bridge sampling
 
 ```{r}
-bm_aoi_adults_method_null <- update(bm_aoi_adults_method, formula = ~ . - condition_c:method_c)
+bm_aoi_adults_method_null <- update(bm_aoi_adults_method, 
+                                    formula = ~ . - condition_c:method_c,
+                                    cores = n_cores)
 summary(bm_aoi_adults_method_null)
 
 saveRDS(bm_aoi_adults_method_null, 
@@ -1680,6 +1588,238 @@ diff_box_exit <- summarize_participant_test_first_trial %>%
 ```
 Adults: difference between conditions for boxes larger than for exits
 Toddlers: difference between conditions for boxes slightly smaller than for exits
+
+### Main Model
+
+#### Toddlers
+
+```{r}
+bm_box_toddlers <- brm_default(
+  prop_box ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
+)
+summary(bm_box_toddlers)
+# prior_summary(bm_aoi_toddlers)
+
+saveRDS(bm_box_toddlers,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_toddlers.rds")
+)
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_box_toddlers)
+# get main coefficient estimate and HDI
+bm_box_toddlers_condition_effect <- bm_box_toddlers %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_toddlers_condition_effect,
+  file = here(RESULTS_FOLDER, "bm_box_toddlers_condition_effect.rds")
+)
+
+bm_box_toddlers_age_effect <- bm_box_toddlers %>%
+  spread_draws(b_age_mo_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_toddlers_age_effect,
+  file = here(RESULTS_FOLDER, "bm_box_toddlers_age_effect.rds")
+)
+
+bm_box_toddlers_condition_age_interaction <- bm_box_toddlers %>%
+  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_toddlers_condition_age_interaction,
+  file = here(RESULTS_FOLDER, "bm_box_toddlers_condition_age_interaction.rds")
+)
+```
+
+Visualize model coefficients
+
+```{r}
+bm_box_toddlers %>%
+  spread_draws(b_condition_c, b_age_mo_c, `b_condition_c:age_mo_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient, y = b)) +
+  stat_halfeye() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_cowplot() +
+  scale_x_discrete(
+    limits = c("b_condition_c:age_mo_c", "b_age_mo_c", "b_condition_c"),
+    labels = c("Condition x Age", "Age", "Condition")
+  ) +
+  ylab("Model Coefficient Estimate") +
+  xlab("Model Predictor") +
+  coord_flip()
+ggsave(here(plot_path, "test_toddlers_box_model_coefficients.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
+
+```{r}
+bm_box_toddlers_condition_null <- update(bm_box_toddlers, 
+                                         formula = ~ . - condition_c,
+                                         cores = n_cores)
+summary(bm_box_toddlers_condition_null)
+
+saveRDS(bm_box_toddlers_condition_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_toddlers_condition_null.rds")
+)
+
+test_box_m_comparison_PTL_toddlers <- brms::bayes_factor(
+  bm_box_toddlers, bm_box_toddlers_condition_null
+)
+
+saveRDS(test_box_m_comparison_PTL_toddlers,
+  file = here(RESULTS_FOLDER, "test_box_m_comparison_PTL_toddlers.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+
+```{r}
+bm_box_toddlers_interaction_null <- update(bm_box_toddlers, 
+                                           formula = ~ . - condition_c * age_mo_c,
+                                           cores = n_cores)
+summary(bm_box_toddlers_interaction_null)
+
+saveRDS(bm_box_toddlers_interaction_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_toddlers_interaction_null.rds")
+)
+
+test_box_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
+  bm_box_toddlers, bm_box_toddlers_interaction_null
+)
+
+saveRDS(test_box_m_comparison_PTL_toddlers_interaction,
+  file = here(RESULTS_FOLDER, "test_box_m_comparison_PTL_toddlers_interaction.rds")
+)
+```
+
+#### Adults
+
+```{r}
+bm_box_adults <- brm_default(
+  prop_box ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
+)
+summary(bm_box_adults)
+# prior_summary(bm_aoi_adults)
+
+saveRDS(bm_box_adults,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_adults.rds")
+)
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_box_adults)
+# get main coefficient estimate and HDI
+bm_box_adults_condition_effect <- bm_box_adults %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_adults_condition_effect,
+  file = here(RESULTS_FOLDER, "bm_box_adults_condition_effect.rds")
+)
+
+bm_box_adults_age_effect <- bm_box_adults %>%
+  spread_draws(b_age_mo_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_adults_age_effect,
+  file = here(RESULTS_FOLDER, "bm_box_adults_age_effect.rds")
+)
+
+bm_box_adults_condition_age_interaction <- bm_box_adults %>%
+  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_box_adults_condition_age_interaction,
+  file = here(RESULTS_FOLDER, "bm_box_adults_condition_age_interaction.rds")
+)
+```
+
+Visualize model coefficients
+
+```{r}
+bm_box_adults %>%
+  spread_draws(b_condition_c, b_age_mo_c, `b_condition_c:age_mo_c`, sigma) %>%
+  pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
+  ggplot(aes(x = coefficient, y = b)) +
+  stat_halfeye() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_cowplot() +
+  scale_x_discrete(
+    limits = c("b_condition_c:age_mo_c", "b_age_mo_c", "b_condition_c"),
+    labels = c("Condition x Age", "Age", "Condition")
+  ) +
+  ylab("Model Coefficient Estimate") +
+  xlab("Model Predictor") +
+  coord_flip()
+ggsave(here(plot_path, "test_adults_box_model_coefficients.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - Condition Effect
+
+```{r}
+bm_box_adults_condition_null <- update(bm_box_adults, 
+                                         formula = ~ . - condition_c,
+                                         cores = n_cores)
+summary(bm_box_adults_condition_null)
+
+saveRDS(bm_box_adults_condition_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_adults_condition_null.rds")
+)
+
+test_box_m_comparison_PTL_adults <- brms::bayes_factor(
+  bm_box_adults, bm_box_adults_condition_null
+)
+
+saveRDS(test_box_m_comparison_PTL_adults,
+  file = here(RESULTS_FOLDER, "test_box_m_comparison_PTL_adults.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+
+```{r}
+bm_box_adults_interaction_null <- update(bm_box_adults, 
+                                           formula = ~ . - condition_c * age_mo_c,
+                                           cores = n_cores)
+summary(bm_box_adults_interaction_null)
+
+saveRDS(bm_box_adults_interaction_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_box_adults_interaction_null.rds")
+)
+
+test_box_m_comparison_PTL_adults_interaction <- brms::bayes_factor(
+  bm_box_adults, bm_box_adults_interaction_null
+)
+
+saveRDS(test_box_m_comparison_PTL_adults_interaction,
+  file = here(RESULTS_FOLDER, "test_box_m_comparison_PTL_adults_interaction.rds")
+)
+```
 
 ## 5. Looking patterns during mouse's change of location
 
@@ -1846,29 +1986,12 @@ d_location_change <- d_location_change %>%
     condition == "ignorance" ~ 0.5
   ))
 
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_test_shifts_age_cohort <- brm(
+bm_test_shifts_age_cohort <- brm_default(
   num_shifts ~ 1 + condition_c + age_cohort_c + condition_c * age_cohort_c + 
     (1 + condition_c + age_cohort_c | lab_id),
   family = poisson(),
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(d_location_change),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(d_location_change)
 )
 summary(bm_test_shifts_age_cohort)
 prior_summary(bm_test_shifts_age_cohort)
@@ -1970,30 +2093,13 @@ ggsave(here(paper_path, "Figure7.png"),
 
 #### Toddlers
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_test_toddlers_shifts_al <- brm(
+bm_test_toddlers_shifts_al <- brm_default(
   prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
 )
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
@@ -2058,30 +2164,13 @@ gc()
 #### Adults
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_test_adults_shifts_al <- brm(
+bm_test_adults_shifts_al <- brm_default(
   prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials_lc, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 15000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults")
 )
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
@@ -2222,32 +2311,16 @@ ggsave(here(plot_path, "AL_diff_mouse_bear.png"),
 ggsave(here(paper_path, "Figure8.png"),
        bg = "white", width = 14, height = 9)
 ```
+
 #### Toddlers
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_test_toddlers_diff_mouse_bear_al <- brm(
+bm_test_toddlers_diff_mouse_bear_al <- brm_default(
   prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear + 
     (1 + condition_c * diff_mouse_bear | lab_id) +
     (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
 )
 # Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12.
 # See https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
@@ -2315,30 +2388,13 @@ gc()
 #### Adults
 
 ```{r}
-# set the prior
-priors <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor?
-
-bm_test_adults_diff_mouse_bear_al <- brm(
+bm_test_adults_diff_mouse_bear_al <- brm_default(
   prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear +
     (1 + condition_c * diff_mouse_bear | lab_id) +
     (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
   family = gaussian,
-  prior = priors,
-  save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_both_trials_lc, age_cohort == "adults"),
-  warmup = 1000,
-  iter = 10000,
-  chains = 4,
-  backend = cur_backend,
-  cores = n_cores,
-  seed = 123,
-  sample_prior = TRUE,
-  control = default_control_list
+  prior = priors_default,
+  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults")
 )
 summary(bm_test_adults_diff_mouse_bear_al)
 prior_summary(bm_test_adults_diff_mouse_bear_al)
