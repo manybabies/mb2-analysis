@@ -1,10 +1,10 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.11.8)  3 DEC 2024 13:56
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.12.5)  19 DEC 2024 11:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **mb2-paper.tex
 (./mb2-paper.tex
-LaTeX2e <2024-11-01>
+LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2024-11-02>
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/apa6/apa6.cls
 Document Class: apa6 2023/08/07 v2.35 APA formatting (6th edition)
@@ -179,7 +179,7 @@ LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 149.
 )
 \c@appendix=\count277
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
-Package: fancyhdr 2024/07/23 v4.3.1 Extensive control of page headers and footers
+Package: fancyhdr 2024/11/20 v4.4 Extensive control of page headers and footers
 \f@nch@headwidth=\skip64
 \f@nch@O@elh=\skip65
 \f@nch@O@erh=\skip66
@@ -354,7 +354,7 @@ LaTeX Info: Redefining \addtolength on input line 81.
 \calc@Ccount=\count314
 \calc@Cskip=\skip80
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/babel.sty
-Package: babel 2024/10/20 v24.12 The multilingual framework for pdfLaTeX, LuaLaTeX and XeLaTeX
+Package: babel 2024/11/30 v24.14 The multilingual framework for pdfLaTeX, LuaLaTeX and XeLaTeX
 \babel@savecnt=\count315
 \U@D=\dimen187
 \l@unhyphenated=\language5
@@ -362,9 +362,9 @@ Package: babel 2024/10/20 v24.12 The multilingual framework for pdfLaTeX, LuaLaT
 \bbl@readstream=\read2
 \bbl@dirlevel=\count316
 Package babel Info: You haven't specified a language as a class or package
-(babel)             option. I'll load 'nil'. Reported on input line 4185.
+(babel)             option. I'll load 'nil'. Reported on input line 4184.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/nil.ldf
-Language: nil 2024/10/20 v24.12 Nil language
+Language: nil 2024/11/30 v24.14 Nil language
 \l@nil=\language6
 )) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/locale/en/babel-english.tex)
 Package babel Info: Importing data for english
@@ -396,7 +396,7 @@ Package: longtable 2024-10-27 v4.22 Multi-page Table package (DPC)
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/graphics/lscape.sty
 Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/multirow/multirow.sty
-Package: multirow 2021/03/15 v2.8 Span multiple rows of a table
+Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
 \multirow@colwidth=\skip85
 \multirow@cntb=\count322
 \multirow@dima=\skip86
@@ -1124,6 +1124,9 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 766--767
 [46]
 
 [47]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [48]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1181,7 +1184,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 ] (./mb2-paper.aux)
  ***********
-LaTeX2e <2024-11-01>
+LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2020/03/25>
  ***********
 
@@ -1189,10 +1192,10 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22292 strings out of 475994
- 418541 string characters out of 5778099
- 984902 words of memory out of 5000000
- 44745 multiletter control sequences out of 15000+600000
+ 22272 strings out of 475964
+ 418062 string characters out of 5776212
+ 985463 words of memory out of 5000000
+ 44753 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,12n,123p,2890b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
