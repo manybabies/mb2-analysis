@@ -514,26 +514,3 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
 
 ```
 
-```{r interaction plot, echo=TRUE, include=TRUE, out.width='90%'}
-# Load required packages
-library(sjPlot)
-library(purrr)
-library(gridExtra)
-
-# Generate interaction plots for each model and store them in a list
-library(purrr)
-library(sjPlot)
-
-# Genera e mostra solo l'ultimo plot per ciascun modello
-walk(lm_results, function(model) {
-  if (!is.null(model)) {
-    # Genera l'interaction plot
-    plot <- plot_model(model, type = "int", terms = c("condition", "outcome", "age_cohort"))
-    
-    # Mostra l'ultimo plot generato
-    print(plot)
-  }
-})
-
-
-```
