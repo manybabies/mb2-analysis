@@ -1,12 +1,14 @@
+
 #author: Giulia Calignano
 
 library(shiny)
 library(ggplot2)
 library(purrr)
 library(sjPlot)
+
 # UI
 ui <- fluidPage(
-  titlePanel("MB2P - Exploring the multiverse of results"),
+  titlePanel("MB2P - Exploring the Multiverse of Results"),
   
   sidebarLayout(
     sidebarPanel(
@@ -19,6 +21,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       plotOutput("metricPlot", click = "plot_click"),
+      plotOutput("specCurvePlot"),
       plotOutput("interactionPlot")
     )
   )
@@ -30,24 +33,24 @@ server <- function(input, output, session) {
   # Reactive dataset based on model type
   selected_data <- reactive({
     if (input$model_type == "lm") {
-      LMmodel_metrics_df
+      LMmodel_metrics_df  # This should be defined in your environment
     } else {
-      LMERmodel_metrics_df
+      LMERmodel_metrics_df  # This should be defined in your environment
     }
   })
   
   # Reactive results based on model type
   selected_results <- reactive({
     if (input$model_type == "lm") {
-      lm_results
+      lm_results  # List of linear models
     } else {
-      lmer_results
+      lmer_results  # List of mixed-effects models
     }
   })
   
   # Metric Plot
   output$metricPlot <- renderPlot({
-    ggplot(selected_data(), aes(x = model_order, y = .data[[input$metric]], color = model_id)) +
+    ggplot(selected_data(), aes(x = model_id, y = .data[[input$metric]], color = model_id)) +
       geom_point(size = 3) +
       labs(
         title = paste("Multiverse of", toupper(input$metric)),
@@ -55,6 +58,32 @@ server <- function(input, output, session) {
         y = toupper(input$metric)
       ) +
       theme_minimal()
+  })
+  
+  # Specification Curve Plot
+  output$specCurvePlot <- renderPlot({
+    # Extract coefficients and terms from all models
+    spec_data <- map_dfr(seq_along(selected_results()), function(i) {
+      model <- selected_results()[[i]]
+      coefs <- summary(model)$coefficients
+      data.frame(
+        term = rownames(coefs),
+        estimate = coefs[, "Estimate"],
+        model_id = i
+      )
+    })
+    
+    ggplot(spec_data, aes(x = term, y = estimate, color = as.factor(model_id), group = as.factor(model_id))) +
+      geom_line() +
+      geom_point(size = 2) +
+      labs(
+        title = "Specification Curve: Effects Across Models",
+        x = "Terms",
+        y = "Estimated Effect",
+        color = "Model ID"
+      ) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
   # Interaction Plot
