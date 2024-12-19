@@ -57,7 +57,7 @@ server <- function(input, output, session) {
         x = "Model Order",
         y = toupper(input$metric)
       ) +
-      theme_minimal()
+      theme(legend.position = "none")
   })
   
   # Specification Curve Plot
@@ -79,10 +79,10 @@ server <- function(input, output, session) {
       labs(
         title = "Specification Curve: Effects Across Models",
         x = "Terms",
-        y = "Estimated Effect",
+        y = "Estimated Effect - baseline corrected pupil dilation in mm",
         color = "Model ID"
       ) +
-      theme_minimal() +
+      theme(legend.position = "none") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
