@@ -507,7 +507,7 @@ We also ran a design analysis for the proportional looking analysis. We used the
 Raw gaze position data (x- and y-coordinates) will be extracted in the time window starting from the first frame at which the chaser enters the tunnel until the last frame before it exits the tunnel in the last familiarisation trial and in the test trial. For data collected from labs using a binocular eye-tracker, gaze positions of the left and the right eye will be averaged.
 We will use the peekds R package (\url{http://github.com/langcog/peekds}) to convert eye-tracking data from disparate trackers into a common format. Because not all eye-trackers record data with the same frequency or regularity, we will resample all data to be at a common rate of 40 Hz (samples per second).
 We will exclude individual trials if more than 50\% of the gaze data is missing (defined as off-screen or unavailable point of gaze during the whole trial, not just the anticipatory period). Applying this criterion would have caused us to exclude 4\% of the trials in our pilot data, which inspection of our pilot data suggested was an appropriate trade-off between not excluding too much usable data and not analyzing trials which were uninformative.
-For each monitor size, we will determine the specific AOIs and compute whether the specific x- and y-position for each participant, trial, and time point fall within their screen resolution-specific AOIs. Our goal is to determine whether participants are anticipating the emergence of the chaser from one of the two tunnel exits. Thus, we defined AOIs on the stimulus by creating a rectangular region around the tunnel exit that is D units from the top, bottom, left, and right of the boundary of the tunnel exit, where D is the diameter of the tunnel exits. We then expanded the sides of the AOI rectangles by 25\% in all directions to account for tracker calibration error. Our rationale was that, if we made the AOI too small, we might fail to capture anticipations by participants with poor calibrations. In contrast, if we made the regions too large, we might capture some fixations by participants looking at the box where the chasee actually is. On the other hand, these chasee looks would not be expected to vary between conditions and so would only affect our baseline level of looking. Thus, the chosen AOIs aim at maximizing our ability to capture between-condition differences. For an illustration of the tunnel exit AOIs see Figure 4. We are not analyzing looks to the boxes, since they can less unambiguously be interpreted as epistemic state-based action predictions and because we observed few anticipatory looks to the boxes in the pilot studies. For more detailed information about the AOI definition process see the description of the pilot study results in the Supplemental Material.
+For each monitor size, we will determine the specific AOIs and compute whether the specific x- and y-position for each participant, trial, and time point fall within their screen resolution-specific AOIs. Our goal is to determine whether participants are anticipating the emergence of the chaser from one of the two tunnel exits. Thus, we defined AOIs on the stimulus by creating a rectangular region around the tunnel exit that is D units from the top, bottom, left, and right of the boundary of the tunnel exit, where D is the diameter of the tunnel exits. We then expanded the sides of the AOI rectangles by 25\% in all directions to account for tracker calibration error. Our rationale was that, if we made the AOI too small, we might fail to capture anticipations by participants with poor calibrations. In contrast, if we made the regions too large, we might capture some fixations by participants looking at the box where the chasee actually is. On the other hand, these chasee looks would not be expected to vary between conditions and so would only affect our baseline level of looking. Thus, the chosen AOIs aim at maximizing our ability to capture between-condition differences. For an illustration of the tunnel exit AOIs see Figure 3. We are not analyzing looks to the boxes, since they can less unambiguously be interpreted as epistemic state-based action predictions and because we observed few anticipatory looks to the boxes in the pilot studies. For more detailed information about the AOI definition process see the description of the pilot study results in the Supplemental Material.
 
 \begin{figure}
 
@@ -515,7 +515,7 @@ For each monitor size, we will determine the specific AOIs and compute whether t
 
 }
 
-\caption{Illustration of Areas of Interest (AOIs) for gaze data analysis during the anticipatory period. \newline{} \textit{Note}. The light green rectangles show the dimensions of the AOIs used for the analysis of AL during the test period.}\label{fig:fig4}
+\caption{Illustration of Areas of Interest (AOIs) for gaze data analysis during the anticipatory period. \newline{} \textit{Note}. The light green rectangles show the dimensions of the AOIs used for the analysis of AL during the test period.}\label{fig:fig3}
 \end{figure}
 
 \subsubsection{Manual Coding}\label{manual-coding}
@@ -529,7 +529,7 @@ For familiarization trials, we define the start of the anticipatory period (tota
 \subsubsection{Dependent Variables}\label{dependent-variables}
 
 We define two primary dependent variables:
-1. First look. First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in rayner2009eye. The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins.
+1. First look. First saccades will be determined as the first change in gaze occurring within the anticipatory time window that is directed towards one of the AOIs. The first look is then the binary variable denoting the target of this first saccade (i.e., either the correct or incorrect AOI) and is defined as the first AOI where participants fixated at for at least 150 ms, as in Rayner, Smith, Malcolm, and Henderson (2009). The rationale for this definition was that, if participants are looking at a location within the tunnel exit AOIs before the anticipation period, they might have been looking there for other reasons than action prediction. We therefore count only looks that start within the anticipation period because they more unambiguously reflect action predictions. This further prevents us from running into a situation where we would include a lot of fixations on regions other than the tunnel exit AOIs because participants are looking somewhere else before the anticipation period begins.
 2. Proportion DLS {[}also referred to as total relative looking time; Senju et al. (2009){]}. We compute the proportion looking (p) to the correct AOI during the full 4000 ms anticipatory window (correct looking time / (correct looking time + incorrect looking time)), excluding looks outside of either AOI.
 
 \section{Results}\label{results}
@@ -549,7 +549,7 @@ For the proportional looking score analysis, we used a uniform prior on the inte
 
 }
 
-\caption{Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.}\label{fig:fig5}
+\caption{Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.}\label{fig:fig4}
 \end{figure}
 
 \begin{center}
@@ -610,10 +610,10 @@ First Look adults & Condition Effect & -0.89 & -1.21 & -0.56\\
 
 \subsubsection{Familiarization Trials.}\label{familiarization-trials.}
 
-Figure 5 shows the proportion of total relative looking time (non-logit transformed) and proportion of first looks for toddlers and adults plotted across familiarization trials and test trials. Our first set of analyses examined data from the four familiarization trials and asked whether participants anticipated the chaser's reappearance at one of the tunnel exits. In our first analysis, we were interested in whether participants engage in AL during the familiarization trials. To quantify the level of familiarization, we fitted Bayesian mixed effect models predicting target looks based on trial number (1-4) with random effects for lab and participants and random slopes for trial number for each.
+Figure 4 shows the proportion of total relative looking time (non-logit transformed) and proportion of first looks for toddlers and adults plotted across familiarization trials and test trials. Our first set of analyses examined data from the four familiarization trials and asked whether participants anticipated the chaser's reappearance at one of the tunnel exits. In our first analysis, we were interested in whether participants engage in AL during the familiarization trials. To quantify the level of familiarization, we fitted Bayesian mixed effect models predicting target looks based on trial number (1-4) with random effects for lab and participants and random slopes for trial number for each.
 In R formula notation (which we adopt here because of its relative concision compared with standard mathematical notation), our base model was as follows:
 \(measure \sim 1 + trial\_number +  (trial\_number | lab) + (trial\_number | participant).\)
-We fitted a total of four instances of this model, one for each age group (toddlers vs.~adults) and dependent measure (proportion looking score vs.~first look). First look models were fitted using a logistic link function. The proportion looking score models were Gaussian.
+We fitted a total of four instances of this model, one for each age group (toddlers vs.~adults) and dependent measure (proportion looking score vs.~first look). First look models were fitted using Bernoulli family with a logit link function. The proportion looking score models were Gaussian.
 Our key question of interest was whether overall anticipation is higher than chance levels on the familiarization trial immediately before the test trials, in service of evaluating the evidence that participants are attentive and making predictive looks immediately prior to test. To evaluate this question across the four models, we coded trial number so that the last trial before the test trials (trial 4) was set to the intercept, allowing the model intercept to encode an estimate of the proportion of correct anticipation immediately before test. We then fitted a simpler model for comparison
 \(measure \sim 0 + trial\_number +  (trial\_number | lab) + (trial\_number | participant),\)
 which included no intercept term. We then computed the BF comparing this model to the full model. This BF quantified the evidence for an anticipation effect for each group and measure.
@@ -644,17 +644,28 @@ There was again support for an effect of trial number on proportion of first loo
 \subsubsection{Test Trials.}\label{test-trials.}
 
 We focused our confirmatory analysis on the first test trial (see Exploratory Analysis section for an analysis of both trials). Our primary question of interest was whether AL differs between conditions (knowledge vs.~ignorance, coded as -.5/.5) and by age (in months, centered). For child participants, we fitted models with the specification:
-\(measure ~ 1 + condition + age + condition:age + (1 + condition + age + condition:age | lab).\)
+\(measure \sim 1 + condition + age + condition:age + (1 + condition + age + condition:age | lab).\)
 For adult participants, we fitted models with the specification
-\(measure ~ 1 + condition + (1 + condition | lab).\)
+\(measure \sim 1 + condition + (1 + condition | lab).\)
 Again, we fitted models with a logistic link for first look analyses and with a standard linear link for DLS.
 In each case, our key BF was a comparison of this model with a simpler ``null'' model that did not include the fixed effect of condition but still included other terms. We take a BF \textgreater{} 3 in favor of a particular model as substantial evidence and a BF \textgreater{} 10 in favor of strong evidence. A BF \textless{} 1/3 is taken as substantial evidence in favor of the simpler model, and a BF \textless{} 1/10 as strong evidence in favor of the simpler model.
 For the model of data from toddlers, we additionally were interested in whether the model shows changes in AL with age. We assessed evidence for this by computing BFs related to the comparison with a model that did not include an interaction between age and condition as fixed effects
-\[measure ~ 1 + condition + age + (1 + condition + age + condition:age | lab).\]
+\[measure \sim 1 + condition + age + (1 + condition + age + condition:age | lab).\]
 These BFs captured the evidence for age-related changes in the difference in action anticipation between the two conditions.
 It is important to note that in the case of a null effect, there are two main explanations: (1) toddlers and adults in our study do not distinguish between knowledgeable and ignorant agents when predicting their actions. (2) The method used is not appropriate to reveal knowledge/ignorance understanding. By using Bayesian analyses, we are able to better evaluate the first of these two possibilities: The BF provides a measure of our statistical confidence in the null hypothesis, i.e., no difference between experimental conditions, given the data in ways that standard null hypothesis significance testing does not. In other words, instead of merely concluding that we did not find a difference between conditions, we would be able to find no/anecdotal/moderate/strong/very strong/extreme evidence for the null hypothesis that our participants did not distinguish between knowledgeable and ignorant agents when predicting their actions (Schönbrodt \& Wagenmakers, 2018). We therefore consider this analysis an important addition to our overall analysis strategy. Yet, even our Bayesian analyses are not able to rule out the second possibility that participants may well show such knowledge/ignorance understanding with different methods, or that this ability may not be measurable with any methods available at the current time. Addressing this alternative explanation warrants follow up experiments.
 
 \paragraph{Proportion of total relative looking time}\label{proportion-of-total-relative-looking-time-1}
+
+\begin{figure}
+
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase} 
+
+}
+
+\caption{Timecourse of mean proportional looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition.}\label{fig:fig5}
+\end{figure}
+
+Figure 5 depicts mean proportion looking to target and distractor during the anticipation window. The timecourse plot displays mean proportional looking for both conditions, knowledge and ignorance, both age cohorts, toddlers and adults, as wells as both test trials, first and second.
 
 \subparagraph{Toddlers}\label{toddlers-2}
 
@@ -682,7 +693,7 @@ We compared a Bayesian mixed-effects model predicting the proportion of first lo
 
 \subsubsection{Spill-over}\label{spill-over}
 
-We will analyze within-participants data from the second test trial that participants saw, using exploratory models to assess whether (1) findings are consistent when both trials are included (overall condition effect), (2) whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of ``spillover'' - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect).
+We will analyze within-participants data from the second test trial that participants saw, using exploratory models to assess whether (1) findings are consistent when both trials are included (overall condition effect), (2) whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of ``spillover'' - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect; see Figure 6).
 
 Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF = 0.0, providing
 strong evidence in favor of the null model.
@@ -755,7 +766,7 @@ This provides strong evidence in favor of including the interaction of condition
 
 \paragraph{AL as a function of number of gaze shifts between mouse and bear during location change}\label{al-as-a-function-of-number-of-gaze-shifts-between-mouse-and-bear-during-location-change}
 
-In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately. The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
+In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately (see Figure 9). The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
 For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of BF = 0.0 was computed, indicating that the data strongly favors the null model over the full model. This suggests that the predictors number of shifts and the interaction with condition included in the full model do not improve the explanation of the observed data compared to the null model.
 
@@ -996,6 +1007,9 @@ Priewasser, B., Fowles, F., Schweller, K., \& Perner, J. (2020). Mistaken max be
 
 \bibitem[\citeproctext]{ref-priewasser2018helping}
 Priewasser, B., Rafetseder, E., Gargitter, C., \& Perner, J. (2018). Helping as an early indicator of a theory of mind: Mentalism or teleology? \emph{Cognitive Development}, \emph{46}, 69--78.
+
+\bibitem[\citeproctext]{ref-rayner2009eye}
+Rayner, K., Smith, T. J., Malcolm, G. L., \& Henderson, J. M. (2009). Eye movements and visual encoding during scene perception. \emph{Psychological Science}, \emph{20}(1), 6--10.
 
 \bibitem[\citeproctext]{ref-ruffman1996children}
 Ruffman, T. (1996). Do children understand the mind by means of simulation or a theory? Evidence from their understanding of inference. \emph{Mind \& Language}, \emph{11}(4), 388--414.

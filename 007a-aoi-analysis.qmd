@@ -1026,6 +1026,33 @@ ggplot(
 ggsave(here(plot_path, "test_timecourse_plot.png"),
   bg = "white", width = 12, height = 6
 )
+
+timecourse_test_trials <- ggplot(
+  filter(ms_timecourse_test_long, t_norm_downsampled > -5000 & t_norm_downsampled <= 120),
+  aes(
+    x = t_norm_downsampled, y = mean,
+    col = aoi_type, lty = trial_number_name
+  )
+) +
+  # geom_point(alpha = .1) +
+  geom_line() +
+  geom_ribbon(aes(ymin = mean - se, ymax = mean + se, fill = aoi_type),
+    alpha = .2, color = NA
+  ) +
+  facet_grid(condition ~ age_cohort) +
+  geom_vline(xintercept = -3880, lty = 3, col = "black") +
+  geom_vline(xintercept = 120, lty = 3, col = "black") +
+  ggthemes::theme_few() +
+  scale_fill_manual(name = "AOI", values = c("#440154FF", "#21908CFF")) +
+  scale_color_manual(name = "AOI", values = c("#440154FF", "#21908CFF")) +
+  scale_linetype(name = "Trial Number") +
+  theme(legend.position = "bottom") +
+  xlab("Time") +
+  ylab("Mean Proportion Looking")
+timecourse_test_trials
+ggsave(here(plot_path, "test_timecourse_plot_anticipation_phase.png"),
+  bg = "white", width = 12, height = 6
+)
 ```
 
 ### With Extension
