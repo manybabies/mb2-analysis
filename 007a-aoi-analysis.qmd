@@ -16,6 +16,8 @@ library(tidybayes)
 library(knitr)
 library(corrr)
 library(ggpubr)
+library(bayesplot)
+library(broom.mixed)
 
 source(here("helper", "ensure_repo_structure.R"))
 plot_path <- here("plots")
@@ -237,12 +239,42 @@ bm_fam_aoi_toddlers <- brm(
   sample_prior = TRUE,
   control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
 )
-summary(bm_fam_aoi_toddlers)
+bm_fam_aoi_toddlers_summary <- summary(bm_fam_aoi_toddlers)
 # prior_summary(bm_fam_aoi_toddlers)
 
 saveRDS(bm_fam_aoi_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers.rds")
 )
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_fam_aoi_toddlers_tidy_summary <- as_tibble(summary(bm_fam_aoi_toddlers)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_aoi_toddlers_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_aoi_toddlers_model_summary.rds")
+)
+```
+
+Conduct model diagnostics
+
+```{r}
+#Is Rhat<1.1?
+bm_fam_aoi_toddlers_tidy_summary$rhat
+sum(bm_fam_aoi_toddlers_tidy_summary$rhat>=1.1)
+
+#visual posterior predictive check
+pp_check(bm_fam_aoi_toddlers) #one can clearly see that the model misses the zero-/one-inflation structure in the distribution
 ```
 
 Summarize outcomes
