@@ -1313,7 +1313,116 @@ correlation_fam_test_by_age %>%
 saveRDS(correlation_fam_test_by_age, 
         file = here(RESULTS_FOLDER, "correlation_fam_test_by_age.rds"))
 ```
+### 2.d. Location of bear during last familiarization trial and final location of mouse in first test trial
 
+```{r}
+# get info on whether location of bear during last familiarization trial is identical to final location of the mouse in first test trial
+
+# Renee's comment on the yo-yo effect: "
+
+fam_final_location_bear <- summarize_participant_familiarization %>%
+  filter(trial_num == 4) %>% 
+  ungroup() %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, media_name)
+
+test_first_trial_final_location_mouse <- summarize_participant_test_first_trial %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, trial_file_name) %>% 
+  left_join(fam_final_location_bear)
+
+test_first_trial_final_location_mouse$media_name <- gsub("FAM_([A-Z]{2})", "\\1", test_first_trial_final_location_mouse$media_name)
+
+test_first_trial_final_location_mouse$trial_file_name <- gsub(".*_([A-Z]{2})(?:_new)?\\.mp4", "\\1", test_first_trial_final_location_mouse$trial_file_name)
+
+test_first_trial_final_location_mouse$location <- ifelse(
+  substr(test_first_trial_final_location_mouse$trial_file_name, 2, 2) == substr(test_first_trial_final_location_mouse$media_name, 2, 2),
+  "different",
+  "same"
+)
+
+location_bear_mouse_fam_test <- test_first_trial_final_location_mouse %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, location)
+```
+
+```{r}
+# merge with test data
+
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>% 
+  left_join(location_bear_mouse_fam_test)
+
+summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial %>% 
+  filter(summarize_participant_test_first_trial$location != "NA")
+
+# MSS: Here, we might only want to look at fam_prop_exit of the last fam trial? Currently, we are looking at mean fam_prop_exit of all four familiarization trials.
+correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_wo_NA_location,
+                                    aes(fam_prop_exit, prop_exit, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm") +
+  facet_wrap(location~age_cohort) +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Overall Proportion Target Looking during Familiarization") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+correlation_plot_fam_test
+```
+
+```{r}
+# Summary statistics by location
+
+summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_location %>%
+  group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition, location) %>%
+  summarize(
+    n = n(),
+    mean_subj_prop_exit = mean(prop_exit, na.rm = T)
+  ) %>%
+  group_by(age_cohort, condition, location) %>%
+  summarize(
+    participant_num = sum(!is.na(mean_subj_prop_exit)),
+    mean_target_looking = mean(mean_subj_prop_exit, na.rm = T),
+    sd_target_looking = sd(mean_subj_prop_exit, na.rm = T),
+    t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu = 0.5)))
+  ) %>%
+  mutate(
+    # 95% CIs
+    lower_ci_target_looking = mean_target_looking -
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking = mean_target_looking +
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    # mean_target_looking_general = mean(prop_general, na.rm=T),
+    # sd_target_looking_general=sd(prop_general,na.rm=T),
+    lower_ci_target_looking_general = mean_target_looking -
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking_general = mean_target_looking +
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
+  ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval = statistic,
+    df = parameter
+  )
+
+
+summarize_test_aoi_location %>%
+  knitr::kable()
+
+model_location <- lmer(
+  prop_exit ~ location * age_cohort * condition + 
+    (1 | participant_id),
+  data = summarize_participant_test_first_trial_wo_NA_location
+)
+
+# Summarize the model
+summary(model_location)
+
+# Visualize interaction effects
+if (!require("emmeans")) install.packages("emmeans")
+library(emmeans)
+emm <- emmeans(model_location, ~ location * age_cohort * condition)
+plot(emm)
+```
 
 ## 3. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
 
