@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.12.5)  9 JAN 2025 11:59
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.12.5)  21 JAN 2025 14:18
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1057,18 +1057,21 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
 [33]
 
 [34]
+
+[35]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png>
 
-Overfull \hbox (21.67989pt too wide) in paragraph at lines 661--662
+Overfull \hbox (21.67989pt too wide) in paragraph at lines 673--674
  [][] 
  []
 
 
 
-[35]
-
 [36]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [37]
 
@@ -1078,7 +1081,7 @@ Overfull \hbox (21.67989pt too wide) in paragraph at lines 661--662
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 713--714
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 714--715
  [][] 
  []
 
@@ -1087,9 +1090,6 @@ Overfull \hbox (21.68977pt too wide) in paragraph at lines 713--714
 [40]
 
 [41]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [42]
 Underfull \vbox (badness 2189) has occurred while \output is active []
@@ -1100,12 +1100,9 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 739--740
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 744--745
  [][] 
  []
-
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
@@ -1115,7 +1112,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 760--761
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 765--766
  [][] 
  []
 
@@ -1125,18 +1122,18 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 760--761
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 777--778
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 782--783
  [][] 
  []
-
-
-Underfull \vbox (badness 1147) has occurred while \output is active []
 
 
 
 [47]
 
 [48]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [49]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1203,11 +1200,11 @@ LaTeX Warning: There were multiply-defined labels.
  ) 
 Here is how much of TeX's memory you used:
  22293 strings out of 475964
- 420181 string characters out of 5776212
- 985674 words of memory out of 5000000
+ 420155 string characters out of 5776212
+ 985650 words of memory out of 5000000
  44773 multiletter control sequences out of 15000+600000
  590776 words of font info for 110 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,12n,123p,2890b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on mb2-paper.pdf (63 pages).
