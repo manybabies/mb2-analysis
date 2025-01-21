@@ -1313,116 +1313,6 @@ correlation_fam_test_by_age %>%
 saveRDS(correlation_fam_test_by_age, 
         file = here(RESULTS_FOLDER, "correlation_fam_test_by_age.rds"))
 ```
-### 2.d. Location of bear during last familiarization trial and final location of mouse in first test trial
-
-```{r}
-# get info on whether location of bear during last familiarization trial is identical to final location of the mouse in first test trial
-
-# Renee's comment on the yo-yo effect: "
-
-fam_final_location_bear <- summarize_participant_familiarization %>%
-  filter(trial_num == 4) %>% 
-  ungroup() %>% 
-  select(lab_id, participant_lab_id, participant_id, age_cohort, media_name)
-
-test_first_trial_final_location_mouse <- summarize_participant_test_first_trial %>% 
-  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, trial_file_name) %>% 
-  left_join(fam_final_location_bear)
-
-test_first_trial_final_location_mouse$media_name <- gsub("FAM_([A-Z]{2})", "\\1", test_first_trial_final_location_mouse$media_name)
-
-test_first_trial_final_location_mouse$trial_file_name <- gsub(".*_([A-Z]{2})(?:_new)?\\.mp4", "\\1", test_first_trial_final_location_mouse$trial_file_name)
-
-test_first_trial_final_location_mouse$location <- ifelse(
-  substr(test_first_trial_final_location_mouse$trial_file_name, 2, 2) == substr(test_first_trial_final_location_mouse$media_name, 2, 2),
-  "different",
-  "same"
-)
-
-location_bear_mouse_fam_test <- test_first_trial_final_location_mouse %>% 
-  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, location)
-```
-
-```{r}
-# merge with test data
-
-summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>% 
-  left_join(location_bear_mouse_fam_test)
-
-summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial %>% 
-  filter(summarize_participant_test_first_trial$location != "NA")
-
-# MSS: Here, we might only want to look at fam_prop_exit of the last fam trial? Currently, we are looking at mean fam_prop_exit of all four familiarization trials.
-correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_wo_NA_location,
-                                    aes(fam_prop_exit, prop_exit, color = condition)) +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
-  geom_point(alpha = 0.25) +
-  geom_smooth(method = "lm") +
-  facet_wrap(location~age_cohort) +
-  theme_cowplot() +
-  scale_color_brewer(palette = "Set1") +
-  scale_fill_brewer(palette = "Set1") +
-  xlab("Overall Proportion Target Looking during Familiarization") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-correlation_plot_fam_test
-```
-
-```{r}
-# Summary statistics by location
-
-summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_location %>%
-  group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition, location) %>%
-  summarize(
-    n = n(),
-    mean_subj_prop_exit = mean(prop_exit, na.rm = T)
-  ) %>%
-  group_by(age_cohort, condition, location) %>%
-  summarize(
-    participant_num = sum(!is.na(mean_subj_prop_exit)),
-    mean_target_looking = mean(mean_subj_prop_exit, na.rm = T),
-    sd_target_looking = sd(mean_subj_prop_exit, na.rm = T),
-    t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu = 0.5)))
-  ) %>%
-  mutate(
-    # 95% CIs
-    lower_ci_target_looking = mean_target_looking -
-      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
-    upper_ci_target_looking = mean_target_looking +
-      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
-    # mean_target_looking_general = mean(prop_general, na.rm=T),
-    # sd_target_looking_general=sd(prop_general,na.rm=T),
-    lower_ci_target_looking_general = mean_target_looking -
-      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
-    upper_ci_target_looking_general = mean_target_looking +
-      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
-    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
-  ) %>%
-  select(-t_test) %>%
-  unnest(p.value) %>%
-  rename(
-    tval = statistic,
-    df = parameter
-  )
-
-
-summarize_test_aoi_location %>%
-  knitr::kable()
-
-model_location <- lmer(
-  prop_exit ~ location * age_cohort * condition + 
-    (1 | participant_id),
-  data = summarize_participant_test_first_trial_wo_NA_location
-)
-
-# Summarize the model
-summary(model_location)
-
-# Visualize interaction effects
-if (!require("emmeans")) install.packages("emmeans")
-library(emmeans)
-emm <- emmeans(model_location, ~ location * age_cohort * condition)
-plot(emm)
-```
 
 ## 3. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
 
@@ -3012,4 +2902,333 @@ test_first_trial_diff_target_distractor_looking <- ggplot(summarize_participant_
 test_first_trial_diff_target_distractor_looking
 ggsave(here(plot_path, "test_first_trial_diff_target_distractor_looking.png"),
        bg = "white", width = 9, height = 9)
+```
+
+## 11. The yo-yo effect: Location of bear during last trial and location of target in following trial
+
+### 11.a. Test phase: Last fam trial and first test trial
+
+```{r}
+# get info on whether location of bear during last familiarization trial is identical to final location of the mouse in first test trial
+
+fam_final_location_bear <- summarize_participant_familiarization %>%
+  filter(trial_num == 4) %>% 
+  ungroup() %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, media_name)
+
+test_first_trial_final_location_mouse <- summarize_participant_test_first_trial %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, trial_file_name) %>% 
+  left_join(fam_final_location_bear)
+
+test_first_trial_final_location_mouse$media_name <- gsub("FAM_([A-Z]{2})", "\\1", test_first_trial_final_location_mouse$media_name)
+
+test_first_trial_final_location_mouse$trial_file_name <- gsub(".*_([A-Z]{2})(?:_new)?\\.mp4", "\\1", test_first_trial_final_location_mouse$trial_file_name)
+
+test_first_trial_final_location_mouse$location <- ifelse(
+  substr(test_first_trial_final_location_mouse$trial_file_name, 2, 2) == substr(test_first_trial_final_location_mouse$media_name, 2, 2),
+  "different",
+  "same"
+)
+
+location_bear_mouse_fam_test <- test_first_trial_final_location_mouse %>% 
+  select(lab_id, participant_lab_id, participant_id, age_cohort, condition, location)
+```
+
+```{r}
+# merge with test data
+
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>% 
+  left_join(location_bear_mouse_fam_test)
+
+summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial %>% 
+  filter(summarize_participant_test_first_trial$location != "NA")
+
+# MSS: Here, we might only want to look at fam_prop_exit of the last fam trial? Currently, we are looking at mean fam_prop_exit of all four familiarization trials.
+correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_wo_NA_location,
+                                    aes(fam_prop_exit, prop_exit, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm") +
+  facet_wrap(location~age_cohort) +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Overall Proportion Target Looking during Familiarization") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+correlation_plot_fam_test
+```
+
+```{r}
+# Summary statistics by location
+
+summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_location %>%
+  group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition, location) %>%
+  summarize(
+    n = n(),
+    mean_subj_prop_exit = mean(prop_exit, na.rm = T)
+  ) %>%
+  group_by(age_cohort, condition, location) %>%
+  summarize(
+    participant_num = sum(!is.na(mean_subj_prop_exit)),
+    mean_target_looking = mean(mean_subj_prop_exit, na.rm = T),
+    sd_target_looking = sd(mean_subj_prop_exit, na.rm = T),
+    t_test = list(broom::tidy(t.test(mean_subj_prop_exit, alternative = "two.sided", mu = 0.5)))
+  ) %>%
+  mutate(
+    # 95% CIs
+    lower_ci_target_looking = mean_target_looking -
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking = mean_target_looking +
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    # mean_target_looking_general = mean(prop_general, na.rm=T),
+    # sd_target_looking_general=sd(prop_general,na.rm=T),
+    lower_ci_target_looking_general = mean_target_looking -
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    upper_ci_target_looking_general = mean_target_looking +
+      qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
+  ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval = statistic,
+    df = parameter
+  )
+
+summarize_test_aoi_location %>%
+  knitr::kable()
+
+# center location for Bayesian models
+
+summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial_wo_NA_location %>%
+  mutate(
+    location_c = case_when(
+      location == "same" ~ -0.5,
+      location == "different" ~ 0.5)
+    )
+```
+
+#### Toddlers
+```{r}
+bm_test_toddlers_location_al <- brm_default(
+  prop_exit ~ 1 + condition_c * location_c +
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial_wo_NA_location, age_cohort == "toddlers")
+)
+
+summary(bm_test_toddlers_location_al)
+prior_summary(bm_test_toddlers_location_al)
+
+saveRDS(bm_test_toddlers_location_al, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_location_al.rds"))
+```
+
+Bridge sampling Bayes factor approach
+
+```{r}
+bm_test_toddlers_location_al_null <- update(bm_test_toddlers_location_al, 
+                                          formula = ~ . - condition_c:location_c,
+                                          cores = n_cores)
+summary(bm_test_toddlers_location_al_null)
+
+saveRDS(bm_test_toddlers_location_al_null, 
+        file = here(model_fits_dir, "bm_test_toddlers_location_al_null.rds"))
+
+test_m_comparison_toddlers_location_al <- brms::bayes_factor(bm_test_toddlers_location_al, 
+                                                           bm_test_toddlers_location_al_null)
+
+saveRDS(test_m_comparison_toddlers_location_al, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_location_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_toddlers_location_al)
+rm(bm_test_toddlers_location_al_null)
+gc()
+```
+
+#### Adults
+```{r}
+bm_test_adults_location_al <- brm_default(
+  prop_exit ~ 1 + condition_c * location_c +
+    (1 + condition_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial_wo_NA_location, age_cohort == "adults")
+)
+summary(bm_test_adults_location_al)
+prior_summary(bm_test_adults_location_al)
+
+saveRDS(bm_test_adults_location_al, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_location_al.rds"))
+```
+
+Bridge sampling Bayes factor approach
+
+```{r}
+bm_test_adults_location_al_null <- update(bm_test_adults_location_al, 
+                                          formula = ~ . - condition_c:location_c,
+                                          cores = n_cores)
+summary(bm_test_adults_location_al_null)
+
+saveRDS(bm_test_adults_location_al_null, 
+        file = here(model_fits_dir, "bm_test_adults_location_al_null.rds"))
+
+test_m_comparison_adults_location_al <- brms::bayes_factor(bm_test_adults_location_al, 
+                                                           bm_test_adults_location_al_null)
+
+saveRDS(test_m_comparison_adults_location_al, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_location_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_adults_location_al)
+rm(bm_test_adults_location_al_null)
+gc()
+```
+
+### 11.b. Familiarization phase: Last fam trial and first test trial
+
+```{r}
+# creating variable prev_location (same/different target location as previous trial):
+
+summarize_participant_familiarization <- summarize_participant_familiarization %>% 
+  mutate(
+    prev_location = case_when(
+      trial_num == "1" ~ NA,
+      trial_num == "2" ~ "different",
+      trial_num == "3" ~ "same",
+      trial_num == "4" ~ "different"),
+     prev_location_c = case_when(
+      prev_location == "same" ~ -0.5,
+      prev_location == "different" ~ 0.5),
+     prop_exit_adj = prop_exit - 0.5, # adjusting for chance
+    familiarization_trial_num_4 = familiarization_trial_num - 4) 
+    
+```
+
+#### Toddlers
+```{r}
+
+priors <- c(
+  set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd") # normal distribution for sd/ random effects
+)
+
+bm_fam_toddlers_location_al <- brm(
+  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_4 +
+    (1 | participant_id) + (1 | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_familiarization, age_cohort == "toddlers" & trial_num != "1"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+
+summary(bm_fam_toddlers_location_al)
+prior_summary(bm_fam_toddlers_location_al)
+
+saveRDS(bm_fam_toddlers_location_al, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_location_al.rds"))
+```
+
+Bridge sampling Bayes factor approach
+
+```{r}
+bm_fam_toddlers_location_al_null <- update(bm_fam_toddlers_location_al, 
+                                          formula = ~ . - prev_location_c,
+                                          cores = n_cores)
+summary(bm_fam_toddlers_location_al_null)
+
+saveRDS(bm_fam_toddlers_location_al_null, 
+        file = here(model_fits_dir, "bm_fam_toddlers_location_al_null.rds"))
+
+fam_m_comparison_toddlers_location_al <- brms::bayes_factor(bm_fam_toddlers_location_al, 
+                                                           bm_fam_toddlers_location_al_null)
+
+saveRDS(fam_m_comparison_toddlers_location_al, 
+        file = here(RESULTS_FOLDER, "fam_m_comparison_toddlers_location_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_fam_toddlers_location_al)
+rm(bm_fam_toddlers_location_al_null)
+gc()
+```
+
+#### Adults
+```{r}
+
+priors <- c(
+  set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd") # normal distribution for sd/ random effects
+)
+
+bm_fam_adults_location_al <- brm(
+  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_4 +
+    (1 | participant_id) + (1 | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_familiarization, age_cohort == "adults" & trial_num != "1"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+
+summary(bm_fam_adults_location_al)
+prior_summary(bm_fam_adults_location_al)
+
+saveRDS(bm_fam_adults_location_al, 
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_location_al.rds"))
+```
+
+Bridge sampling Bayes factor approach
+
+```{r}
+bm_fam_adults_location_al_null <- update(bm_fam_adults_location_al, 
+                                          formula = ~ . - prev_location_c,
+                                          cores = n_cores)
+summary(bm_fam_adults_location_al_null)
+
+saveRDS(bm_fam_adults_location_al_null, 
+        file = here(model_fits_dir, "bm_fam_adults_location_al_null.rds"))
+
+fam_m_comparison_adults_location_al <- brms::bayes_factor(bm_fam_adults_location_al, 
+                                                           bm_fam_adults_location_al_null)
+
+saveRDS(fam_m_comparison_adults_location_al, 
+        file = here(RESULTS_FOLDER, "fam_m_comparison_adults_location_al.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_fam_adults_location_al)
+rm(bm_fam_adults_location_al_null)
+gc()
 ```
