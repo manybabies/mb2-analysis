@@ -3095,7 +3095,7 @@ rm(bm_test_adults_location_al_null)
 gc()
 ```
 
-### 11.b. Familiarization phase: Last fam trial and first test trial
+### 11.b. Familiarization phase: Influence of previous trial
 
 ```{r}
 # creating variable prev_location (same/different target location as previous trial):
@@ -3125,7 +3125,7 @@ priors <- c(
 )
 
 bm_fam_toddlers_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_4 +
+  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_4 +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
@@ -3151,7 +3151,7 @@ Bridge sampling Bayes factor approach
 
 ```{r}
 bm_fam_toddlers_location_al_null <- update(bm_fam_toddlers_location_al, 
-                                          formula = ~ . - prev_location_c,
+                                          formula = ~ . - prev_location_c:familiarization_trial_num_4,
                                           cores = n_cores)
 summary(bm_fam_toddlers_location_al_null)
 
@@ -3184,7 +3184,7 @@ priors <- c(
 )
 
 bm_fam_adults_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_4 +
+  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_4 +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
@@ -3210,7 +3210,7 @@ Bridge sampling Bayes factor approach
 
 ```{r}
 bm_fam_adults_location_al_null <- update(bm_fam_adults_location_al, 
-                                          formula = ~ . - prev_location_c,
+                                          formula = ~ . - prev_location_c:familiarization_trial_num_4,
                                           cores = n_cores)
 summary(bm_fam_adults_location_al_null)
 
