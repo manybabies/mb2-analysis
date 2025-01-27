@@ -2959,9 +2959,9 @@ correlation_plot_fam_test
 ```
 
 ```{r}
-# Summary statistics by location
+# Summary statistics by location and t-test against chance
 
-summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_location %>%
+summarize_test_aoi_location_chance <- summarize_participant_test_first_trial_wo_NA_location %>%
   group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition, location) %>%
   summarize(
     n = n(),
@@ -2986,6 +2986,51 @@ summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_loca
       qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
     upper_ci_target_looking_general = mean_target_looking +
       qt(1 - (0.05 / 2), participant_num - 1) * sd_target_looking / sqrt(participant_num),
+    p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
+  ) %>%
+  select(-t_test) %>%
+  unnest(p.value) %>%
+  rename(
+    tval = statistic,
+    df = parameter
+  )
+
+summarize_test_aoi_location_chance %>%
+  knitr::kable()
+
+# t-test comparing location for each age_cohort and condition
+
+summarize_test_aoi_location <- summarize_participant_test_first_trial_wo_NA_location %>%
+  group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition, location) %>%
+  summarize(
+    n = n(),
+    mean_subj_prop_exit = mean(prop_exit, na.rm = TRUE)
+  ) %>%
+  group_by(age_cohort, condition) %>%
+  summarize(
+    participant_num = sum(!is.na(mean_subj_prop_exit)),
+    mean_same_location = mean(mean_subj_prop_exit[location == "same"], na.rm = TRUE),
+    mean_diff_location = mean(mean_subj_prop_exit[location == "different"], na.rm = TRUE),
+    sd_same_location = sd(mean_subj_prop_exit[location == "same"], na.rm = TRUE),
+    sd_diff_location = sd(mean_subj_prop_exit[location == "different"], na.rm = TRUE),
+    t_test = list(
+      broom::tidy(t.test(
+        mean_subj_prop_exit[location == "same"],
+        mean_subj_prop_exit[location == "different"],
+        alternative = "two.sided",
+        paired = FALSE
+      ))
+    )
+  ) %>%
+  mutate(
+    lower_ci_same = mean_same_location - qt(1 - (0.05 / 2), participant_num - 1) *
+      sd_same_location / sqrt(participant_num),
+    upper_ci_same = mean_same_location + qt(1 - (0.05 / 2), participant_num - 1) *
+      sd_same_location / sqrt(participant_num),
+    lower_ci_diff = mean_diff_location - qt(1 - (0.05 / 2), participant_num - 1) *
+      sd_diff_location / sqrt(participant_num),
+    upper_ci_diff = mean_diff_location + qt(1 - (0.05 / 2), participant_num - 1) *
+      sd_diff_location / sqrt(participant_num),
     p.value = purrr::map(t_test, ~ select(.x, c("p.value", "parameter", "statistic")))
   ) %>%
   select(-t_test) %>%
@@ -3023,6 +3068,8 @@ prior_summary(bm_test_toddlers_location_al)
 
 saveRDS(bm_test_toddlers_location_al, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_location_al.rds"))
+
+pp_check(bm_test_toddlers_location_al)
 ```
 
 Bridge sampling Bayes factor approach
@@ -3066,6 +3113,9 @@ prior_summary(bm_test_adults_location_al)
 
 saveRDS(bm_test_adults_location_al, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_location_al.rds"))
+
+pp_check(bm_test_adults_location_al)
+
 ```
 
 Bridge sampling Bayes factor approach

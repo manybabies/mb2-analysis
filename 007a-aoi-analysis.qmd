@@ -75,7 +75,7 @@ test_data <- data_preprocessed_post_exclusions %>%
 
 ```{r}
 summarize_participant_familiarization <- fam_data %>%
-  group_by(lab_id, age_cohort, condition, participant_lab_id, participant_id, participant_trial_id, trial_num, point_of_disambiguation, video_duration_ms) %>%
+  group_by(lab_id, age_cohort, condition, participant_lab_id, participant_id, participant_trial_id, trial_num, point_of_disambiguation, video_duration_ms, media_name) %>%
   filter(t_norm <= 120 & t_norm >= -3880) %>%
   mutate(
     aoi_diff = c(0, diff(as.numeric(as.factor(aoi))))
