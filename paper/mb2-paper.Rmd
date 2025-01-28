@@ -482,69 +482,69 @@ include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
 ```{r Results table of Bayesian regression models, warning=FALSE}
-# Add model names
-e_bm_fam_aoi_toddlers <- bm_fam_aoi_toddlers_intercept_effect %>% transmute(
-    model = "PTL toddlers",
-    term = "Intercept Effect",
-    estimate = b_Intercept,
-    conf.low = b_Intercept.lower,
-    conf.high = b_Intercept.upper
-  )
-e_bm_fam_aoi_adults <- bm_fam_aoi_adults_intercept_effect %>% transmute(
-    model = "PTL adults",
-    term = "Intercept Effect",
-    estimate = b_Intercept,
-    conf.low = b_Intercept.lower,
-    conf.high = b_Intercept.upper
-  )
-e_bm_fam_first_look_toddlers <- bm_fam_first_look_toddlers_intercept_effect %>% transmute(
-    model = "First Look toddlers",
-    term = "Intercept Effect",
-    estimate = b_Intercept,
-    conf.low = .lower,
-    conf.high = .upper
-  )
-e_bm_fam_first_look_adults <-  bm_fam_first_look_adults_intercept_effect %>% transmute(
-    model = "First Look adults",
-    term = "Intercept Effect",
-    estimate = b_Intercept,
-    conf.low = .lower,
-    conf.high = .upper
-  )
-e_bm_aoi_toddlers <- bm_aoi_toddlers_condition_effect  %>% transmute(
-    model = "PTL toddlers",
-    term = "Condition Effect",
-    estimate = b_condition_c,
-    conf.low = b_condition_c.lower,
-    conf.high = b_condition_c.upper
-  )
-e_bm_aoi_adults <- bm_aoi_adults_condition_effect %>% transmute(
-    model = "PTL adults",
-    term = "Condition Effect",
-    estimate = b_condition_c,
-    conf.low = b_condition_c.lower,
-    conf.high = b_condition_c.upper
-)
-e_bm_test_first_look_toddlers <- bm_test_first_look_toddlers_condition_effect %>% transmute(
-    model = "First Look toddlers",
-    term = "Condition Effect",
-    estimate = b_condition_c,
-    conf.low = .lower,
-    conf.high = .upper
-  )
-e_bm_test_first_look_adults <- bm_test_first_look_adults_condition_effect %>% transmute(
-    model = "First Look adults",
-    term = "Condition Effect",
-    estimate = b_condition_c,
-    conf.low = .lower,
-    conf.high = .upper
-  )
-
-combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
-
-combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
-
-library(kableExtra)
+# # Add model names
+# e_bm_fam_aoi_toddlers <- bm_fam_aoi_toddlers_intercept_effect %>% transmute(
+#     model = "PTL toddlers",
+#     term = "Intercept Effect",
+#     estimate = b_Intercept,
+#     conf.low = b_Intercept.lower,
+#     conf.high = b_Intercept.upper
+#   )
+# e_bm_fam_aoi_adults <- bm_fam_aoi_adults_intercept_effect %>% transmute(
+#     model = "PTL adults",
+#     term = "Intercept Effect",
+#     estimate = b_Intercept,
+#     conf.low = b_Intercept.lower,
+#     conf.high = b_Intercept.upper
+#   )
+# e_bm_fam_first_look_toddlers <- bm_fam_first_look_toddlers_intercept_effect %>% transmute(
+#     model = "First Look toddlers",
+#     term = "Intercept Effect",
+#     estimate = b_Intercept,
+#     conf.low = .lower,
+#     conf.high = .upper
+#   )
+# e_bm_fam_first_look_adults <-  bm_fam_first_look_adults_intercept_effect %>% transmute(
+#     model = "First Look adults",
+#     term = "Intercept Effect",
+#     estimate = b_Intercept,
+#     conf.low = .lower,
+#     conf.high = .upper
+#   )
+# e_bm_aoi_toddlers <- bm_aoi_toddlers_condition_effect  %>% transmute(
+#     model = "PTL toddlers",
+#     term = "Condition Effect",
+#     estimate = b_condition_c,
+#     conf.low = b_condition_c.lower,
+#     conf.high = b_condition_c.upper
+#   )
+# e_bm_aoi_adults <- bm_aoi_adults_condition_effect %>% transmute(
+#     model = "PTL adults",
+#     term = "Condition Effect",
+#     estimate = b_condition_c,
+#     conf.low = b_condition_c.lower,
+#     conf.high = b_condition_c.upper
+# )
+# e_bm_test_first_look_toddlers <- bm_test_first_look_toddlers_condition_effect %>% transmute(
+#     model = "First Look toddlers",
+#     term = "Condition Effect",
+#     estimate = b_condition_c,
+#     conf.low = .lower,
+#     conf.high = .upper
+#   )
+# e_bm_test_first_look_adults <- bm_test_first_look_adults_condition_effect %>% transmute(
+#     model = "First Look adults",
+#     term = "Condition Effect",
+#     estimate = b_condition_c,
+#     conf.low = .lower,
+#     conf.high = .upper
+#   )
+# 
+# combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
+# 
+# combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
+# 
+# library(kableExtra)
 # 
 # # Create the table
 # combined_brm_results_fam <- combined_brm_results_fam %>%
@@ -561,14 +561,23 @@ library(kableExtra)
 #       term == "condition_c:age_mo_c" ~ "Condition x Age",
 #       term == "(Intercept)" ~ "Intercept"))
 
+combined_brm_results_fam_with_blanks <- combined_brm_results_fam %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
 
-papaja::apa_table(combined_brm_results_fam,
+combined_brm_results_test_with_blanks <- combined_brm_results_test %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
+
+papaja::apa_table(combined_brm_results_fam_with_blanks,
                   caption = "Results of the Bayesian mixed effects models for the familiarization trials.",
                   format.args = list(digits = 2),
                   longtable = TRUE,font_size="footnotesize",
                   align=c("l","l","c","c","c"))
 
-papaja::apa_table(combined_brm_results_test,
+papaja::apa_table(combined_brm_results_test_with_blanks,
                   caption = "Results of the Bayesian mixed effects models for the test trials.",
                   format.args = list(digits = 2),
                   longtable = TRUE,font_size="footnotesize",

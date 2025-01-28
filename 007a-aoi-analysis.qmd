@@ -363,6 +363,25 @@ saveRDS(bm_fam_aoi_adults,
 )
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_fam_aoi_adults_tidy_summary <- as_tibble(summary(bm_fam_aoi_adults)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_aoi_adults_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_aoi_adults_model_summary.rds")
+)
+```
+
 Summarize outcomes
 
 Intercept
@@ -732,7 +751,7 @@ saveRDS(bm_aoi_toddlers,
 Organize table in a tidy format
 
 ```{r}
-bm_aoi_toddlers_tidy_summary <- as_tibble(summary(bm_aoi_toddlers)$fixed,rownames=NA) %>% 
+bm_test_aoi_toddlers_tidy_summary <- as_tibble(summary(bm_aoi_toddlers)$fixed,rownames=NA) %>% 
   rownames_to_column("term") %>% 
   rename(
     estimate = Estimate,
@@ -743,8 +762,8 @@ bm_aoi_toddlers_tidy_summary <- as_tibble(summary(bm_aoi_toddlers)$fixed,rowname
   ) %>%
   select(term,estimate,est_error,lower_ci,upper_ci,rhat)
 
-saveRDS(bm_aoi_toddlers_tidy_summary,
-  file = here(RESULTS_FOLDER, "bm_aoi_toddlers_model_summary.rds")
+saveRDS(bm_test_aoi_toddlers_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_aoi_toddlers_model_summary.rds")
 )
 ```
 
@@ -928,6 +947,26 @@ saveRDS(bm_aoi_adults,
 )
 ```
 
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_adults_tidy_summary <- as_tibble(summary(bm_aoi_adults)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_adults_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_aoi_adults_tidy_summary.rds")
+)
+```
+
 ```{r}
 # get main coefficient estimate and HDI
 bm_aoi_adults_condition_effect <- bm_aoi_adults %>%
@@ -958,6 +997,7 @@ saveRDS(test_m_comparison_PTL_adults,
   file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults.rds")
 )
 ```
+
 Robustness: beta regression
 
 ```{r}
@@ -1565,8 +1605,6 @@ quick and dirty averaging of the first look proportions
 
 ### Familiarization Data
 
-TO DO: familiarization plot
-
 ```{r}
 summarize_participant_familiarization_first_look <- d_anticipatory_fam %>%
   group_by(age_cohort, participant_lab_id, lab_id, participant_id, trial_num) %>%
@@ -1832,6 +1870,25 @@ saveRDS(bm_fam_first_look_toddlers,
 )
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_fam_fl_toddlers_tidy_summary <- as_tibble(summary(bm_fam_first_look_toddlers)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_fl_toddlers_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_fl_toddlers_model_summary.rds")
+)
+```
+
 Summarize outcomes
 
 Intercept
@@ -2008,6 +2065,25 @@ summary(bm_fam_first_look_adults)
 
 saveRDS(bm_fam_first_look_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults.rds")
+)
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_fam_fl_adults_tidy_summary <- as_tibble(summary(bm_fam_first_look_adults)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_fl_adults_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_fl_adults_model_summary.rds")
 )
 ```
 
@@ -2228,6 +2304,25 @@ sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correc
 binom.test(sum_correct_first_looks_knowledge, sum_total_first_looks_knowledge, alternative = "two.sided", p = 0.5)
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_toddlers_tidy_summary <- as_tibble(summary(bm_test_first_look_toddlers)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_toddlers_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_toddlers_model_summary.rds")
+)
+```
+
 Summarize outcomes
 
 ```{r}
@@ -2338,6 +2433,7 @@ sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correc
 binom.test(sum_correct_first_looks_knowledge, sum_total_first_looks_knowledge, alternative = "two.sided", p = 0.5)
 ```
 
+
 Summarize outcomes
 
 ```{r}
@@ -2405,6 +2501,24 @@ saveRDS(bm_test_first_look_adults,
 )
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_adults_tidy_summary <- as_tibble(summary(bm_test_first_look_adults)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_adults_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_adults_model_summary.rds")
+)
+```
 Summarize outcomes
 
 ```{r}
@@ -2511,7 +2625,7 @@ rm(bm_test_first_look_adults_less_inf_prior)
 rm(bm_test_first_look_adults_less_inf_prior_null)
 ```
 
-## Plotting PTL and First Look for familiarization and test
+# Plotting PTL and First Look for familiarization and test
 
 ```{r}
 figure_fam_test_p_fl <- ggarrange(
@@ -2551,5 +2665,89 @@ figure_fam_test_p_fl <- cowplot::plot_grid(
 
 ggsave(here(paper_path, "Figure5.png"),
   bg = "white", width = 14, height = 8
+)
+```
+
+# Creating results tables for Bayesian mixed effects models of PTL and First Look for familiarization and test
+
+## Familiarization
+
+```{r}
+table_names_fam <- c("bm_fam_fl_toddlers_tidy_summary", "bm_fam_fl_adults_tidy_summary", "bm_fam_aoi_toddlers_tidy_summary", "bm_fam_aoi_adults_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata_fam <- function(table_names_fam) {
+  parts <- strsplit(table_names_fam, "_")[[1]]
+  list(
+    measure = parts[3], # e.g., "test"
+    age_cohort = parts[4]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_fam <- table_names_fam %>%
+  map_df(~ {
+    metadata <- extract_metadata_fam(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("prev_location_c", "Location") %>% 
+    str_replace_all("location_c", "Location") %>%
+    str_replace_all("familiarization_trial_num_4", "Trial Number"))
+
+
+# View the combined table
+print(combined_brm_results_fam)
+
+saveRDS(combined_brm_results_fam,
+  file = here(RESULTS_FOLDER, "combined_brm_results_fam.rds")
+)
+```
+
+## Test
+
+```{r}
+table_names_test <- c("bm_test_fl_toddlers_tidy_summary", "bm_test_fl_adults_tidy_summary", "bm_test_aoi_toddlers_tidy_summary", "bm_test_aoi_adults_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata_test <- function(table_names_test) {
+  parts <- strsplit(table_names_test, "_")[[1]]
+  list(
+    measure = parts[3], # e.g., "test"
+    age_cohort = parts[4]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_test <- table_names_test %>%
+  map_df(~ {
+    metadata <- extract_metadata_test(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("age_mo_c", "Age"))
+
+
+# View the combined table
+print(combined_brm_results_test)
+
+saveRDS(combined_brm_results_test,
+  file = here(RESULTS_FOLDER, "combined_brm_results_test.rds")
 )
 ```

@@ -482,7 +482,7 @@ include_graphics(here("paper","Figure8.png"),rel_path=FALSE)
 
 ### Test phase: Influence of target location from last familarization on proportional target looking in first test trial
 
-A Bayesian mixed-effects model was fitted to examine the effect of condition, target location (same vs. different from the previous trial), and their interaction on toddlers' proportional target looking . The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with toddlers in the ignorance condition demonstrating higher proportional target looking than those in the knowledge condition. The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison indicated weak evidence against the interaction model, with 
+A Bayesian mixed-effects model was fitted to examine the effect of condition, target location (same vs. different from the previous trial), and their interaction on toddlers' proportional target looking. The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with toddlers in the ignorance condition demonstrating higher proportional target looking than those in the knowledge condition (see Table . The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison indicated weak evidence against the interaction model, with 
 `r format_bayes_factor(test_m_comparison_toddlers_location_al$bf)`, favoring the null model without the interaction over the full model.
 
 Similarly, a Bayesian mixed-effects model was fitted to investigate the effects of condition, target location (same vs. different from the previous trial), and their interaction on adults' proportional target looking. The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with adults in the knowledge condition showing higher proportional target looking compared to those in the ignorance condition. The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison suggested weak evidence against the inclusion of the interaction term, with `r format_bayes_factor(test_m_comparison_adults_location_al$bf)`, favoring the null model without the interaction over the full model.
@@ -493,6 +493,24 @@ A Bayesian mixed-effects model was conducted to assess the effects of the target
 was negative but not significant. Similarly, the main effect of trial number was not significant. The interaction between previous trial location and trial number was also not significant. A Bayes factor analysis provided weak evidence in favor of the full model compared to the null model without these predictors, `r format_bayes_factor(fam_m_comparison_toddlers_location_al$bf)`.
 
 For adults during the familiarization phase, we examined whether the proportional target looking was influenced by the location of the target in the previous trial and the trial number. The results indicated no significant main effect of prior location, trial number, or their interaction. These findings suggest that adults’ proportional looking was not systematically influenced by the side of the target in the previous trial or by trial number. The Bayes factor, `r format_bayes_factor(fam_m_comparison_adults_location_al$bf)`, further supports the conclusion that the model including these predictors was not substantially better than the null model.
+
+```{r fig11, fig.cap="Proportional target looking during the test phase for toddlers and adults split by condition (knowledge vs. ignorance) and consistency of location (same vs. different).", fig.align="center", out.width = "6.8in"}
+include_graphics(here("paper","FigureS6.png"),rel_path=FALSE)
+```
+
+```{r Results table of Bayesian mixed effects models proportional target looking was influenced by the location of the target in the previous trial, warning=FALSE}
+
+combined_brm_results_location_with_blanks <- combined_brm_results_location %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
+
+papaja::apa_table(combined_brm_results_location_with_blanks,
+                  caption = "Results of the Bayesian mixed effects models for consitency of location.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align=c("l","l","r","r","r","r","r"))
+```
 
 \newpage
 

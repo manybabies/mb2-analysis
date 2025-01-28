@@ -2956,7 +2956,45 @@ correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_wo_NA
   xlab("Overall Proportion Target Looking during Familiarization") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
 correlation_plot_fam_test
-```
+
+# plot average proportion looking by location of target on previous trial
+overall_p_test_location <- ggplot(
+  summarize_participant_test_first_trial_wo_NA_location,
+  aes(x = condition, y = prop_exit, color = condition)
+) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_half_violin(
+    aes(fill = condition),
+    side = "r", # Right side for the violin plot
+    position = position_nudge(x = 0.3), # Nudge to avoid overlap with points
+    width = 0.4,
+    alpha = 0.2
+  ) +
+ # geom_half_violin(
+ #   data = filter(summarize_participant_test_first_trial, condition == "ignorance"),
+ #   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
+#  ) +
+ # geom_half_violin(
+ #   data = filter(summarize_participant_test_first_trial, condition == "knowledge"),
+ #   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
+#  ) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~location + age_cohort) +
+  theme(legend.position = "none") +
+  ggtitle("Test") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+overall_p_test_location
+ggsave(here(plot_path, "test_overall_proportion_target_exit_looking_by_location.png"),
+  bg = "white", width = 9, height = 6
+)
+ ```
 
 ```{r}
 # Summary statistics by location and t-test against chance
@@ -3064,12 +3102,33 @@ bm_test_toddlers_location_al <- brm_default(
 )
 
 summary(bm_test_toddlers_location_al)
+bm_test_toddlers_location_al_summary <- summary(bm_test_toddlers_location_al)
+
 prior_summary(bm_test_toddlers_location_al)
 
 saveRDS(bm_test_toddlers_location_al, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_location_al.rds"))
 
 pp_check(bm_test_toddlers_location_al)
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_toddlers_location_al_tidy_summary <- as_tibble(summary(bm_test_toddlers_location_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_toddlers_location_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_toddlers_location_al_model_summary.rds")
+)
 ```
 
 Bridge sampling Bayes factor approach
@@ -3118,6 +3177,25 @@ pp_check(bm_test_adults_location_al)
 
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_adults_location_al_tidy_summary <- as_tibble(summary(bm_test_adults_location_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_adults_location_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_adults_location_al_model_summary.rds")
+)
+```
+
 Bridge sampling Bayes factor approach
 
 ```{r}
@@ -3161,8 +3239,8 @@ summarize_participant_familiarization <- summarize_participant_familiarization %
       prev_location == "same" ~ -0.5,
       prev_location == "different" ~ 0.5),
      prop_exit_adj = prop_exit - 0.5, # adjusting for chance
-    familiarization_trial_num_4 = familiarization_trial_num - 4) 
-    
+    familiarization_trial_num_4 = familiarization_trial_num - 4)
+
 ```
 
 #### Toddlers
@@ -3195,6 +3273,25 @@ prior_summary(bm_fam_toddlers_location_al)
 
 saveRDS(bm_fam_toddlers_location_al, 
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_location_al.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_fam_toddlers_location_al_tidy_summary <- as_tibble(summary(bm_fam_toddlers_location_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_toddlers_location_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_toddlers_location_al_model_summary.rds")
+)
 ```
 
 Bridge sampling Bayes factor approach
@@ -3256,6 +3353,25 @@ saveRDS(bm_fam_adults_location_al,
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_adults_location_al.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_fam_adults_location_al_tidy_summary <- as_tibble(summary(bm_fam_adults_location_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_fam_adults_location_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_fam_adults_location_al_model_summary.rds")
+)
+```
+
 Bridge sampling Bayes factor approach
 
 ```{r}
@@ -3281,4 +3397,45 @@ Remove the Bayes models from the environment (because the model objects are quit
 rm(bm_fam_adults_location_al)
 rm(bm_fam_adults_location_al_null)
 gc()
+```
+
+```{r}
+# Assume all tables are already loaded into your environment and follow this naming pattern
+table_names <- c("bm_test_adults_location_al_tidy_summary", "bm_test_toddlers_location_al_tidy_summary", "bm_fam_adults_location_al_tidy_summary", "bm_fam_toddlers_location_al_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata <- function(table_name) {
+  parts <- strsplit(table_name, "_")[[1]]
+  list(
+    phase = parts[2], # e.g., "test"
+    age_cohort = parts[3]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_location <- table_names %>%
+  map_df(~ {
+    metadata <- extract_metadata(.x)
+    get(.x) %>% 
+      mutate(
+        phase = metadata$phase,
+        age_cohort = metadata$age_cohort,
+        model = paste(phase, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-phase, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("prev_location_c", "Location") %>% 
+    str_replace_all("location_c", "Location") %>%
+    str_replace_all("familiarization_trial_num_4", "Trial Number"))
+
+
+# View the combined table
+print(combined_brm_results_location)
+
+saveRDS(combined_brm_results_location,
+  file = here(RESULTS_FOLDER, "combined_brm_results_location.rds")
+)
 ```

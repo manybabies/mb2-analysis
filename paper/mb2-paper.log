@@ -1,11 +1,11 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.12.5)  21 JAN 2025 14:18
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  28 JAN 2025 16:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **mb2-paper.tex
 (./mb2-paper.tex
 LaTeX2e <2024-11-01> patch level 1
-L3 programming layer <2024-11-02>
+L3 programming layer <2024-12-25>
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/apa6/apa6.cls
 Document Class: apa6 2023/08/07 v2.35 APA formatting (6th edition)
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
@@ -76,7 +76,7 @@ Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/iftex/ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
-Package: iftex 2022/02/03 v1.0f TeX engine tests
+Package: iftex 2024/12/12 v1.0g TeX engine tests
 ))
 \Gm@cnth=\count267
 \Gm@cntv=\count268
@@ -179,16 +179,22 @@ LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 149.
 )
 \c@appendix=\count277
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
-Package: fancyhdr 2024/11/20 v4.4 Extensive control of page headers and footers
+Package: fancyhdr 2025/01/07 v5.1.1 Extensive control of page headers and footers
 \f@nch@headwidth=\skip64
-\f@nch@O@elh=\skip65
-\f@nch@O@erh=\skip66
-\f@nch@O@olh=\skip67
-\f@nch@O@orh=\skip68
-\f@nch@O@elf=\skip69
-\f@nch@O@erf=\skip70
-\f@nch@O@olf=\skip71
-\f@nch@O@orf=\skip72
+\f@nch@offset@elh=\skip65
+\f@nch@offset@erh=\skip66
+\f@nch@offset@olh=\skip67
+\f@nch@offset@orh=\skip68
+\f@nch@offset@elf=\skip69
+\f@nch@offset@erf=\skip70
+\f@nch@offset@olf=\skip71
+\f@nch@offset@orf=\skip72
+\f@nch@height=\skip73
+\f@nch@footalignment=\skip74
+\f@nch@widthL=\skip75
+\f@nch@widthC=\skip76
+\f@nch@widthR=\skip77
+\@temptokenb=\toks19
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/endfloat/endfloat.sty
 Package: endfloat 2019/04/15 v2.7 LaTeX2e package puts figures and tables at end (jdm)
 \c@posttable=\count278
@@ -200,19 +206,19 @@ Package: endfloat 2019/04/15 v2.7 LaTeX2e package puts figures and tables at end
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/float/float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \c@float@type=\count282
-\float@exts=\toks19
+\float@exts=\toks20
 \float@box=\box54
-\@float@everytoks=\toks20
+\@float@everytoks=\toks21
 \@floatcapt=\box55
 )) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2024/11/05 v2.17t AMS math features
-\@mathmargin=\skip73
+\@mathmargin=\skip78
 For additional information on amsmath, use the `?' option.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amstext.sty
 Package: amstext 2021/08/26 v2.01 AMS text
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
-\@emptytoks=\toks21
+\@emptytoks=\toks22
 \ex@=\dimen173
 )) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
@@ -251,21 +257,21 @@ LaTeX Info: Redefining \Relbar on input line 970.
 \dotsspace@=\muskip17
 \c@parentequation=\count290
 \dspbrk@lvl=\count291
-\tag@help=\toks22
+\tag@help=\toks23
 \row@=\count292
 \column@=\count293
 \maxfields@=\count294
-\andhelp@=\toks23
+\andhelp@=\toks24
 \eqnshift@=\dimen176
 \alignsep@=\dimen177
 \tagshift@=\dimen178
 \tagwidth@=\dimen179
 \totwidth@=\dimen180
 \lineht@=\dimen181
-\@envbody=\toks24
-\multlinegap=\skip74
-\multlinetaggap=\skip75
-\mathdisplay@stack=\toks25
+\@envbody=\toks25
+\multlinegap=\skip79
+\multlinetaggap=\skip80
+\mathdisplay@stack=\toks26
 LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/amssymb.sty
@@ -278,7 +284,7 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 )) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/unicode-math/unicode-math.sty (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/l3kernel/expl3.sty
-Package: expl3 2024-11-02 L3 programming layer (loader) 
+Package: expl3 2024-12-25 L3 programming layer (loader) 
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
 File: l3backend-xetex.def 2024-05-08 L3 backend support: XeTeX
 \g__graphics_track_int=\count295
@@ -339,22 +345,22 @@ Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
 Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
 )
-\cslhangindent=\skip76
-\csllabelwidth=\skip77
+\cslhangindent=\skip81
+\csllabelwidth=\skip82
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/tools/calc.sty
 Package: calc 2023/07/08 v4.3 Infix arithmetic (KKT,FJ)
 \calc@Acount=\count312
 \calc@Bcount=\count313
 \calc@Adimen=\dimen185
 \calc@Bdimen=\dimen186
-\calc@Askip=\skip78
-\calc@Bskip=\skip79
+\calc@Askip=\skip83
+\calc@Bskip=\skip84
 LaTeX Info: Redefining \setlength on input line 80.
 LaTeX Info: Redefining \addtolength on input line 81.
 \calc@Ccount=\count314
-\calc@Cskip=\skip80
+\calc@Cskip=\skip85
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/babel.sty
-Package: babel 2024/11/30 v24.14 The multilingual framework for pdfLaTeX, LuaLaTeX and XeLaTeX
+Package: babel 2025/01/25 v25.2 The multilingual framework for pdfLaTeX, LuaLaTeX and XeLaTeX
 \babel@savecnt=\count315
 \U@D=\dimen187
 \l@unhyphenated=\language5
@@ -362,9 +368,9 @@ Package: babel 2024/11/30 v24.14 The multilingual framework for pdfLaTeX, LuaLaT
 \bbl@readstream=\read2
 \bbl@dirlevel=\count316
 Package babel Info: You haven't specified a language as a class or package
-(babel)             option. I'll load 'nil'. Reported on input line 4184.
+(babel)             option. I'll load 'nil'. Reported on input line 4188.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/nil.ldf
-Language: nil 2024/11/30 v24.14 Nil language
+Language: nil 2025/01/25 v25.2 Nil language
 \l@nil=\language6
 )) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/generic/babel/locale/en/babel-english.tex)
 Package babel Info: Importing data for english
@@ -377,10 +383,10 @@ LaTeX Font Info:    Overwriting symbol font `ugrf@m' in version `bold'
 (Font)                  U/eur/m/n --> U/eur/b/n on input line 38.
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/tools/longtable.sty
 Package: longtable 2024-10-27 v4.22 Multi-page Table package (DPC)
-\LTleft=\skip81
-\LTright=\skip82
-\LTpre=\skip83
-\LTpost=\skip84
+\LTleft=\skip86
+\LTright=\skip87
+\LTpre=\skip88
+\LTpost=\skip89
 \LTchunksize=\count317
 \LTcapwidth=\dimen188
 \LT@head=\box59
@@ -392,14 +398,14 @@ Package: longtable 2024-10-27 v4.22 Multi-page Table package (DPC)
 \LT@rows=\count319
 \c@LT@tables=\count320
 \c@LT@chunks=\count321
-\LT@p@ftn=\toks26
+\LT@p@ftn=\toks27
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/graphics/lscape.sty
 Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/multirow/multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
-\multirow@colwidth=\skip85
+\multirow@colwidth=\skip90
 \multirow@cntb=\count322
-\multirow@dima=\skip86
+\multirow@dima=\skip91
 \bigstrutjot=\dimen189
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/tools/tabularx.sty
 Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
@@ -408,9 +414,9 @@ Package: array 2024/10/17 v2.6g Tabular extension package (FMi)
 \col@sep=\dimen190
 \ar@mcellbox=\box64
 \extrarowheight=\dimen191
-\NC@list=\toks27
-\extratabsurround=\skip87
-\backup@length=\skip88
+\NC@list=\toks28
+\extratabsurround=\skip92
+\backup@length=\skip93
 \ar@cellbox=\box65
 )
 \TX@col@width=\dimen192
@@ -419,7 +425,7 @@ Package: array 2024/10/17 v2.6g Tabular extension package (FMi)
 \TX@target=\dimen195
 \TX@delta=\dimen196
 \TX@cols=\count323
-\TX@ftn=\toks28
+\TX@ftn=\toks29
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/threeparttablex/threeparttablex.sty
 Package: threeparttablex 2013/07/23 v0.3 by daleif
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/environ/environ.sty
@@ -427,16 +433,16 @@ Package: environ 2014/05/04 v0.3 A new way to define environments
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/trimspaces/trimspaces.sty
 Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 ))
-\TPTL@width=\skip89
+\TPTL@width=\skip94
 )
-\longtablewidth=\skip90
+\longtablewidth=\skip95
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/xpatch/xpatch.sty
 Package: xpatch 2020/03/25 v0.3a Extending etoolbox patching commands
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/lineno/lineno.sty
 Package: lineno 2023/05/20 line numbers on paragraphs v5.3
 Invalid UTF-8 byte or sequence at line 292 replaced by U+FFFD.
 \linenopenalty=\count324
-\output=\toks29
+\output=\toks30
 \linenoprevgraf=\count325
 \linenumbersep=\dimen197
 \linenumberwidth=\dimen198
@@ -459,7 +465,7 @@ Package: csquotes 2024-04-04 v5.2o context-sensitive quotations (JAW)
 \csq@qlevel=\count335
 \csq@maxlvl=\count336
 \csq@tshold=\count337
-\csq@ltx@everypar=\toks30
+\csq@ltx@everypar=\toks31
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/csquotes/csquotes.def
 File: csquotes.def 2024-04-04 v5.2o csquotes generic definitions (JAW)
 )
@@ -562,7 +568,7 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 285.
 )
-\Hy@SectionHShift=\skip91
+\Hy@SectionHShift=\skip96
 ) (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count351
@@ -1062,7 +1068,7 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png>
 
-Overfull \hbox (21.67989pt too wide) in paragraph at lines 673--674
+Overfull \hbox (21.67989pt too wide) in paragraph at lines 685--686
  [][] 
  []
 
@@ -1081,7 +1087,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 714--715
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 726--727
  [][] 
  []
 
@@ -1100,7 +1106,7 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 744--745
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 756--757
  [][] 
  []
 
@@ -1112,7 +1118,7 @@ Overfull \hbox (21.68977pt too wide) in paragraph at lines 744--745
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 765--766
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 777--778
  [][] 
  []
 
@@ -1122,7 +1128,7 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 765--766
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 782--783
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 794--795
  [][] 
  []
 
@@ -1199,11 +1205,11 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22293 strings out of 475964
- 420155 string characters out of 5776212
- 985650 words of memory out of 5000000
- 44773 multiletter control sequences out of 15000+600000
- 590776 words of font info for 110 fonts, out of 8000000 for 9000
+ 22434 strings out of 475852
+ 423480 string characters out of 5773463
+ 990106 words of memory out of 5000000
+ 45026 multiletter control sequences out of 15000+600000
+ 591544 words of font info for 110 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,12n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
