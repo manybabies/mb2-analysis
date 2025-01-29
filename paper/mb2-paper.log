@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  28 JAN 2025 16:20
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  29 JAN 2025 12:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1106,7 +1106,7 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 756--757
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 796--797
  [][] 
  []
 
@@ -1118,7 +1118,7 @@ Overfull \hbox (21.68977pt too wide) in paragraph at lines 756--757
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 777--778
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 817--818
  [][] 
  []
 
@@ -1128,7 +1128,7 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 777--778
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 794--795
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 834--835
  [][] 
  []
 
@@ -1191,9 +1191,38 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [62
 
-])
+]
 
 [63
+
+]
+Overfull \hbox (16.96655pt too wide) in paragraph at lines 191--191
+[] [] 
+ []
+
+
+Overfull \hbox (33.93309pt too wide) in alignment at lines 190--195
+ [] [] [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (16.96655pt too wide) in paragraph at lines 196--196
+[] [] 
+ []
+
+
+Overfull \hbox (33.93309pt too wide) in alignment at lines 195--200
+ [] [] [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (33.93309pt too wide) in alignment at lines 200--218
+ [] [] [] [] [] [] [] 
+ []
+
+)
+
+[64
 
 ] (./mb2-paper.aux)
  ***********
@@ -1205,12 +1234,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22434 strings out of 475852
- 423480 string characters out of 5773463
- 990106 words of memory out of 5000000
- 45026 multiletter control sequences out of 15000+600000
- 591544 words of font info for 110 fonts, out of 8000000 for 9000
+ 22438 strings out of 475852
+ 423603 string characters out of 5773463
+ 990254 words of memory out of 5000000
+ 45029 multiletter control sequences out of 15000+600000
+ 591552 words of font info for 111 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,12n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (63 pages).
+Output written on mb2-paper.pdf (64 pages).

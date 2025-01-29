@@ -121,7 +121,7 @@ Total & 809 & 521 & 256 & 22.48 & \\
 
 \footnotesize{
 
-\begin{longtable}{llcccll}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
 \caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the familiarization trials.}\\
 \toprule
 model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
@@ -152,7 +152,7 @@ aoi adults & Intercept & 0.26 & 0.02 & 0.23 & 0.29 & 1.00\\
 
 \footnotesize{
 
-\begin{longtable}{llcccll}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
 \caption{\label{tab:Results table of Bayesian regression models}Results of the Bayesian mixed effects models for the test trials.}\\
 \toprule
 model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
@@ -175,6 +175,45 @@ aoi toddlers & Intercept & 0.61 & 0.02 & 0.58 & 0.65 & 1.00\\
  & Condition:Age & -0.01 & 0.02 & -0.04 & 0.02 & 1.00\\
 aoi adults & Intercept & 0.48 & 0.02 & 0.45 & 0.51 & 1.00\\
  & Condition & -0.20 & 0.03 & -0.26 & -0.15 & 1.00\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\efloatseparator
+ 
+\begin{ThreePartTable}
+
+\scriptsize{
+
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models fam test relationship}Results of the Bayesian mixed effects models for the relationship between familiarization and test.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models fam test relationship} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endhead
+adults sufficient familiarization & Intercept & 0.48 & 0.02 & 0.44 & 0.51 & 1.00\\
+ & Condition & -0.20 & 0.03 & -0.26 & -0.14 & 1.00\\
+ & Successful Fam Anticipation & 0.04 & 0.03 & -0.02 & 0.10 & 1.00\\
+ & Condition:Successful Fam Anticipation & 0.00 & 0.05 & -0.11 & 0.10 & 1.00\\
+toddlers sufficient familiarization & Intercept & 0.61 & 0.02 & 0.56 & 0.65 & 1.00\\
+ & Condition & 0.10 & 0.04 & 0.02 & 0.17 & 1.00\\
+ & Successful Fam Anticipation & 0.03 & 0.04 & -0.04 & 0.11 & 1.00\\
+ & Condition:Successful Fam Anticipation & 0.02 & 0.06 & -0.11 & 0.14 & 1.00\\
+adults correct first look & Intercept & 0.48 & 0.02 & 0.45 & 0.52 & 1.00\\
+ & Condition & -0.20 & 0.03 & -0.26 & -0.13 & 1.00\\
+ & Correct First Look Final Fam & -0.04 & 0.03 & -0.10 & 0.03 & 1.00\\
+ & Condition:Correct First Look Final Fam & -0.08 & 0.06 & -0.19 & 0.04 & 1.00\\
+toddlers correct first look & Intercept & 0.62 & 0.02 & 0.58 & 0.65 & 1.00\\
+ & Condition & 0.07 & 0.04 & 0.00 & 0.15 & 1.00\\
+ & Correct First Look Final Fam & 0.00 & 0.04 & -0.07 & 0.07 & 1.00\\
+ & Condition:Correct First Look Final Fam & -0.05 & 0.06 & -0.17 & 0.07 & 1.00\\
 \bottomrule
 \end{longtable}
 

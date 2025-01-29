@@ -917,6 +917,36 @@ saveRDS(bm_aoi_toddlers_correct_final_fam_trial,
         file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+
+# Load all model result
+# List all RDS files in the results folder
+rds_files <- list.files(model_fits_dir, pattern = "\\.rds$", full.names = TRUE)
+
+# Load each RDS file as a separate variable in the global environment
+for (file in rds_files) {
+  rds_name <- tools::file_path_sans_ext(basename(file))
+  assign(rds_name, readRDS(file))
+}
+
+bm_aoi_toddlers_correct_final_fam_trial_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_correct_final_fam_trial)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_tidy_summary_model_summary.rds")
+)
+```
+
 Summarize outcomes
 
 ```{r}
@@ -989,6 +1019,25 @@ summary(bm_aoi_adults_correct_final_fam_trial)
 
 saveRDS(bm_aoi_adults_correct_final_fam_trial, 
         file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_aoi_adults_correct_final_fam_trial_tidy_summary <- as_tibble(summary(bm_aoi_adults_correct_final_fam_trial)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_adults_correct_final_fam_trial_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_tidy_summary_model_summary.rds")
+)
 ```
 
 ```{r}
@@ -1122,6 +1171,25 @@ saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking,
         file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_aoi_toddlers_sufficient_fam_prop_looking_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_sufficient_fam_prop_looking)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_tidy_summary_model_summary.rds")
+)
+```
+
 Summarize outcomes
 
 ```{r}
@@ -1197,6 +1265,25 @@ saveRDS(bm_aoi_adults_sufficient_fam_prop_looking,
         file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_aoi_adults_sufficient_fam_prop_looking_tidy_summary <- as_tibble(summary(bm_aoi_adults_sufficient_fam_prop_looking)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_tidy_summary_model_summary.rds")
+)
+```
+
 ```{r}
 # get main coefficient estimate and HDI
 bm_aoi_adults_sufficient_fam_prop_looking_condition_effect <- bm_aoi_adults_sufficient_fam_prop_looking %>%
@@ -1251,6 +1338,52 @@ Remove the Bayes models from the environment (because the model objects are quit
 rm(bm_aoi_adults_sufficient_fam_prop_looking)
 rm(bm_aoi_adults_sufficient_fam_prop_looking_null)
 gc()
+```
+
+```{r}
+# Creating results table
+table_names_fam_test <- c("bm_aoi_adults_sufficient_fam_prop_looking_tidy_summary", "bm_aoi_toddlers_sufficient_fam_prop_looking_tidy_summary", "bm_aoi_adults_correct_final_fam_trial_tidy_summary", "bm_aoi_toddlers_correct_final_fam_trial_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata <- function(table_names_fam_test) {
+  parts <- strsplit(table_names_fam_test, "_")[[1]]
+  list(
+    measure = parts[4], # e.g., "test"
+    age_cohort = parts[3]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_fam_test <- table_names_fam_test %>%
+  map_df(~ {
+    metadata <- extract_metadata_test(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("successful_fam_anticipation_c", "Successful Fam Anticipation") %>% 
+    str_replace_all("correct_first_look_final_fam_trial_c", "Correct First Look Final Fam") %>%
+    str_replace_all("familiarization_trial_num_4", "Trial Number"),
+    model = model %>% 
+    str_replace_all("adults sufficient", "adults sufficient familiarization") %>%
+    str_replace_all("toddlers sufficient", "toddlers sufficient familiarization") %>%
+    str_replace_all("toddlers correct", "toddlers correct first look") %>% 
+    str_replace_all("adults correct", "adults correct first look"))
+
+
+# View the combined table
+print(combined_brm_results_fam_test)
+
+saveRDS(combined_brm_results_fam_test,
+  file = here(RESULTS_FOLDER, "combined_brm_results_fam_test.rds")
+)
 ```
 
 ### 2.c. Correlation between familiarization and test
