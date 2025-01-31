@@ -261,6 +261,13 @@ The heatmaps in Figure S3 illustrate the distribution of looks to scene location
 \caption{Binned proportion looking, averaged across all participants and trials. \newline{} \textit{Note}. The left column comes from Trials 1-4, the right column from Trials 5-8. The vertical dotted line represents the disambiguation time. The red points represent looks to the target, the blue points represent looks to the distractor.}\label{fig:figS2}
 \end{figure}
 
+\begin{figure}
+
+\includegraphics[width=6in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/FigureS3} \hfill{}
+
+\caption{Heatmaps showing the distribution of looks in the anticipatory period in Pilot Study 1 (left: adults; right: toddlers). \newline{} \textit{Note}. Larger and reddisher areas indicate a greater amount of looks toward the respective location.}\label{fig:figS3}
+\end{figure}
+
 \paragraph{Inferential statistics.}\label{inferential-statistics.}
 
 To further assess the pilot data and test our proposed analysis described in the main text, we ran two Bayesian mixed effect models as described in the main manuscript, the first using first look location as the dependent variable and the second using proportional looking score as the dependent variable. For the first look analysis, we defined the first look location as in the main text (corresponding roughly to the first look of 150 ms or more in the same AOI). We calculated the proportion looking (\emph{p}) to the correct AOI during the full 4000 ms anticipatory window by correct AOI looks / (correct AOI looks + incorrect AOI looks), excluding looks outside of either AOI. The anticipatory eye movement window was defined 120 ms after the first frame when the chaser had completely entered the tunnel and 120 ms after the chaser reappeared from the tunnel.\\
@@ -308,13 +315,6 @@ Data preprocessing was analogous to Pilot 1.
 
 As can be seen in Figures S1 and S2, we found a similar pattern of results in both conditions of Pilot 2 (with outcome and without come) as we did in Pilot 1. We saw more looks directed towards the target than to the distractor. As described above, all trials in Pilot 2 lacked the tunnel window, whereas all trials in Pilot 1 included the tunnel window. Thus, we can assess the effect of the tunnel window by comparing Pilot 2 to Pilot 1. We found that the removal of the tunnel window did not appear to increase or decrease AL in Pilot 2 in any clear way. In fact, even after the removal of the window, a substantial amount of gaze was attracted towards the location where the window had been in Pilot 1 (for an illustration, see Figure S4). An explanation for this pattern of results is that not the window itself but its location in the center of the scene attracted visual attention. Previous research documented a central fixation bias in infants, toddlers and adults when viewing complex visual scenes (Tatler, 2007; van Renswoude et al., 2019).
 By comparing the outcome and no outcome conditions in Pilot 2, we were able to assess whether the use of the chime helps AL. We did not find evidence that the chime helped to increase AL, and the majority of anticipatory looks to the tunnel exits happened before the chime sounded. As with Pilot 1, we ran a series of Bayesian mixed effect models to quantitatively evaluate anticipation. As we had a much smaller sample in Pilot 2, our Bayesian analyses were broadly inconclusive and did not favor either the full or null model. (Bayes factors fell between 0.1 and 3), suggesting that we did not have sufficient data to conclude whether the evidence is in favor of the full model or the simpler model. But, by comparing the results to the results of Pilot 1, we are confident that the results of Pilot 2 are qualitatively similar.
-
-\begin{figure}
-
-\includegraphics[width=6in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/FigureS3} \hfill{}
-
-\caption{Proportion looks to the area where the window is (in Pilot 1) or would be if it were there (in Pilot 2) across conditions. \newline{} \textit{Note}. These graphs show that, at the time that the chaser disappears at around -4000 ms, there are many looks to the window/center of the screen. Over the course of the anticipation period, as more participants look to the target and distractor, there are fewer looks to the window. At the time of disambiguation, which occurs in all panels except for Pilot 2, Trials 5-8 (the no outcome condition), any remaining looks to the window disappear.}\label{fig:figS3}
-\end{figure}
 
 \subsubsection{Conclusions}\label{conclusions}
 
@@ -496,7 +496,7 @@ When comparing this full model with a simpler model that excluded the interactio
 
 \subsubsection{Test phase: Influence of target location from last familarization on proportional target looking in first test trial}\label{test-phase-influence-of-target-location-from-last-familarization-on-proportional-target-looking-in-first-test-trial}
 
-A Bayesian mixed-effects model was fitted to examine the effect of condition, target location (same vs.~different from the previous trial), and their interaction on toddlers' proportional target looking . The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with toddlers in the ignorance condition demonstrating higher proportional target looking than those in the knowledge condition. The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison indicated weak evidence against the interaction model, with
+A Bayesian mixed-effects model was fitted to examine the effect of condition, target location (same vs.~different from the previous trial), and their interaction on toddlers' proportional target looking. The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with toddlers in the ignorance condition demonstrating higher proportional target looking than those in the knowledge condition (see Table . The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison indicated weak evidence against the interaction model, with
 BF = 0.6, favoring the null model without the interaction over the full model.
 
 Similarly, a Bayesian mixed-effects model was fitted to investigate the effects of condition, target location (same vs.~different from the previous trial), and their interaction on adults' proportional target looking. The model included random intercepts and slopes for condition by lab. Results revealed a significant main effect of condition, with adults in the knowledge condition showing higher proportional target looking compared to those in the ignorance condition. The main effect of location was not significant, nor was the interaction between condition and location. A Bayes factor comparison suggested weak evidence against the inclusion of the interaction term, with BF = 0.8, favoring the null model without the interaction over the full model.
@@ -504,9 +504,58 @@ Similarly, a Bayesian mixed-effects model was fitted to investigate the effects 
 \subsubsection{Familiarization phase: Influence of target location from previous familiarization trials on proportional target looking}\label{familiarization-phase-influence-of-target-location-from-previous-familiarization-trials-on-proportional-target-looking}
 
 A Bayesian mixed-effects model was conducted to assess the effects of the target location in the previous trial, trial number, and their interaction on toddlers' proportional target looking during the familiarization phase. The model accounted for random intercepts at the participant and lab levels. Results revealed that the main effect of the previous trial location
-was negative but not significant. Similarly, the main effect of trial number was not significant. The interaction between previous trial location and trial number was also not significant. A Bayes factor analysis provided weak evidence in favor of the full model compared to the null model without these predictors, BF = 1.3.
+was negative but not significant. Similarly, the main effect of trial number was not significant. The interaction between previous trial location and trial number was also not significant. A Bayes factor analysis provided weak evidence in favor of the full model compared to the null model without these predictors, BF = 1.1.
 
-For adults during the familiarization phase, we examined whether the proportional target looking was influenced by the location of the target in the previous trial and the trial number. The results indicated no significant main effect of prior location, trial number, or their interaction. These findings suggest that adults' proportional looking was not systematically influenced by the side of the target in the previous trial or by trial number. The Bayes factor, BF = 0.4, further supports the conclusion that the model including these predictors was not substantially better than the null model.
+For adults during the familiarization phase, we examined whether the proportional target looking was influenced by the location of the target in the previous trial and the trial number. The results indicated no significant main effect of prior location, trial number, or their interaction. These findings suggest that adults' proportional looking was not systematically influenced by the side of the target in the previous trial or by trial number. The Bayes factor, BF = 0.7, further supports the conclusion that the model including these predictors was not substantially better than the null model.
+
+\begin{figure}
+
+{\centering \includegraphics[width=6.8in]{/Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/FigureS6} 
+
+}
+
+\caption{Proportional target looking during the test phase for toddlers and adults split by condition (knowledge vs. ignorance) and consistency of location (same vs. different).}\label{fig:fig11}
+\end{figure}
+
+\begin{center}
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian mixed effects models proportional target looking was influenced by the location of the target in the previous trial}Results of the Bayesian mixed effects models for consitency of location.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian mixed effects models proportional target looking was influenced by the location of the target in the previous trial} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endhead
+test adults & Intercept & 0.48 & 0.02 & 0.45 & 0.52 & 1.00\\
+ & Condition & -0.20 & 0.03 & -0.26 & -0.15 & 1.00\\
+ & Location & 0.00 & 0.03 & -0.05 & 0.05 & 1.00\\
+ & Condition:Location & 0.05 & 0.05 & -0.05 & 0.14 & 1.00\\
+test toddlers & Intercept & 0.62 & 0.02 & 0.59 & 0.66 & 1.00\\
+ & Condition & 0.11 & 0.03 & 0.05 & 0.18 & 1.00\\
+ & Location & -0.04 & 0.03 & -0.11 & 0.02 & 1.00\\
+ & Condition:Location & 0.00 & 0.06 & -0.11 & 0.11 & 1.00\\
+fam adults & Intercept & 0.19 & 0.04 & 0.12 & 0.26 & 1.00\\
+ & Location & 0.09 & 0.06 & -0.03 & 0.22 & 1.00\\
+ & Trial Number & 0.02 & 0.03 & -0.04 & 0.08 & 1.00\\
+ & Location:Trial Number & 0.00 & 0.06 & -0.12 & 0.12 & 1.00\\
+fam toddlers & Intercept & 0.15 & 0.03 & 0.09 & 0.22 & 1.00\\
+ & Location & -0.10 & 0.06 & -0.22 & 0.01 & 1.00\\
+ & Trial Number & -0.03 & 0.03 & -0.08 & 0.03 & 1.00\\
+ & Location:Trial Number & 0.07 & 0.05 & -0.04 & 0.17 & 1.00\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\end{center}
 
 \newpage
 
