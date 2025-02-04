@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  29 JAN 2025 12:00
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  4 FEB 2025 10:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -970,9 +970,6 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [11]
 
 [12]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [13]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -985,6 +982,9 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [15]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [16]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1.jpg Graphic file (type bmp)
@@ -997,7 +997,7 @@ Overfull \hbox (21.68134pt too wide) in paragraph at lines 289--290
 
 
 [17]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 2189) has occurred while \output is active []
 
 
 
@@ -1009,6 +1009,9 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 [19]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2.jpg Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2.jpg>
+
+Underfull \vbox (badness 2189) has occurred while \output is active []
+
 
 
 [20]
@@ -1032,21 +1035,23 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [26]
 
 [27]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg>
-
-Underfull \vbox (badness 2189) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [28]
-Underfull \vbox (badness 2818) has occurred while \output is active []
-
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg>
 
 
 [29]
 
 [30]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[31]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png>
 
@@ -1056,8 +1061,6 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
 
 
 
-[31]
-
 [32]
 
 [33]
@@ -1065,17 +1068,14 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
 [34]
 
 [35]
+
+[36]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png>
 
 Overfull \hbox (21.67989pt too wide) in paragraph at lines 685--686
  [][] 
  []
-
-
-
-[36]
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
@@ -1098,9 +1098,6 @@ Overfull \hbox (21.68977pt too wide) in paragraph at lines 726--727
 [41]
 
 [42]
-Underfull \vbox (badness 2189) has occurred while \output is active []
-
-
 
 [43]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
@@ -1125,6 +1122,11 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 817--818
 
 
 [46]
+Underfull \vbox (badness 2088) has occurred while \output is active []
+
+
+
+[47]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
@@ -1134,12 +1136,7 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 834--835
 
 
 
-[47]
-
 [48]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [49]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1234,12 +1231,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22438 strings out of 475852
- 423603 string characters out of 5773463
- 990254 words of memory out of 5000000
- 45029 multiletter control sequences out of 15000+600000
+ 22439 strings out of 475852
+ 423625 string characters out of 5773463
+ 987296 words of memory out of 5000000
+ 45030 multiletter control sequences out of 15000+600000
  591552 words of font info for 111 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,12n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,11n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on mb2-paper.pdf (64 pages).
