@@ -71,15 +71,33 @@ data.ni <- data_pupillometry |>
 
 data_pupillometry <- data_pupillometry |> 
   filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
-         lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
+         #lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
          trial_num == 6,                   # filter to second test trial only (data reduction)
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
+
 
 data_pupillometry <- data_pupillometry |> 
   mutate(age_cohort <- as.factor(age_cohort)) |> 
   rowwise() |> 
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
   ungroup()
+
+# centering of age_cohort, condition, and outcome
+  data_pupillometry <- data_pupillometry |>
+    mutate(
+    age_cohort_c = case_when(
+      age_cohort == "adults" ~ -0.5,
+      age_cohort == "toddlers" ~ 0.5
+    ),
+    condition_c = case_when(
+      condition == "knowledge" ~ -0.5,
+      condition == "ignorance" ~ 0.5
+    ),
+    outcome_c = case_when(
+      outcome == "congruent" ~ -0.5,
+      outcome == "incongurent" ~ 0.5)
+    )
+  
 
 # Merging in AL data (variable prop_exit)
 
@@ -318,10 +336,10 @@ library(purrr)
 
 # Define the custom modeling function
 run_model_lm <- function(df) {
-  if (is.data.frame(df) && n_distinct(df$condition) > 1 & 
-      n_distinct(df$outcome) > 1 & n_distinct(df$age_cohort) > 1) {
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
     # Fit the model if conditions are met
-    lm(average ~ condition * outcome * age_cohort, data = df)
+    lm(average ~ condition_c * outcome_c * age_cohort_c, data = df)
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -329,10 +347,10 @@ run_model_lm <- function(df) {
 }
 
 run_model_lmer <- function(df) {
-  if (is.data.frame(df) && n_distinct(df$condition) > 1 & 
-      n_distinct(df$outcome) > 1 & n_distinct(df$age_cohort) > 1) {
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
     # Fit the model if conditions are met
-    lmer(average ~ condition * outcome * age_cohort + (1|participant_id), data = df)
+    lmer(average ~ condition_c * outcome_c * age_cohort_c + (1|participant_id), data = df)
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -368,7 +386,7 @@ extract_model_metrics <- function(model) {
     # Extract coefficients and standard errors (using tidy output)
     coef_df <- broom::tidy(model)
     coef_df <- coef_df %>%
-      filter(term %in% c("condition", "outcome", "age_cohort")) %>%
+      filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>%
       select(term, estimate, std.error)
     
     # If coefficients are missing, create empty placeholders
