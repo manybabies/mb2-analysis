@@ -247,16 +247,20 @@ overall_p_test_both <- ggplot(summarize_participant_test_both_trials,
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  facet_wrap(age_cohort ~ test_trial_num) +
+  facet_wrap(age_cohort ~ test_trial_num, 
+             labeller = labeller(
+               test_trial_num = c("1" = "first trial", "2" = "second trial"),
+               age_cohort = label_value  # Keeps original labels for age_cohort
+             )) +
   theme(legend.position = "none") +
   # ggtitle("Test")+
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)")
+  ylab("Proportion DLS")
 overall_p_test_both
 ggsave(here(plot_path, "overall_proportion_both_trials_target_exit_looking.png"), 
-       bg = "white", width = 9, height = 9)
+       bg = "white", width = 6, height = 6)
 ggsave(here(paper_path, "Figure_PTL_bothtrials.png"), 
-       bg = "white", width = 9, height = 9)
+       bg = "white", width = 7, height = 7)
 ```
 
 Plot the effect by age
@@ -1400,8 +1404,8 @@ correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  xlab("Overall Proportion Target Looking during Familiarization") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  xlab("Overall Proportion DLS during Familiarization") +
+  ylab("Proportion DLS during First Test Trial")
 correlation_plot_fam_test
 ggsave(here(plot_path, "correlation_plot_fam_test.png"), 
        bg = "white", width = 9, height = 6)
@@ -2189,7 +2193,7 @@ AL_shifts <- ggplot(summarize_participant_test_both_trials_lc,
   theme_set(theme_cowplot(font_size = 24)) +
   theme(legend.position = "none") +
   xlab("Number of shifts during location change of mouse") +
-  ylab("AL in test trials")
+  ylab("Proportion DLS during test trials")
 
 AL_shifts
 

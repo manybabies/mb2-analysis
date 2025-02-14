@@ -137,10 +137,10 @@ overall_p_fam <- ggplot(
   scale_fill_brewer(palette = "Set1") +
   facet_wrap(~age_cohort) +
   theme(legend.position = "none") +
-  ggtitle("Familiarization") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  #ggtitle("Familiarization") +
+  #theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   xlab("Trial Number") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window)")
+  ylab("Proportion DLS to Target Exit")
 overall_p_fam
 ggsave(here(plot_path, "familiarization_overall_proportion_target_exit_looking.png"),
   bg = "white", width = 9, height = 6
@@ -550,9 +550,9 @@ overall_p_test <- ggplot(
   scale_fill_brewer(palette = "Set1") +
   facet_wrap(~age_cohort) +
   theme(legend.position = "none") +
-  ggtitle("Test") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  #ggtitle("Test") +
+  #theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  ylab("Proportion DLS to Target Exit")
 overall_p_test
 ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 9, height = 6
@@ -919,9 +919,6 @@ rm(bm_aoi_toddlers)
 rm(bm_aoi_toddlers_condition_null)
 rm(bm_aoi_toddlers_interaction_null)
 ```
-
-
-
 
 #### Adults
 
@@ -1693,6 +1690,7 @@ overall_fl_fam <- ggplot(
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   facet_wrap(~age_cohort) +
   theme_cowplot() +
+  ggtitle("Familiarization") +
   # theme(strip.background = element_blank(),
   # strip.text.x = element_blank())+
   geom_smooth(
@@ -1700,9 +1698,10 @@ overall_fl_fam <- ggplot(
     aes(y = prop_correct_first_look), method = "lm"
   ) +
   theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   xlab("Trial Number") +
   ylim(0, 1) +
-  ylab("Proportion First Look to Target Exit")
+  ylab("First Look to Target Exit")
 overall_fl_fam
 ggsave(here(plot_path, "overall_fam_trials_first_look.png"),
   bg = "white", width = 9, height = 6
@@ -1817,11 +1816,13 @@ overall_fl_test <- ggplot(
     strip.background = element_blank(),
     strip.text.x = element_blank()
   ) +
+    ggtitle("Test") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
   theme(legend.position = "none") +
   ylim(0, 1) +
-  ylab("Proportion First Look to Target Exit\n(First Trial Only)")
+  ylab("First Look to Target Exit\n(First Trial Only)")
 overall_fl_test
 ggsave(here(plot_path, "overall_test_trial_first_look_first_trial.png"),
   bg = "white", width = 9, height = 6
@@ -2629,7 +2630,7 @@ rm(bm_test_first_look_adults_less_inf_prior_null)
 
 ```{r}
 figure_fam_test_p_fl <- ggarrange(
-  overall_p_fam, overall_p_test, overall_fl_fam, overall_fl_test,
+  overall_fl_fam, overall_fl_test, overall_p_fam, overall_p_test, 
   labels = c("A", "B", "C", "D"),
   ncol = 2, nrow = 2
 )
@@ -2637,13 +2638,13 @@ figure_fam_test_p_fl <- ggarrange(
 figure_fam_test_p_fl
 
 figure_fam_test_p_fl <- cowplot::plot_grid(
-  overall_p_fam +
+  overall_fl_fam +
     theme(
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank()
     ),
-  overall_p_test +
+  overall_fl_test +
     theme(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
@@ -2652,8 +2653,8 @@ figure_fam_test_p_fl <- cowplot::plot_grid(
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank()
     ),
-  overall_fl_fam,
-  overall_fl_test +
+  overall_p_fam, 
+  overall_p_test +
     theme(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),

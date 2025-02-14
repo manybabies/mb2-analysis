@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  4 FEB 2025 10:32
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.28)  14 FEB 2025 12:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1087,7 +1087,7 @@ Overfull \hbox (21.67989pt too wide) in paragraph at lines 685--686
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 726--727
+Overfull \hbox (21.692pt too wide) in paragraph at lines 726--727
  [][] 
  []
 
@@ -1137,6 +1137,9 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 834--835
 
 
 [48]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [49]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1164,33 +1167,69 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [54]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [55]
+
+[56]
+
+[57]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[56] AED endfloat: Processing end Figures and Tables
+[58]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[57] (./mb2-paper.ttt [58
 
 
-]
+[59]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[59] [60
 
-]
+
+[60]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [61]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[62
+
+
+[62]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[63]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[64]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[65] AED endfloat: Processing end Figures and Tables
+
+[66] (./mb2-paper.ttt [67
+
 
 ]
 
-[63
+[68] [69
+
+]
+
+[70]
+
+[71
+
+]
+
+[72
 
 ]
 Overfull \hbox (16.96655pt too wide) in paragraph at lines 191--191
@@ -1219,7 +1258,7 @@ Overfull \hbox (33.93309pt too wide) in alignment at lines 200--218
 
 )
 
-[64
+[73
 
 ] (./mb2-paper.aux)
  ***********
@@ -1231,12 +1270,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22439 strings out of 475852
- 423625 string characters out of 5773463
- 987296 words of memory out of 5000000
- 45030 multiletter control sequences out of 15000+600000
+ 22445 strings out of 475852
+ 423762 string characters out of 5773463
+ 1000530 words of memory out of 5000000
+ 45036 multiletter control sequences out of 15000+600000
  591552 words of font info for 111 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,11n,123p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (64 pages).
+Output written on mb2-paper.pdf (73 pages).
