@@ -771,8 +771,8 @@ Conduct model diagnostics
 
 ```{r}
 #Is Rhat<1.1?
-bm_aoi_toddlers_tidy_summary$rhat
-sum(bm_aoi_toddlers_tidy_summary$rhat>=1.1)
+bm_test_aoi_toddlers_tidy_summary$rhat
+sum(bm_test_aoi_toddlers_tidy_summary$rhat>=1.1)
 
 #visual posterior predictive check
 pp_check(bm_aoi_toddlers) #one can clearly see that the model misses the zero-/one-inflation structure in the distribution
@@ -884,33 +884,28 @@ plot(h_aoi_toddlers_interaction)
 Investigate robustness of the result using a model that better captures zero/1-inflation
 
 ```{r}
-# set the prior
-priors_01inflation <- c(
-  set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
-  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
-  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
-  set_prior("lkj(2)", class = "L")
-) # lkj distribution for covariance matrix/Cholesky Factor
-bm_aoi_toddlers_01inflation <- brm(
-  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
+bm_aoi_toddlers_01inflation_formula <- bf(
+  prop_exit ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
     (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  family = zero_one_inflated_beta,
-  prior = priors_01inflation,
+  phi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  zoi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  coi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  family = zero_one_inflated_beta())
+bm_aoi_toddlers_01inflation <- brm(
+  formula = bm_aoi_toddlers_01inflation_formula,
   save_pars = save_pars(all = TRUE),
-  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
   warmup = 1000,
   iter = 10000,
   chains = 4,
   cores = 4,
   seed = 123,
   sample_prior = TRUE,
-  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
-)
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12))
 summary(bm_aoi_toddlers_01inflation)
-```
-
-```{r}
-brms::pp_check(bm_aoi_toddlers_01inflation)
 ```
 
 ```{r}
