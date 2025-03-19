@@ -746,6 +746,15 @@ summary(bm_aoi_toddlers)
 saveRDS(bm_aoi_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers.rds")
 )
+
+# Checking variance for lab_id
+lab_variance <- as.numeric(VarCorr(bm_aoi_toddlers)$`lab_id`$sd[1]^2)
+random_effects <- VarCorr(bm_aoi_toddlers)
+
+lab_variance <- as.numeric(random_effects$lab_id$sd[1])^2
+residual_variance <- as.numeric(random_effects$residual$sd[1])^2
+
+icc <- lab_variance / (lab_variance + residual_variance)
 ```
 
 Organize table in a tidy format
