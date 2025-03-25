@@ -341,6 +341,42 @@ data_df5 <- bind_rows(
 
 ```
 
+```{r Ploting all 72 datasets, echo=TRUE, include=TRUE, out.width='90%'}
+# Generate and store all plots
+plots <- data_df5 |> 
+  pull(data) |> 
+  map(\(d) {
+    ggplot(d |> filter(!is.na(average),
+                       t_norm >= 0 & t_norm < 5000), 
+           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (mm)") +
+      geom_vline(xintercept = 0) +
+      geom_hline(yintercept = 0) +
+      geom_smooth(se = TRUE) +
+      facet_grid(condition ~ age_cohort)
+  })
+
+# Extract labels for filenames
+labels <- data_df5 |> 
+  select(1:5) |>  # Select first 5 columns
+  apply(1, paste, collapse = "_") # Combine column values into a string
+
+# Add numbers before labels
+labels <- paste0(seq_along(labels), "_", labels)
+
+# Define output directory
+output_dir <- "plots"
+dir.create(output_dir, showWarnings = FALSE)
+
+# Save each plot with a meaningful filename
+walk2(plots, labels, ~ ggsave(
+  filename = file.path(output_dir, paste0(.y, ".png")),
+  plot = .x,
+  width = 8, height = 6, dpi = 300
+))
+```
+
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
 ```{r modelling, echo=TRUE, include=TRUE, out.width='90%'}
