@@ -24,6 +24,10 @@ Basic cleaning:
 2. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right`.
 3. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
 ```{r}
+
+data.ni <- data_preprocessed |> filter(lab_id == "babylabNijmegen")
+
+
 data_pupillometry <- data_preprocessed |> 
   filter(data_type=="in-lab") |> 
   mutate(pupil_left = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_left should be NA, not 0

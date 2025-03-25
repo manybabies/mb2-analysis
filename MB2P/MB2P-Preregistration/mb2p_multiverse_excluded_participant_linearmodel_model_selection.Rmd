@@ -27,19 +27,18 @@ library(dplyr)
 library(tidyverse)
 library(stringi)
 library(gridExtra)
+library(purrr)
+library(broom)
 ```
 
-```{r setup2, include=FALSE}
+```{r load data, include=FALSE}
 set.seed(123) # for reproducibility
 source(here("helper", "ensure_repo_structure.R"))
 theme_set(theme_classic())
 
 # load pupillometry data
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
-#data_pupillometry <- read.csv2("mb2p.csv",sep=",")
-#data_pupillometry$outcome = as.factor(data_pupillometry$outcome)
-#data_pupillometry$condition = as.factor(data_pupillometry$condition)
-#data_pupillometry$age_cohort = as.factor(data_pupillometry$age_cohort)
+rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDIATE_008", "RESULTS_FOLDER")))
 ```
 
 ## The Data 
@@ -57,24 +56,22 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 
 The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2-P (see Calignano, Girardi, and Altoé, 2023).
 
-Let's assume that we have 10s worth of data per participant which starts at 1s before the resolution until 9s after the resolution. The crucial time-window for our analyses is the 5s after the bear exits the tubes, i.e,. from 1s to 6s in this dataset.
-
 ```{r preprocess}
 # Check Nijmegen-lab
-data.ni <- data_pupillometry |> 
-  filter(lab_id == "babylabNijmegen",
-  trial_num == 6,                   
-  t_norm >= -1000 & t_norm < 5000)
- #hist(data.ni$pupil_right)
+# data.ni <- data_pupillometry |>
+#   filter(lab_id == "babylabNijmegen",
+#   trial_num == 6,
+#   t_norm >= -1000 & t_norm < 5000)
+#  hist(data.ni$pupil_right)
  #head(data.ni$pupil_left)
 # -> Looks like values need to be divided by 100 to transform to mm.
 
 data_pupillometry <- data_pupillometry |> 
   filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
-         #lab_id != "babylabNijmegen",      # Nijmegen has pupil values in the 100s
          trial_num == 6,                   # filter to second test trial only (data reduction)
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
 
+#! Double-check the choice in time-window. Do some models require time for the entirety of the second test trial?
 
 data_pupillometry <- data_pupillometry |> 
   mutate(age_cohort <- as.factor(age_cohort)) |> 
@@ -99,6 +96,9 @@ data_pupillometry <- data_pupillometry |>
     )
   
 
+#! This would be a good place to do the z-transformation.
+
+  
 # Merging in AL data (variable prop_exit)
 
 #summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
@@ -109,6 +109,7 @@ data_pupillometry <- data_pupillometry |>
 ```
 
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
 data_pupillometry <- data_pupillometry |> 
@@ -150,17 +151,26 @@ data_plausible.Eyelink <- data_pupillometry |>
   filter(eyetracker_type == "EyeLink") |>
     mutate(average = ifelse(average < 52 | average > 3008, NA, average))
 
-
 data_plausible <- bind_rows(data_plausible.SMI.Tobii, data_plausible.Eyelink)
+rm("data_plausible.SMI.Tobii", "data_plausible.Eyelink")
 
 data_df1 <- bind_rows(
   data_pupillometry |> 
     mutate(df1_extreme_values = "implausible"),
   data_plausible |> 
     mutate(df1_extreme_values = "plausible")
-) |> nest(data = -df1_extreme_values)
+) |> nest(data = -df1_extreme_values) #! What does this do?
 
-# scatterplot
+
+# Prelim check:
+data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
+  summarize(range_min = min(pupil_left, na.rm=T),
+            range_max = max(pupil_left, na.rm=T))
+
+#! Why are there still such large values even with Eyelink-data removed? Likely Nimegen issue -> solved.
+
+# scatterplot #! This needs to be fixed once the z-transformation is done.
 data_pupillometry |> 
   #filter(eyetracker_type != "EyeLink") |>
   mutate(plausibility = ifelse(pupil_left <= 2 | pupil_left >= 8 | 
@@ -174,7 +184,8 @@ data_pupillometry |>
   facet_wrap("age_cohort")
 ```
 
-# Second degree of freedom: fixation within the screen vs outside the screen
+# Second degree of freedom: gaze within the screen vs outside the screen
+This results in 4 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen).
 
 ```{r DF2 area of interest, echo=TRUE, include=TRUE, out.width='90%'}
 data_within <- data_df1 |> 
@@ -189,17 +200,21 @@ data_df2 <- bind_rows(
   data_within |> mutate(df2_screen_fixation = "within", .before = "data")
 )
 
+#! Can we adjust this to show both 'mapped 'in' and 'out' values?
+
 data_pupillometry |> 
   ggplot(aes(x = x, y = y)) +
   geom_point(alpha = .1)
 ```
+
 # Third degree of freedom: moving average filtered vs unfiltered data
+This results in 8 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not).
 
 ```{r DF3 moving average, echo=TRUE, include=TRUE, out.width='90%'}
 WINDOW_SIZE = 5
 
 data_avg <- data_df2 |> 
-  mutate(data = map(data, \(d) {
+  mutate(data = map(data, \(d) { #! What does \(d) do?
     d |> 
       group_by(participant_id, trial_num) |> 
       mutate(pupil_left = rollapply(pupil_left, width = WINDOW_SIZE, 
@@ -209,7 +224,7 @@ data_avg <- data_df2 |>
                                      FUN = mean, na.rm = TRUE, 
                                      fill = NA, align = "right")) |> 
       rowwise() |> 
-      mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # NEW: need to update average after applying rolling average; switched to liberal avg
+      mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> 
       ungroup() 
   }))
 
@@ -222,6 +237,8 @@ data_df3 <- bind_rows(
 # Fourth degree of freedom: 1s, 0.5s, or 0.25s before the bear resolution.
 
 We consider three possible baseline correction all performed by subtracting the average pupil diameter from all subsequent values between, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
+
+This results in 24 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not) * 3 (1s, 0.5s, or 0.25s baseline).
 
 ```{r DF4 baseline correction, echo=TRUE, include=TRUE, out.width='90%'}
 ### 3 median baselines, i.e., initial time window for each trial_num ,id, lab_id
@@ -254,9 +271,7 @@ data_df4 <- bind_rows(
   data_baseline_0.25
 )
 
-# plotting
-# RH: Changed the color and facet to show condition within panel.
-
+# plotting #! Will need to create these plots for each of the final (72?) datasets.
 data_df4 |> 
   pull(data) |> 
   (`[`)(value = c(3,7)) |> # arbitrarily select three universes to visualise
@@ -268,8 +283,8 @@ data_df4 |>
            y = "Pupil size (mm)") +
       geom_vline(xintercept = 0) +
       geom_hline(yintercept = 0) +
-      geom_smooth(se = TRUE) 
-      #facet_grid(condition ~ eyetracker_type)
+      geom_smooth(se = TRUE) +
+      facet_grid(condition ~ age_cohort)
   })
 ```
 
@@ -277,8 +292,9 @@ data_df4 |>
 
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
-```{r DF5 participant exclusion, echo=TRUE, include=TRUE, out.width='90%'}
+This results in 72 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not) * 3 (1s, 0.5s, or 0.25s baseline) * 3 (no exclusions, valid trial 2 or valid trial 1 AND 2).
 
+```{r DF5 participant exclusion, echo=TRUE, include=TRUE, out.width='90%'}
 no_exclusions <- data_pupillometry |> 
   filter(pilot == "no",
       session_error == "noerror",
@@ -322,18 +338,16 @@ data_df5 <- bind_rows(
   data_valid_second |> mutate(df5_ppt_exclusion = "second test trial valid", .before = "data"),
   data_valid_both |> mutate(df5_ppt_exclusion = "both test trials valid", .before = "data")
 )
+
 ```
 
-As a final step, we investigated (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provided an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across the datasets we created.
+As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
 ```{r modelling, echo=TRUE, include=TRUE, out.width='90%'}
 # Assuming `data_df5$data` is a list of dataframes:
 data_df5_list <- data_df5$data
 
 # Run your model function on each dataframe in data_df5_list
-library(dplyr)
-library(purrr)
-
 # Define the custom modeling function
 run_model_lm <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
@@ -350,7 +364,7 @@ run_model_lmer <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
     # Fit the model if conditions are met
-    lmer(average ~ condition_c * outcome_c * age_cohort_c + (1|participant_id), data = df)
+    lmer(average ~ condition_c * outcome_c * age_cohort_c + (1|participant_id), data = df) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -364,15 +378,9 @@ results_lmer <- map(data_df5_list, run_model_lmer)
 lm_results <- compact(results_lm)
 lmer_results <- compact(results_lmer)
 
-
 ```
 
 ```{r model parameters, echo=TRUE, include=TRUE, out.width='90%'}
-# Load required packages
-library(purrr)
-library(broom)
-library(dplyr)
-
 # Define the extraction function with improved error handling
 extract_model_metrics <- function(model) {
   if (!is.null(model)) {
@@ -428,7 +436,6 @@ extract_model_metrics_LMER <- function(model) {
 LM_model_metrics <- map(lm_results, extract_model_metrics)
 LM_model_metrics <- compact(LM_model_metrics)  # Remove any NULL elements
 
-
 LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)
 LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)  # Remove any NULL elements
 
@@ -441,7 +448,6 @@ LMERmodel_metrics_df <- bind_rows(LMER_model_metrics, .id = "model_id")
 str(LMmodel_metrics_df)
 str(LMERmodel_metrics_df)
 # Plot the specification curve
-library(ggplot2)
 
 # Add a model order for plotting
 LMmodel_metrics_df <- LMmodel_metrics_df %>%
