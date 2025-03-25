@@ -4,7 +4,7 @@ format: html
 ---
 
 ```{r}
-# Clear workspace:
+# Clear work space:
 rm(list = ls())
 
 library(tidyverse)
@@ -30,6 +30,11 @@ data_pupillometry <- data_preprocessed |>
                           ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
          pupil_right = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_right should be NA, not 0
                           ifelse(is.na(pupil_right), pupil_left, pupil_right))) # If pupil_right is NA, take value of pupil_left
+```
+
+```{r}
+# Clear work space and keeo only relevant files
+rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDIATE_008")))
 ```
 
 Sanity check.
