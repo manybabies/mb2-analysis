@@ -350,14 +350,18 @@ data_df5 <- bind_rows(
 
 ```
 
-```{r Ploting all 72 datasets, echo=TRUE, include=TRUE, out.width='90%'}
+```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, out.width='90%'}
+# work-around for different time points for now: rounding to the nearest 25ms
+data_df5 <- data_df5 |> 
+  mutate(data = map(data, ~ .x |> mutate(t_norm_downsampled = floor(t_norm / 25) * 25)))
+
 # Generate and store all plots
 plots <- data_df5 |> 
   pull(data) |> 
   map(\(d) {
     ggplot(d |> filter(!is.na(average),
                        t_norm >= 0 & t_norm < 5000), 
-           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
+           aes(x = t_norm_downsampled, y = average, col = outcome, linetype = age_cohort)) +
       labs(x = "Time (ms)",
            y = "Pupil size (mm)") +
       geom_vline(xintercept = 0) +
@@ -384,6 +388,27 @@ walk2(plots, labels, ~ ggsave(
   plot = .x,
   width = 8, height = 6, dpi = 300
 ))
+
+grand_avg <- data_df5 |> 
+  pull(data) |> 
+  bind_rows(.id = "dataset_id") |>  # Keep dataset ID
+  filter(!is.na(average), t_norm_downsampled >= 0 & t_norm_downsampled < 5000) |>  
+  group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
+  summarize(
+    grand_average = mean(average, na.rm = TRUE),  
+    se = sd(average, na.rm = TRUE) / sqrt(n_distinct(dataset_id)),  # SE using # of datasets
+    .groups = "drop"
+  )
+
+ggplot(grand_avg, 
+       aes(x = t_norm_downsampled, y = grand_average, col = interaction(condition, outcome))) +
+  labs(x = "Time (ms)", y = "Pupil size (mm)", color = "Condition & Outcome") +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_ribbon(aes(ymin = grand_average - se, ymax = grand_average + se, fill = interaction(condition, outcome)), 
+              alpha = 0.25, color = NA) +
+  geom_line() +
+  facet_wrap(~ age_cohort)
 ```
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
