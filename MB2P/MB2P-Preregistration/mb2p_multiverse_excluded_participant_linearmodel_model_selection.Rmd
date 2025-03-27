@@ -29,6 +29,9 @@ library(stringi)
 library(gridExtra)
 library(purrr)
 library(broom)
+library(broom.mixed)
+library(lme4)
+library(performance)
 ```
 
 ```{r load data, include=FALSE}
@@ -92,13 +95,12 @@ data_pupillometry <- data_pupillometry |>
     ),
     outcome_c = case_when(
       outcome == "congruent" ~ -0.5,
-      outcome == "incongurent" ~ 0.5)
+      outcome == "incongruent" ~ 0.5)
     )
   
 
 #! This would be a good place to do the z-transformation.
 
-  
 # Merging in AL data (variable prop_exit)
 
 #summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
@@ -122,35 +124,35 @@ data_pupillometry$pupil_right = as.numeric(as.character(data_pupillometry$pupil_
 
 ### The following is a temporary workaround to include the Eyelink-data by calculating those values which would correspond to 2mm and 8mm, i.e., the mm-values for the first degree of freedom in the multiverse.
 
-data_plausible <- data_pupillometry |> 
-  filter(eyetracker_type != "EyeLink")
-
-#pupil.vector <- data_plausible.SMI.Tobii[!is.na(data_plausible.SMI.Tobii$average),]$average
-#sum(pupil.vector<=2)/length(pupil.vector)
-#sum(pupil.vector>8)/length(pupil.vector)
-#range(pupil.vector)
-#quantile(pupil.vector)
-# -> 2mm and 8mm correspond to 0.001568934 and 1
-data_plausible.Eyelink <- data_pupillometry |> 
- filter(eyetracker_type == "EyeLink")
-
-pupil.vector <- data_plausible.Eyelink[!is.na(data_plausible.Eyelink$average),]$average
-range(pupil.vector)
-quantile(pupil.vector, probs=c(0.001568934, 1))
-# -> corresponds to 52 and 3008
-
-###
-
-# plausible data range ]2, 8[ for SMI and Tobii
-data_plausible.SMI.Tobii <- data_pupillometry |> 
- filter(eyetracker_type != "EyeLink") |>
-  mutate(average = ifelse(average < 2 | average > 8, NA, average))
-
-# plausible data range ]52, 3008[ for Eyelink
-data_plausible.Eyelink <- data_pupillometry |> 
-  filter(eyetracker_type == "EyeLink") |>
+# data_plausible <- data_pupillometry |> 
+#   filter(eyetracker_type != "EyeLink")
+# 
+# #pupil.vector <- data_plausible.SMI.Tobii[!is.na(data_plausible.SMI.Tobii$average),]$average
+# #sum(pupil.vector<=2)/length(pupil.vector)
+# #sum(pupil.vector>8)/length(pupil.vector)
+# #range(pupil.vector)
+# #quantile(pupil.vector)
+# # -> 2mm and 8mm correspond to 0.001568934 and 1
+# data_plausible.Eyelink <- data_pupillometry |> 
+#  filter(eyetracker_type == "EyeLink")
+# 
+# pupil.vector <- data_plausible.Eyelink[!is.na(data_plausible.Eyelink$average),]$average
+# range(pupil.vector)
+# quantile(pupil.vector, probs=c(0.001568934, 1))
+# # -> corresponds to 52 and 3008
+# 
+# ###
+# 
+ # plausible data range ]2, 8[ for SMI and Tobii
+ data_plausible.SMI.Tobii <- data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
+   mutate(average = ifelse(average < 2 | average > 8, NA, average))
+ 
+ # plausible data range ]52, 3008[ for Eyelink
+ data_plausible.Eyelink <- data_pupillometry |> 
+   filter(eyetracker_type == "EyeLink") |>
     mutate(average = ifelse(average < 52 | average > 3008, NA, average))
-
+ 
 data_plausible <- bind_rows(data_plausible.SMI.Tobii, data_plausible.Eyelink)
 rm("data_plausible.SMI.Tobii", "data_plausible.Eyelink")
 
@@ -160,7 +162,6 @@ data_df1 <- bind_rows(
   data_plausible |> 
     mutate(df1_extreme_values = "plausible")
 ) |> nest(data = -df1_extreme_values) #! What does this do?
-
 
 # Prelim check:
 data_pupillometry |> 
@@ -379,7 +380,7 @@ walk2(plots, labels, ~ ggsave(
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
-```{r modelling, echo=TRUE, include=TRUE, out.width='90%'}
+```{r modelling, echo=FALSE, include=TRUE, out.width='90%'}
 # Assuming `data_df5$data` is a list of dataframes:
 data_df5_list <- data_df5$data
 
@@ -389,7 +390,15 @@ run_model_lm <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
     # Fit the model if conditions are met
-    lm(average ~ condition_c * outcome_c * age_cohort_c, data = df)
+    #! Reduce dataset to to average across the 5 seconds, i.e., 1 value per participant per trial? 
+    df.short <- df |>
+      filter(t_norm > 0) |>
+      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      summarize(Average = mean(average, na.rm=T)) |>
+      ungroup()
+    
+    # Fit model.
+    lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -400,7 +409,15 @@ run_model_lmer <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
     # Fit the model if conditions are met
-    lmer(average ~ condition_c * outcome_c * age_cohort_c + (1|participant_id), data = df) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
+    
+    #! Reduce dataset to to average across the 5 seconds, i.e., 1 value per participant per trial? 
+    df.short <- df |>
+      filter(t_norm > 0) |>
+      group_by(participant_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
+      summarize(Average = mean(average, na.rm=T)) |>
+      ungroup()
+    
+    lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -421,7 +438,7 @@ lmer_results <- compact(results_lmer)
 extract_model_metrics <- function(model) {
   if (!is.null(model)) {
     # Calculate R-squared
-    rsq <- summary(model)$r.squared
+    rsq <- summary(model)$adj.r.squared
     
     # Get AIC and BIC
     aic <- AIC(model)
@@ -430,7 +447,8 @@ extract_model_metrics <- function(model) {
     # Extract coefficients and standard errors (using tidy output)
     coef_df <- broom::tidy(model)
     coef_df <- coef_df %>%
-      filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>%
+      filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>% #! Here we need only one coefficient, i.e., the one for the 3-way interaction?
+      
       select(term, estimate, std.error)
     
     # If coefficients are missing, create empty placeholders
@@ -448,13 +466,9 @@ extract_model_metrics <- function(model) {
   }
 }
 
-library(broom.mixed)
 LMER_model_metrics <- map(lmer_results, function(model) {
   broom.mixed::tidy(model)
 })
-
-library(lme4)
-library(performance)
 
 extract_model_metrics_LMER <- function(model) {
   r2 <- performance::r2(model)  # Extract R^2 values
@@ -489,13 +503,13 @@ str(LMERmodel_metrics_df)
 LMmodel_metrics_df <- LMmodel_metrics_df %>%
   group_by(term) %>%
   mutate(model_order = row_number()) %>%
-  ungroup()
+  ungroup() #|>
+  #filter()
 
 LMERmodel_metrics_df <- LMERmodel_metrics_df %>%
   group_by(fixed_effects) %>%
   mutate(model_order = row_number()) %>%
   ungroup()
-
 
 ```
 
@@ -573,4 +587,158 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
   theme_minimal()
 
 ```
+
+# Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
+
+
+
+```{r table key parameters, echo=TRUE, include=TRUE, out.width='90%', message=FALSE}
+
+# Start building the dataframe with key information already gathered in previous steps"
+
+# Merge info from LMER:
+dataStats.temp <- data_df5 |>
+  select(-"data")
+
+dataStats.df <- LMERmodel_metrics_df |>
+  select(-c("fixed_effects", "model_order")) |>
+  rename(LMER.AIC = AIC, LMER.BIC = BIC, LMER.logLik = logLik, LMER.margR2 = marginal_R2, LMER.condR2 = conditional_R2)
+
+dataStats.df <- bind_cols(dataStats.temp, dataStats.df) |>
+  relocate(model_id)
+
+rm("dataStats.temp")
+
+# Merge info from LM:
+dataStats.temp <- LMmodel_metrics_df |>
+  filter(term == "condition_c") |>
+  select(-c("term", "model_order", "model_id")) |>
+  rename(LM.CondEstimate = estimate, LM.CondSE = std.error, LM.AIC = AIC, LM.BIC = BIC, LM.R2 = R_squared)
+
+dataStats.df <- bind_cols(dataStats.df, dataStats.temp)
+
+rm("dataStats.temp")
+
+# Get more statistics for the df:
+
+run_model_anova <- function(df) {
+  
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+      
+    df.short <- df |>
+      filter(t_norm > 0) |>
+      group_by(participant_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort) |>
+      summarize(Average = mean(average, na.rm=T)) |>
+      ungroup()
+    
+    # Hypothesis 1.
+    # Fit model.
+    df.modelFull <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
+    df.modelFull.sum <- summary(df.modelFull)
+    
+    # Add to df.
+    df.return <- tibble(F.FullNull = df.modelFull.sum$fstatistic[1])
+    
+    # Get beta-coef for outcome given condition == knowledge and age_cohort == toddlers.
+    df.short$condition <- as.factor(df.short$condition)
+    df.short$condition <- relevel(df.short$condition, ref = "knowledge")
+    df.short$age_cohort <- as.factor(df.short$age_cohort)
+    df.short$age_cohort <- relevel(df.short$age_cohort, ref = "toddlers")
+    
+    df.modelFull2 <- lm(Average ~ condition * outcome * age_cohort, data = df.short)
+    df.modelFull2 <- broom::tidy(df.modelFull2) |>
+      filter(term=="outcomeincongruent") |>
+      select(-c("statistic", "p.value"))
+    
+    df.return <- df.return |>
+      mutate(Beta.FullCondition = as.numeric(df.modelFull2[2]), BetaSD.FullCondition = as.numeric(df.modelFull2[3]))
+  
+    ### 3-way interaction
+    df.modelRedBy3Way <- lm(Average ~ (condition_c+outcome_c+age_cohort_c)^2, data = df.short)
+    df.modelFullRed3Way <- anova(df.modelRedBy3Way, df.modelFull)
+    
+    Fvalue <- df.modelFullRed3Way$F[2]
+    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedBy3Way)$r.squared
+    
+    df.return <- df.return |>
+    mutate(F.FullRedBy3Way = Fvalue, R2.FullRedBy3Way = R2)
+    rm("Fvalue", "R2")
+    
+    
+    # Hypothesis 1.1 &  Hypothesis 1.2
+    df.short <- df |>
+      filter(t_norm > 0) |>
+      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      summarize(Average = mean(average, na.rm=T)) |>
+      ungroup()
+    #
+    df.modelFull <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
+    df.modelRedByOutome <- lm(Average ~ condition_c * age_cohort_c, data = df.short)
+    df.modelFullRedOutcome <- anova(df.modelRedByOutome, df.modelFull)
+    
+    Fvalue <- df.modelFullRedOutcome$F[2]
+    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByOutome)$r.squared
+    
+    df.return <- df.return |>
+    mutate(F.FullRedByOutcome = Fvalue, R2.FullRedByOutcome = R2)
+    rm("Fvalue", "R2")
+    
+    # Hypothesis 1.3 &  Hypothesis 1.4
+    df.modelRedByCondition <- lm(Average ~ outcome_c * age_cohort_c, data = df.short)
+    df.modelFullRedCondition <- anova(df.modelRedByCondition, df.modelFull)
+    
+    Fvalue <- df.modelFullRedCondition$F[2]
+    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByCondition)$r.squared
+    
+    df.return <- df.return |>
+    mutate(F.FullRedByCondition = Fvalue, R2.FullRedByCondition = R2)
+    rm("Fvalue", "R2")
+    
+    return(df.return)
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+
+dataStats.df.additional <- map(data_df5_list, run_model_anova)
+dataStats.df.additional <- bind_rows(dataStats.df.additional, .id = "model_id")
+
+dataStats.final <- inner_join(dataStats.df, dataStats.df.additional, by = "model_id")
+
+hist(dataStats.final$F.FullNull)
+#
+plot(sort(dataStats.final$F.FullNull), ylim=c(0,8))
+points(sort(dataStats.final$F.FullRedByOutcome), pch=19, col="blue")
+points(sort(dataStats.final$F.FullRedByCondition), pch=19, col="green")
+points(sort(dataStats.final$F.FullRedBy3Way), pch=19, col="red")
+legend("topleft",                             # Position of legend
+       legend = c("Full Null", 
+                  "Full Reduced by Outcome", 
+                  "Full Reduced by Condition", 
+                  "Full Reduced by 3-Way"),   # Labels
+       col = c("black", "blue", "green", "red"), # Colors to match your points
+       pch = c(1,19,19,19),                   # Point styles matching plot
+       bty = "n")    
+
+plot(sort(dataStats.final$Beta.FullCondition), pch=19, ylim =c(-0.01, 0.01), ylab="Beta-coeff from congruent to incongruent", main="Change in relative Pupil Size for\n Toddlers in the Knowledge Condition")
+abline(h=0)
+
+# Spot check
+dataStats.final |>
+  relocate(F.FullNull)
+#
+dataStats.final |>
+  relocate(LMER.AIC)
+
+# It looks like all the model values are identical with filtered datasets (here no effect of df1 and df2?)?
+# Likewise, within unfiltered, the two plausible are identical and the two implausible are identical.
+# Does that all make sense?
+
+```
+
+
+
+
 
