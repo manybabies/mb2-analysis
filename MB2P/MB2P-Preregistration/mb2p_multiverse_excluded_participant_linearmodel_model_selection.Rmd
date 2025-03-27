@@ -99,15 +99,23 @@ data_pupillometry <- data_pupillometry |>
     )
   
 
-#! This would be a good place to do the z-transformation.
+# z-transform left and right pupil size within each eye tracker type
+
+data_pupillometry <- data_pupillometry %>%
+  group_by(eyetracker_type) %>%  # Group by eye tracker type
+  mutate(
+    pupil_left_z = (pupil_left - mean(pupil_left, na.rm = TRUE)) / sd(pupil_left, na.rm = TRUE),
+    pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)
+  ) %>%
+  ungroup()
 
 # Merging in AL data (variable prop_exit)
 
-#summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
+summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
 
-#data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
+data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
 
-#rm(summarize_participant_test_both_trials)
+rm(summarize_participant_test_both_trials)
 ```
 
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
