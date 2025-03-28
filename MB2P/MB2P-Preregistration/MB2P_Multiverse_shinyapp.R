@@ -1,5 +1,4 @@
-
-#author: Giulia Calignano
+# Author: Giulia Calignano
 
 library(shiny)
 library(ggplot2)
@@ -13,38 +12,55 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("model_type", "Select Model Type:", 
-                  choices = c("Linear Models" = "lm", "Mixed-Effects Models" = "lmer")),
+                  choices = c("Linear Models" = "lm", "Mixed-Effects Models" = "lmer", "Mixed-Effects Models (with time)" = "TIMElmer")),
       selectInput("metric", "Select Metric:", 
                   choices = c("BIC" = "BIC", "AIC" = "AIC", 
                               "R-Squared" = "R_squared", "Conditional R-Squared" = "conditional_R2")),
-      p("Click on a point in the graph to view the interaction effect estimated by the corresponding model.")
+      p("Click a point on either plot to view the model ID and its interaction plot.")
     ),
     mainPanel(
       plotOutput("metricPlot", click = "plot_click"),
-      plotOutput("specCurvePlot"),
-      plotOutput("interactionPlot")
+      plotOutput("interactionPlot", click = "volcano_click"),
+      plotOutput("modelInteractionPlot")
     )
   )
 )
 
-# Server
+# SERVER
 server <- function(input, output, session) {
   
-  # Reactive dataset based on model type
+  clicked_model_id <- reactiveVal(NULL)
+  
   selected_data <- reactive({
     if (input$model_type == "lm") {
-      LMmodel_metrics_df  # This should be defined in your environment
+      LMmodel_metrics_df
     } else {
-      LMERmodel_metrics_df  # This should be defined in your environment
+      LMERmodel_metrics_df
     }
   })
   
-  # Reactive results based on model type
   selected_results <- reactive({
     if (input$model_type == "lm") {
-      lm_results  # List of linear models
+      lm_results
     } else {
-      lmer_results  # List of mixed-effects models
+      lmer_results
+    }
+  })
+  
+  # Handle clicks from either plot
+  observeEvent(input$plot_click, {
+    data <- selected_data()
+    clicked <- nearPoints(data, input$plot_click, xvar = "model_id", yvar = input$metric, maxpoints = 1)
+    if (nrow(clicked) > 0) {
+      clicked_model_id(clicked$model_id)
+    }
+  })
+  
+  observeEvent(input$volcano_click, {
+    data <- selected_data()
+    clicked <- nearPoints(data, input$volcano_click, xvar = "estimate", yvar = "p.value", maxpoints = 1)
+    if (nrow(clicked) > 0) {
+      clicked_model_id(clicked$model_id)
     }
   })
   
@@ -60,57 +76,46 @@ server <- function(input, output, session) {
       theme(legend.position = "none")
   })
   
-  # Specification Curve Plot
-  output$specCurvePlot <- renderPlot({
-    # Extract coefficients and terms from all models
-    spec_data <- map_dfr(seq_along(selected_results()), function(i) {
-      model <- selected_results()[[i]]
-      coefs <- summary(model)$coefficients
-      data.frame(
-        term = rownames(coefs),
-        estimate = coefs[, "Estimate"],
-        model_id = i
-      )
-    })
+  # Volcano Plot with clicked label
+  output$interactionPlot <- renderPlot({
+    data <- selected_data()
+    data$model_id <- as.factor(data$model_id)
     
-    ggplot(spec_data, aes(x = term, y = estimate, color = as.factor(model_id), group = as.factor(model_id))) +
-      geom_line() +
-      geom_point(size = 2) +
+    gg <- ggplot(data, aes(x = estimate, y = -log10(p.value), color = model_id)) +
+      geom_point(size = 3, alpha = 0.8) +
+      geom_vline(xintercept = c(-0.02, 0.02), linetype = "dashed", color = "grey40") +
+      geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
       labs(
-        title = "Specification Curve: Effects Across Models",
-        x = "Terms",
-        y = "Estimated Effect - baseline corrected pupil dilation in mm",
-        color = "Model ID"
+        title = "Volcano Plot of Model Performance vs. Effect Size",
+        x = "Effect Size: Three-way Interaction",
+        y = expression(-log[10](p-value))
       ) +
-      theme(legend.position = "none") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme_minimal() +
+      theme(legend.position = "none")
+    
+    if (!is.null(clicked_model_id())) {
+      highlight <- selected_data() %>% filter(model_id == clicked_model_id())
+      gg <- gg +
+        geom_text(data = highlight,
+                  aes(x = estimate, y = -log10(p.value), label = model_id),
+                  color = "black", vjust = -1.2, size = 5, fontface = "bold",
+                  inherit.aes = FALSE)
+    }
+    
+    gg
   })
   
-  # Interaction Plot
-  output$interactionPlot <- renderPlot({
-    req(input$plot_click)
+  # Plot model interaction
+  output$modelInteractionPlot <- renderPlot({
+    req(clicked_model_id())
+    model_index <- as.numeric(clicked_model_id())
+    model_list <- selected_results()
+    req(model_index <= length(model_list))
+    selected_model <- model_list[[model_index]]
     
-    # Identify the clicked model
-    clicked_point <- nearPoints(
-      selected_data(),
-      input$plot_click,
-      xvar = "model_order",           # The x-variable in the plot
-      yvar = input$metric             # Dynamically set the y-variable based on user selection
-    )
-    req(nrow(clicked_point) == 1)    # Ensure a valid point was clicked
-    
-    # Get the corresponding model
-    model_index <- clicked_point$model_order
-    selected_model <- selected_results()[[model_index]]
-    
-    # Generate interaction plot
-    if (input$model_type == "lm") {
-      plot_model(selected_model, type = "int", terms = c("hp", "wt", "mpg"))  # Example for linear models
-    } else {
-      plot_model(selected_model, type = "int", terms = c("hp", "wt", "mpg"))  # Replace with mixed-model terms
-    }
+    plot_model(selected_model, type = "int", terms = c("hp", "wt", "mpg"))  # Customize for your model terms
   })
 }
 
-# Run the app
+# Run the App
 shinyApp(ui = ui, server = server)
