@@ -4,6 +4,7 @@ library(shiny)
 library(ggplot2)
 library(purrr)
 library(sjPlot)
+library(dplyr)
 
 # UI
 ui <- fluidPage(
@@ -76,25 +77,26 @@ server <- function(input, output, session) {
       theme(legend.position = "none")
   })
   
-  # Volcano Plot with clicked label
+  # Volcano Plot (colored by significance)
   output$interactionPlot <- renderPlot({
     data <- selected_data()
     data$model_id <- as.factor(data$model_id)
     
-    gg <- ggplot(data, aes(x = estimate, y = -(log10(p.value))  , color = model_id)) +
+    gg <- ggplot(data, aes(x = estimate, y = -(log10(p.value)), color = p.value < 0.05)) +
       geom_point(size = 3, alpha = 0.8) +
       geom_vline(xintercept = c(-0.02, 0.02), linetype = "dashed", color = "grey40") +
       geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
+      scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey60")) +
       labs(
         title = "Volcano Plot of Model Performance vs. Effect Size",
         x = "Effect Size: Three-way Interaction",
-        y = expression(-log[10](p-value))
+        y = expression(-log[10](p-value)),
+        color = "Significant (p < 0.05)"
       ) +
-      theme_minimal() +
-      theme(legend.position = "none")
+      theme_minimal()
     
     if (!is.null(clicked_model_id())) {
-      highlight <- selected_data() %>% filter(model_id == clicked_model_id())
+      highlight <- data %>% filter(model_id == clicked_model_id())
       gg <- gg +
         geom_text(data = highlight,
                   aes(x = estimate, y = -log10(p.value), label = model_id),
@@ -105,7 +107,7 @@ server <- function(input, output, session) {
     gg
   })
   
-  # Plot model interaction
+  # Interaction Plot
   output$modelInteractionPlot <- renderPlot({
     req(clicked_model_id())
     model_index <- as.numeric(clicked_model_id())
