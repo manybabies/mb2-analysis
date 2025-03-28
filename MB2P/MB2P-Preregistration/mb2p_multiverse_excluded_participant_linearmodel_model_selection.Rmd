@@ -1,6 +1,6 @@
 ---
 title: "MB2-P - Multiverse Data Simulation and Statistical Analysis"
-author: "Rmarkdown by Giulia Calignano, Alvin Tan, Melli S. Schreiner  "
+author: "Rmarkdown by Giulia Calignano, Melanie S. Schreiner, Alvin Tan, and Robert Hepach"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -20,7 +20,6 @@ rm(list = ls())
 knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(zoo)
-library(lme4)
 library(mgcv)
 library(here)
 library(dplyr)
@@ -456,14 +455,36 @@ run_model_lmer <- function(df) {
     NULL
   }
 }
+
+run_model_TIMElmer <- function(df) {
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+    # Fit the model if conditions are met
+    
+    #! Reduce dataset to to average across the 5 seconds, i.e., 1 value per participant per trial? 
+    df.short <- df |>
+      filter(t_norm > 0) |>
+      group_by(participant_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
+      summarize(Average = mean(average, na.rm=T)) |>
+      ungroup()
+    
+    lmer(Average ~ t_norm*condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+
+
+
 # Apply the model function across the list of dataframes in the list-column
 results_lm <- map(data_df5_list, run_model_lm)
 results_lmer <- map(data_df5_list, run_model_lmer)
-
+results_TIMElmer <- map(data_df5_list, run_model_TIMElmer)
 # Filter out NULL values (dataframes that didn't meet the condition)
 lm_results <- compact(results_lm)
 lmer_results <- compact(results_lmer)
-
+TIMElmer_results <- compact(results_TIMElmer)
 ```
 
 ```{r model parameters, echo=TRUE, include=TRUE, out.width='90%'}
@@ -472,21 +493,19 @@ extract_model_metrics <- function(model) {
   if (!is.null(model)) {
     # Calculate R-squared
     rsq <- summary(model)$adj.r.squared
-    
+    tval <- summary(model)$coefficients[,3] 
     # Get AIC and BIC
     aic <- AIC(model)
     bic <- BIC(model)
     
     # Extract coefficients and standard errors (using tidy output)
-    coef_df <- broom::tidy(model)
-    coef_df <- coef_df %>%
-      filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>% #! Here we need only one coefficient, i.e., the one for the 3-way interaction?
-      
-      select(term, estimate, std.error)
+   coef_df <- broom::tidy(model) %>%
+  filter(term == "condition_c:outcome_c:age_cohort_c") %>%  # Only the 3-way interaction
+  select(term, estimate, std.error, p.value)
     
     # If coefficients are missing, create empty placeholders
     if (nrow(coef_df) == 0) {
-      coef_df <- tibble(term = NA, estimate = NA, std.error = NA)
+      coef_df <- tibble(term = NA, estimate = NA, std.error = NA, p.value = NA)
     }
     
     # Add the AIC, BIC, and R-squared as additional columns for consistency
@@ -515,21 +534,41 @@ extract_model_metrics_LMER <- function(model) {
   )
 }
 
+timeLMER_model_metrics <- map(TIMElmer_results, function(model) {
+  broom.mixed::tidy(model)
+})
+
+extract_model_metrics_timeLMER <- function(model) {
+  r2 <- performance::r2(model)  # Extract R^2 values
+  data.frame(
+    AIC = AIC(model),
+    BIC = BIC(model),
+    logLik = logLik(model),
+    marginal_R2 = r2$R2_marginal,   # Marginal R^2
+    conditional_R2 = r2$R2_conditional,  # Conditional R^2
+    fixed_effects = paste(names(fixef(model)), round(fixef(model), 3), collapse = ", ")
+  )
+}
+
 # Apply the extraction function across all models and filter out NULL results
 LM_model_metrics <- map(lm_results, extract_model_metrics)
 LM_model_metrics <- compact(LM_model_metrics)  # Remove any NULL elements
 
 LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)
-LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)  # Remove any NULL elements
+LMER_model_metrics <-compact(LMER_model_metrics) # Remove any NULL elements
 
+timeLMER_model_metrics <- map(TIMElmer_results, extract_model_metrics_timeLMER)
+timeLMER_model_metrics <- compact(LMER_model_metrics)  # Remove any 
 # Convert to a tidy dataframe
 LMmodel_metrics_df <- bind_rows(LM_model_metrics, .id = "model_id")
 LMERmodel_metrics_df <- bind_rows(LMER_model_metrics, .id = "model_id")
+timeLMERmodel_metrics_df <- bind_rows(timeLMER_model_metrics, .id = "model_id")
 
 
 # Check the structure of model_metrics_df to confirm columns are present
 str(LMmodel_metrics_df)
 str(LMERmodel_metrics_df)
+str(timeLMERmodel_metrics_df)
 # Plot the specification curve
 
 # Add a model order for plotting
@@ -540,6 +579,11 @@ LMmodel_metrics_df <- LMmodel_metrics_df %>%
   #filter()
 
 LMERmodel_metrics_df <- LMERmodel_metrics_df %>%
+  group_by(fixed_effects) %>%
+  mutate(model_order = row_number()) %>%
+  ungroup()
+
+timeLMERmodel_metrics_df <- timeLMERmodel_metrics_df %>%
   group_by(fixed_effects) %>%
   mutate(model_order = row_number()) %>%
   ungroup()
@@ -571,6 +615,19 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
       # color = "Predictor") +
   theme_minimal() 
 
+#BIC LMER time
+ggplot(timeLMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
+  geom_point() +                                # Points for estimates
+ # geom_errorbar(aes(ymin = BIC - std.error, ymax = BIC + std.error), 
+            #    width = 0.2) +                  # Error bars
+  #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
+  labs(title = "Specification Curve for BIC",
+       x = "Model Order",
+       y = "BIC") +
+      # color = "Predictor") +
+  theme_minimal() 
+
+
 #AIC LM
 ggplot(LMmodel_metrics_df, aes(x = model_order, y = AIC, color = model_id)) +
   geom_point() +                                # Points for estimates
@@ -595,6 +652,19 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = AIC, color = model_id)) +
       # color = "Predictor") +
   theme_minimal()
 
+#AIC LMER time
+ggplot(LMERmodel_metrics_df, aes(x = model_order, y = AIC, color = model_id)) +
+  geom_point() +                                # Points for estimates
+ # geom_errorbar(aes(ymin = AIC - std.error, ymax = AIC + std.error), 
+            #    width = 0.2) +                  # Error bars
+  #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
+  labs(title = "Specification Curve for AIC",
+       x = "Model Order",
+       y = "AIC") +
+      # color = "Predictor") +
+  theme_minimal()
+
+
 #R2 LM
 ggplot(LMmodel_metrics_df, aes(x = model_order, y = R_squared, color = model_id)) +
   geom_point() +                                # Points for estimates
@@ -618,6 +688,19 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
        y = "R_squared") +
       # color = "Predictor") +
   theme_minimal()
+
+#R2 CONDITIONAL LMER time
+ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = model_id)) +
+  geom_point() +                                # Points for estimates
+ # geom_errorbar(aes(ymin = R_squared - std.error, ymax = R_squared + std.error), 
+            #    width = 0.2) +                  # Error bars
+#  facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
+  labs(title = "Specification Curve for R_squared",
+       x = "Model Order",
+       y = "R_squared") +
+      # color = "Predictor") +
+  theme_minimal()
+
 
 ```
 
