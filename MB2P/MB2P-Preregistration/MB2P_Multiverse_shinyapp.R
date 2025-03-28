@@ -12,7 +12,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("model_type", "Select Model Type:", 
-                  choices = c("Linear Models" = "lm", "Mixed-Effects Models" = "lmer", "Mixed-Effects Models (with time)" = "TIMElmer")),
+                  choices = c("Linear Models (without time)" = "lm", "Linear Models (with time)" = "lmer", "Mixed-Effects Models (with time)" = "TIMElmer")),
       selectInput("metric", "Select Metric:", 
                   choices = c("BIC" = "BIC", "AIC" = "AIC", 
                               "R-Squared" = "R_squared", "Conditional R-Squared" = "conditional_R2")),
@@ -81,7 +81,7 @@ server <- function(input, output, session) {
     data <- selected_data()
     data$model_id <- as.factor(data$model_id)
     
-    gg <- ggplot(data, aes(x = estimate, y = -log10(p.value), color = model_id)) +
+    gg <- ggplot(data, aes(x = estimate, y = -(log10(p.value))  , color = model_id)) +
       geom_point(size = 3, alpha = 0.8) +
       geom_vline(xintercept = c(-0.02, 0.02), linetype = "dashed", color = "grey40") +
       geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
@@ -113,7 +113,7 @@ server <- function(input, output, session) {
     req(model_index <= length(model_list))
     selected_model <- model_list[[model_index]]
     
-    plot_model(selected_model, type = "int", terms = c("hp", "wt", "mpg"))  # Customize for your model terms
+    plot_model(selected_model, type = "int")  
   })
 }
 
