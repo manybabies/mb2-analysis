@@ -59,21 +59,15 @@ rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDI
 The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2-P (see Calignano, Girardi, and Altoé, 2023).
 
 ```{r preprocess}
-# Check Nijmegen-lab
-# data.ni <- data_pupillometry |>
-#   filter(lab_id == "babylabNijmegen",
-#   trial_num == 6,
-#   t_norm >= -1000 & t_norm < 5000)
-#  hist(data.ni$pupil_right)
- #head(data.ni$pupil_left)
-# -> Looks like values need to be divided by 100 to transform to mm.
+#! The z-transformation does not work. It produces weird values in the plots below. Next step: We have to transform the values here, per subject per recording, to preserve the shape of the signal.
 
 data_pupillometry <- data_pupillometry |> 
-  filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
+  # filter(trial_num == 6,                   # filter to second test trial only (data reduction)
+  #        t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
+  # 
+    filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
          trial_num == 6,                   # filter to second test trial only (data reduction)
          t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
-
-#! Double-check the choice in time-window. Do some models require time for the entirety of the second test trial?
 
 data_pupillometry <- data_pupillometry |> 
   mutate(age_cohort <- as.factor(age_cohort)) |> 
@@ -99,15 +93,16 @@ data_pupillometry <- data_pupillometry |>
   
 
 # z-transform left and right pupil size within each eye tracker type
-
-data_pupillometry <- data_pupillometry %>%
-  group_by(eyetracker_type) %>%  # Group by eye tracker type
+data_pupillometry <- data_pupillometry |>
+  group_by(participant_id) |> # Should this be done by age cohort, too?
   mutate(
     pupil_left_z = (pupil_left - mean(pupil_left, na.rm = TRUE)) / sd(pupil_left, na.rm = TRUE),
-    pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)
-  ) %>%
+    pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)) |>
+  ungroup() |>
+  rowwise() |>
+  mutate(average_z = mean(c(pupil_left_z, pupil_right_z), na.rm = TRUE)) |>
   ungroup()
-
+  
 # Merging in AL data (variable prop_exit)
 
 summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
@@ -115,72 +110,49 @@ summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize
 data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
 
 rm(summarize_participant_test_both_trials)
-```
 
+# For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm.
+data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink", average <= 2 ) |>
+  filter(average == max(average, na.rm = T)) |>
+  pull(average_z) # 2mm corresponds to  z = -2.445436
+#
+data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink", average >= 7.18) |>
+  filter(average == max(average, na.rm = T)) |>
+  pull(average_z) # 6.5mm corresponds to  z = 5.043629
+
+# Are there any values greater than z = 5.043629?
+data_pupillometry |> 
+  filter(average_z >= 5.04)
+
+```
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
 This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
 data_pupillometry <- data_pupillometry |> 
-  mutate(pupil_left = ifelse(pupil_left < 0, NA, pupil_left),
-         pupil_right = ifelse(pupil_right < 0, NA, pupil_right))
+  mutate(average = ifelse(pupil_left < 0, NA, average),
+         average = ifelse(average < 0, NA, average),
+         average_z = ifelse(pupil_left < 0, NA, average_z),
+         average_z = ifelse(pupil_right < 0, NA, average_z),
+         )
 
+#! This needs to be done on a subject by recording level, i.e., for each Tobii-participant determine the z-value that corresponds to 2mm and 8mm. Then determine to 'largest' 2mm z-score and the 'smallest' 8mm z-score across all Tobii-subjects. Those should be the cutoffs.
 
-data_pupillometry$pupil_left = as.numeric(as.character(data_pupillometry$pupil_left))
-data_pupillometry$pupil_right = as.numeric(as.character(data_pupillometry$pupil_right))
-
-### The following is a temporary workaround to include the Eyelink-data by calculating those values which would correspond to 2mm and 8mm, i.e., the mm-values for the first degree of freedom in the multiverse.
-
-# data_plausible <- data_pupillometry |> 
-#   filter(eyetracker_type != "EyeLink")
-# 
-# #pupil.vector <- data_plausible.SMI.Tobii[!is.na(data_plausible.SMI.Tobii$average),]$average
-# #sum(pupil.vector<=2)/length(pupil.vector)
-# #sum(pupil.vector>8)/length(pupil.vector)
-# #range(pupil.vector)
-# #quantile(pupil.vector)
-# # -> 2mm and 8mm correspond to 0.001568934 and 1
-# data_plausible.Eyelink <- data_pupillometry |> 
-#  filter(eyetracker_type == "EyeLink")
-# 
-# pupil.vector <- data_plausible.Eyelink[!is.na(data_plausible.Eyelink$average),]$average
-# range(pupil.vector)
-# quantile(pupil.vector, probs=c(0.001568934, 1))
-# # -> corresponds to 52 and 3008
-# 
-# ###
-# 
- # plausible data range ]2, 8[ for SMI and Tobii
- data_plausible.SMI.Tobii <- data_pupillometry |> 
-  filter(eyetracker_type != "EyeLink") |>
-   mutate(average = ifelse(average < 2 | average > 8, NA, average))
+data_plausible <- data_pupillometry |> 
+    mutate(average = ifelse(average_z < -2.45 | average_z > 5.04, NA, average)) |>
+    mutate(average_z = ifelse(average_z < -2.45 | average_z > 5.04, NA, average_z))
  
- # plausible data range ]52, 3008[ for Eyelink
- data_plausible.Eyelink <- data_pupillometry |> 
-   filter(eyetracker_type == "EyeLink") |>
-    mutate(average = ifelse(average < 52 | average > 3008, NA, average))
- 
-data_plausible <- bind_rows(data_plausible.SMI.Tobii, data_plausible.Eyelink)
-rm("data_plausible.SMI.Tobii", "data_plausible.Eyelink")
-
 data_df1 <- bind_rows(
   data_pupillometry |> 
     mutate(df1_extreme_values = "implausible"),
   data_plausible |> 
     mutate(df1_extreme_values = "plausible")
-) |> nest(data = -df1_extreme_values) #! What does this do?
+) |> nest(data = -df1_extreme_values) 
 
-# Prelim check:
+# scatterplot
 data_pupillometry |> 
-  filter(eyetracker_type != "EyeLink") |>
-  summarize(range_min = min(pupil_left, na.rm=T),
-            range_max = max(pupil_left, na.rm=T))
-
-#! Why are there still such large values even with Eyelink-data removed? Likely Nimegen issue -> solved.
-
-# scatterplot #! This needs to be fixed once the z-transformation is done.
-data_pupillometry |> 
-  #filter(eyetracker_type != "EyeLink") |>
   mutate(plausibility = ifelse(pupil_left <= 2 | pupil_left >= 8 | 
                                  pupil_right <= 2 | pupil_right >= 8,
                                "implausible", "plausible")) |> 
@@ -190,12 +162,25 @@ data_pupillometry |>
        y = "Pupil size right eye (mm)") +
   scale_color_manual(values = c("indianred", "royalblue")) +
   facet_wrap("age_cohort")
+
+# Here plot with z-values
+data_pupillometry |> 
+  mutate(plausibility = ifelse(pupil_left_z <= -2.45 | pupil_left_z >= 5.04 | 
+                                 pupil_right_z <= -2.45 | pupil_right_z >= 5.04,
+                               "implausible", "plausible")) |> 
+  ggplot(aes(x = pupil_left_z, y = pupil_right_z, col = plausibility)) +
+  geom_point(alpha = .1) +
+  labs(x = "Pupil size left eye (z-score)",
+       y = "Pupil size right eye (z-score)") +
+  scale_color_manual(values = c("indianred", "royalblue")) +
+  facet_wrap("age_cohort")
 ```
 
 # Second degree of freedom: gaze within the screen vs outside the screen
 This results in 4 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen).
 
 ```{r DF2 area of interest, echo=TRUE, include=TRUE, out.width='90%'}
+#! Does the following actually affect the cols average or average_z?
 data_within <- data_df1 |> 
   mutate(data = map(data, \(d) {
     d |> 
@@ -209,7 +194,6 @@ data_df2 <- bind_rows(
 )
 
 #! Can we adjust this to show both 'mapped 'in' and 'out' values?
-
 data_pupillometry |> 
   ggplot(aes(x = x, y = y)) +
   geom_point(alpha = .1)
@@ -222,17 +206,23 @@ This results in 8 datasets; 2 (plausible vs. implausible values) * 2 (on-screen 
 WINDOW_SIZE = 5
 
 data_avg <- data_df2 |> 
-  mutate(data = map(data, \(d) { #! What does \(d) do?
+  mutate(data = map(data, \(d) { 
     d |> 
       group_by(participant_id, trial_num) |> 
-      mutate(pupil_left = rollapply(pupil_left, width = WINDOW_SIZE, 
-                                    FUN = mean, na.rm = TRUE, 
-                                    fill = NA, align = "right"),
-             pupil_right = rollapply(pupil_right, width = WINDOW_SIZE, 
+      mutate(average = rollapply(average, width = WINDOW_SIZE, 
                                      FUN = mean, na.rm = TRUE, 
-                                     fill = NA, align = "right")) |> 
-      rowwise() |> 
-      mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> 
+                                     fill = NA, align = "right"),
+              average_z = rollapply(average_z, width = WINDOW_SIZE, 
+                                      FUN = mean, na.rm = TRUE, 
+                                      fill = NA, align = "right")) |>
+      # mutate(pupil_left = rollapply(pupil_left, width = WINDOW_SIZE, 
+      #                               FUN = mean, na.rm = TRUE, 
+      #                               fill = NA, align = "right"),
+      #        pupil_right = rollapply(pupil_right, width = WINDOW_SIZE, 
+      #                                FUN = mean, na.rm = TRUE, 
+      #                                fill = NA, align = "right")) |> 
+      # rowwise() |> 
+      # mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> 
       ungroup() 
   }))
 
@@ -240,6 +230,22 @@ data_df3 <- bind_rows(
   data_df2 |> mutate(df3_moving_average = "unfiltered", .before = "data"),
   data_avg |> mutate(df3_moving_average = "filtered", .before = "data")
 )
+
+data_df3 |> 
+  pull(data) |> 
+  (`[`)(value = c(1,1)) |> # arbitrarily select two universes to visualise
+  map(\(d) {
+    ggplot(d |> filter(!is.na(average_z),
+                       t_norm >= 0 & t_norm < 5000), 
+           aes(x = t_norm, y = average_z, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (mm)") +
+      geom_smooth(se = TRUE) +
+      facet_grid(condition ~ age_cohort)
+  })
+
+#! Why is average pupil size for adults *smaller* than for children?!
+
 ```
 
 # Fourth degree of freedom: 1s, 0.5s, or 0.25s before the bear resolution.
@@ -249,19 +255,36 @@ We consider three possible baseline correction all performed by subtracting the 
 This results in 24 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not) * 3 (1s, 0.5s, or 0.25s baseline).
 
 ```{r DF4 baseline correction, echo=TRUE, include=TRUE, out.width='90%'}
-### 3 median baselines, i.e., initial time window for each trial_num ,id, lab_id
+### 3 mean baselines, i.e., initial time window for each trial_num ,id, lab_id
 ### i.e. 1s, 0.5s, or 0.25s before resolution.
 # MSS: According to the current data set, the resolution is at 0 ms for t_norm!
-# FIXME: note suggests median, but actual code uses mean
 baseline_correct <- function(data, TIME_WINDOW = 1000) {
-  data |> 
-    group_by(participant_id, condition, outcome, lab_id) |> 
+  data |>
+    group_by(participant_id, condition, outcome, lab_id) |>
     mutate(average = {
       avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
       (average - avg_mean)/avg_mean # Changed to calculate relative change.
+    }) |>
+    mutate(average_z = {
+      avg_filtered_z <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
+      avg_mean_z <- mean(avg_filtered_z, na.rm = TRUE)
+      (average_z - avg_mean_z)/avg_mean_z # Changed to calculate relative change.
     })
 }
+
+#
+
+# baseline_correct <- function(data, TIME_WINDOW = 1000) {
+#   data |> 
+#     group_by(participant_id, condition, outcome, lab_id) |> 
+#     mutate(average_z = {
+#       avg_filtered_z <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
+#       avg_mean_z <- mean(avg_filtered_z, na.rm = TRUE)
+#       (average_z - avg_mean_z)/avg_mean_z # Changed to calculate relative change.
+#     })
+# }
+
 
 data_baseline_1 <- data_df3 |> 
   mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 1000)),
@@ -279,14 +302,14 @@ data_df4 <- bind_rows(
   data_baseline_0.25
 )
 
-# plotting #! Will need to create these plots for each of the final (72?) datasets.
+# plotting
 data_df4 |> 
   pull(data) |> 
-  (`[`)(value = c(3,7)) |> # arbitrarily select three universes to visualise
+  (`[`)(value = c(1,1)) |> # arbitrarily select three universes to visualise
   map(\(d) {
-    ggplot(d |> filter(!is.na(average),
+    ggplot(d |> filter(!is.na(average_z),
                        t_norm >= 0 & t_norm < 5000), 
-           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
+           aes(x = t_norm, y = average_z, col = outcome, linetype = age_cohort)) +
       labs(x = "Time (ms)",
            y = "Pupil size (mm)") +
       geom_vline(xintercept = 0) +
@@ -294,6 +317,20 @@ data_df4 |>
       geom_smooth(se = TRUE) +
       facet_grid(condition ~ age_cohort)
   })
+#
+data_df4 |> 
+  pull(data) |> 
+  (`[`)(value = c(3,1)) |> # arbitrarily select two universes to visualise
+  map(\(d) {
+    ggplot(d |> filter(!is.na(average),
+                       t_norm >= 0 & t_norm < 5000), 
+           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (mm)") +
+      geom_smooth(se = TRUE) +
+      facet_grid(condition ~ age_cohort)
+  })
+#
 ```
 
 # Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
@@ -412,7 +449,7 @@ ggplot(grand_avg,
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
-```{r modelling, echo=FALSE, include=TRUE, out.width='90%'}
+```{r modelling, echo=FALSE, include=TRUE, out.width='90%', message=FALSE}
 # Assuming `data_df5$data` is a list of dataframes:
 data_df5_list <- data_df5$data
 
@@ -421,8 +458,8 @@ data_df5_list <- data_df5$data
 run_model_lm <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+
     # Fit the model if conditions are met
-    #! Reduce dataset to to average across the 5 seconds, i.e., 1 value per participant per trial? 
     df.short <- df |>
       filter(t_norm > 0) |>
       group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
@@ -440,16 +477,15 @@ run_model_lm <- function(df) {
 run_model_lmer <- function(df) {
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+
     # Fit the model if conditions are met
-    
-    #! Reduce dataset to to average across the 5 seconds, i.e., 1 value per participant per trial? 
     df.short <- df |>
       filter(t_norm > 0) |>
       group_by(participant_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
       summarize(Average = mean(average, na.rm=T)) |>
       ungroup()
     
-    lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
+    lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short)
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -487,7 +523,7 @@ lmer_results <- compact(results_lmer)
 TIMElmer_results <- compact(results_TIMElmer)
 ```
 
-```{r model parameters, echo=TRUE, include=TRUE, out.width='90%'}
+```{r model parameters, echo=TRUE, include=TRUE, out.width='90%', message=FALSE}
 # Define the extraction function with improved error handling
 extract_model_metrics <- function(model) {
   if (!is.null(model)) {
@@ -499,9 +535,17 @@ extract_model_metrics <- function(model) {
     bic <- BIC(model)
     
     # Extract coefficients and standard errors (using tidy output)
+<<<<<<< Updated upstream
    coef_df <- broom::tidy(model) %>%
   filter(term == "condition_c:outcome_c:age_cohort_c") %>%  # Only the 3-way interaction
   select(term, estimate, std.error, p.value)
+=======
+    coef_df <- broom::tidy(model)
+    coef_df <- coef_df %>%
+      filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>% 
+      
+      select(term, estimate, std.error)
+>>>>>>> Stashed changes
     
     # If coefficients are missing, create empty placeholders
     if (nrow(coef_df) == 0) {
@@ -706,11 +750,10 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
 
 # Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
 
-
-
 ```{r table key parameters, echo=TRUE, include=TRUE, out.width='90%', message=FALSE}
 
 # Start building the dataframe with key information already gathered in previous steps"
+# The goal is to have all the information at hand to address the preregistered analyses (https://osf.io/wt79h)
 
 # Merge info from LMER:
 dataStats.temp <- data_df5 |>
@@ -848,10 +891,8 @@ dataStats.final |>
 dataStats.final |>
   relocate(LMER.AIC)
 
-# It looks like all the model values are identical with filtered datasets (here no effect of df1 and df2?)?
-# Likewise, within unfiltered, the two plausible are identical and the two implausible are identical.
-# Does that all make sense?
-
+# It looks like all the model values are identical with filtered datasets (here no effect of df1 and df2?)? Fixed by applying filter to average (see above)
+# Likewise, within unfiltered, the two plausible are identical and the two implausible are identical. Fixed by applying filter to average (see above)
 ```
 
 
