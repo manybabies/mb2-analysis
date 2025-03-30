@@ -1491,6 +1491,20 @@ saveRDS(correlation_fam_test_by_age,
         file = here(RESULTS_FOLDER, "correlation_fam_test_by_age.rds"))
 ```
 
+Is there an interaction between condition and the proportion familiarization looking effect for toddlers?
+
+```{r}
+correlation_fam_test_by_condition_toddlers <- lm(
+  prop_exit ~ fam_prop_exit * condition_c,
+  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
+)
+summary(correlation_fam_test_by_condition_toddlers)
+
+saveRDS(correlation_fam_test_by_condition_toddlers, 
+        file = here(RESULTS_FOLDER, "correlation_interaction_fam_test_toddlers.rds"))
+```
+
+
 ## 3. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
 
 ### Data collection type: in-lab vs. web-based
