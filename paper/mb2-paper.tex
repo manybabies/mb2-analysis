@@ -178,10 +178,11 @@
 \makeatletter
 \xapptocmd\appendix
   {\xapptocmd\section
-    {\addcontentsline{toc}{section}{\appendixname\ifoneappendix\else~\theappendix\fi\\: #1}}
+    {\addcontentsline{toc}{section}{\appendixname\ifoneappendix\else~\theappendix\fi: #1}}
     {}{\InnerPatchFailed}%
   }
 {}{\PatchFailed}
+\makeatother
 \keywords{anticipatory looking; spontaneous Theory of Mind;  replication\newline\indent Word count: 15907}
 \DeclareDelayedFloatFlavor{ThreePartTable}{table}
 \DeclareDelayedFloatFlavor{lltable}{table}
@@ -635,7 +636,7 @@ which included no intercept term. We then computed the BF comparing this model t
 \subparagraph{Toddlers}\label{toddlers}
 
 Investigating proportion of first looks to the target location for toddlers, we again used a Bayesian mixed effects model to predict whether toddlers' first look was to the target exit based on trial number (1-4), with random effects for lab and participants and random slopes for trial number for each.
-The Bayes factor comparing the full model to the simpler model was estimated to be BF = 0.5, favoring the full model over the null model.
+The Bayes factor comparing the full model to the simpler model was estimated to be BF \textgreater{} 1000, favoring the full model over the null model.
 The model also provided support for an effect of trial number on proportion of first looks, with the negative coefficient indicating a decrease in target looks across the familiarization trials.
 
 \subparagraph{Adults}\label{adults}
