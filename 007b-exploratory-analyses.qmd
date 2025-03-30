@@ -680,10 +680,13 @@ summarize_participant_test_second_trial <- summarize_participant_test_both_trial
 summarize_participant_test_first_test_trial <- summarize_participant_test_both_trials %>%
   filter(test_trial_num == 1) %>%
   select(age_cohort, lab_id, participant_id, participant_lab_id, prop_exit) %>%
-  rename(first_trial_prop_exit = prop_exit)
+  rename(first_trial_prop_exit = prop_exit) %>%
+  mutate(
+    first_trial_prop_exit_c = first_trial_prop_exit - mean(first_trial_prop_exit,na.rm=T)
+  )
 
 summarize_participant_test_second_trial <- summarize_participant_test_second_trial %>% 
-  left_join(summarize_participant_test_first_test_trial)
+  left_join(summarize_participant_test_first_test_trial) 
 ```
 
 #### Main Model
@@ -694,8 +697,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 ```{r}
 bm_aoi_toddlers_second_trial <- brm_default(
-  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
-    (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
+  second_trial_prop_exit ~ 1 + condition_c * first_trial_prop_exit_c +
+    (1 + condition_c * first_trial_prop_exit_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_second_trial, age_cohort == "toddlers")
@@ -721,7 +724,7 @@ saveRDS(bm_aoi_toddlers_second_trial_condition_effect,
 
 # get main coefficient estimate and HDI for correct first look final fam trial effect
 bm_aoi_toddlers_second_trial_first_trial_prop_exit_effect <- bm_aoi_toddlers_second_trial %>%
-  spread_draws(b_first_trial_prop_exit, sigma) %>%
+  spread_draws(b_first_trial_prop_exit_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -730,7 +733,7 @@ saveRDS(bm_aoi_toddlers_second_trial_first_trial_prop_exit_effect,
 
 # get main coefficient estimate and HDI for interaction
 bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_interaction <- bm_aoi_toddlers_second_trial %>%
-  spread_draws(`b_condition_c:first_trial_prop_exit`, sigma) %>%
+  spread_draws(`b_condition_c:first_trial_prop_exit_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -742,7 +745,7 @@ Compute the Bayes factor using bridge sampling
 
 ```{r}
 bm_aoi_toddlers_second_trial_null <- update(bm_aoi_toddlers_second_trial, 
-                                            formula = ~ . - condition_c * first_trial_prop_exit,
+                                            formula = ~ . - condition_c * first_trial_prop_exit_c,
                                             cores = n_cores)
 summary(bm_aoi_toddlers_second_trial_null)
 
@@ -756,12 +759,31 @@ saveRDS(test_m_comparison_aoi_toddlers_second_trial,
         file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial.rds"))
 ```
 
+Bayes factor for condition effect
+
+```{r}
+bm_aoi_toddlers_second_trial_condition_null <- update(bm_aoi_toddlers_second_trial, 
+                                            formula = ~ . - condition_c,
+                                            cores = n_cores)
+summary(bm_aoi_toddlers_second_trial_condition_null)
+
+saveRDS(bm_aoi_toddlers_second_trial_condition_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_second_trial_condition_null.rds"))
+
+test_m_comparison_aoi_toddlers_second_trial_condition <- brms::bayes_factor(bm_aoi_toddlers_second_trial, 
+                                                                  bm_aoi_toddlers_second_trial_condition_null)
+
+saveRDS(test_m_comparison_aoi_toddlers_second_trial_condition, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial_condition.rds"))
+```
+
+
 ##### Adults
 
 ```{r}
 bm_aoi_adults_second_trial <- brm_default(
-  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit +
-    (1 + condition_c + first_trial_prop_exit + condition_c * first_trial_prop_exit | lab_id),
+  second_trial_prop_exit ~ 1 + condition_c * first_trial_prop_exit_c +
+    (1 + condition_c * first_trial_prop_exit_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_second_trial, age_cohort == "adults")
@@ -787,7 +809,7 @@ saveRDS(bm_aoi_adults_second_trial_condition_effect,
 
 # get main coefficient estimate and HDI for correct first look final fam trial effect
 bm_aoi_adults_second_trial_first_trial_prop_exit_effect <- bm_aoi_adults_second_trial %>%
-  spread_draws(b_first_trial_prop_exit, sigma) %>%
+  spread_draws(b_first_trial_prop_exit_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -796,7 +818,7 @@ saveRDS(bm_aoi_adults_second_trial_first_trial_prop_exit_effect,
 
 # get main coefficient estimate and HDI for interaction
 bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction <- bm_aoi_adults_second_trial %>%
-  spread_draws(`b_condition_c:first_trial_prop_exit`, sigma) %>%
+  spread_draws(`b_condition_c:first_trial_prop_exit_c`, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -808,7 +830,7 @@ Compute the Bayes factor using bridge sampling
 
 ```{r}
 bm_aoi_adults_second_trial_null <- update(bm_aoi_adults_second_trial, 
-                                          formula = ~ . - condition_c * first_trial_prop_exit,
+                                          formula = ~ . - condition_c * first_trial_prop_exit_c,
                                           cores = n_cores)
 summary(bm_aoi_adults_second_trial_null)
 
@@ -820,6 +842,24 @@ test_m_comparison_aoi_adults_second_trial <- brms::bayes_factor(bm_aoi_adults_se
 
 saveRDS(test_m_comparison_aoi_adults_second_trial, 
         file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial.rds"))
+```
+
+Bayes factor for condition effect
+
+```{r}
+bm_aoi_adults_second_trial_condition_null <- update(bm_aoi_adults_second_trial, 
+                                          formula = ~ . - condition_c,
+                                          cores = n_cores)
+summary(bm_aoi_adults_second_trial_condition_null)
+
+saveRDS(bm_aoi_adults_second_trial_condition_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_second_trial_condition_null.rds"))
+
+test_m_comparison_aoi_adults_second_trial_condition <- brms::bayes_factor(bm_aoi_adults_second_trial, 
+                                                                bm_aoi_adults_second_trial_condition_null)
+
+saveRDS(test_m_comparison_aoi_adults_second_trial_condition, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial_condition.rds"))
 ```
 
 ## 2. Connections between familiarization and test
