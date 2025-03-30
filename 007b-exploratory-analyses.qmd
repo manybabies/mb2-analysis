@@ -2090,13 +2090,13 @@ overall_shifts_location_change <- ggplot(d_location_change,
 
 overall_shifts_location_change <- ggplot(d_location_change, 
                                          aes(age_cohort, num_shifts, color = age_cohort)) +
-  geom_quasirandom(method = "pseudorandom", alpha = 0.2) +
+  geom_quasirandom(method = "pseudorandom", alpha = 0.2, width=0.2) +
   # geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data = filter(d_location_change, age_cohort == "toddlers"), 
                    aes(fill = age_cohort), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
   geom_half_violin(data = filter(d_location_change, age_cohort == "adults"), 
                    aes(fill = age_cohort), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.5, color = "black") +
   theme_cowplot() +
   theme_set(theme_cowplot(font_size = 24)) +
   scale_color_brewer(palette = "Set1") +
@@ -2202,7 +2202,6 @@ summary(bm_test_shifts_age_cohort_null)
 saveRDS(bm_test_shifts_age_cohort_null, 
         file = here(model_fits_dir, "bm_test_shifts_age_cohort_null.rds"))
 
-# MZ: bridge sampling fails here for me
 test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_cohort, 
                                                           bm_test_shifts_age_cohort_null)
 
@@ -2245,6 +2244,7 @@ AL_shifts <- ggplot(summarize_participant_test_both_trials_lc,
   scale_x_continuous(breaks = seq(0, 11, 1)) +
   scale_y_continuous(breaks = seq(0, 1, 0.25)) +
   theme_set(theme_cowplot(font_size = 24)) +
+  scale_color_brewer(palette = "Set1") +
   theme(legend.position = "none") +
   xlab("Number of shifts during location change of mouse") +
   ylab("Proportion DLS during test trials")
