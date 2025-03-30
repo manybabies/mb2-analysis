@@ -2047,7 +2047,7 @@ d_location_change <- test_data %>%
   filter(t_zeroed >= window_start,
          t_zeroed <= window_end,
          aoi_bearmouse_special %in% c("bear", "mouse")) %>%
-  arrange(participant_lab_id, t_zeroed) |> 
+  arrange(participant_lab_id, condition, t_zeroed) |> 
   group_by(participant_lab_id, condition, lab_id, age_cohort, age_mo) %>%
   mutate(
     shift = (aoi_bearmouse_special != lag(aoi_bearmouse_special)) & !is.na(lag(aoi_bearmouse_special))
@@ -2118,13 +2118,13 @@ ggsave(here(paper_path, "Figure6.png"),
 ```{r}
 overall_shifts_location_change_by_condition <- ggplot(d_location_change, 
                                                       aes(condition, num_shifts, color = condition)) +
-  geom_quasirandom(method = "pseudorandom", alpha = 0.2) +
+  geom_quasirandom(method = "pseudorandom", alpha = 0.2,width=0.2) +
   # geom_beeswarm(alpha=0.2,cex=0.5)+
   geom_half_violin(data = filter(d_location_change, age_cohort == "toddlers"), 
                    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
   geom_half_violin(data = filter(d_location_change, age_cohort == "adults"), 
                    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.5, color = "black") +
   # theme_cowplot()+
   theme_set(theme_cowplot(font_size = 24)) +
   scale_color_brewer(palette = "Set1") +
