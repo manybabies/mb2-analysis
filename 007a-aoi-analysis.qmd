@@ -559,6 +559,37 @@ ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking.png")
 )
 ```
 
+Alternative plot
+
+```{r}
+# plot average proportion looking
+overall_p_test_alternative <- ggplot(
+  summarize_participant_test_first_trial,
+  aes(x = condition, y = prop_exit, color = condition)
+) +
+  # geom_violin()+
+  # geom_boxplot()+
+  #geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_half_violin(
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  stat_summary(fun.data = "mean_cl_boot", size = 1, position=position_nudge(x = .2, y = 0)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
+  #ggtitle("Test") +
+  #theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  ylab("Proportion DLS to Target Exit")
+overall_p_test_alternative
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_alternative.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
 Splitting plot by lab and age cohort
 
 ```{r}
