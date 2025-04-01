@@ -1,0 +1,40 @@
+---
+title: "MB2P"
+date: "2025-04-01"
+figsintext: yes
+output: 
+  html_document:
+    fig_caption: true
+---
+
+```{r load_packages_settings, include = FALSE}
+library("papaja")
+library(here)
+library(knitr)
+#library(kableExtra)
+
+source(here('helper','ensure_repo_structure.R'))
+
+MB2P_DIR <- here('MB2P')
+MB2P_Preregistration_path <- here(MB2P_DIR, 'MB2P-Preregistration')
+MB2P_plot_path <- here(MB2P_Preregistration_path, 'plots')
+
+```
+
+
+## MB2P
+
+This document may be used to create a preliminary summary of the results of MB2P, a spin-off project of MB2. 
+
+### Sample Size
+
+```{r echo = FALSE}
+```
+
+### Including Plots
+
+You can also embed plots, for example:
+
+```{r echo = FALSE}
+include_graphics(here(MB2P_plot_path, "grand_average_new.png"))
+```
