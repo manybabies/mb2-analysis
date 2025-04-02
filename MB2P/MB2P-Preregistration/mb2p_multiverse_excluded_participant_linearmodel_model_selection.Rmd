@@ -195,8 +195,13 @@ data_df2 <- bind_rows(
 
 #! Can we adjust this to show both 'mapped 'in' and 'out' values?
 data_pupillometry |> 
-  ggplot(aes(x = x, y = y)) +
-  geom_point(alpha = .1)
+  mutate(screen_fixation = ifelse(x <= 0 | x >= 1280 | y <= 0 | y >= 960,
+                               "outside", "within")) |>
+  ggplot(aes(x = x, y = y, col = screen_fixation)) +
+    scale_color_manual(name = "screen fixation", values = c("indianred", "royalblue")) +
+    facet_wrap("age_cohort") +
+    geom_point(alpha = .1)
+
 ```
 
 # Third degree of freedom: moving average filtered vs unfiltered data
