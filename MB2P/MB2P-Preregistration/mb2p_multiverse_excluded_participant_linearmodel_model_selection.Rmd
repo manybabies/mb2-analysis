@@ -66,7 +66,7 @@ The following script specifies the preprocessing and analysis steps of the multi
 
 data_pupillometry <- data_pupillometry |> 
   filter(trial_num == 6) |>                   # filter to second test trial only (data reduction)
-  select(participant_id, participant_lab_id, lab_id, age_cohort, t, x, y, pupil_left, pupil_right, condition, t_norm, trial_num, participant_gender, eyetracker_type, outcome, pilot, session_error, age_exclusion, sufficient_fam_trials, valid_second_test_trial) |>
+  select(participant_id, participant_lab_id, lab_id, age_cohort, t, x, y, pupil_left, pupil_right, condition, t_norm, trial_num, participant_gender, eyetracker_type, outcome, pilot, session_error, age_exclusion, sufficient_fam_trials, valid_second_test_trial, valid_first_test_trial) |>
   mutate(pupil_left = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_left),
          pupil_right = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_right)
          ) |>
@@ -400,7 +400,7 @@ plots <- data_df5 |>
   map(\(d) {
     ggplot(d |> filter(!is.na(average),
                        t_norm >= 0 & t_norm < 5000), 
-           aes(x = t_norm_downsampled, y = average, col = outcome, linetype = age_cohort)) +
+           aes(x = t_norm_downsampled, y = average_z, col = outcome, linetype = age_cohort)) +
       labs(x = "Time (ms)",
            y = "Pupil size (mm)") +
       geom_vline(xintercept = 0) +
@@ -434,7 +434,7 @@ grand_avg <- data_df5 |>
   filter(!is.na(average), t_norm_downsampled >= 0 & t_norm_downsampled < 5000) |>  
   group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
   summarize(
-    grand_average = mean(average, na.rm = TRUE),  
+    grand_average = mean(average_z, na.rm = TRUE),  
     se = sd(average, na.rm = TRUE) / sqrt(n_distinct(dataset_id)),  # SE using # of datasets
     .groups = "drop"
   )
