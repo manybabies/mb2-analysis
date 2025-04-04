@@ -98,24 +98,11 @@ hist(data_pupillometry$average_z) # Looks evenly distributed.
       outcome == "incongruent" ~ 0.5)
     )
   
-# z-transform left and right pupil size within each eye tracker type
-# data_pupillometry <- data_pupillometry |>
-#   group_by(participant_id) |> # Should this be done by age cohort, too?
-#   mutate(
-#     pupil_left_z = (pupil_left - mean(pupil_left, na.rm = TRUE)) / sd(pupil_left, na.rm = TRUE),
-#     pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)) |>
-#   ungroup() |>
-#   rowwise() |>
-#   mutate(average_z = mean(c(pupil_left_z, pupil_right_z), na.rm = TRUE)) |>
-#   ungroup()
-  
 # Merging in AL data (variable prop_exit)
 
 summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize_participant_test_both_trials.rds"))
-
 data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
-
-rm(summarize_participant_test_both_trials)
+rm("summarize_participant_test_both_trials")
 
 # # For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm (according to Tobii).
 temp <- data_pupillometry |> 
@@ -307,7 +294,7 @@ baseline_correctZ <- function(data, TIME_WINDOW = 1000) {
     mutate(average_z = {
       avg_filtered <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
-      (average_z - avg_mean)/avg_mean # Changed to calculate relative change.
+      (average_z - avg_mean)#/avg_mean # Changed to calculate relative change.
     })
 }
 
