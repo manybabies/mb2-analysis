@@ -61,19 +61,26 @@ The following script specifies the preprocessing and analysis steps of the multi
 ```{r preprocess}
 #! The z-transformation does not work. It produces weird values in the plots below. Next step: We have to transform the values here, per subject per recording, to preserve the shape of the signal.
 
-data_pupillometry <- data_pupillometry |> 
-  # filter(trial_num == 6,                   # filter to second test trial only (data reduction)
-  #        t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
-  # 
-    filter(eyetracker_type == "Tobii",       # pending resolution for Eyelink
-         trial_num == 6,                   # filter to second test trial only (data reduction)
-         t_norm >= -1000 & t_norm < 5000)  # filter to window of interest only (data reduction)
+# data_pupillometry.temp <- data_pupillometry
+# data_pupillometry <- data_pupillometry.temp
 
 data_pupillometry <- data_pupillometry |> 
+  filter(trial_num == 6) |>                   # filter to second test trial only (data reduction)
+  select(participant_id, participant_lab_id, lab_id, age_cohort, t, x, y, pupil_left, pupil_right, condition, t_norm, trial_num, participant_gender, eyetracker_type, outcome, pilot, session_error, age_exclusion, sufficient_fam_trials, valid_second_test_trial) |>
+  mutate(pupil_left = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_left),
+         pupil_right = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_right)
+         ) |>
   mutate(age_cohort <- as.factor(age_cohort)) |> 
   rowwise() |> 
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
-  ungroup()
+  ungroup() |>
+  group_by(participant_id) |> # Scale pupil-value #! Should we be using participant_lab_id here?
+  mutate(average_z = (average - mean(average, na.rm = TRUE)) / sd(average, na.rm = TRUE)) |>
+  ungroup() |>  
+  filter(t_norm >= -1000 & t_norm < 5000)  
+
+hist(data_pupillometry$average)
+hist(data_pupillometry$average_z) # Looks evenly distributed.
 
 # centering of age_cohort, condition, and outcome
   data_pupillometry <- data_pupillometry |>
@@ -91,17 +98,16 @@ data_pupillometry <- data_pupillometry |>
       outcome == "incongruent" ~ 0.5)
     )
   
-
 # z-transform left and right pupil size within each eye tracker type
-data_pupillometry <- data_pupillometry |>
-  group_by(participant_id) |> # Should this be done by age cohort, too?
-  mutate(
-    pupil_left_z = (pupil_left - mean(pupil_left, na.rm = TRUE)) / sd(pupil_left, na.rm = TRUE),
-    pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)) |>
-  ungroup() |>
-  rowwise() |>
-  mutate(average_z = mean(c(pupil_left_z, pupil_right_z), na.rm = TRUE)) |>
-  ungroup()
+# data_pupillometry <- data_pupillometry |>
+#   group_by(participant_id) |> # Should this be done by age cohort, too?
+#   mutate(
+#     pupil_left_z = (pupil_left - mean(pupil_left, na.rm = TRUE)) / sd(pupil_left, na.rm = TRUE),
+#     pupil_right_z = (pupil_right - mean(pupil_right, na.rm = TRUE)) / sd(pupil_right, na.rm = TRUE)) |>
+#   ungroup() |>
+#   rowwise() |>
+#   mutate(average_z = mean(c(pupil_left_z, pupil_right_z), na.rm = TRUE)) |>
+#   ungroup()
   
 # Merging in AL data (variable prop_exit)
 
@@ -111,39 +117,50 @@ data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_
 
 rm(summarize_participant_test_both_trials)
 
-# For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm.
-data_pupillometry |> 
-  filter(eyetracker_type != "EyeLink", average <= 2 ) |>
-  filter(average == max(average, na.rm = T)) |>
-  pull(average_z) # 2mm corresponds to  z = -2.445436
+# # For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm (according to Tobii).
+temp <- data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
+  group_by(participant_id) |>
+  filter(average <= 2) |>
+  select(participant_id, average, average_z) |>
+  arrange(average_z) |>
+  ungroup()
 #
-data_pupillometry |> 
-  filter(eyetracker_type != "EyeLink", average >= 7.18) |>
-  filter(average == max(average, na.rm = T)) |>
-  pull(average_z) # 6.5mm corresponds to  z = 5.043629
+temp |>
+  summarise(ZMean.2mm = mean(average_z, na.rm = T), ZMedian.2mm = median(average_z, na.rm = T), Min.2mm = min(average, na.rm = T), Max.2mm = max(average, na.rm = T),
+            ZMin.2mm = min(average_z, na.rm = T), ZMax.2mm = max(average_z, na.rm = T))
 
-# Are there any values greater than z = 5.043629?
-data_pupillometry |> 
-  filter(average_z >= 5.04)
+## -> Lower bound: z = 0.8000874
+hist(temp$average_z)
+rm("temp")
+##
+temp <- data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
+  group_by(participant_id) |>
+  filter(average >= 8) |>
+  select(participant_id, average, average_z) |>
+  arrange(average_z) |>
+  ungroup()
+#
+temp |>
+  summarise(Min.8mm = min(average, na.rm = T), Max.8mm = max(average, na.rm = T),
+            ZMin.8mm = min(average_z, na.rm = T), ZMax.8mm = max(average_z, na.rm = T))
 
+## -> There are no samples with pupil_size ?> 8mm
 ```
 # First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
 This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
-data_pupillometry <- data_pupillometry |> 
-  mutate(average = ifelse(pupil_left < 0, NA, average),
-         average = ifelse(average < 0, NA, average),
-         average_z = ifelse(pupil_left < 0, NA, average_z),
-         average_z = ifelse(pupil_right < 0, NA, average_z),
-         )
-
-#! This needs to be done on a subject by recording level, i.e., for each Tobii-participant determine the z-value that corresponds to 2mm and 8mm. Then determine to 'largest' 2mm z-score and the 'smallest' 8mm z-score across all Tobii-subjects. Those should be the cutoffs.
+# data_plausible <- data_pupillometry |> 
+#     mutate(average = ifelse(average_z < 0.8000874 , NA, average)) |>
+#     mutate(average_z = ifelse(average_z < 0.8000874, NA, average_z))
 
 data_plausible <- data_pupillometry |> 
-    mutate(average = ifelse(average_z < -2.45 | average_z > 5.04, NA, average)) |>
-    mutate(average_z = ifelse(average_z < -2.45 | average_z > 5.04, NA, average_z))
- 
+  mutate(average = ifelse(eyetracker_type != "EyeLink" & average <= 2 , NA, average),
+         average_z = ifelse(eyetracker_type != "EyeLink" & average <= 2 , NA, average_z)
+         )
+
 data_df1 <- bind_rows(
   data_pupillometry |> 
     mutate(df1_extreme_values = "implausible"),
@@ -153,6 +170,7 @@ data_df1 <- bind_rows(
 
 # scatterplot
 data_pupillometry |> 
+  filter(eyetracker_type != "EyeLink") |>
   mutate(plausibility = ifelse(pupil_left <= 2 | pupil_left >= 8 | 
                                  pupil_right <= 2 | pupil_right >= 8,
                                "implausible", "plausible")) |> 
@@ -163,17 +181,14 @@ data_pupillometry |>
   scale_color_manual(values = c("indianred", "royalblue")) +
   facet_wrap("age_cohort")
 
-# Here plot with z-values
-data_pupillometry |> 
-  mutate(plausibility = ifelse(pupil_left_z <= -2.45 | pupil_left_z >= 5.04 | 
-                                 pupil_right_z <= -2.45 | pupil_right_z >= 5.04,
-                               "implausible", "plausible")) |> 
-  ggplot(aes(x = pupil_left_z, y = pupil_right_z, col = plausibility)) +
-  geom_point(alpha = .1) +
-  labs(x = "Pupil size left eye (z-score)",
-       y = "Pupil size right eye (z-score)") +
-  scale_color_manual(values = c("indianred", "royalblue")) +
-  facet_wrap("age_cohort")
+# Check to see  whether any changes were made.
+data_df1 |> 
+  pull(data) |> 
+  map(\(d) {
+  d |>
+  group_by(eyetracker_type) |>
+  summarise(AVE = mean(average_z, na.rm =T))
+  })  
 ```
 
 # Second degree of freedom: gaze within the screen vs outside the screen
@@ -185,7 +200,10 @@ data_within <- data_df1 |>
   mutate(data = map(data, \(d) {
     d |> 
       mutate(x = ifelse(x <= 0 | x >= 1280, NA, x),
-             y = ifelse(y <= 0 | y >= 960, NA, y))
+             y = ifelse(y <= 0 | y >= 960, NA, y),
+            average = ifelse(is.na(x) | is.na(y), NA, average),
+            average_z = ifelse(is.na(x) | is.na(y), NA, average_z)
+            )
   }))
 
 data_df2 <- bind_rows(
@@ -202,6 +220,13 @@ data_pupillometry |>
     facet_wrap("age_cohort") +
     geom_point(alpha = .1)
 
+data_df2 |> 
+  pull(data) |> 
+  map(\(d) {
+  d |>
+  group_by(eyetracker_type) |>
+  summarise(AVE = mean(average_z, na.rm =T))
+  })  
 ```
 
 # Third degree of freedom: moving average filtered vs unfiltered data
@@ -220,14 +245,6 @@ data_avg <- data_df2 |>
               average_z = rollapply(average_z, width = WINDOW_SIZE, 
                                       FUN = mean, na.rm = TRUE, 
                                       fill = NA, align = "right")) |>
-      # mutate(pupil_left = rollapply(pupil_left, width = WINDOW_SIZE, 
-      #                               FUN = mean, na.rm = TRUE, 
-      #                               fill = NA, align = "right"),
-      #        pupil_right = rollapply(pupil_right, width = WINDOW_SIZE, 
-      #                                FUN = mean, na.rm = TRUE, 
-      #                                fill = NA, align = "right")) |> 
-      # rowwise() |> 
-      # mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> 
       ungroup() 
   }))
 
@@ -238,18 +255,26 @@ data_df3 <- bind_rows(
 
 data_df3 |> 
   pull(data) |> 
-  (`[`)(value = c(1,1)) |> # arbitrarily select two universes to visualise
+  (`[`)(value = c(1:4)) |>
   map(\(d) {
     ggplot(d |> filter(!is.na(average_z),
-                       t_norm >= 0 & t_norm < 5000), 
+                       t_norm >= -1000 & t_norm < 5000), 
            aes(x = t_norm, y = average_z, col = outcome, linetype = age_cohort)) +
       labs(x = "Time (ms)",
-           y = "Pupil size (mm)") +
+           y = "Pupil size (z-score)") +
       geom_smooth(se = TRUE) +
       facet_grid(condition ~ age_cohort)
   })
 
 #! Why is average pupil size for adults *smaller* than for children?!
+
+data_df3 |> 
+  pull(data) |> 
+  map(\(d) {
+  d |>
+  group_by(eyetracker_type) |>
+  summarise(AVE = mean(average_z, na.rm =T))
+  })  
 
 ```
 
@@ -263,6 +288,9 @@ This results in 24 datasets; 2 (plausible vs. implausible values) * 2 (on-screen
 ### 3 mean baselines, i.e., initial time window for each trial_num ,id, lab_id
 ### i.e. 1s, 0.5s, or 0.25s before resolution.
 # MSS: According to the current data set, the resolution is at 0 ms for t_norm!
+
+#!  There is currently an issue with the z-score baseline correct. The plots look weird!
+
 baseline_correct <- function(data, TIME_WINDOW = 1000) {
   data |>
     group_by(participant_id, condition, outcome, lab_id) |>
@@ -270,37 +298,34 @@ baseline_correct <- function(data, TIME_WINDOW = 1000) {
       avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
       (average - avg_mean)/avg_mean # Changed to calculate relative change.
-    }) |>
+    })
+}
+#
+baseline_correctZ <- function(data, TIME_WINDOW = 1000) {
+  data |>
+    group_by(participant_id, condition, outcome, lab_id) |>
     mutate(average_z = {
-      avg_filtered_z <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
-      avg_mean_z <- mean(avg_filtered_z, na.rm = TRUE)
-      (average_z - avg_mean_z)/avg_mean_z # Changed to calculate relative change.
+      avg_filtered <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
+      avg_mean <- mean(avg_filtered, na.rm = TRUE)
+      (average_z - avg_mean)/avg_mean # Changed to calculate relative change.
     })
 }
 
-#
-
-# baseline_correct <- function(data, TIME_WINDOW = 1000) {
-#   data |> 
-#     group_by(participant_id, condition, outcome, lab_id) |> 
-#     mutate(average_z = {
-#       avg_filtered_z <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
-#       avg_mean_z <- mean(avg_filtered_z, na.rm = TRUE)
-#       (average_z - avg_mean_z)/avg_mean_z # Changed to calculate relative change.
-#     })
-# }
-
-
 data_baseline_1 <- data_df3 |> 
   mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 1000)),
-         df4_baseline_correction = "1s", .before = "data")
-data_baseline_0.5 <- data_df3 |> 
+         df4_baseline_correction = "1s", .before = "data") |>
+    mutate(data = map(data, partial(baseline_correctZ, TIME_WINDOW = 1000))) # Z-score
+#
+data_baseline_0.5 <- data_df3 |>
   mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 500)),
-         df4_baseline_correction = "0.5s", .before = "data")
+         df4_baseline_correction = "0.5s", .before = "data") |>
+  mutate(data = map(data, partial(baseline_correctZ, TIME_WINDOW = 500))) # Z-score
+#
 data_baseline_0.25 <- data_df3 |> 
   mutate(data = map(data, partial(baseline_correct, TIME_WINDOW = 250)),
-         df4_baseline_correction = "0.25s", .before = "data")
-
+         df4_baseline_correction = "0.25s", .before = "data") |>
+    mutate(data = map(data, partial(baseline_correctZ, TIME_WINDOW = 250))) # Z-score
+      
 data_df4 <- bind_rows(
   data_baseline_1,
   data_baseline_0.5,
@@ -310,7 +335,7 @@ data_df4 <- bind_rows(
 # plotting
 data_df4 |> 
   pull(data) |> 
-  (`[`)(value = c(1,1)) |> # arbitrarily select three universes to visualise
+  (`[`)(value = c(1:4)) |> 
   map(\(d) {
     ggplot(d |> filter(!is.na(average_z),
                        t_norm >= 0 & t_norm < 5000), 
@@ -322,20 +347,6 @@ data_df4 |>
       geom_smooth(se = TRUE) +
       facet_grid(condition ~ age_cohort)
   })
-#
-data_df4 |> 
-  pull(data) |> 
-  (`[`)(value = c(3,1)) |> # arbitrarily select two universes to visualise
-  map(\(d) {
-    ggplot(d |> filter(!is.na(average),
-                       t_norm >= 0 & t_norm < 5000), 
-           aes(x = t_norm, y = average, col = outcome, linetype = age_cohort)) +
-      labs(x = "Time (ms)",
-           y = "Pupil size (mm)") +
-      geom_smooth(se = TRUE) +
-      facet_grid(condition ~ age_cohort)
-  })
-#
 ```
 
 # Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
@@ -540,17 +551,17 @@ extract_model_metrics <- function(model) {
     bic <- BIC(model)
     
     # Extract coefficients and standard errors (using tidy output)
-<<<<<<< Updated upstream
+#<<<<<<< Updated upstream
    coef_df <- broom::tidy(model) %>%
   filter(term == "condition_c:outcome_c:age_cohort_c") %>%  # Only the 3-way interaction
   select(term, estimate, std.error, p.value)
-=======
+#=======
     coef_df <- broom::tidy(model)
     coef_df <- coef_df %>%
       filter(term %in% c("condition_c", "outcome_c", "age_cohort_c")) %>% 
       
       select(term, estimate, std.error)
->>>>>>> Stashed changes
+##>>>>>>> Stashed changes
     
     # If coefficients are missing, create empty placeholders
     if (nrow(coef_df) == 0) {
