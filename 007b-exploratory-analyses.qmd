@@ -359,8 +359,6 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 #### Toddlers
 
-## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
-
 ```{r}
 bm_aoi_toddlers_both <- brm_default(
   prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
@@ -443,8 +441,6 @@ gc()
 ```
 
 #### Adults
-
-## MZ: NEED TO DISCUSS MODEL STRUCTURE HERE ##
 
 ```{r}
 bm_aoi_adults_both <- brm_default(
@@ -1524,13 +1520,13 @@ saveRDS(correlation_fam_test_by_age,
 Is there an interaction between condition and the proportion familiarization looking effect for toddlers?
 
 ```{r}
-correlation_fam_test_by_condition_toddlers <- lm(
+correlation_interaction_fam_test_toddlers <- lm(
   prop_exit ~ fam_prop_exit * condition_c,
   data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
 )
-summary(correlation_fam_test_by_condition_toddlers)
+summary(correlation_interaction_fam_test_toddlers)
 
-saveRDS(correlation_fam_test_by_condition_toddlers, 
+saveRDS(correlation_interaction_fam_test_toddlers, 
         file = here(RESULTS_FOLDER, "correlation_interaction_fam_test_toddlers.rds"))
 ```
 
