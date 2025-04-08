@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  29 MAR 2025 17:43
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  7 APR 2025 14:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1054,15 +1054,21 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 549--550
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 550--551
  [][] 
  []
 
 
 
 [32]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [33]
+Underfull \vbox (badness 1137) has occurred while \output is active []
+
+
 
 [34]
 
@@ -1072,9 +1078,12 @@ Overfull \hbox (21.6843pt too wide) in paragraph at lines 549--550
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png>
 
-Overfull \hbox (21.67989pt too wide) in paragraph at lines 686--687
+Overfull \hbox (21.67989pt too wide) in paragraph at lines 687--688
  [][] 
  []
+
+
+Underfull \vbox (badness 2818) has occurred while \output is active []
 
 
 
@@ -1083,16 +1092,19 @@ Overfull \hbox (21.67989pt too wide) in paragraph at lines 686--687
 [38]
 
 [39]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
-
-Overfull \hbox (21.692pt too wide) in paragraph at lines 727--728
- [][] 
- []
+Underfull \vbox (badness 7649) has occurred while \output is active []
 
 
 
 [40]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
+
+Overfull \hbox (21.692pt too wide) in paragraph at lines 728--729
+ [][] 
+ []
+
+
 
 [41]
 
@@ -1102,26 +1114,32 @@ Overfull \hbox (21.692pt too wide) in paragraph at lines 727--728
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 797--798
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 798--799
  [][] 
  []
 
 
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [44]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [45]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 818--819
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 819--820
  [][] 
  []
 
 
 
 [46]
-Underfull \vbox (badness 2088) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
@@ -1129,7 +1147,7 @@ Underfull \vbox (badness 2088) has occurred while \output is active []
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 835--836
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 836--837
  [][] 
  []
 
@@ -1168,13 +1186,13 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [54]
 
 [55]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [56]
 
 [57]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [58]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1211,24 +1229,29 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[65] AED endfloat: Processing end Figures and Tables
+[65]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[66] (./mb2-paper.ttt [67
 
+
+[66] AED endfloat: Processing end Figures and Tables
+
+[67] (./mb2-paper.ttt [68
+
+
+]
+
+[69] [70
 
 ]
 
-[68] [69
-
-]
-
-[70]
-
-[71
-
-]
+[71]
 
 [72
+
+]
+
+[73
 
 ]
 Overfull \hbox (16.96655pt too wide) in paragraph at lines 191--191
@@ -1257,7 +1280,7 @@ Overfull \hbox (33.93309pt too wide) in alignment at lines 200--218
 
 )
 
-[73
+[74
 
 ] (./mb2-paper.aux)
  ***********
@@ -1271,10 +1294,10 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  22481 strings out of 475848
  424388 string characters out of 5773546
- 1001353 words of memory out of 5000000
+ 1002353 words of memory out of 5000000
  45077 multiletter control sequences out of 15000+600000
  591552 words of font info for 111 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,11n,114p,2740b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (73 pages).
+Output written on mb2-paper.pdf (74 pages).
