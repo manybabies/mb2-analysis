@@ -2176,8 +2176,9 @@ d_location_change <- d_location_change %>%
   ))
 
 bm_test_shifts_age_cohort <- brm_default(
-  num_shifts ~ 1 + condition_c + age_cohort_c + condition_c * age_cohort_c + 
-    (1 + condition_c + age_cohort_c | lab_id),
+  num_shifts ~ 1 + condition_c + age_cohort_c + condition_c * age_cohort_c +
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c + age_cohort_c + condition_c * age_cohort_c | lab_id),
   family = poisson(),
   prior = priors_default,
   data = d_location_change
@@ -2233,6 +2234,24 @@ test_m_comparison_shifts_age_cohort <- brms::bayes_factor(bm_test_shifts_age_coh
 
 saveRDS(test_m_comparison_shifts_age_cohort, 
         file = here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort.rds"))
+```
+
+Bayes factor for condition effect
+
+```{r}
+bm_test_shifts_age_cohort_condition_null <- update(bm_test_shifts_age_cohort, 
+                                         formula = ~ . - condition_c,
+                                         cores = n_cores)
+summary(bm_test_shifts_age_cohort_condition_null)
+
+saveRDS(bm_test_shifts_age_cohort_condition_null, 
+        file = here(model_fits_dir, "bm_test_shifts_age_cohort_condition_null.rds"))
+
+test_m_comparison_shifts_age_cohort_condition <- brms::bayes_factor(bm_test_shifts_age_cohort, 
+                                                          bm_test_shifts_age_cohort_condition_null)
+
+saveRDS(test_m_comparison_shifts_age_cohort_condition, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort_condition.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
