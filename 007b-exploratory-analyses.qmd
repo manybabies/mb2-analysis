@@ -3475,7 +3475,8 @@ summarize_participant_familiarization <- summarize_participant_familiarization %
       prev_location == "same" ~ -0.5,
       prev_location == "different" ~ 0.5),
      prop_exit_adj = prop_exit - 0.5, # adjusting for chance
-    familiarization_trial_num_4 = familiarization_trial_num - 4)
+    familiarization_trial_num_4 = familiarization_trial_num - 4,
+    familiarization_trial_num_c = familiarization_trial_num - 2.5)
 
 ```
 
@@ -3489,7 +3490,7 @@ priors <- c(
 )
 
 bm_fam_toddlers_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_4 +
+  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_c +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
@@ -3534,7 +3535,7 @@ Bridge sampling Bayes factor approach
 
 ```{r}
 bm_fam_toddlers_location_al_null <- update(bm_fam_toddlers_location_al, 
-                                          formula = ~ . - prev_location_c:familiarization_trial_num_4,
+                                          formula = ~ . - prev_location_c:familiarization_trial_num_c,
                                           cores = n_cores)
 summary(bm_fam_toddlers_location_al_null)
 
@@ -3567,7 +3568,7 @@ priors <- c(
 )
 
 bm_fam_adults_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_4 +
+  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_c +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
@@ -3612,7 +3613,7 @@ Bridge sampling Bayes factor approach
 
 ```{r}
 bm_fam_adults_location_al_null <- update(bm_fam_adults_location_al, 
-                                          formula = ~ . - prev_location_c:familiarization_trial_num_4,
+                                          formula = ~ . - prev_location_c:familiarization_trial_num_c,
                                           cores = n_cores)
 summary(bm_fam_adults_location_al_null)
 
@@ -3665,7 +3666,7 @@ combined_brm_results_location <- table_names %>%
     str_replace_all("condition_c", "Condition") %>%
     str_replace_all("prev_location_c", "Location") %>% 
     str_replace_all("location_c", "Location") %>%
-    str_replace_all("familiarization_trial_num_4", "Trial Number"))
+    str_replace_all("familiarization_trial_num_c", "Trial Number"))
 
 
 # View the combined table
