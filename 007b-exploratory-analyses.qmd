@@ -431,6 +431,17 @@ saveRDS(test_comparison_aoi_toddlers_both,
         file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both.rds"))
 ```
 
+Alternative bayes factor computation (due to challenges with bridge sampling)
+
+```{r}
+h_bm_aoi_toddlers_both <- hypothesis(bm_aoi_toddlers_both, "condition_c = 0", class = "b")
+h_bm_aoi_toddlers_both
+plot(h_bm_aoi_toddlers_both)
+# evidence in favor of condition being different from zero
+1 / h_bm_aoi_toddlers_both$hypothesis$Evid.Ratio
+```
+
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
