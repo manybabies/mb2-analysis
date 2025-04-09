@@ -403,7 +403,7 @@ papaja::apa_table(lab_stats_adults_incl_sum,
                   col.names = c("Lab","N collected","N included", "Sex (N   Female)","Mean Age (months)","Method"))
 ```
 Our final dataset consisted of `r sum(n_included_by_cohort$n_participants)` participants, with an overall exclusion rate of `r round((sum(n_before_exclusion_by_cohort$n_participants)-sum(n_included_by_cohort$n_participants))/sum(n_before_exclusion_by_cohort$n_participants),4)*100`% (toddlers: `r round((filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants-filter(n_included_by_cohort,age_cohort=="toddlers")$n_participants)/filter(n_before_exclusion_by_cohort,age_cohort=="toddlers")$n_participants,4)*100`%, adults: `r round((filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants-filter(n_included_by_cohort,age_cohort=="adults")$n_participants)/filter(n_before_exclusion_by_cohort,age_cohort=="adults")$n_participants,4)*100`%).
-Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages. 
+Table 1 and Table 2 show the distribution of included participants across labs, eye-tracking methods, and ages. 
 A final sample of `r sum(lab_stats_toddlers_included$N_included)` toddlers (`r round(sum(lab_stats_toddlers_included$N_female)/sum(lab_stats_toddlers_included$N_included),4)*100`% female) that were tested in `r length(unique(lab_stats_toddlers_included$lab_id))` labs (mean lab sample size = `r round(mean(lab_stats_toddlers_included$N_included),2)`, *SD* = `r round(sd(lab_stats_toddlers_included$N_included),2)`, range: `r min(lab_stats_toddlers_included$N_included)` - `r max(lab_stats_toddlers_included$N_included)`) was analyzed. 
 The average age of toddlers in the final sample was `r round(age_stat_toddlers_included$mean, 2)` months (*SD*: `r round(age_stat_toddlers_included$sd, 2)`, range: `r round(age_stat_toddlers_included$min, 2)` - `r round(age_stat_toddlers_included$max, 2)`). 
 The final sample size of included adults was *N* = `r sum(lab_stats_adults_included$N_included)` (`r round(sum(lab_stats_adults_included$N_female)/sum(lab_stats_adults_included$N_included),4)*100`% female), tested in `r length(unique(lab_stats_adults_included$lab_id))` labs (mean lab sample size = `r round(mean(lab_stats_adults_included$N_included),2)`, *SD* = `r round(sd(lab_stats_adults_included$N_included),2)`, range: `r min(lab_stats_adults_included$N_included)` - `r max(lab_stats_adults_included$N_included)`). 
@@ -740,11 +740,29 @@ b_age_cohort_c_estimate_shifts <- bm_test_shifts_age_cohort_age_cohort_effect[["
 #b_num_shifts_estimate_shifts <- bm_test_shifts_al[["b_num_shifts"]]
 ```
 
+```{r Results table of Bayesian regression models for number of shifts, warning=FALSE}
+
+combined_brm_results_shifts_with_blanks <- combined_brm_results_shifts %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
+
+papaja::apa_table(combined_brm_results_shifts_with_blanks,
+                  caption = "Results of the Bayesian mixed effects models for the number of shifts during location change of the mouse.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align = c("l", "l", "r", "r", "r", "r", "r"))
+```
+
 #### Comparing the number of shifts of toddlers and adults during the location change of the mouse.
-We fitted a Bayesian mixed-effects model using the Poisson family to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8). 
-<!-- MZ: commenting for now because of an issue with estimating the bayes factor - MSS: should work now-->
- Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed.
-This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
+We fitted a Bayesian mixed-effects model using the Poisson family to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=`r round(b_age_cohort_c_estimate_shifts, 3)`, indicating that the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8 and Table 6 for the results of Bayesian mixed effects models).
+Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_age_cohort$bf)` was computed.
+This provides strong evidence in favor of including the interaction of condition and age cohort in the model. In order to interpret this interaction, we conducted follow-up analyses separately for toddlers and adults.
+
+For toddlers, there was extreme evidence in favor of the null model compared to the full model that included condition as fixed effect, `r  format_bayes_factor(test_m_comparison_shifts_toddlers$bf)`, suggesting little to no reliable difference in the number of gaze shifts between the knowledge and ignorance condition.
+
+In contrast, for adults, the Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_adults$bf)` provided extreme evidence in favor of the full model that included condition as fixed effect. In the knowledge condition, adults showed more gaze shifts than in the ignorance condition.
+These findings demonstrate a robust condition effect in adults but not in toddlers.
 
 ```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
