@@ -466,7 +466,7 @@ Total & 809 & 521 & 256 & 22.48 & \\
 \end{center}
 
 Our final dataset consisted of 1224 participants, with an overall exclusion rate of 24.16\% (toddlers: 35.60\%, adults: 12.67\%).
-Tables 1 A. and B. show the distribution of included participants across labs, eye-tracking methods, and ages.
+Table 1 and Table 2 show the distribution of included participants across labs, eye-tracking methods, and ages.
 A final sample of 521 toddlers (49.14\% female) that were tested in 37 labs (mean lab sample size = 14.08, \emph{SD} = 5.56, range: 2 - 32) was analyzed.
 The average age of toddlers in the final sample was 22.49 months (\emph{SD}: 2.53, range: 18 - 27.01).
 The final sample size of included adults was \emph{N} = 703 (68.85\% female), tested in 34 labs (mean lab sample size = 20.68, \emph{SD} = 12.14, range: 8 - 65).
@@ -807,11 +807,48 @@ However, there was also no significant interaction between condition and the cor
 
 To examine whether participants monitored both the bear and the mouse during the mouse's location change, and whether this influenced AL in the test phase, we defined new time windows of interest (TOIs) corresponding to the mouse's location change in each condition and new AOIs for both the mouse and bear. We hypothesized that participants who attended to both AOIs would exhibit greater AL compared to those who predominantly tracked the mouse during its location change. Specifically, we analyzed the frequency of gaze shifts between the mouse and bear mouse's location change. An additional exploratory analysis of differential gaze duration directed toward mouse and bear during the mouse's location change is provided in the Supplement S3.
 
+\begin{center}
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models for number of shifts}Results of the Bayesian mixed effects models for the number of shifts during location change of the mouse.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models for number of shifts} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endhead
+shifts age & Intercept & 0.59 & 0.02 & 0.55 & 0.64 & 1.00\\
+ & Condition & -0.10 & 0.03 & -0.16 & -0.04 & 1.00\\
+ & Age Cohort & 0.57 & 0.04 & 0.48 & 0.65 & 1.00\\
+ & Condition:Age Cohort & -0.33 & 0.06 & -0.44 & -0.22 & 1.00\\
+shifts toddlers & Intercept & 0.26 & 0.03 & 0.20 & 0.32 & 1.00\\
+ & Condition & 0.12 & 0.05 & 0.02 & 0.22 & 1.00\\
+shifts adults & Intercept & 0.92 & 0.03 & 0.86 & 0.97 & 1.00\\
+ & Condition & -0.28 & 0.04 & -0.35 & -0.20 & 1.00\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\end{center}
+
 \paragraph{Comparing the number of shifts of toddlers and adults during the location change of the mouse.}\label{comparing-the-number-of-shifts-of-toddlers-and-adults-during-the-location-change-of-the-mouse.}
 
-We fitted a Bayesian mixed-effects model using the Poisson family to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.56, indicating that the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8).
+We fitted a Bayesian mixed-effects model using the Poisson family to examine the relationship between the number of shifts between mouse and bear and age cohort during location change of the mouse, while accounting for random effects by lab. The effect of condition was negative and approached significance, suggesting a potential reduction in the number of shifts for the ignorance condition compared to the knowledge condition. The main effect of age cohort was positive and credible, Estimate=0.56, indicating that the number of shifts was higher for adults than for toddlers. Importantly, the interaction between condition and age cohort was negative and credible, indicating that the negative effect of condition was more pronounced in the adult cohort (see Figure 8 and Table 6 for the results of Bayesian mixed effects models).
 Comparing this model to a simpler model without the interaction of condition and age cohort, a Bayes Factor of BF \textgreater{} 1000 was computed.
-This provides strong evidence in favor of including the interaction of condition and age cohort in the model.
+This provides strong evidence in favor of including the interaction of condition and age cohort in the model. In order to interpret this interaction, we conducted follow-up analyses separately for toddlers and adults.
+
+For toddlers, there was extreme evidence in favor of the null model compared to the full model that included condition as fixed effect, BF \textless{} 0.1, suggesting little to no reliable difference in the number of gaze shifts between the knowledge and ignorance condition.
+
+In contrast, for adults, the Bayes Factor of BF \textgreater{} 1000 provided extreme evidence in favor of the full model that included condition as fixed effect. In the knowledge condition, adults showed more gaze shifts than in the ignorance condition.
+These findings demonstrate a robust condition effect in adults but not in toddlers.
 
 \begin{figure}
 

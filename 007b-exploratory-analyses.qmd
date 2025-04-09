@@ -2190,6 +2190,25 @@ saveRDS(bm_test_shifts_age_cohort,
         file = here(model_fits_dir, "bm_test_shifts_age_cohort.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_shifts_age_cohort_tidy_summary <- as_tibble(summary(bm_test_shifts_age_cohort)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_shifts_age_cohort_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_shifts_age_cohort_model_summary.rds")
+)
+```
+
 ```{r}
 # get main coefficient estimate and HDI
 bm_test_shifts_age_cohort_age_cohort_effect <- bm_test_shifts_age_cohort %>%
@@ -2261,6 +2280,182 @@ Remove the Bayes models from the environment (because the model objects are quit
 rm(bm_test_shifts_age_cohort)
 rm(bm_test_shifts_age_cohort_null)
 gc()
+```
+
+#### Toddlers
+
+```{r}
+
+bm_test_shifts_toddlers <- brm_default(
+  num_shifts ~ 1 + condition_c +
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c | lab_id),
+  family = poisson(),
+  prior = priors_default,
+  data = filter(d_location_change, age_cohort == "toddlers")
+)
+summary(bm_test_shifts_toddlers)
+prior_summary(bm_test_shifts_toddlers)
+
+saveRDS(bm_test_shifts_toddlers, 
+        file = here(model_fits_dir, "bm_test_shifts_toddlers.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_shifts_toddlers_tidy_summary <- as_tibble(summary(bm_test_shifts_toddlers)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_shifts_toddlers_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_shifts_toddlers_model_summary.rds")
+)
+```
+
+```{r}
+# get main coefficient estimate and HDI
+
+bm_test_shifts_toddlers_condition_effect <- bm_test_shifts_toddlers %>%
+  spread_draws(b_condition_c) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_test_shifts_toddlers_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_shifts_toddlers_condition_effect.rds"))
+```
+
+Compute Bayes Factor using bridge sampling
+
+```{r}
+bm_test_shifts_toddlers_null <- update(bm_test_shifts_toddlers, 
+                                         formula = ~ . - condition_c,
+                                         cores = n_cores)
+summary(bm_test_shifts_toddlers_null)
+
+saveRDS(bm_test_shifts_toddlers_null, 
+        file = here(model_fits_dir, "bm_test_shifts_toddlers_null.rds"))
+
+test_m_comparison_shifts_toddlers <- brms::bayes_factor(bm_test_shifts_toddlers, 
+                                                          bm_test_shifts_toddlers_null)
+
+saveRDS(test_m_comparison_shifts_toddlers, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_shifts_toddlers.rds"))
+```
+
+#### Adults
+
+```{r}
+
+bm_test_shifts_adults <- brm_default(
+  num_shifts ~ 1 + condition_c +
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c | lab_id),
+  family = poisson(),
+  prior = priors_default,
+  data = filter(d_location_change, age_cohort == "adults")
+)
+summary(bm_test_shifts_adults)
+prior_summary(bm_test_shifts_adults)
+
+saveRDS(bm_test_shifts_adults, 
+        file = here(model_fits_dir, "bm_test_shifts_adults.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_shifts_adults_tidy_summary <- as_tibble(summary(bm_test_shifts_adults)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_shifts_adults_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_shifts_adults_model_summary.rds")
+)
+```
+
+```{r}
+# get main coefficient estimate and HDI
+
+bm_test_shifts_adults_condition_effect <- bm_test_shifts_adults %>%
+  spread_draws(b_condition_c) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_test_shifts_adults_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_test_shifts_adults_condition_effect.rds"))
+```
+
+Compute Bayes Factor using bridge sampling
+
+```{r}
+bm_test_shifts_adults_null <- update(bm_test_shifts_adults, 
+                                         formula = ~ . - condition_c,
+                                         cores = n_cores)
+summary(bm_test_shifts_adults_null)
+
+saveRDS(bm_test_shifts_adults_null, 
+        file = here(model_fits_dir, "bm_test_shifts_adults_null.rds"))
+
+test_m_comparison_shifts_adults <- brms::bayes_factor(bm_test_shifts_adults, 
+                                                          bm_test_shifts_adults_null)
+
+saveRDS(test_m_comparison_shifts_adults, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_shifts_adults.rds"))
+```
+
+#### Creating results tables for Bayesian mixed effects models of shifts during location change of mouse
+
+```{r}
+table_names_shifts <- c("bm_test_shifts_age_cohort_tidy_summary", "bm_test_shifts_toddlers_tidy_summary", "bm_test_shifts_adults_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata_fam <- function(table_names_shifts) {
+  parts <- strsplit(table_names_shifts, "_")[[1]]
+  list(
+    measure = parts[3], # e.g., "test"
+    age_cohort = parts[4]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_shifts <- table_names_shifts %>%
+  map_df(~ {
+    metadata <- extract_metadata_fam(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("age_cohort_c", "Age Cohort"))
+
+
+# View the combined table
+print(combined_brm_results_shifts)
+
+saveRDS(combined_brm_results_shifts,
+  file = here(RESULTS_FOLDER, "combined_brm_results_shifts.rds")
+)
 ```
 
 ### 5.2. Anticipatory looking as a function of the number of gaze shifts during location change of the mouse
