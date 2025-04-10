@@ -708,7 +708,7 @@ Next, we used a Bayesian mixed effects model to predict PTL based on condition f
 
 We will analyze within-participants data from the second test trial that participants saw, using exploratory models to assess whether (1) findings are consistent when both trials are included (overall condition effect), (2) whether effects are magnified or diminished on the second trial (order main effect), and (3) whether there is evidence of ``spillover'' - dependency in anticipation on the second trial depending on what the first trial is (condition x order interaction effect; see Figure 6).
 
-Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF \textless{} 0.1, providing
+Analyzing condition-effects of within-participants data for both test trials, we fitted a Bayesian mixed-effects model with the dependent variable of PTL and main effects of condition and age and their interaction for toddlers. Comparing this full model to a null model that did not include the fixed effect of condition, we obtained a Bayes Factor of BF = 133.1, providing
 strong evidence in favor of the null model.
 
 For adults, we also fitted a Bayesian mixed-effects model to predict their PTL for both test trials with the main effect of condition and random effects for participant and lab. Again, the data provided very strong evidence for the inclusion of the main effect of condition with a Bayes Factor of BF \textgreater{} 1000. The effect of condition was negative and credible, suggesting that PTL was significantly lower in the ignorance condition compared to the knowledge condition.
@@ -748,22 +748,22 @@ model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1
 model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
 \midrule
 \endhead
-adults sufficient familiarization & Intercept & 0.48 & 0.02 & 0.44 & 0.51 & 1.00\\
- & Condition & -0.20 & 0.03 & -0.26 & -0.14 & 1.00\\
- & Successful Fam Anticipation & 0.04 & 0.03 & -0.02 & 0.10 & 1.00\\
- & Condition:Successful Fam Anticipation & 0.00 & 0.05 & -0.11 & 0.10 & 1.00\\
-toddlers sufficient familiarization & Intercept & 0.61 & 0.02 & 0.56 & 0.65 & 1.00\\
- & Condition & 0.10 & 0.04 & 0.02 & 0.17 & 1.00\\
- & Successful Fam Anticipation & 0.03 & 0.04 & -0.04 & 0.11 & 1.00\\
- & Condition:Successful Fam Anticipation & 0.02 & 0.06 & -0.11 & 0.14 & 1.00\\
-adults correct first look & Intercept & 0.48 & 0.02 & 0.45 & 0.52 & 1.00\\
+correct adults & Intercept & 0.48 & 0.02 & 0.45 & 0.52 & 1.00\\
  & Condition & -0.20 & 0.03 & -0.26 & -0.13 & 1.00\\
  & Correct First Look Final Fam & -0.04 & 0.03 & -0.10 & 0.03 & 1.00\\
  & Condition:Correct First Look Final Fam & -0.08 & 0.06 & -0.19 & 0.04 & 1.00\\
-toddlers correct first look & Intercept & 0.62 & 0.02 & 0.58 & 0.65 & 1.00\\
+correct toddlers & Intercept & 0.62 & 0.02 & 0.58 & 0.65 & 1.00\\
  & Condition & 0.07 & 0.04 & 0.00 & 0.15 & 1.00\\
  & Correct First Look Final Fam & 0.00 & 0.04 & -0.07 & 0.07 & 1.00\\
  & Condition:Correct First Look Final Fam & -0.05 & 0.06 & -0.17 & 0.07 & 1.00\\
+sufficient adults & Intercept & 0.48 & 0.02 & 0.45 & 0.51 & 1.00\\
+ & Condition & -0.21 & 0.03 & -0.26 & -0.15 & 1.00\\
+ & Successful Fam Anticipation & 0.00 & 0.03 & -0.06 & 0.05 & 1.00\\
+ & Condition:Successful Fam Anticipation & -0.01 & 0.05 & -0.11 & 0.09 & 1.00\\
+sufficient toddlers & Intercept & 0.62 & 0.02 & 0.59 & 0.66 & 1.00\\
+ & Condition & 0.10 & 0.03 & 0.03 & 0.17 & 1.00\\
+ & Successful Fam Anticipation & 0.05 & 0.03 & -0.02 & 0.11 & 1.00\\
+ & Condition:Successful Fam Anticipation & -0.03 & 0.06 & -0.14 & 0.08 & 1.00\\
 \bottomrule
 \end{longtable}
 
@@ -785,7 +785,7 @@ For adults, the Bayes factor comparing this model to the simpler null model with
 
 \paragraph{Only \textgreater50\% looking to target during familiarization trials}\label{only-50-looking-to-target-during-familiarization-trials}
 
-To examine the effect of condition and successful anticipatory looking during familiarization (above 50\% target looking during all familiarization trials) on anticipatory looking during the first test trial, we fitted Bayesian mixed-effects models for each age group separately. The models included fixed effects for condition, anticipatory looking during familiarization trials, and their interaction. Random intercepts and slopes for these predictors were included at the lab level. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 10.9, providing strong evidence favoring the full model over a null model that excludes these predictors, suggesting that these factors contribute meaningfully to explaining the variance in test trial anticipatory looking. The regression analysis showed a positive main effect of condition, indicating higher anticipatory looking in one condition compared to the other (see Table 5). There was a small positive, but non-significant, effect of successful anticipatory looking during familiarization. The interaction between condition and successful anticipatory looking during familiarization was also small and non-significant. These results indicate that condition is a meaningful predictor of anticipatory looking during test trials in toddlers, with participants showing different levels of anticipatory looking based on condition. However, the successful anticipatory looking during familiarization trials and its interaction with condition appear to have minimal additional impact. The strong Bayes factor further supports the importance of including these predictors in the model but highlights that condition remains the primary driver of test trial differences.
+To examine the effect of condition and successful anticipatory looking during familiarization (above 50\% target looking during the last two familiarization trials before test) on anticipatory looking during the first test trial, we fitted Bayesian mixed-effects models for each age group separately. The models included fixed effects for condition, anticipatory looking during familiarization trials, and their interaction. Random intercepts and slopes for these predictors were included at the lab level. Comparing the full model to the null model of toddlers revealed a Bayes Factor of BF = 17.9, providing strong evidence favoring the full model over a null model that excludes these predictors, suggesting that these factors contribute meaningfully to explaining the variance in test trial anticipatory looking. The regression analysis showed a positive main effect of condition, indicating higher anticipatory looking in one condition compared to the other (see Table 5). There was a small positive, but non-significant, effect of successful anticipatory looking during familiarization. The interaction between condition and successful anticipatory looking during familiarization was also small and non-significant. These results indicate that condition is a meaningful predictor of anticipatory looking during test trials in toddlers, with participants showing different levels of anticipatory looking based on condition. However, the successful anticipatory looking during familiarization trials and its interaction with condition appear to have minimal additional impact. The strong Bayes factor further supports the importance of including these predictors in the model but highlights that condition remains the primary driver of test trial differences.
 
 The estimated Bayes factor in favor of the full model of adults over the null model was BF \textgreater{} 1000, indicating that the predictors substantially contribute to explaining test trial anticipatory looking. The regression coefficients revealed a significant main effect of condition, with participants showing lower anticipatory looking in the ignorance condition compared to the knowledge condition. There was a small, positive, and non-significant effect of successful anticipatory looking during familiarization and the interaction between condition and successful successful anticipatory looking during familiarization was negligible. These results indicate that condition has a substantial and meaningful impact on anticipatory looking during the first test trial in adults, while successful anticipatory looking in familiarization trials and its interaction with condition have limited additional influence. The extremely large Bayes factor highlights the strong explanatory power of including these predictors in the model, although condition remains the primary driver of the observed differences.
 

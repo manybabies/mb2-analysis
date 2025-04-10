@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  9 APR 2025 20:54
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  10 APR 2025 15:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1234,31 +1234,6 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [72
 
 ]
-Overfull \hbox (16.96655pt too wide) in paragraph at lines 191--191
-[] [] 
- []
-
-
-Overfull \hbox (33.93309pt too wide) in alignment at lines 190--195
- [] [] [] [] [] [] [] 
- []
-
-
-Overfull \hbox (16.96655pt too wide) in paragraph at lines 196--196
-[] [] 
- []
-
-
-Overfull \hbox (33.93309pt too wide) in alignment at lines 195--200
- [] [] [] [] [] [] [] 
- []
-
-
-Overfull \hbox (33.93309pt too wide) in alignment at lines 200--218
- [] [] [] [] [] [] [] 
- []
-
-
 
 [73
 
@@ -1278,7 +1253,7 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  22483 strings out of 475848
  424463 string characters out of 5773546
- 1003500 words of memory out of 5000000
+ 1003499 words of memory out of 5000000
  45079 multiletter control sequences out of 15000+600000
  591552 words of font info for 111 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191

@@ -40,7 +40,6 @@ load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 rds_files <- list.files(RESULTS_FOLDER, pattern = "\\.rds$", full.names = TRUE)
 
 # Load each RDS file as a separate variable in the global environment
-# This doesn't work for me anymore - not sure why
 for (file in rds_files) {
   rds_name <- tools::file_path_sans_ext(basename(file))
   assign(rds_name, readRDS(file))
@@ -290,6 +289,8 @@ overall_p_test_both_alternative <- ggplot(summarize_participant_test_both_trials
 overall_p_test_both_alternative
 ggsave(here(plot_path, "overall_proportion_both_trials_target_exit_looking_alternative.png"), 
        bg = "white", width = 6, height = 6)
+ggsave(here(paper_path, "Figure_PTL_bothtrials.png"), 
+       bg = "white", width = 7, height = 7)
 ```
 
 
@@ -1011,17 +1012,6 @@ saveRDS(bm_aoi_toddlers_correct_final_fam_trial,
 Organize table in a tidy format
 
 ```{r}
-
-# Load all model result
-# List all RDS files in the results folder
-rds_files <- list.files(model_fits_dir, pattern = "\\.rds$", full.names = TRUE)
-
-# Load each RDS file as a separate variable in the global environment
-for (file in rds_files) {
-  rds_name <- tools::file_path_sans_ext(basename(file))
-  assign(rds_name, readRDS(file))
-}
-
 bm_aoi_toddlers_correct_final_fam_trial_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_correct_final_fam_trial)$fixed,rownames=NA) %>% 
   rownames_to_column("term") %>% 
   rename(
@@ -1188,11 +1178,308 @@ gc()
 
 ### 2.b. Only >50% looking to target during familiarization trials
 
-#### Plot
+#### 2.b.a. Above >50% looking in each of the last two familiarization trials before test (trials 3 and 4)
+
+##### Plot
+
+```{r}
+successful_fam <- summarize_participant_familiarization %>%
+  filter(trial_num %in% c(3, 4)) %>%
+  select(lab_id, age_cohort, condition, participant_id, trial_num, prop_exit) %>%
+  mutate(above_0.5 = prop_exit > 0.5) %>%
+  group_by(lab_id, age_cohort, participant_id) %>%
+  summarise(
+    successful_fam_anticipation_c = if (all(above_0.5 %in% TRUE)) 0.5 else -0.5,
+    .groups = "drop"
+  )
+
+# join overall familiarization looking in to test trial
+summarize_participant_test_first_trial_fam3and4 <- summarize_participant_test_first_trial %>%
+  left_join(successful_fam)
+
+# overall plot
+# plot average proportion looking
+overall_p_sufficient_fam_prop_looking_fam3and4 <- ggplot(filter(summarize_participant_test_first_trial_fam3and4, successful_fam_anticipation_c == 0.5), 
+                                                aes(x = condition, y = prop_exit, color = condition)) +
+  # geom_violin()+
+  # geom_boxplot()+
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_half_violin(
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.6, position=position_nudge(x = .2, y = 0)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~age_cohort) +
+  theme(legend.position = "none") +
+  ylab("Proportion DLS\n(Anticipatory Window, First Trial)")
+overall_p_sufficient_fam_prop_looking_fam3and4
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking_fam3and4.png"), 
+       bg = "white", width = 9, height = 6)
+```
+
+##### Summary Statistics
+
+```{r}
+summarize_test_aoi_sufficient_fam_prop_looking_fam3and4 <- summarize_participant_test_first_trial_fam3and4 %>%
+  filter(successful_fam_anticipation_c == 0.5) %>%
+  group_by(age_cohort, condition) %>%
+  summarize(
+    participant_num = sum(!is.na(prop_exit)),
+    mean_target_looking = mean(prop_exit, na.rm = T),
+    sd_target_looking = sd(prop_exit, na.rm = T),
+    mean_target_looking_general = mean(prop_general, na.rm = T),
+    sd_target_looking_general = sd(prop_general, na.rm = T),
+  )
+
+summarize_test_aoi_sufficient_fam_prop_looking_fam3and4 %>%
+  knitr::kable()
+```
+
+##### Main Model
+
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial.
+
+###### Toddlers
+
+```{r}
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4 <- brm_default(
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial_fam3and4, age_cohort == "toddlers")
+)
+summary(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4,
+        file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_tidy_summary_model_summary.rds")
+)
+```
+
+Summarize outcomes
+
+```{r}
+# get_variables(bm_aoi_toddlers)
+# get main coefficient estimate and HDI
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_effect.rds"))
+
+# get main coefficient estimate and HDI for successful fam anticipation effect
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(b_successful_fam_anticipation_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_effect <- bm_aoi_toddlers_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(`b_condition_c:successful_fam_anticipation_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_interaction.rds"))
+```
+
+Compute the Bayes factor using bridge sampling
+
+```{r}
+bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4, 
+                                                           formula = ~ . - condition_c * successful_fam_anticipation_c,
+                                                           cores = n_cores)
+summary(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
+
+saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null, 
+        file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null.rds"))
+
+test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4 <-
+  brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4, bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
+
+saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4)
+rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
+gc()
+```
+
+###### Adults
+
+```{r}
+bm_aoi_adults_sufficient_fam_prop_looking_3and4 <- brm_default(
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
+  family = gaussian,
+  prior = priors_default,
+  data = filter(summarize_participant_test_first_trial_fam3and4, age_cohort == "adults")
+)
+summary(bm_aoi_adults_sufficient_fam_prop_looking_3and4)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4, 
+        file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_3and4.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_aoi_adults_sufficient_fam_prop_looking_3and4_tidy_summary <- as_tibble(summary(bm_aoi_adults_sufficient_fam_prop_looking_3and4)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_tidy_summary_model_summary.rds")
+)
+```
+
+```{r}
+# get main coefficient estimate and HDI
+bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_effect <- bm_aoi_adults_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(b_condition_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_effect.rds"))
+
+
+# get main coefficient estimate and HDI for successful fam anticipation effect
+bm_aoi_adults_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect <- bm_aoi_adults_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(b_successful_fam_anticipation_c, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_successful_fam_anticipation_effect.rds"))
+
+# get main coefficient estimate and HDI for interaction
+bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_effect <- bm_aoi_adults_sufficient_fam_prop_looking_3and4 %>%
+  spread_draws(`b_condition_c:successful_fam_anticipation_c`, sigma) %>%
+  mean_hdi(.width = 0.95)
+
+# cache
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_effect, 
+        file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_interaction.rds"))
+```
+
+Compute the Bayes factor using bridge sampling
+
+```{r}
+bm_aoi_adults_sufficient_fam_prop_looking_3and4_null <- update(bm_aoi_adults_sufficient_fam_prop_looking_3and4, 
+                                                         formula = ~ . - condition_c * successful_fam_anticipation_c,
+                                                         cores = n_cores)
+summary(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
+
+saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null, 
+        file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_null.rds"))
+
+test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4 <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking_3and4, bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
+
+saveRDS(test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4,
+        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4.rds"))
+```
+
+Remove the Bayes models from the environment (because the model objects are quite large).
+
+```{r}
+# remove Bayes model fits
+rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4)
+rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
+gc()
+```
+
+```{r}
+# Creating results table
+table_names_fam_test <- c("bm_aoi_adults_correct_final_fam_trial_tidy_summary", "bm_aoi_toddlers_correct_final_fam_trial_tidy_summary", "bm_aoi_adults_sufficient_fam_prop_looking_3and4_tidy_summary", "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata <- function(table_names_fam_test) {
+  parts <- strsplit(table_names_fam_test, "_")[[1]]
+  list(
+    measure = parts[4], # e.g., "test"
+    age_cohort = parts[3]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_fam_test_3and4 <- table_names_fam_test %>%
+  map_df(~ {
+    metadata <- extract_metadata(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("successful_fam_anticipation_c", "Successful Fam Anticipation") %>% 
+    str_replace_all("correct_first_look_final_fam_trial_c", "Correct First Look Final Fam") %>%
+    str_replace_all("familiarization_trial_num_4", "Trial Number"),
+    model = model %>% 
+    str_replace_all("adults sufficient", "adults sufficient familiarization") %>%
+    str_replace_all("toddlers sufficient", "toddlers sufficient familiarization") %>%
+    str_replace_all("toddlers correct", "toddlers correct first look") %>% 
+    str_replace_all("adults correct", "adults correct first look"))
+
+
+# View the combined table
+print(combined_brm_results_fam_test_3and4)
+
+saveRDS(combined_brm_results_fam_test_3and4,
+  file = here(RESULTS_FOLDER, "combined_brm_results_fam_test_3and4.rds")
+)
+```
+
+#### 2.b.b. Above >50% looking across all four familiarization trials
+
+##### Plot
 
 ```{r}
 # join overall familiarization looking in to test trial
-summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+summarize_participant_test_first_trial_all_fam_trials <- summarize_participant_test_first_trial %>%
   left_join(summarize_participant_familiarization_overall) %>%
   mutate(successful_fam_anticipation_c = case_when(
     fam_prop_exit > 0.5 ~ 0.5,
@@ -1202,14 +1489,14 @@ summarize_participant_test_first_trial <- summarize_participant_test_first_trial
 
 # overall plot
 # plot average proportion looking
-overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5), 
+overall_p_sufficient_fam_prop_looking_all_fam_trials <- ggplot(filter(summarize_participant_test_first_trial_all_fam_trials, fam_prop_exit > 0.5), 
                                                 aes(x = condition, y = prop_exit, color = condition)) +
   # geom_violin()+
   # geom_boxplot()+
   geom_beeswarm(alpha = 0.2, cex = 0.5) +
-  geom_half_violin(data = filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5 & condition == "ignorance"), 
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_all_fam_trials, fam_prop_exit > 0.5 & condition == "ignorance"), 
                    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2) +
-  geom_half_violin(data = filter(summarize_participant_test_first_trial, fam_prop_exit > 0.5 & condition == "knowledge"), 
+  geom_half_violin(data = filter(summarize_participant_test_first_trial_all_fam_trials, fam_prop_exit > 0.5 & condition == "knowledge"), 
                    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2) +
   stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
@@ -1219,15 +1506,15 @@ overall_p_sufficient_fam_prop_looking <- ggplot(filter(summarize_participant_tes
   facet_wrap(~age_cohort) +
   theme(legend.position = "none") +
   ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
-overall_p_sufficient_fam_prop_looking
-ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking.png"), 
+overall_p_sufficient_fam_prop_looking_all_fam_trials
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_sufficient_fam_prop_looking_all_fam_trials.png"), 
        bg = "white", width = 9, height = 6)
 ```
 
-#### Summary Statistics
+##### Summary Statistics
 
 ```{r}
-summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_first_trial %>%
+summarize_test_aoi_sufficient_fam_prop_looking_all_fam_trials <- summarize_participant_test_first_trial_all_fam_trials %>%
   filter(fam_prop_exit > 0.5) %>%
   group_by(age_cohort, condition) %>%
   summarize(
@@ -1238,15 +1525,15 @@ summarize_test_aoi_sufficient_fam_prop_looking <- summarize_participant_test_fir
     sd_target_looking_general = sd(prop_general, na.rm = T),
   )
 
-summarize_test_aoi_sufficient_fam_prop_looking %>%
+summarize_test_aoi_sufficient_fam_prop_looking_all_fam_trials %>%
   knitr::kable()
 ```
 
-#### Main Model
+##### Main Model
 
 Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial.
 
-##### Toddlers
+###### Toddlers
 
 ```{r}
 bm_aoi_toddlers_sufficient_fam_prop_looking <- brm_default(
@@ -1254,7 +1541,7 @@ bm_aoi_toddlers_sufficient_fam_prop_looking <- brm_default(
     (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors_default,
-  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
+  data = filter(summarize_participant_test_first_trial_all_fam_trials, age_cohort == "toddlers")
 )
 summary(bm_aoi_toddlers_sufficient_fam_prop_looking)
 
@@ -1340,7 +1627,7 @@ rm(bm_aoi_toddlers_sufficient_fam_prop_looking_null)
 gc()
 ```
 
-##### Adults
+###### Adults
 
 ```{r}
 bm_aoi_adults_sufficient_fam_prop_looking <- brm_default(
@@ -1348,7 +1635,7 @@ bm_aoi_adults_sufficient_fam_prop_looking <- brm_default(
     (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors_default,
-  data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
+  data = filter(summarize_participant_test_first_trial_all_fam_trials, age_cohort == "adults")
 )
 summary(bm_aoi_adults_sufficient_fam_prop_looking)
 
@@ -1447,7 +1734,7 @@ extract_metadata <- function(table_names_fam_test) {
 # Combine all tables into one
 combined_brm_results_fam_test <- table_names_fam_test %>%
   map_df(~ {
-    metadata <- extract_metadata_test(.x)
+    metadata <- extract_metadata(.x)
     get(.x) %>% 
       mutate(
         measure = metadata$measure,
@@ -1550,7 +1837,6 @@ summary(correlation_interaction_fam_test_toddlers)
 saveRDS(correlation_interaction_fam_test_toddlers, 
         file = here(RESULTS_FOLDER, "correlation_interaction_fam_test_toddlers.rds"))
 ```
-
 
 ## 3. If we have a sufficiently large sample of participants tested with online sources (e.g., contributions of at least 32 participants), we will conduct a separate analysis with a model term for online participants that estimates whether condition effects are different in this population. We will further report whether exclusion rates are different for this population.
 
