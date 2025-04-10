@@ -360,14 +360,26 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #### Toddlers
 
 ```{r}
-bm_aoi_toddlers_both <- brm_default(
+#Note: the Bayes factors we obtained for this model were more variable,
+#so we increased the number of iterations in an attempt to obtain more stable
+# Bayes factor estimates (using bridge sampling)
+bm_aoi_toddlers_both <- brm(
   prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
     (1 + condition_c | participant_lab_id) + 
     (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers") %>%
-    select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id)
+    select(prop_exit, condition_c, age_mo_c, participant_lab_id, lab_id),
+  save_pars = save_pars(all = TRUE),
+  warmup = 1000,
+  iter = 50000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
 )
 summary(bm_aoi_toddlers_both)
 prior_summary(bm_aoi_toddlers_both)
@@ -376,8 +388,6 @@ prior_summary(bm_aoi_toddlers_both)
 if (!dir.exists(model_fits_dir)) {
   dir.create(model_fits_dir, recursive = TRUE)
 }
-
-summary(bm_aoi_toddlers_both)
 
 saveRDS(bm_aoi_toddlers_both, 
         file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
@@ -431,7 +441,7 @@ saveRDS(test_comparison_aoi_toddlers_both,
         file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both.rds"))
 ```
 
-Alternative bayes factor computation (due to challenges with bridge sampling)
+Alternative bayes factor computation (for comparison, due to the above-mentioned challenges with bridge sampling)
 
 ```{r}
 h_bm_aoi_toddlers_both <- hypothesis(bm_aoi_toddlers_both, "condition_c = 0", class = "b")
