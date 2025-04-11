@@ -526,44 +526,11 @@ ggplot(summarize_participant_test_first_trial, aes(N_exit)) +
 
 First look at the proportional looking measures, focusing on the target exit during the anticipatory window.
 
-```{r}
-# plot average proportion looking
-overall_p_test <- ggplot(
-  summarize_participant_test_first_trial,
-  aes(x = condition, y = prop_exit, color = condition)
-) +
-  # geom_violin()+
-  # geom_boxplot()+
-  geom_beeswarm(alpha = 0.2, cex = 0.5) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, condition == "ignorance"),
-    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, condition == "knowledge"),
-    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.5, color = "black") +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
-  theme_cowplot() +
-  scale_color_brewer(palette = "Set1") +
-  scale_fill_brewer(palette = "Set1") +
-  facet_wrap(~age_cohort) +
-  theme(legend.position = "none") +
-  #ggtitle("Test") +
-  #theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-  ylab("Proportion DLS to Target Exit")
-overall_p_test
-ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking.png"),
-  bg = "white", width = 9, height = 6
-)
-```
-
 Alternative plot
 
 ```{r}
 # plot average proportion looking
-overall_p_test_alternative <- ggplot(
+overall_p_test <- ggplot(
   summarize_participant_test_first_trial,
   aes(x = condition, y = prop_exit, color = condition)
 ) +
@@ -584,8 +551,8 @@ overall_p_test_alternative <- ggplot(
   #ggtitle("Test") +
   #theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   ylab("Proportion DLS to Target Exit")
-overall_p_test_alternative
-ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking_alternative.png"),
+overall_p_test
+ggsave(here(plot_path, "overall_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 9, height = 6
 )
 ```
@@ -1718,8 +1685,7 @@ saveRDS(summarize_overall_familiarization_first_look_across_trials,
 ```{r}
 overall_fl_fam <- ggplot(
   summarize_overall_familiarization_first_look,
-  aes(trial_num, prop_target_first_look)
-) +
+  aes(trial_num, prop_target_first_look)) +
   geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0) +
   geom_point(size = 5) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
@@ -1730,8 +1696,7 @@ overall_fl_fam <- ggplot(
   # strip.text.x = element_blank())+
   geom_smooth(
     data = summarize_participant_familiarization_first_look,
-    aes(y = prop_correct_first_look), method = "lm"
-  ) +
+    aes(y = prop_correct_first_look), method = "lm") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   xlab("Trial Number") +
@@ -1742,7 +1707,6 @@ ggsave(here(plot_path, "overall_fam_trials_first_look.png"),
   bg = "white", width = 9, height = 6
 )
 ```
-
 ### Test Data
 
 ```{r}
@@ -1847,11 +1811,7 @@ overall_fl_test <- ggplot(
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   facet_wrap(~age_cohort) +
   theme_cowplot() +
-  theme(
-    strip.background = element_blank(),
-    strip.text.x = element_blank()
-  ) +
-    ggtitle("Test") +
+  ggtitle("Test") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +

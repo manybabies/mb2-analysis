@@ -2792,6 +2792,8 @@ AL_shifts <- ggplot(summarize_participant_test_both_trials_lc,
   scale_y_continuous(breaks = seq(0, 1, 0.25)) +
   theme_set(theme_cowplot(font_size = 24)) +
   scale_color_brewer(palette = "Set1") +
+  theme_cowplot() +
+  theme_set(theme_cowplot(font_size = 24)) +
   theme(legend.position = "none") +
   xlab("Number of shifts during location change of mouse") +
   ylab("Proportion DLS during test trials")
@@ -2868,6 +2870,24 @@ saveRDS(test_m_comparison_toddlers_shifts_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_shifts_al.rds"))
 ```
 
+Bridge sampling Bayes factor approach: Number of shifts Effect
+
+```{r}
+bm_test_toddlers_shifts_al_num_shifts_null <- update(bm_test_toddlers_shifts_al, 
+                                          formula = ~ . - num_shifts,
+                                          cores = n_cores)
+summary(bm_test_toddlers_shifts_al_num_shifts_null)
+
+saveRDS(bm_test_toddlers_shifts_al_num_shifts_null, 
+        file = here(model_fits_dir, "bm_test_toddlers_shifts_al_num_shifts_null.rds"))
+
+test_m_comparison_toddlers_shifts_al_num_shifts <- brms::bayes_factor(bm_test_toddlers_shifts_al, 
+                                                           bm_test_toddlers_shifts_al_num_shifts_null)
+
+saveRDS(test_m_comparison_toddlers_shifts_al_num_shifts, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_shifts_al_num_shifts.rds"))
+```
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
@@ -2941,6 +2961,25 @@ saveRDS(test_m_comparison_adults_shifts_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al.rds"))
 ```
 
+Bridge sampling Bayes factor approach: Number of shifts Effect
+
+```{r}
+bm_test_adults_shifts_al_num_shifts_null <- update(bm_test_adults_shifts_al, 
+                                          formula = ~ . - num_shifts,
+                                          cores = n_cores)
+summary(bm_test_adults_shifts_al_num_shifts_null)
+
+saveRDS(bm_test_adults_shifts_al_num_shifts_null, 
+        file = here(model_fits_dir, "bm_test_adults_shifts_al_num_shifts_null.rds"))
+
+test_m_comparison_adults_shifts_al_num_shifts <- brms::bayes_factor(bm_test_adults_shifts_al, 
+                                                           bm_test_adults_shifts_al_num_shifts_null)
+# Warning: Infinite value in iterative scheme, returning NA.
+# Try rerunning with more samples.
+ 
+saveRDS(test_m_comparison_adults_shifts_al_num_shifts, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al_num_shifts.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
