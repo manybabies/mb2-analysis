@@ -479,7 +479,7 @@ Bayesian model comparisons require the specification of proper priors on the coe
 	For the proportional looking score analysis, we used a uniform prior on the intercept between -0.5 and 0.5 (corresponding to proportional looking scores between 0 and 1: the full possible range). For the priors on the fixed effect coefficients, we used a normal prior with a mean of 0 and an *SD* of 0.1. Because these regressions are in proportion space, 0.10 corresponds to a change in proportion of 10%. For the random effect priors, we used a normal distribution with mean 0 and standard deviation .05. The LKJ prior was specified as above.
 	All preregistered confirmatory models converged, with no divergent transitions, all Rhat values < 1.1, and an effective sample size greater than 20% of the total sample size.
 	
-```{r fig4, fig.cap="Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test.", fig.align="center", out.width = "6.8in"}
+```{r fig4, fig.cap="Proportional target looking and proportion of first looks for toddlers and adults during familiarization and test. Error bars and error bands represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
@@ -645,7 +645,7 @@ We compared a Bayesian mixed-effects model predicting the proportion of first lo
 
 #### Proportion of target looking
 
-```{r fig5, fig.cap="Timecourse of mean proportional looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
+```{r fig5, fig.cap="Timecourse of mean proportional looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition. The dotted vertical lines represent the onset and offset of the 4s anticipatory period. Time is centered such that 0 represents the moment the bear re-remerges from the tunnel. Error bands represent +1/-1 SEs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper", "Figure_test_timecourse_plot_anticipation_phase.png"), rel_path=FALSE)
 ```
 
@@ -680,7 +680,7 @@ To examine whether anticipatory looking during the second test trial was influen
 
 For adults, the Bayes factor comparing the full model including condition, first trial anticipatory looking, and their interaction to the null model with only the intercept was  `r format_bayes_factor(test_m_comparison_aoi_adults_second_trial$bf)` providing extreme evidence for the full model. Comparing the full model with a model that excluded condition, the Bayes factor, `r format_bayes_factor(test_m_comparison_aoi_adults_second_trial_condition$bf)`, provided again extreme evidence in favor of the full model. Hence, the extremely large Bayes factors underscore the importance of considering these predictors in explaining second test trial anticipatory looking behavior.
 
-```{r fig6, fig.cap="Proportional target looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
+```{r fig6, fig.cap="Proportional target looking for the first and second test trial for toddlers and adults in the ignorance and knowledge condition. Error bars represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure_PTL_bothtrials.png"),rel_path=FALSE)
 ```
 
@@ -718,7 +718,7 @@ The estimated Bayes factor in favor of the full model of adults over the null mo
 
 #### Correlation between familiarization and test
 
-```{r fig7, fig.cap="Relationship of anticipatory looking during familiarization and test for both age cohorts and conditions.", fig.align="center", out.width = "6.8in"}
+```{r fig7, fig.cap="Relationship of anticipatory looking during familiarization and test for both age cohorts and conditions. Error bands represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","correlation_plot_fam_test.png"),rel_path=FALSE)
 ```
 
@@ -764,7 +764,7 @@ For toddlers, there was extreme evidence in favor of the null model compared to 
 In contrast, for adults, the Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_adults$bf)` provided extreme evidence in favor of the full model that included condition as fixed effect. In the knowledge condition, adults showed more gaze shifts than in the ignorance condition.
 These findings demonstrate a robust condition effect in adults but not in toddlers.
 
-```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition.", fig.align="center", out.width = "6.8in"}
+```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition. Error bars represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
 ```
 
@@ -775,7 +775,7 @@ For toddlers, comparing this model to a simpler model without the interaction of
 
 For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of number of shifts on proportion looking at test was larger in the knowledge condition than in the ignorance condition. The estimated Bayes factor comparing the full model to the null model was approximately `r format_bayes_factor(test_m_comparison_adults_shifts_al$bf)`, providing strong evidence in favor of the full model over the null model.
 
-```{r fig9, fig.cap="AL as a function of number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults.", fig.align="center", out.width = "6.8in"}
+```{r fig9, fig.cap="AL as a function of number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults. Error bands represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure7.png"),rel_path=FALSE)
 ```
 
