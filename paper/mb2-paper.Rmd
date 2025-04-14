@@ -761,8 +761,7 @@ This provides strong evidence in favor of including the interaction of condition
 
 For toddlers, there was extreme evidence in favor of the null model compared to the full model that included condition as fixed effect, `r  format_bayes_factor(test_m_comparison_shifts_toddlers$bf)`, suggesting little to no reliable difference in the number of gaze shifts between the knowledge and ignorance condition.
 
-In contrast, for adults, the Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_adults$bf)` provided extreme evidence in favor of the full model that included condition as fixed effect. In the knowledge condition, adults showed more gaze shifts than in the ignorance condition.
-These findings demonstrate a robust condition effect in adults but not in toddlers.
+In contrast, for adults, the Bayes Factor of `r  format_bayes_factor(test_m_comparison_shifts_adults$bf)` provided extreme evidence in favor of the full model that included condition as fixed effect. In the knowledge condition, adults showed more gaze shifts than in the ignorance condition. These findings demonstrate a robust condition effect in adults but not in toddlers.
 
 ```{r fig8, fig.cap="Number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults in the ignorance and knowledge condition. Error bars represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)

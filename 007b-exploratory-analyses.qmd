@@ -2900,13 +2900,23 @@ gc()
 #### Adults
 
 ```{r}
-bm_test_adults_shifts_al <- brm_default(
+bm_test_adults_shifts_al <- brm(
   prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
   family = gaussian,
   prior = priors_default,
-  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults")
+  data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults") %>%
+    select(prop_exit, condition_c, num_shifts, participant_lab_id, lab_id),
+  save_pars = save_pars(all = TRUE),
+  warmup = 1000,
+  iter = 20000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list
 )
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
@@ -3072,10 +3082,15 @@ ggsave(here(paper_path, "Figure8.png"),
 
 #### Toddlers
 ```{r}
+# convert diff_mouse_bear in s
+
+summarize_participant_test_both_trials_lc <- summarize_participant_test_both_trials_lc %>%
+  mutate(diff_mouse_bear_s = diff_mouse_bear / 1000)
+
 bm_test_toddlers_diff_mouse_bear_al <- brm_default(
-  prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear + 
-    (1 + condition_c * diff_mouse_bear | lab_id) +
-    (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
+  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s + 
+    (1 + condition_c * diff_mouse_bear_s | lab_id) +
+    (1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
@@ -3101,7 +3116,7 @@ saveRDS(bm_test_toddlers_diff_mouse_bear_al_condition_effect,
         file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_condition_effect.rds"))
 
 bm_test_toddlers_diff_mouse_bear_al_diff_effect <- bm_test_toddlers_diff_mouse_bear_al %>%
-  spread_draws(b_diff_mouse_bear, sigma) %>%
+  spread_draws(b_diff_mouse_bear_s, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -3109,7 +3124,7 @@ saveRDS(bm_test_toddlers_diff_mouse_bear_al_diff_effect,
         file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_diff_effect.rds"))
 
 bm_test_toddlers_diff_mouse_bear_al_condition_diff_interaction <- bm_test_toddlers_diff_mouse_bear_al %>%
-  spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
+  spread_draws(`b_condition_c:diff_mouse_bear_s`, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -3121,7 +3136,7 @@ Bridge sampling Bayes factor approach
 
 ```{r}
 bm_test_toddlers_diff_mouse_bear_al_null <- update(bm_test_toddlers_diff_mouse_bear_al, 
-                                                   formula = ~ . - condition_c:diff_mouse_bear, 
+                                                   formula = ~ . - condition_c:diff_mouse_bear_s, 
                                                    cores = n_cores)
 summary(bm_test_toddlers_diff_mouse_bear_al_null)
 
@@ -3135,6 +3150,25 @@ saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
 
 # bm_test_adults_diff_mouse_bear_al <- readRDS(file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
+```
+Bridge sampling: diff_mouse_bear effect
+
+```{r}
+bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null <- update(bm_test_toddlers_diff_mouse_bear_al, 
+                                                 formula = ~ . - diff_mouse_bear_s,
+                                                 cores = n_cores)
+summary(bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null)
+
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null,
+        file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null.rds"))
+
+#bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null <- readRDS(here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null.rds"))
+
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
+test_m_comparison_toddlers_diff_mouse_bear_al_diff_mouse_bear_effect <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null)
+
+saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al_diff_mouse_bear_effect,
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al_diff_mouse_bear_effect.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
@@ -3150,9 +3184,9 @@ gc()
 
 ```{r}
 bm_test_adults_diff_mouse_bear_al <- brm_default(
-  prop_exit ~ 1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear +
-    (1 + condition_c * diff_mouse_bear | lab_id) +
-    (1 + condition_c + diff_mouse_bear + condition_c * diff_mouse_bear | participant_lab_id),
+  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s +
+    (1 + condition_c * diff_mouse_bear_s | lab_id) +
+    (1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults")
@@ -3175,7 +3209,7 @@ saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect,
         file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_condition_effect.rds"))
 
 bm_test_adults_diff_mouse_bear_al_diff_effect <- bm_test_adults_diff_mouse_bear_al %>%
-  spread_draws(b_diff_mouse_bear, sigma) %>%
+  spread_draws(b_diff_mouse_bear_s, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -3183,7 +3217,7 @@ saveRDS(bm_test_adults_diff_mouse_bear_al_diff_effect,
         file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_diff_effect.rds"))
 
 bm_test_adults_diff_mouse_bear_al_condition_diff_interaction <- bm_test_adults_diff_mouse_bear_al %>%
-  spread_draws(`b_condition_c:diff_mouse_bear`, sigma) %>%
+  spread_draws(`b_condition_c:diff_mouse_bear_s`, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
@@ -3197,7 +3231,7 @@ Alternate Bayes factor approach
 # Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
 # See https://mc-stan.org/misc/warnings for details.
 bm_test_adults_diff_mouse_bear_al_null <- update(bm_test_adults_diff_mouse_bear_al, 
-                                                 formula = ~ . - condition_c:diff_mouse_bear,
+                                                 formula = ~ . - condition_c:diff_mouse_bear_s,
                                                  cores = n_cores)
 summary(bm_test_adults_diff_mouse_bear_al_null)
 
@@ -3211,7 +3245,23 @@ test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al.rds"))
 ```
+Bridge sampling: diff_mouse_bear effect
 
+```{r}
+bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null <- update(bm_test_adults_diff_mouse_bear_al, 
+                                                 formula = ~ . - diff_mouse_bear_s,
+                                                 cores = n_cores)
+summary(bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null)
+
+saveRDS(bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null,
+        file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null.rds"))
+
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. Estimate might be more variable than usual.Iteration: 1
+test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect <- brms::bayes_factor(bm_test_adults_diff_mouse_bear_al, bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null)
+
+saveRDS(test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect,
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect.rds"))
+```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
