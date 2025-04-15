@@ -3068,8 +3068,8 @@ AL_diff_mouse_bear <- ggplot(summarize_participant_test_both_trials_lc,
   facet_wrap(condition ~ age_cohort) +
   theme_set(theme_cowplot(font_size = 24)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
-  scale_fill_brewer(palette = "Set1") +
-  xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)") +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +  xlab("Difference in looking time to mouse and bear\nduring location change of mouse (in ms)") +
   ylab("AL in test trials")
 
 AL_diff_mouse_bear
@@ -3789,25 +3789,11 @@ overall_p_test_location <- ggplot(
   summarize_participant_test_first_trial_wo_NA_location,
   aes(x = condition, y = prop_exit, color = condition)
 ) +
-  # geom_violin()+
-  # geom_boxplot()+
-  geom_beeswarm(alpha = 0.2, cex = 0.5) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
   geom_half_violin(
-    aes(fill = condition),
-    side = "r", # Right side for the violin plot
-    position = position_nudge(x = 0.3), # Nudge to avoid overlap with points
-    width = 0.4,
-    alpha = 0.2
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
- # geom_half_violin(
- #   data = filter(summarize_participant_test_first_trial, condition == "ignorance"),
- #   aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
-#  ) +
- # geom_half_violin(
- #   data = filter(summarize_participant_test_first_trial, condition == "knowledge"),
- #   aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-#  ) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1, color = "black") +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.6, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
@@ -3816,12 +3802,16 @@ overall_p_test_location <- ggplot(
   theme(legend.position = "none") +
   ggtitle("Test") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  ylab("Proportion DLS\n(Anticipatory Window, First Trial)")
 overall_p_test_location
 ggsave(here(plot_path, "test_overall_proportion_target_exit_looking_by_location.png"),
   bg = "white", width = 9, height = 6
 )
- ```
+ggsave(here(paper_path, "FigureS6.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+ 
 
 ```{r}
 # Summary statistics by location and t-test against chance
@@ -3975,6 +3965,23 @@ test_m_comparison_toddlers_location_al <- brms::bayes_factor(bm_test_toddlers_lo
 saveRDS(test_m_comparison_toddlers_location_al, 
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_location_al.rds"))
 ```
+Bridge sampling Bayes factor approach: location effect
+
+```{r}
+bm_test_toddlers_location_al_location_c_null <- update(bm_test_toddlers_location_al, 
+                                          formula = ~ . - location_c,
+                                          cores = n_cores)
+summary(bm_test_toddlers_location_al_location_c_null)
+
+saveRDS(bm_test_toddlers_location_al_location_c_null, 
+        file = here(model_fits_dir, "bm_test_toddlers_location_al_location_c_null.rds"))
+
+test_m_comparison_toddlers_location_al_location_c <- brms::bayes_factor(bm_test_toddlers_location_al, 
+                                                           bm_test_toddlers_location_al_location_c_null)
+
+saveRDS(test_m_comparison_toddlers_location_al_location_c, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_location_al_location_c.rds"))
+```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
@@ -3982,6 +3989,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 # remove Bayes model fits
 rm(bm_test_toddlers_location_al)
 rm(bm_test_toddlers_location_al_null)
+rm(bm_test_toddlers_location_al_location_c_null)
 gc()
 ```
 
@@ -4040,13 +4048,30 @@ test_m_comparison_adults_location_al <- brms::bayes_factor(bm_test_adults_locati
 saveRDS(test_m_comparison_adults_location_al, 
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_location_al.rds"))
 ```
+Bridge sampling Bayes factor approach: location effect
 
+```{r}
+bm_test_adults_location_al_location_c_null <- update(bm_test_adults_location_al, 
+                                          formula = ~ . - location_c,
+                                          cores = n_cores)
+summary(bm_test_adults_location_al_location_c_null)
+
+saveRDS(bm_test_adults_location_al_location_c_null, 
+        file = here(model_fits_dir, "bm_test_adults_location_al_location_c_null.rds"))
+
+test_m_comparison_adults_location_al_location_c <- brms::bayes_factor(bm_test_adults_location_al, 
+                                                           bm_test_adults_location_al_location_c_null)
+
+saveRDS(test_m_comparison_adults_location_al_location_c, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_adults_location_al_location_c.rds"))
+```
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_test_adults_location_al)
 rm(bm_test_adults_location_al_null)
+rm(bm_test_adults_location_al_location_c_null)
 gc()
 ```
 
@@ -4140,12 +4165,31 @@ saveRDS(fam_m_comparison_toddlers_location_al,
         file = here(RESULTS_FOLDER, "fam_m_comparison_toddlers_location_al.rds"))
 ```
 
+Bridge sampling Bayes factor approach: prev_location effect
+
+```{r}
+bm_fam_toddlers_location_al_prev_location_c_null <- update(bm_fam_toddlers_location_al, 
+                                          formula = ~ . - prev_location_c,
+                                          cores = n_cores)
+summary(bm_fam_toddlers_location_al_prev_location_c_null)
+
+saveRDS(bm_fam_toddlers_location_al_prev_location_c_null, 
+        file = here(model_fits_dir, "bm_fam_toddlers_location_al_prev_location_c_null.rds"))
+
+fam_m_comparison_toddlers_location_al_prev_location_c <- brms::bayes_factor(bm_fam_toddlers_location_al, 
+                                                           bm_fam_toddlers_location_al_prev_location_c_null)
+
+saveRDS(fam_m_comparison_toddlers_location_al_prev_location_c, 
+        file = here(RESULTS_FOLDER, "fam_m_comparison_toddlers_location_al_prev_location_c.rds"))
+```
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_fam_toddlers_location_al)
 rm(bm_fam_toddlers_location_al_null)
+rm(bm_fam_toddlers_location_al_prev_location_c_null)
 gc()
 ```
 
@@ -4218,12 +4262,32 @@ saveRDS(fam_m_comparison_adults_location_al,
         file = here(RESULTS_FOLDER, "fam_m_comparison_adults_location_al.rds"))
 ```
 
+Bridge sampling Bayes factor approach: prev_location effect
+
+```{r}
+bm_fam_adults_location_al_prev_location_c_null <- update(bm_fam_adults_location_al, 
+                                          formula = ~ . - prev_location_c,
+                                          cores = n_cores)
+summary(bm_fam_adults_location_al_prev_location_c_null)
+
+saveRDS(bm_fam_adults_location_al_prev_location_c_null, 
+        file = here(model_fits_dir, "bm_fam_adults_location_al_prev_location_c_null.rds"))
+
+fam_m_comparison_adults_location_al_prev_location_c <- brms::bayes_factor(bm_fam_adults_location_al, 
+                                                           bm_fam_adults_location_al_prev_location_c_null)
+
+saveRDS(fam_m_comparison_adults_location_al_prev_location_c, 
+        file = here(RESULTS_FOLDER, "fam_m_comparison_adults_location_al_prev_location_c.rds"))
+```
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_fam_adults_location_al)
+rm(bm_fam_adults_location_al_prev_location_c_null)
 rm(bm_fam_adults_location_al_null)
+
 gc()
 ```
 
