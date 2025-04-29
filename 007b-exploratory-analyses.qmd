@@ -3208,6 +3208,18 @@ saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al_diff_mouse_bear_effect,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al_diff_mouse_bear_effect.rds"))
 ```
 
+Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_toddlers_diff_mouse_bear_al <- hypothesis(bm_test_toddlers_diff_mouse_bear_al, "condition_c:diff_mouse_bear_s = 0", class = "b")
+h_test_toddlers_diff_mouse_bear_al
+# evidence in favor of interaction being different from zero
+1 / h_test_toddlers_diff_mouse_bear_al$hypothesis$Evid.Ratio
+saveRDS(h_test_toddlers_diff_mouse_bear_al, 
+        file = here(RESULTS_FOLDER, "h_test_toddlers_diff_mouse_bear_al.rds"))
+```
+
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
@@ -3262,7 +3274,7 @@ saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction,
         file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_condition_diff_interaction.rds"))
 ```
 
-Alternate Bayes factor approach
+Bridge sampling: interaction effect
 
 ```{r}
 # Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
@@ -3282,6 +3294,18 @@ test_m_comparison_adults_diff_mouse_bear_al <- brms::bayes_factor(bm_test_adults
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al.rds"))
 ```
+
+Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_adults_diff_mouse_bear_al <- hypothesis(bm_test_adults_diff_mouse_bear_al, "condition_c:diff_mouse_bear_s = 0", class = "b")
+h_test_adults_diff_mouse_bear_al
+# evidence in favor of interaction being different from zero
+1 / h_test_adults_diff_mouse_bear_al$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_diff_mouse_bear_al, 
+        file = here(RESULTS_FOLDER, "h_test_adults_diff_mouse_bear_al.rds"))
+```
+
 Bridge sampling: diff_mouse_bear effect
 
 ```{r}
@@ -3298,6 +3322,17 @@ test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect <- brms::baye
 
 saveRDS(test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_diff_mouse_bear_al_diff_mouse_bear_effect.rds"))
+```
+
+Alternative bayes factor computation for diff_mouse_bear effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_adults_diff_mouse_bear_al_diff_mouse_bear <- hypothesis(bm_test_adults_diff_mouse_bear_al, "diff_mouse_bear_s = 0", class = "b")
+h_test_adults_diff_mouse_bear_al_diff_mouse_bear
+# evidence in favor of interaction being different from zero
+1 / h_test_adults_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_diff_mouse_bear_al, 
+        file = here(RESULTS_FOLDER, "h_test_adults_diff_mouse_bear_al_diff_mouse_bear.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
