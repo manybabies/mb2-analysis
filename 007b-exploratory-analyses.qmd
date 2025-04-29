@@ -2808,12 +2808,21 @@ ggsave(here(paper_path, "Figure7.png"),
 
 #### Toddlers
 ```{r}
-bm_test_toddlers_shifts_al <- brm_default(
+bm_test_toddlers_shifts_al <- brm(
   prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
     (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
   family = gaussian,
   prior = priors_default,
+    save_pars = save_pars(all = TRUE),
+  warmup = 1000,
+  iter = 20000,
+  chains = 4,
+  backend = cur_backend,
+  cores = n_cores,
+  seed = 123,
+  sample_prior = TRUE,
+  control = default_control_list,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
 )
 summary(bm_test_toddlers_shifts_al)
@@ -2910,7 +2919,7 @@ bm_test_adults_shifts_al <- brm(
     select(prop_exit, condition_c, num_shifts, participant_lab_id, lab_id),
   save_pars = save_pars(all = TRUE),
   warmup = 1000,
-  iter = 20000,
+  iter = 30000,
   chains = 4,
   backend = cur_backend,
   cores = n_cores,
@@ -2952,6 +2961,8 @@ saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction,
         file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_condition_num_shits_interaction.rds"))
 ```
 
+##### Interaction
+
 Compute Bayes factor using bridge sampling
 
 ```{r}
@@ -2971,6 +2982,20 @@ saveRDS(test_m_comparison_adults_shifts_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al.rds"))
 ```
 
+Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
+h_test_adults_shifts_al_num_shifts
+#plot(h_test_adults_shifts_al_num_shifts)
+# evidence in favor of condition being different from zero
+1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_shifts_al_num_shifts, 
+        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
+```
+
+##### Number of Shifts
+
 Bridge sampling Bayes factor approach: Number of shifts Effect
 
 ```{r}
@@ -2984,18 +3009,30 @@ saveRDS(bm_test_adults_shifts_al_num_shifts_null,
 
 test_m_comparison_adults_shifts_al_num_shifts <- brms::bayes_factor(bm_test_adults_shifts_al, 
                                                            bm_test_adults_shifts_al_num_shifts_null)
-# Warning: Infinite value in iterative scheme, returning NA.
-# Try rerunning with more samples.
  
 saveRDS(test_m_comparison_adults_shifts_al_num_shifts, 
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al_num_shifts.rds"))
 ```
+
+Alternative bayes factor computation for number of shifts (due to challenges with bridge sampling)
+
+```{r}
+h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
+h_test_adults_shifts_al_num_shifts
+plot(h_test_adults_shifts_al_num_shifts)
+# evidence in favor of condition being different from zero
+1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_shifts_al_num_shifts, 
+        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
+```
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_test_adults_shifts_al)
 rm(bm_test_adults_shifts_al_null)
+rm(bm_test_adults_shifts_al_num_shifts_null)
 gc()
 ```
 
