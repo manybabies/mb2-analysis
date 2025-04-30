@@ -2919,7 +2919,7 @@ bm_test_adults_shifts_al <- brm(
     select(prop_exit, condition_c, num_shifts, participant_lab_id, lab_id),
   save_pars = save_pars(all = TRUE),
   warmup = 1000,
-  iter = 30000,
+  iter = 20000,
   chains = 4,
   backend = cur_backend,
   cores = n_cores,
