@@ -2952,13 +2952,13 @@ bm_test_adults_shifts_al_num_shifts_effect <- bm_test_adults_shifts_al %>%
 saveRDS(bm_test_adults_shifts_al_num_shifts_effect,
         file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_num_shifts_effect.rds"))
 
-bm_test_adults_shifts_al_condition_num_shits_interaction <- bm_test_adults_shifts_al %>%
+bm_test_adults_shifts_al_condition_num_shifts_interaction <- bm_test_adults_shifts_al %>%
   spread_draws(`b_condition_c:num_shifts`, sigma) %>%
   mean_hdi(.width = 0.95)
 
 # cache
-saveRDS(bm_test_adults_shifts_al_condition_num_shits_interaction,
-        file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_condition_num_shits_interaction.rds"))
+saveRDS(bm_test_adults_shifts_al_condition_num_shifts_interaction,
+        file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_condition_num_shifts_interaction.rds"))
 ```
 
 ##### Interaction
@@ -2985,13 +2985,12 @@ saveRDS(test_m_comparison_adults_shifts_al,
 Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
 
 ```{r}
-h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
-h_test_adults_shifts_al_num_shifts
-#plot(h_test_adults_shifts_al_num_shifts)
+h_test_adults_shifts_al_interaction <- hypothesis(bm_test_adults_shifts_al, "condition_c:num_shifts = 0", class = "b")
+h_test_adults_shifts_al_interaction
 # evidence in favor of condition being different from zero
-1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
-saveRDS(h_test_adults_shifts_al_num_shifts, 
-        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
+1 / h_test_adults_shifts_al_interaction$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_shifts_al_interaction, 
+        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_interaction.rds"))
 ```
 
 ##### Number of Shifts
