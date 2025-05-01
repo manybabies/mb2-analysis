@@ -1403,7 +1403,21 @@ include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
 
 #### AL as a function of number of gaze shifts between mouse and bear during location change
 
-In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately (see Figure 9). The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
+```{r Results table of Bayesian regression models for al number of shifts, warning=FALSE}
+
+combined_brm_results_al_shifts_with_blanks <- combined_brm_results_al_shifts %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
+
+papaja::apa_table(combined_brm_results_al_shifts_with_blanks,
+                  caption = "Results of the Bayesian mixed effects models for anticipatory looking as a function of the number of shifts during location change of the mouse.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align = c("l", "l", "r", "r", "r", "r", "r"))
+```
+
+In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately (see Figure 9 and Table 7 for the results of Bayesian mixed effects models). The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
 For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_shifts_al$bf)` was computed, indicating that the data extremely favored the null model over the full model. A Bayes Factor comparison also provided extreme evidence against including the fixed effect of number of shifts, `r format_bayes_factor(test_m_comparison_toddlers_shifts_al_num_shifts$bf)`. These results suggest that, for toddlers, condition influenced proportional DLS, but the number of location shifts—either alone or in interaction with condition—did not meaningfully contribute to explaining variation in their looking behavior.
 

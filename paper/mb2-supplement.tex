@@ -445,19 +445,19 @@ The analyses demonstrate that parameter estimates were generally robust across p
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{threeparttable}
-\begin{tabular}[t]{lllrll}
+\begin{tabular}[t]{lllrl}
 \toprule
-Age Cohort & Phase & Prior & Bayes Factor & Parameter Estimates & Sensitivity\\
+Age Cohort & Phase & Prior & Bayes Factor & Parameter Estimates\\
 \midrule
-Toddlers & Familiarization & Weakly Informative & 7180 & Intercept: 0.44, Main Effect: -0.22 & Low\\
- &  & Less Informative & 10763 & Intercept: 0.45, Main Effect: -0.23 & Low\\
-Adults &  & Weakly Informative & 2242713044 & Intercept: 1.03, Main Effect: 0.38 & Low\\
- &  & Less Informative & 5201436143831125852160 & Intercept: 1.06, Main Effect: 0.40 & Low\\
-Toddlers & Test & Weakly Informative & 2.4 & Intercept: 0.53, Main Effect: 0.53, Interaction: -0.13 & High\\
+Toddlers & Familiarization & Weakly Informative & 7180 & Intercept: 0.44, Main Effect: -0.22\\
+ &  & Less Informative & 10763 & Intercept: 0.45, Main Effect: -0.23\\
+Adults &  & Weakly Informative & 2242713044 & Intercept: 1.03, Main Effect: 0.38\\
+ &  & Less Informative & 5201436143831125852160 & Intercept: 1.06, Main Effect: 0.40\\
+Toddlers & Test & Weakly Informative & 2.4 & Intercept: 0.53, Main Effect: 0.53, Interaction: -0.13\\
 \addlinespace
- &  & Less Informative & 1 & Intercept: 0.57, Main Effect: 0.56, Interaction: -0.14 & High\\
-Adults &  & Weakly Informative & 157455 & Intercept: 0.05, Main Effect: -0.89 & Moderate\\
- &  & Less Informative & 1889 & Intercept: 0.06, Main Effect: -0.96 & Moderate\\
+ &  & Less Informative & 1 & Intercept: 0.57, Main Effect: 0.56, Interaction: -0.14\\
+Adults &  & Weakly Informative & 157455 & Intercept: 0.05, Main Effect: -0.89\\
+ &  & Less Informative & 1889 & Intercept: 0.06, Main Effect: -0.96\\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}[para]
@@ -479,11 +479,11 @@ In sum, the analysis suggests that the method used (web-based vs.~in-lab) does n
 
 \subsection{AL as a function of differential fixation times of bear and mouse during location change of the mouse}\label{al-as-a-function-of-differential-fixation-times-of-bear-and-mouse-during-location-change-of-the-mouse}
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately. The dependent variable was the proportion DLS. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately (see Figure S5 and Table S4). The dependent variable was the proportion DLS. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
 Due to limitations with bridge sampling, Bayes factors were computed using the Savage-Dickey density ratio method. These analyses provided moderate evidence against including both the fixed effect of difference in fixation times of mouse and bear, BF = 0.3, and its interaction with condition, BF = 0.2. These results suggest that the difference in looking time to mouse versus bear, either alone or in interaction with condition, did not meaningfully account for variance in toddlers' proportional DLS.
 
-To assess whether proportional DLS in adults was predicted by condition, the difference in looking time between the mouse and bear, and their interaction, we fit a Bayesian mixed-effects model. There was a strong negative main effect of condition, indicating lower proportional DLS in the ignorance condition compared to the knowledge condition (Estimate = --0.21, 95\% CI {[}--0.29, --0.13{]}). We also observed a negative main effect of mouse-bear looking difference, with greater looking toward the bear (relative to the mouse) associated with higher proportion DLS (Estimate = --0.04, 95\% CI {[}--0.05, --0.02{]}). The interaction between condition and looking difference was close to zero and uncertain (Estimate = 0.01, 95\% CI {[}--0.02, 0.04{]}).
+To assess whether proportional DLS in adults was predicted by condition, the difference in looking time between the mouse and bear, and their interaction, we fit a Bayesian mixed-effects model. There was a strong negative main effect of condition, indicating lower proportional DLS in the ignorance condition compared to the knowledge condition. We also observed a negative main effect of mouse-bear looking difference, with greater looking toward the bear (relative to the mouse) associated with higher proportion DLS. The interaction between condition and looking difference was close to zero and uncertain.
 
 Bayes factors computed using the Savage-Dickey method provided overwhelming evidence in favor of including the fixed effect of the difference in looking time between the mouse and bear, BF \textgreater{} 1000, and moderate evidence against including the interaction term, BF = 0.2. These results suggest that both condition and mouse-versus-bear looking independently predict proportional DLS in adults, but their interaction does not appear to contribute meaningfully.
 
@@ -496,13 +496,45 @@ Bayes factors computed using the Savage-Dickey method provided overwhelming evid
 \caption{AL as a function of the difference in looking time to mouse and bear during location change of mouse (in ms) for each age cohort and each condition.}\label{fig:fig10}
 \end{figure}
 
+\begin{center}
+\begin{ThreePartTable}
+
+\footnotesize{
+
+\begin{longtable}{llrrrrr}\noalign{\getlongtablewidth\global\LTcapwidth=\longtablewidth}
+\caption{\label{tab:Results table of Bayesian regression models for al as a function of the difference in mouse-bear looking}Results of the Bayesian mixed effects models for anticipatory looking as a function of the difference in mouse-bear looking.}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endfirsthead
+\caption*{\normalfont{Table \ref{tab:Results table of Bayesian regression models for al as a function of the difference in mouse-bear looking} continued}}\\
+\toprule
+model & \multicolumn{1}{c}{term} & \multicolumn{1}{c}{estimate} & \multicolumn{1}{c}{est\_error} & \multicolumn{1}{c}{lower\_ci} & \multicolumn{1}{c}{upper\_ci} & \multicolumn{1}{c}{rhat}\\
+\midrule
+\endhead
+toddlers diff & Intercept & 0.57 & 0.03 & 0.52 & 0.62 & 1.00\\
+ & Condition & 0.08 & 0.04 & -0.01 & 0.17 & 1.00\\
+ & Difference Mouse-Bear & 0.01 & 0.01 & 0.00 & 0.03 & 1.00\\
+ & Condition:Difference Mouse-Bear & 0.01 & 0.02 & -0.03 & 0.04 & 1.00\\
+adults diff & Intercept & 0.64 & 0.02 & 0.59 & 0.68 & 1.00\\
+ & Condition & -0.21 & 0.04 & -0.29 & -0.13 & 1.00\\
+ & Difference Mouse-Bear & -0.04 & 0.01 & -0.05 & -0.02 & 1.00\\
+ & Condition:Difference Mouse-Bear & 0.01 & 0.02 & -0.02 & 0.04 & 1.00\\
+\bottomrule
+\end{longtable}
+
+}
+
+\end{ThreePartTable}
+\end{center}
+
 \subsection{Influence of target location from previous trials}\label{influence-of-target-location-from-previous-trials}
 
 \subsubsection{Test phase: Influence of target location from last familarization on proportional target looking in first test trial}\label{test-phase-influence-of-target-location-from-last-familarization-on-proportional-target-looking-in-first-test-trial}
 
 We examined whether proportion DLS in the first test trial was influenced by condition, the location of the target in the preceding familiarization trial (same vs.~different), and their interaction. Separate Bayesian mixed-effects models were fitted for toddlers and adults, including random intercepts and slopes for condition by lab.
 
-For toddlers, we found a significant effect of condition, with higher proportion DLS in the ignorance condition compared to the knowledge condition. The effect of location and the interaction between condition and location were not significant (see Table S3). A model comparison testing the inclusion of the location effect yielded a Bayes factor of BF = 0.9, indicating anecdotal evidence against its contribution. A Bayes factor comparison indicated anecdotal evidence against the interaction model, with
+For toddlers, we found a significant effect of condition, with higher proportion DLS in the ignorance condition compared to the knowledge condition. The effect of location and the interaction between condition and location were not significant (see Table S5). A model comparison testing the inclusion of the location effect yielded a Bayes factor of BF = 0.9, indicating anecdotal evidence against its contribution. A Bayes factor comparison indicated anecdotal evidence against the interaction model, with
 BF = 0.6.
 
 For adults, results similarly revealed a significant effect of condition, with greater proportion DLS in the knowledge condition. The main effect of location and the interaction were not significant. The model comparison testing the main effect of location yielded a Bayes factor of BF = 0.3, suggesting moderate evidence against its inclusion. A Bayes factor comparison suggested anecdotal evidence against the inclusion of the interaction term, with BF = 0.8.
@@ -511,7 +543,7 @@ For adults, results similarly revealed a significant effect of condition, with g
 
 We also assessed whether proportion DLS during the familiarization phase was influenced by the target's location in the previous trial, trial number, and their interaction. Separate Bayesian mixed-effects models were fitted for toddlers and adults, with random intercepts for participants and labs.
 
-For toddlers, there was a significant negative effect of previous trial location (see Table S3), indicating that toddlers looked more at the target when it had been on the same side as in the previous trial. The effect of trial number and the interaction were not significant. The model comparison testing the contribution of the location effect alone yielded a Bayes Factor of BF \textgreater{} 1000, indicating extreme evidence in favor of including previous trial location. Furthermore, a Bayes factor analysis provided anecdotal evidence in favor of the full model compared to the null model without the interaction of these predictors, BF = 1.1.
+For toddlers, there was a significant negative effect of previous trial location (see Table S5), indicating that toddlers looked more at the target when it had been on the same side as in the previous trial. The effect of trial number and the interaction were not significant. The model comparison testing the contribution of the location effect alone yielded a Bayes Factor of BF \textgreater{} 1000, indicating extreme evidence in favor of including previous trial location. Furthermore, a Bayes factor analysis provided anecdotal evidence in favor of the full model compared to the null model without the interaction of these predictors, BF = 1.1.
 
 For adults, no predictor reached significance. The Bayes factor for including location was BF = 1.3, providing only anecdotal support for its contribution. The Bayes factor, BF = 0.4, further supports the conclusion that the model including the interaction of the predictors was not substantially better than the null model, providing anecdotal evidence for the null model.
 

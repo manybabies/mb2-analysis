@@ -2835,6 +2835,25 @@ saveRDS(bm_test_toddlers_shifts_al,
         file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_toddlers_shifts_al.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_toddlers_shifts_al_tidy_summary <- as_tibble(summary(bm_test_toddlers_shifts_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_toddlers_shifts_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_toddlers_shifts_al_model_summary.rds")
+)
+```
+
 ```{r}
 # get main coefficient estimate and HDI
 bm_test_toddlers_shifts_al_condition_effect <- bm_test_toddlers_shifts_al %>%
@@ -2935,10 +2954,31 @@ bm_test_adults_shifts_al <- brm(
 summary(bm_test_adults_shifts_al)
 prior_summary(bm_test_adults_shifts_al)
 
+bm_test_adults_shifts_al <- readRDS(here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
+
 saveRDS(bm_test_adults_shifts_al,
         file = here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
 bm_test_adults_shifts_al <- readRDS(here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
 
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_adults_shifts_al_tidy_summary <- as_tibble(summary(bm_test_adults_shifts_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_adults_shifts_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_adults_shifts_al_model_summary.rds")
+)
 ```
 
 ```{r}
@@ -3006,18 +3046,13 @@ saveRDS(test_m_comparison_adults_shifts_al,
 Alternative bayes factor computation for number of shifts (due to challenges with bridge sampling)
 
 ```{r}
-<<<<<<< Updated upstream
-h_test_adults_shifts_al_interaction <- hypothesis(bm_test_adults_shifts_al, "condition_c:num_shifts = 0", class = "b")
-h_test_adults_shifts_al_interaction
-=======
 h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
 h_test_adults_shifts_al_num_shifts
 plot(h_test_adults_shifts_al_num_shifts)
->>>>>>> Stashed changes
 # evidence in favor of condition being different from zero
-1 / h_test_adults_shifts_al_interaction$hypothesis$Evid.Ratio
-saveRDS(h_test_adults_shifts_al_interaction, 
-        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_interaction.rds"))
+1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_shifts_num_shifts, 
+        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
 ```
 
 Bridge sampling Bayes factor approach: Number of shifts Effect
@@ -3046,6 +3081,46 @@ rm(bm_test_adults_shifts_al)
 rm(bm_test_adults_shifts_al_null)
 rm(bm_test_adults_shifts_al_num_shifts_null)
 gc()
+```
+
+#### Creating results tables for Bayesian mixed effects models of AL as a function of the number of gaze shifts during location change of the mouse
+
+```{r}
+table_names_al_shifts <- c("bm_test_toddlers_shifts_al_tidy_summary", "bm_test_adults_shifts_al_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata_fam <- function(table_names_al_shifts) {
+  parts <- strsplit(table_names_al_shifts, "_")[[1]]
+  list(
+    measure = parts[3], # e.g., "test"
+    age_cohort = parts[4]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_al_shifts <- table_names_al_shifts %>%
+  map_df(~ {
+    metadata <- extract_metadata_fam(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("num_shifts", "Number Shifts"))
+
+
+# View the combined table
+print(combined_brm_results_al_shifts)
+
+saveRDS(combined_brm_results_al_shifts,
+  file = here(RESULTS_FOLDER, "combined_brm_results_al_shifts.rds")
+)
 ```
 
 ### 5.3. Anticipatory looking as a function of fixation times of bear and mouse during location change of the mouse
@@ -3152,6 +3227,25 @@ prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
 saveRDS(bm_test_toddlers_diff_mouse_bear_al,
         file = here(model_fits_dir, "bm_test_toddlers_diff_mouse_bear_al.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_toddlers_diff_mouse_bear_al_tidy_summary <- as_tibble(summary(bm_test_toddlers_diff_mouse_bear_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_toddlers_diff_mouse_bear_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_toddlers_diff_mouse_bear_al_model_summary.rds")
+)
 ```
 
 ```{r}
@@ -3269,11 +3363,32 @@ saveRDS(bm_test_adults_diff_mouse_bear_al,
         file = here(model_fits_dir, "bm_test_adults_diff_mouse_bear_al.rds"))
 ```
 
+Organize table in a tidy format
+
+```{r}
+bm_test_adults_diff_mouse_bear_al_tidy_summary <- as_tibble(summary(bm_test_adults_diff_mouse_bear_al)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_adults_diff_mouse_bear_al_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_model_summary.rds")
+)
+```
+
 ```{r}
 # get main coefficient estimate and HDI
 bm_test_adults_diff_mouse_bear_al_condition_effect <- bm_test_adults_diff_mouse_bear_al %>%
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
+
+coefs <- fixef(bm_test_adults_diff_mouse_bear_al)
 
 # cache
 saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect,
@@ -3364,6 +3479,45 @@ Remove the Bayes models from the environment (because the model objects are quit
 rm(bm_test_adults_diff_mouse_bear_al)
 rm(bm_test_adults_diff_mouse_bear_al_null)
 gc()
+```
+
+#### Creating results tables for Bayesian mixed effects models of AL as a function of the number of gaze shifts during location change of the mouse
+
+```{r}
+table_names_al_diff_mouse_bear <- c("bm_test_toddlers_diff_mouse_bear_al_tidy_summary", "bm_test_adults_diff_mouse_bear_al_tidy_summary")
+
+# Create a function to extract age cohort and test phase from the table names
+extract_metadata_fam <- function(table_names_al_diff_mouse_bear) {
+  parts <- strsplit(table_names_al_diff_mouse_bear, "_")[[1]]
+  list(
+    measure = parts[3], # e.g., "test"
+    age_cohort = parts[4]  # e.g., "adults"
+  )
+}
+
+# Combine all tables into one
+combined_brm_results_al_diff_mouse_bear <- table_names_al_diff_mouse_bear %>%
+  map_df(~ {
+    metadata <- extract_metadata_fam(.x)
+    get(.x) %>% 
+      mutate(
+        measure = metadata$measure,
+        age_cohort = metadata$age_cohort,
+        model = paste(measure, age_cohort, sep = " ")
+      )
+  }) %>%
+  select(model, everything()) %>% # Reorder columns 
+  select(-measure, -age_cohort) %>% 
+  mutate(term = term %>%
+    str_replace_all("condition_c", "Condition") %>%
+    str_replace_all("diff_mouse_bear_s", "Difference Mouse-Bear"))
+
+# View the combined table
+print(combined_brm_results_al_diff_mouse_bear)
+
+saveRDS(combined_brm_results_al_diff_mouse_bear,
+  file = here(RESULTS_FOLDER, "combined_brm_results_al_diff_mouse_bear.rds")
+)
 ```
 
 ### 5.4. Distraction

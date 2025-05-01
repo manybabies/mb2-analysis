@@ -412,9 +412,7 @@ bayesian_results <- data.frame(
     "Intercept: 0.53, Main Effect: 0.53, Interaction: -0.13",
     "Intercept: 0.57, Main Effect: 0.56, Interaction: -0.14",
     "Intercept: 0.05, Main Effect: -0.89",
-    "Intercept: 0.06, Main Effect: -0.96"),
-  Sensitivity = c("Low", "Low", "Low", "Low", 
-                  "High", "High", "Moderate", "Moderate")
+    "Intercept: 0.06, Main Effect: -0.96")
 )
 
 
@@ -430,7 +428,7 @@ bayesian_results <- data.frame(
 
 tS3_caption <- "Summary of Bayesian Results Across Phases and Priors."
 
-kable(bayesian_results, caption = tS3_caption, format = "latex", booktabs=TRUE, align=c("l","l","l","r","l","l"),col.names = c("Age Cohort","Phase", "Prior", "Bayes Factor","Parameter Estimates", "Sensitivity"),rep("c",4)) %>%
+kable(bayesian_results, caption = tS3_caption, format = "latex", booktabs=TRUE, align=c("l","l","l","r","l"),col.names = c("Age Cohort","Phase", "Prior", "Bayes Factor","Parameter Estimates"),rep("c",4)) %>%
   kable_styling(latex_options="scale_down") %>%
   footnote(general = "BFs reported for the familiarization phase are model comparisons without the intercept. BFS reported for the test phase are model comparisons without the fixed effect of condition.",
            threeparttable = TRUE, 
@@ -451,7 +449,6 @@ For adults, the main effect of method was slightly negative but uncertain, sugge
 In sum, the analysis suggests that the method used (web-based vs. in-lab) does not have a strong impact on AL, as the effect of method and its interaction with condition were small and uncertain. Additionally, the results should be interpreted with caution due to the relatively small sample size for web-based data compared to in-lab data collection, which may limit the robustness of the findings.
 
 ## AL as a function of differential fixation times of bear and mouse during location change of the mouse  
-<!-- MSS: I feel like this does not add anything and I would possibly put it into the supplement. What do you think?-->
 
 ```{r Fixed effect for difference in mouse-bear looking on AL, warning=FALSE}
 
@@ -466,11 +463,11 @@ b_adults_diff_mouse_bear_estimate_diff_mouse_bear_interaction <- bm_test_adults_
 
 ```
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately. The dependent variable was the proportion DLS. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately (see Figure S5 and Table S4). The dependent variable was the proportion DLS. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
 Due to limitations with bridge sampling, Bayes factors were computed using the Savage-Dickey density ratio method. These analyses provided moderate evidence against including both the fixed effect of difference in fixation times of mouse and bear, `r format_bayes_factor(1 / h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio)`, and its interaction with condition, `r format_bayes_factor(1 / h_test_toddlers_diff_mouse_bear_al$hypothesis$Evid.Ratio)`. These results suggest that the difference in looking time to mouse versus bear, either alone or in interaction with condition, did not meaningfully account for variance in toddlers’ proportional DLS.
 
-To assess whether proportional DLS in adults was predicted by condition, the difference in looking time between the mouse and bear, and their interaction, we fit a Bayesian mixed-effects model. There was a strong negative main effect of condition, indicating lower proportional DLS in the ignorance condition compared to the knowledge condition (Estimate = –0.21, 95% CI [–0.29, –0.13]). We also observed a negative main effect of mouse-bear looking difference, with greater looking toward the bear (relative to the mouse) associated with higher proportion DLS (Estimate = –0.04, 95% CI [–0.05, –0.02]). The interaction between condition and looking difference was close to zero and uncertain (Estimate = 0.01, 95% CI [–0.02, 0.04]).
+To assess whether proportional DLS in adults was predicted by condition, the difference in looking time between the mouse and bear, and their interaction, we fit a Bayesian mixed-effects model. There was a strong negative main effect of condition, indicating lower proportional DLS in the ignorance condition compared to the knowledge condition. We also observed a negative main effect of mouse-bear looking difference, with greater looking toward the bear (relative to the mouse) associated with higher proportion DLS. The interaction between condition and looking difference was close to zero and uncertain.
 
 Bayes factors computed using the Savage-Dickey method provided overwhelming evidence in favor of including the fixed effect of the difference in looking time between the mouse and bear, `r format_bayes_factor(1 / h_test_adults_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio)`, and moderate evidence against including the interaction term, `r format_bayes_factor(1 / h_test_adults_diff_mouse_bear_al$hypothesis$Evid.Ratio)`. These results suggest that both condition and mouse-versus-bear looking independently predict proportional DLS in adults, but their interaction does not appear to contribute meaningfully.
 
@@ -478,25 +475,36 @@ Bayes factors computed using the Savage-Dickey method provided overwhelming evid
 include_graphics(here("paper","Figure8.png"),rel_path=FALSE)
 ```
 
+```{r Results table of Bayesian regression models for al as a function of the difference in mouse-bear looking, warning=FALSE}
+
+combined_brm_results_al_diff_mouse_bear_with_blanks <- combined_brm_results_al_diff_mouse_bear %>%
+  group_by(model) %>%
+  mutate(model = ifelse(row_number() == 1, model, "")) %>%
+  ungroup()
+
+papaja::apa_table(combined_brm_results_al_diff_mouse_bear_with_blanks,
+                  caption = "Results of the Bayesian mixed effects models for anticipatory looking as a function of the difference in mouse-bear looking.",
+                  format.args = list(digits = 2),
+                  longtable = TRUE,font_size="footnotesize",
+                  align = c("l", "l", "r", "r", "r", "r", "r"))
+```
+
 ## Influence of target location from previous trials
 
 ### Test phase: Influence of target location from last familarization on proportional target looking in first test trial
-
 We examined whether proportion DLS in the first test trial was influenced by condition, the location of the target in the preceding familiarization trial (same vs. different), and their interaction. Separate Bayesian mixed-effects models were fitted for toddlers and adults, including random intercepts and slopes for condition by lab.
 
-For toddlers, we found a significant effect of condition, with higher proportion DLS in the ignorance condition compared to the knowledge condition. The effect of location and the interaction between condition and location were not significant (see Table S3). A model comparison testing the inclusion of the location effect yielded a Bayes factor of `r format_bayes_factor(test_m_comparison_toddlers_location_al_location_c$bf)`, indicating anecdotal evidence against its contribution. A Bayes factor comparison indicated anecdotal evidence against the interaction model, with 
+For toddlers, we found a significant effect of condition, with higher proportion DLS in the ignorance condition compared to the knowledge condition. The effect of location and the interaction between condition and location were not significant (see Table S5). A model comparison testing the inclusion of the location effect yielded a Bayes factor of `r format_bayes_factor(test_m_comparison_toddlers_location_al_location_c$bf)`, indicating anecdotal evidence against its contribution. A Bayes factor comparison indicated anecdotal evidence against the interaction model, with 
 `r format_bayes_factor(test_m_comparison_toddlers_location_al$bf)`.
 
 For adults, results similarly revealed a significant effect of condition, with greater proportion DLS in the knowledge condition. The main effect of location and the interaction were not significant. The model comparison testing the main effect of location yielded a Bayes factor of `r format_bayes_factor(test_m_comparison_adults_location_al_location_c$bf)`, suggesting moderate evidence against its inclusion. A Bayes factor comparison suggested anecdotal evidence against the inclusion of the interaction term, with `r format_bayes_factor(test_m_comparison_adults_location_al$bf)`.
 
 ### Familiarization phase: Influence of target location from previous familiarization trials on proportional target looking
-
 We also assessed whether proportion DLS during the familiarization phase was influenced by the target's location in the previous trial, trial number, and their interaction. Separate Bayesian mixed-effects models were fitted for toddlers and adults, with random intercepts for participants and labs.
 
-For toddlers, there was a significant negative effect of previous trial location (see Table S3), indicating that toddlers looked more at the target when it had been on the same side as in the previous trial. The effect of trial number and the interaction were not significant. The model comparison testing the contribution of the location effect alone yielded a Bayes Factor of `r format_bayes_factor(fam_m_comparison_toddlers_location_al_prev_location_c$bf)`, indicating extreme evidence in favor of including previous trial location. Furthermore, a Bayes factor analysis provided anecdotal evidence in favor of the full model compared to the null model without the interaction of these predictors, `r format_bayes_factor(fam_m_comparison_toddlers_location_al$bf)`.
+For toddlers, there was a significant negative effect of previous trial location (see Table S5), indicating that toddlers looked more at the target when it had been on the same side as in the previous trial. The effect of trial number and the interaction were not significant. The model comparison testing the contribution of the location effect alone yielded a Bayes Factor of `r format_bayes_factor(fam_m_comparison_toddlers_location_al_prev_location_c$bf)`, indicating extreme evidence in favor of including previous trial location. Furthermore, a Bayes factor analysis provided anecdotal evidence in favor of the full model compared to the null model without the interaction of these predictors, `r format_bayes_factor(fam_m_comparison_toddlers_location_al$bf)`.
 
 For adults, no predictor reached significance. The Bayes factor for including location was `r format_bayes_factor(fam_m_comparison_adults_location_al_prev_location_c$bf)`, providing only anecdotal support for its contribution. The Bayes factor, `r format_bayes_factor(fam_m_comparison_adults_location_al$bf)`, further supports the conclusion that the model including the interaction of the predictors was not substantially better than the null model, providing anecdotal evidence for the null model.
-
 ```{r fig11, fig.cap="Proportion DLS during the first test trial for toddlers and adults split by condition (knowledge vs. ignorance) and consistency of location in the previous familiarization trial (same vs. different). Error bars represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","FigureS6.png"),rel_path=FALSE)
 ```
