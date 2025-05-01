@@ -3388,8 +3388,6 @@ bm_test_adults_diff_mouse_bear_al_condition_effect <- bm_test_adults_diff_mouse_
   spread_draws(b_condition_c, sigma) %>%
   mean_hdi(.width = 0.95)
 
-coefs <- fixef(bm_test_adults_diff_mouse_bear_al)
-
 # cache
 saveRDS(bm_test_adults_diff_mouse_bear_al_condition_effect,
         file = here(RESULTS_FOLDER, "bm_test_adults_diff_mouse_bear_al_condition_effect.rds"))
