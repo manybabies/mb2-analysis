@@ -2,25 +2,733 @@
 title             : "Action Anticipation Based on an Agent's Epistemic State in Toddlers and Adults"
 shorttitle        : "EPISTEMIC STATE-BASED ACTION ANTICIPATION"
   
-author: 
-  - name          : "The ManyBabies2 Consortium"
-    affiliation   : "1"
-    corresponding : yes    # Define only one corresponding author
-    address       : "Leopoldstr. 13, 80802 München, Germany"
-    email         : "tobias.schuwerk@psy.lmu.de"
+author:
+  - name: Tobias Schuwerk
+    affiliation: "1"
+    corresponding: yes
+    address: "Leopoldstr. 13, 80802 München, Germany"
+    email: tobias.schuwerk@psy.lmu.de
+  - name: Dora Kampis
+    affiliation: "2"
+    corresponding: no
+    email: dk@psy.ku.dk
+  - name: Nicolás Alessandroni
+    affiliation: "3"
+    corresponding: no
+    email: nicolas.alessandroni@concordia.ca
+  - name: Nicole Altvater-Mackensen
+    affiliation: "4"
+    corresponding: no
+    email: altvater-mackensen@uni-mannheim.de
+  - name: Natalia Arias-Trejo
+    affiliation: "5"
+    corresponding: no
+    email: nariast@unam.mx
+  - name: Emma L. Axelsson
+    affiliation: "6"
+    corresponding: no
+    email: emma.axelsson@newcastle.edu.au
+  - name: Renée Baillargeon
+    affiliation: "7"
+    corresponding: no
+    email: rbaillar@illinois.edu
+  - name: Anna-Elisabeth Baumann
+    affiliation: "8,9"
+    corresponding: no
+    email: anna.baumann@ucalgary.ca
+  - name: Cyann Bernard
+    affiliation: "10"
+    corresponding: no
+    email: cyann.bernard@etu.u-paris.fr
+  - name: Szilvia Biro
+    affiliation: "11,12"
+    corresponding: no
+    email: sbiro@fsw.leidenuniv.nl
+  - name: Tashauna L. Blankenship
+    affiliation: "13"
+    corresponding: no
+    email: tashauna.blankenshi@umb.edu
+  - name: Isa Blomberg
+    affiliation: "14"
+    corresponding: no
+    email: isa.blomberg@uni-goettingen.de
+  - name: Manuel Bohn
+    affiliation: "15,16"
+    corresponding: no
+    email: manuel.bohn@leuphana.de
+  - name: Elisabeth E. F. Bradford
+    affiliation: "17"
+    corresponding: no
+    email: eefb@st-andrews.ac.uk
+  - name: Krista Byers-Heinlein
+    affiliation: "18"
+    corresponding: no
+  - name: Irene Canudas Grabolosa
+    affiliation: "19"
+    corresponding: no
+    email: Irenecanudas@gmail.com
+  - name: Emily M. Chen
+    affiliation: "20,21"
+    corresponding: no
+    email: echen15@mit.edu
+  - name: Xiaoyun Chen
+    affiliation: "22"
+    corresponding: no
+    email: x.chen24@lancaster.ac.uk
+  - name: John Corbit
+    affiliation: "23"
+    corresponding: no
+    email: jcorbit@stfx.ca
+  - name: Cynthia Fisher
+    affiliation: "24"
+    corresponding: no
+    email: clfishe@illinois.edu
+  - name: Samuel H. Forbes
+    affiliation: "25"
+    corresponding: no
+    email: samuel.forbes@durham.ac.uk
+  - name: Laura Franchin
+    affiliation: "26"
+    corresponding: no
+    email: laura.franchin@unitn.it
+  - name: Tess Fulcher
+    affiliation: "27"
+    corresponding: no
+    email: mtfulcher@uchicago.edu
+  - name: Alessandra Geraci
+    affiliation: "28"
+    corresponding: no
+    email: alessandra.geraci@unict.it
+  - name: Nayeli Gonzalez-Gomez
+    affiliation: "29"
+    corresponding: no
+    email: ngonzalez-gomez@brookes.ac.uk
+  - name: Paul Grohmann
+    affiliation: "16"
+    corresponding: no
+    email: paulgrohmann@posteo.de
+  - name: Charlotte Grosse Wiesmann
+    affiliation: "30,31"
+    corresponding: no
+    email: wiesmann@cbs.mpg.de
+  - name: J. Kiley Hamlin
+    affiliation: "32"
+    corresponding: no
+    email: Kiley.hamlin@psych.ubc.ca
+  - name: Daniel Haun
+    affiliation: "33"
+    corresponding: no
+    email: haun@eva.mpg.de
+  - name: Naomi Havron
+    affiliation: "34,35"
+    corresponding: no
+    email: nhavron@psy.haifa.ac.il
+  - name: Robert Hepach
+    affiliation: "36"
+    corresponding: no
+    email: robert.hepach@psy.ox.ac.uk
+  - name: Tone K. Hermansen
+    affiliation: "37"
+    corresponding: no
+    email: t.k.hermansen@psykologi.uio.no
+  - name: Mikołaj Hernik
+    affiliation: "38"
+    corresponding: no
+    email: mikolaj.l.hernik@uit.no
+  - name: Michael Huemer
+    affiliation: "39"
+    corresponding: no
+    email: michael.huemer32@gmail.com
+  - name: Sabine Hunnius
+    affiliation: "40"
+    corresponding: no
+    email: sabine.hunnius@donders.ru.nl
+  - name: Daniel C. Hyde
+    affiliation: "41"
+    corresponding: no
+    email: dchyde@illinois.edu
+  - name: Sagi Jaffe-Dax
+    affiliation: "42"
+    corresponding: no
+    email: jaffedax@tauex.tau.ac.il
+  - name: Krisztina V. Jakobsen
+    affiliation: "43"
+    corresponding: no
+    email: jakobskv@jmu.edu
+  - name: Natalia Kartushina
+    affiliation: "44"
+    corresponding: no
+    email: natalia.kartushina@iln.uio.no
+  - name: Coral Kfir
+    affiliation: "45"
+    corresponding: no
+    email: coralkfir@mail.tau.ac.il
+  - name: Manar Khalaila
+    affiliation: "46"
+    corresponding: no
+    email: manarkhalaily4@gmail.com
+  - name: Osman S. Kingo
+    affiliation: "47"
+    corresponding: no
+    email: osman@psy.au.dk
+  - name: Mona M. Klau
+    affiliation: "48"
+    corresponding: no
+    email: m.klau@uva.nl
+  - name: Ada Koleini
+    affiliation: "37"
+    corresponding: no
+    email: adako@uio.no
+  - name: Abhinav Kona
+    affiliation: "49"
+    corresponding: no
+    email: ak161@rice.edu
+  - name: Shannon P. Kong
+    affiliation: "29"
+    corresponding: no
+    email: 19062026@brookes.ac.uk
+  - name: Heather L. Kosakowski
+    affiliation: "50,51"
+    corresponding: no
+    email: heatherlkosakowski@gmail.com
+  - name: Anna Krämer
+    affiliation: "52"
+    corresponding: no
+    email: anna.kraemer@plus.ac.at
+  - name: Judith L. Krief
+    affiliation: "53"
+    corresponding: no
+    email: kriefjudith@gmail.com
+  - name: Peter Krøjgaard
+    affiliation: "54"
+    corresponding: no
+    email: peter@psy.au.dk
+  - name: Louisa Kulke
+    affiliation: "55"
+    corresponding: no
+    email: kulke@uni-bremen.de
+  - name: Crystal Y. Lee
+    affiliation: "56"
+    corresponding: no
+    email: cl40@princeton.edu
+  - name: Edward W. Legg
+    affiliation: "57,58"
+    corresponding: no
+    email: edward.legg@uniri.hr
+  - name: Tiffany S. Leung
+    affiliation: "59"
+    corresponding: no
+    email: tsl51@miami.edu
+  - name: Casey Lew-Williams
+    affiliation: "60"
+    corresponding: no
+    email: caseylw@princeton.edu
+  - name: Yixun Li
+    affiliation: "61"
+    corresponding: no
+    email: lyixun@eduhk.hk
+  - name: Ulf Liszkowski
+    affiliation: "62"
+    corresponding: no
+    email: ulf.liszkowski@uni-hamburg.de
+  - name: Liquan Liu
+    affiliation: "63,64"
+    corresponding: no
+    email: liquan.liu@uts.edu.au
+  - name: Yiyu Liu
+    affiliation: "65"
+    corresponding: no
+    email: yiyuliu2@illinois.edu
+  - name: Alexander Mackiel
+    affiliation: "66"
+    corresponding: no
+    email: amackiel@uchicago.edu
+  - name: Kyle Mahowald
+    affiliation: "67"
+    corresponding: no
+    email: mahowald@utexas.edu
+  - name: Milena Marx
+    affiliation: "68"
+    corresponding: no
+    email: milena.marx@psychologie.uni-heidelberg.de
+  - name: Olivier Mascaro
+    affiliation: "10"
+    corresponding: no
+    email: olivier.mascaro@gmail.com
+  - name: Magda Matetovici
+    affiliation: "69"
+    corresponding: no
+    email: magda.matetovici@mpi.nl
+  - name: Marlena Mayer
+    affiliation: "62"
+    corresponding: no
+    email: marlena.mayer@uni-hamburg.de
+  - name: Julien Mayor
+    affiliation: "37"
+    corresponding: no
+    email: julien.mayor@psykologi.uio.no
+  - name: Marek Meristo
+    affiliation: "70"
+    corresponding: no
+    email: marek.meristo@psy.gu.se
+  - name: Marlene Meyer
+    affiliation: "71"
+    corresponding: no
+    email: marlene.meyer@donders.ru.nl
+  - name: David Moreau
+    affiliation: "72"
+    corresponding: no
+    email: d.moreau@auckland.ac.nz
+  - name: Hay Mar Myat Kyaw
+    affiliation: "61"
+    corresponding: no
+    email: mhaymar@eduhk.hk
+  - name: Andreea A. Nistor
+    affiliation: "73"
+    corresponding: no
+    email: alexandranistorr@outlook.com
+  - name: Josef Perner
+    affiliation: "52"
+    corresponding: no
+    email: josef.perner@plus.ac.at
+  - name: Stefanie Peykarjou
+    affiliation: "74,75"
+    corresponding: no
+    email: stefanie.peykarjou@charlotte-fresenius-uni.de
+  - name: Que Anh Pham
+    affiliation: "76"
+    corresponding: no
+    email: queanh.pham001@umb.edu
+  - name: Diane Poulin-Dubois
+    affiliation: "77"
+    corresponding: no
+    email: diane.poulindubois@concordia.ca
+  - name: Lindsey J. Powell
+    affiliation: "78"
+    corresponding: no
+    email: ljpowell@ucsd.edu
+  - name: Julia C. Prein
+    affiliation: "16,79"
+    corresponding: no
+    email: julia.prein@leuphana.de
+  - name: Beate Priewasser
+    affiliation: "80"
+    corresponding: no
+    email: beate.priewasser@pmu.ac.at
+  - name: Marina Proft
+    affiliation: "81"
+    corresponding: no
+    email: mproft@uni-goettingen.de
+  - name: Alyssa A. Quinn
+    affiliation: "82"
+    corresponding: no
+    email: Alyssa.Quinn1998@gmail.com
+  - name: Peter J. Reschke
+    affiliation: "83"
+    corresponding: no
+    email: peter_reschke@byu.edu
+  - name: Josephine Ross
+    affiliation: "84"
+    corresponding: no
+    email: juross@dundee.ac.uk
+  - name: Audun Rosslund
+    affiliation: "37,85"
+    corresponding: no
+    email: audunrosslund@gmail.com
+  - name: Katrin Rothmaler
+    affiliation: "86"
+    corresponding: no
+    email: katrin.rothmaler@uni-leipzig.de
+  - name: Petra Šarić
+    affiliation: "57,87"
+    corresponding: no
+    email: ppetrasaric@gmail.com
+  - name: Karola Schlegelmilch
+    affiliation: "88,89"
+    corresponding: no
+    email: Karola.schlegelmilch@uni-leipzig.de
+  - name: Dana Schneider
+    affiliation: "90"
+    corresponding: no
+    email: msdanaschneider@gmail.com
+  - name: Melanie S. Schreiner
+    affiliation: "91"
+    corresponding: no
+    email: melanie.schreiner@psych.uni-goettingen.de
+  - name: Lital Shapiro
+    affiliation: "92"
+    corresponding: no
+    email: litalshapiro@gmail.com
+  - name: Elizabeth A. Simpson
+    affiliation: "93"
+    corresponding: no
+    email: simpsone@miami.edu
+  - name: Lauren Smith
+    affiliation: "94"
+    corresponding: no
+    email: l7smith@ucsd.edu
+  - name: Trine Sonne
+    affiliation: "47"
+    corresponding: no
+    email: trines@psy.au.dk
+  - name: Adrian Steffan
+    affiliation: "95"
+    corresponding: no
+    email: adrian.steffan@hotmail.de
+  - name: Yanjie Su
+    affiliation: "96"
+    corresponding: no
+    email: yjsu@pku.edu.cn
+  - name: Alvin W. M. Tan
+    affiliation: "97"
+    corresponding: no
+    email: tanawm@stanford.edu
+  - name: Anna-Lena Tebbe
+    affiliation: "98,99"
+    corresponding: no
+    email: tebbe@cbs.mpg.de
+  - name: Ingmar Visser
+    affiliation: "48"
+    corresponding: no
+    email: i.visser@uva.nl
+  - name: Yanwei Wang
+    affiliation: "96"
+    corresponding: no
+    email: ywwang@stu.pku.edu.cn
+  - name: Annie E. Wertz
+    affiliation: "100,101"
+    corresponding: no
+    email: wertz@ucsb.edu
+  - name: Gert Westermann
+    affiliation: "22"
+    corresponding: no
+    email: g.westermann@lancaster.ac.uk
+  - name: Amanda L. Woodward
+    affiliation: "102"
+    corresponding: no
+    email: woodward@uchicago.edu
+  - name: Yukun Yu
+    affiliation: "103"
+    corresponding: no
+    email: yukunyu2@illinois.edu
+  - name: Francis Yuen
+    affiliation: "104"
+    corresponding: no
+    email: francis.yuen@psych.ubc.ca
+  - name: Amanda Rose Yuile
+    affiliation: "105,106"
+    corresponding: no
+    email: ayuile@purdue.edu
+  - name: Zhen Zeng
+    affiliation: "107,108"
+    corresponding: no
+    email: zh.zeng2015@gmail.com
+  - name: Martin Zettersten
+    affiliation: "109"
+    corresponding: no
+    email: mzettersten@ucsd.edu
+  - name: Lucie Zimmer
+    affiliation: "110"
+    corresponding: no
+    email: lucie.zimmer@psy.lmu.de
+  - name: Michael C. Frank
+    affiliation: "111"
+    corresponding: no
+    email: mcfrank@stanford.edu
+  - name: Hannes Rakoczy
+    affiliation: "112"
+    corresponding: no
+    email: Hannes.Rakoczy@psych.uni-goettingen.de
 
 affiliation:
-  - id            : "1"
-    institution   : "See author note"
-
-authornote: |
- The ManyBabies2 Consortium consists of Tobias Schuwerk (Ludwig-Maximilians-Universität München), Dora Kampis* (University of Copenhagen), Renée Baillargeon (University of Illinois at Urbana-Champaign), Szilvia Biro (Leiden University), Manuel Bohn (Max Planck Institute for Evolutionary Anthropology), Krista Byers-Heinlein (Concordia University), Sebastian Dörrenberg (University of Bremen), Cynthia Fisher (University of Illinois at Urbana-Champaign), Laura Franchin (University of Trento), Tess Fulcher (University of Chicago), Isa Garbisch (University of Göttingen), Alessandra Geraci (University of Trento), Charlotte Grosse Wiesmann (Max Planck Institute for Human Cognitive and Brain Sciences), J. Kiley Hamlin (University of British Columbia), Daniel Haun (Max Planck Institute for Evolutionary Anthropology) Robert Hepach (University of Oxford), Sabine Hunnius (Radboud University Nijmegen), Daniel C. Hyde (University of Illinois at Urbana-Champaign), Petra Kármán (Central European University), Heather L Kosakowski (MIT), Ágnes M. Kovács (Central European University), Anna Krämer (University of Salzburg), Louisa Kulke (Friedrich-Alexander-University Erlangen-Nürnberg), Crystal Lee (Princeton University), Casey Lew-Williams (Princeton University), Ulf Liszkowski (Universität Hamburg), Kyle Mahowald (University of California, Santa Barbara), Olivier Mascaro (Integrative Neuroscience and Cognition Center, CNRS UMR8002/University of Paris), Marlene Meyer (Radboud University Nijmegen), David Moreau (University of Auckland), Josef Perner (University of Salzburg), Diane Poulin-Dubois (Concordia University), Lindsey J. Powell (University of California, San Diego), Julia Prein (Max Planck Institute for Evolutionary Anthropology), Beate Priewasser (University of Salzburg), Marina Proft (Universität Göttingen), Gal Raz (MIT), Peter Reschke (Brigham Young University), Josephine Ross (University of Dundee), Katrin Rothmaler (Max Planck Institute for Human Cognitive and Brain Sciences), Rebecca Saxe (MIT), Dana Schneider (Friedrich-Schiller-University Jena, Germany), Victoria Southgate (University of Copenhagen), Luca Surian (University of Trento), Anna-Lena Tebbe (Max Planck Institute for Human Cognitive and Brain Sciences), Birgit Träuble (Universität zu Köln), Angeline Sin Mei Tsui (Stanford University), Annie E. Wertz (Max Planck Institute for Human Development), Amanda Woodward (University of Chicago), Francis Yuen (University of British Columbia), Amanda Rose Yuile (University of Illinois at Urbana-Champaign), Luise Zellner (University of Salzburg), Lucie Zimmer (Ludwig-Maximilians-Universität München), Michael C. Frank (Stanford University), and Hannes Rakoczy (University of Göttingen).
+  - id: "1"
+    institution: Department of Psychology, Ludwig-Maximilians-Universität München,
+      München, Bayern, Germany
+  - id: "2"
+    institution: Department of Psychology, University of Copenhagen
+  - id: "3"
+    institution: Department of Psychology, Concordia University, Montréal, Canada
+  - id: "4"
+    institution: Psycholinguistics, School of Humanities, University of Mannheim
+  - id: "5"
+    institution: Facultad de Psicología, Universidad Autónoma de México, CdMx, México
+  - id: "6"
+    institution: School of Psychological Sciences, University of Newcastle, Australia
+  - id: "7"
+    institution: Department of Psychology, University of Illinois Urbana-Champaign,
+      Champaign, United States
+  - id: "8"
+    institution: University of Calgary, Calgary, Canada
+  - id: "9"
+    institution: Department of Psychology, Concordia University, Montreal, Canada
+  - id: "10"
+    institution: Université Paris Cité, INCC UMR 8002, CNRS, F-75006 Paris, France
+  - id: "11"
+    institution: Leiden Institute of Education and Child Studies, Leiden University,
+      Leiden, The Netherlands
+  - id: "12"
+    institution: Leiden Institute for Brain and Cognition, Leiden University, Leiden,
+      The Netherlands
+  - id: "13"
+    institution: University of Massachusetts Boston
+  - id: "14"
+    institution: Department of Developmental Psychology, University of Göttingen
+  - id: "15"
+    institution: Institute of Psychology in Education, Leuphana University Lüneburg,
+      Lüneburg, Germany
+  - id: "16"
+    institution: Department of Comparative Cultural Psychology, Max Planck Institute
+      for Evolutionary Anthropology, Leipzig, Germany
+  - id: "17"
+    institution: School of Psychology & Neuroscience, University of St Andrews, Scotland,
+      UK
+  - id: "18"
+    institution: Department of Psychology, Concordia University
+  - id: "19"
+    institution: Department of Psychology, Faculty of Arts and Sciences, Harvard University,  Cambridge
+      (MA), USA
+  - id: "20"
+    institution: Department of Brain and Cognitive Sciences, Massachusetts Institute
+      of Technology, Cambridge, MA, United States of America
+  - id: "21"
+    institution: Department of Psychology, Stanford University, Stanford, CA, United
+      States of America
+  - id: "22"
+    institution: Department of Psychology, Lancaster University, Lancaster, UK
+  - id: "23"
+    institution: Psychology Department, St. Francis Xavier University, Antigonish,
+      Nova Scotia, Canada
+  - id: "24"
+    institution: Psychology Department, University of Illinois Urbana Champaign
+  - id: "25"
+    institution: Department of Psychology, Durham University, Durham, United Kingdom
+  - id: "26"
+    institution: Department of Psychology and Cognitive Science, University of Trento
+  - id: "27"
+    institution: University of Chicago
+  - id: "28"
+    institution: Department of Educational Sciences, University of Catania, Catania,
+      Italia
+  - id: "29"
+    institution: Centre for Psychological Research, Oxford Brookes University, Oxford,
+      UK
+  - id: "30"
+    institution: Cognitive Neuroscience Lab, Department of Liberal Arts and Sciences,
+      University of Technology Nuremberg, Germany
+  - id: "31"
+    institution: Research Group Milestones of Early Cognitive Development, Max Planck
+      Institute for Cognitive and Brain Sciences, Leipzig, Germany
+  - id: "32"
+    institution: Department of Psychology, University of British Columbia
+  - id: "33"
+    institution: Department of Comparative Cultural Psychology, Max Planck Institute
+      for Evolutionary Anthropology,  Leipzig, Germany
+  - id: "34"
+    institution: School of Psychological Sciences, Faculty of Social Sciences, University
+      of Haifa, Haifa, Israel
+  - id: "35"
+    institution: The Institute of Information Processing and Decision Making, University
+      of Haifa, Haifa, Israel
+  - id: "36"
+    institution: Department of Experimental Psychology, University of Oxford, Oxford,
+      United Kingdom
+  - id: "37"
+    institution: Department of Psychology, University of Oslo, Oslo, Norway
+  - id: "38"
+    institution: Department of Psychology, UiT The Arctic University of Norway, Tromsø,
+      Norway
+  - id: "39"
+    institution: Department of Psychology, Harvard University, Cambridge, MA, USA
+  - id: "40"
+    institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University
+      Nijmegen
+  - id: "41"
+    institution: Department of Psychology, University of Illinois Urbana-Champaign
+  - id: "42"
+    institution: School of Psychological Sciences and Sagol School of Neuroscience,
+      Tel Aviv University, Tel Aviv, Israel
+  - id: "43"
+    institution: Department of Psychology, James Madison University, Harrisonburg,
+      USA
+  - id: "44"
+    institution: Institute for Linguistics and Scandinavian Studies, University of
+      Oslo
+  - id: "45"
+    institution: School of Psychology, Tel Aviv University, Tel Aviv, Israel
+  - id: "46"
+    institution: Department of Psychology, Tel Aviv University, Tel Aviv, Israel
+  - id: "47"
+    institution: Department of Psychology and Behavioural Sciences, Aarhus University,
+      Aarhus, Denmark
+  - id: "48"
+    institution: Department of Psychology, University of Amsterdam
+  - id: "49"
+    institution: Department of BioSciences, Rice University, Houston, USA
+  - id: "50"
+    institution: Department of Psychology, Center for Brain Science, Harvard University,
+      Cambridge, MA, USA
+  - id: "51"
+    institution: Department of Psychology, University of Southern California, Los
+      Angeles, MA, USA
+  - id: "52"
+    institution: Centre for Cognitive Neuroscience & Department of Psychology, University
+      of Salzburg, Salzburg, Austria
+  - id: "53"
+    institution: Department of Psychology, Centre for Early Childhood Cognition, University
+      of Copenhagen
+  - id: "54"
+    institution: Department of Psychology and the Behavioural Sciences, Aarhus University,
+      Aarhus, Denmark
+  - id: "55"
+    institution: Department of Developmental Psychology with Educational Psychology,
+      University of Bremen
+  - id: "56"
+    institution: Department of Psychology, Princeton University, Princeton, NJ
+  - id: "57"
+    institution: Division of Cognitive Sciences, University of Rijeka, Rijeka, Croatia
+  - id: "58"
+    institution: Centre for Mind and Behaviour, University of Rijeka, Rijeka, Croatia
+  - id: "59"
+    institution: Department of Psychology, University of Miami, Coral Gables, USA
+  - id: "60"
+    institution: Department of Psychology, Princeton University, Princeton, New Jersey,
+      USA
+  - id: "61"
+    institution: Department of Early Childhood Education, The Education University
+      of Hong Kong, Hong Kong
+  - id: "62"
+    institution: Universität Hamburg
+  - id: "63"
+    institution: Graduate School of Health, University of Technology Sydney, Sydney,
+      Australia
+  - id: "64"
+    institution: School of Psychology, Western Sydney University, Sydney, Australia
+  - id: "65"
+    institution: Department of Psychology, University of Illinois at Urbana-Champaign,
+      Champaign, Champaign, Illinois, USA
+  - id: "66"
+    institution: Department of Psychology, University of Chicago, Chicago, United
+      States
+  - id: "67"
+    institution: Department of Linguistics, The University of Texas at Austin, USA
+  - id: "68"
+    institution: Psychological Institute, Heidelberg University, Heidelberg, Germany
+  - id: "69"
+    institution: Max Planck Institute for Psycholinguistics, Nijmegen, The Netherlands
+  - id: "70"
+    institution: Department of Psychology, University of Gothenburg, Sweden
+  - id: "71"
+    institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University,
+      the Netherlands
+  - id: "72"
+    institution: School of Psychology, University of Auckland, Auckland, New Zealand
+  - id: "73"
+    institution: University of Oxford, Oxford, United Kingdom
+  - id: "74"
+    institution: Developmental and Biological Psychology, Heidelberg University, Heidelberg,
+      Germany
+  - id: "75"
+    institution: Developmental and Pedagogical Psychology, Charlotte Fresenius Hochschule
+      Wiesbaden, Wiesbaden, Germany
+  - id: "76"
+    institution: Department of Psychology, University of Massachusetts Boston, Boston,
+      Massachusetts, USA
+  - id: "77"
+    institution: Psychology Department, Concordia University, Montréal, Canada
+  - id: "78"
+    institution: Department of Psychology, University of California, San Diego, La
+      Jolla, CA, USA
+  - id: "79"
+    institution: Department of Developmental Psychology, Institute of Psychology in
+      Education, Leuphana University Lüneburg, Lüneburg, Germany
+  - id: "80"
+    institution: Institute Early Life Care, Paracelsus Medical University, Salzburg,
+      Austria
+  - id: "81"
+    institution: University of Göttingen
+  - id: "82"
+    institution: School of Psychological Science, University of Newcastle, Australia
+  - id: "83"
+    institution: School of Family Life, Brigham Young University, Provo, UT, United
+      States
+  - id: "84"
+    institution: Department of Psychology, University of Dundee, Scotland, UK
+  - id: "85"
+    institution: Department of Linguistics and Scandinavian Studies, University of
+      Oslo, Oslo, Norway
+  - id: "86"
+    institution: Max Planck Institute for Human Cognitive and Brain Sciences, Leipzig,
+      Germany
+  - id: "87"
+    institution: Department of Psychology, University of Rijeka, Rijeka, Croatia
+  - id: "88"
+    institution: Leipzig University, Leipzig, Germany
+  - id: "89"
+    institution: Max Planck Institute for Human Development, Berlin, Germany
+  - id: "90"
+    institution: Friedrich-Schiller-University Jena, Jena, Germany
+  - id: "91"
+    institution: Department of Developmental Psychology, University of Göttingen,
+      Göttingen, Germany
+  - id: "92"
+    institution: School of Psychological Sciences, Tel Aviv University, Tel Aviv,
+      Israel
+  - id: "93"
+    institution: Department of Psychology, University of Miami, Coral Gables, Florida,
+      USA
+  - id: "94"
+    institution: University of California San Diego
+  - id: "95"
+    institution: Department of Psychology, Ludwig-Maximilians-Universität München,
+      Munich, Germany
+  - id: "96"
+    institution: School of Psychological and Cognitive Sciences, Peking University,
+      Beijing, China
+  - id: "97"
+    institution: Department of Psychology, Stanford University, Stanford, United States
+  - id: "98"
+    institution: Max Planck Institute for Human Cognitive and Brain Sciences
+  - id: "99"
+    institution: University of Florida
+  - id: "100"
+    institution: Department of Psychological & Brain Sciences, University of California,
+      Santa Barbara, Santa Barbara, California, USA
+  - id: "101"
+    institution: Max Planck Research Group Naturalistic Social Cognition, Max Planck
+      Institute for Human Development, Berlin, Germany
+  - id: "102"
+    institution: Psychology, University of Chicago, Chicago, IL
+  - id: "103"
+    institution: Department of Psychology, University of Illinois Urbana-Champaign,
+      Champaign, IL, USA
+  - id: "104"
+    institution: Department of Psychology, University of British Columbia, Vancouver,
+      Canada
+  - id: "105"
+    institution: Department of Speech, Language, and Hearing Sciences, Purdue University
+  - id: "106"
+    institution: Department of Psychology, University of Illinois at Urbana-Champaign
+  - id: "107"
+    institution: Department of Linguistics and Modern Languages, The Chinese University
+      of Hong Kong, Hong Kong SAR, China
+  - id: "108"
+    institution: MARCS Institute for Brain, Behaviour and Development, Western Sydney
+      University, Sydney, Australia
+  - id: "109"
+    institution: Department of Cognitive Science, University of California San Diego,
+      La Jolla, California
+  - id: "110"
+    institution: Ludwig-Maximilians-Universität München, Munich, Germany
+  - id: "111"
+    institution: Department of Psychology, Stanford University, Stanford, CA, USA
+  - id: "112"
+    institution: Department of Psychology, University of Göttingen, Göttingen, Germany
 
 abstract: |
  Do toddlers and adults engage in spontaneous Theory of Mind (ToM)? Evidence from anticipatory looking (AL) studies suggests they do. But a growing body of failed replication studies raised questions about the paradigm’s suitability, urging the need to test the robustness of AL as a spontaneous measure of ToM. In a multi-lab collaboration we examine whether 18- to 27-month- olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In adults [n = 703 included, 68 % FEMALE], we found clear support for epistemic state-based action anticipation: they engaged in simple goal-based action anticipation in pilot studies, and clearly differentiated between knowledge and ignorance conditions in the main study as predicted. In toddlers [n = 521 included, 49 % FEMALE], in contrast, the results were less clear. They did engage in simple goal-based action anticipation in pilot studies, but did not show the clear differentiation between knowledge and ignorance conditions in the main study as predicted. Future research with adults can now move on to probe whether their spontaneous action anticipation is also sensitive to more complex kinds of epistemic states, such as true and false beliefs. Future research with toddlers will first need to investigate more systematically the source of the puzzling findings in the present study and clarify whether they indicate competence or mere performance limitations.
 
 keywords          : "anticipatory looking; spontaneous Theory of Mind;  replication"
-wordcount         : "15907"
+wordcount         : "16092"
 
 bibliography      : ["r-references.bib"]
 
@@ -95,7 +803,7 @@ Humans are proficient at interpreting and predicting others’ intentional actio
 
 The largest body of evidence for spontaneous ToM comes from studies using AL tasks. In such tasks, participants see an agent who acts in pursuit of some goal (typically, to collect a certain object) and has either a true or a false belief (for example, regarding the location of the target object). A number of studies have shown that infants, toddlers, older children, neurotypical adults, and even non-human primates anticipate (indicated by looks to the location in question) that an agent will go where it (truly or falsely) believes the object to be rather than, irrespective of the actual location of the object [@gliga2014early; @grosse2017implicit; @hayashi2020macaques; @kano2019great; @krupenye2016great; @meristo2012belief; @schneider2012eye; @schneider2013temporally; @senju2009mindblind; @senju2010absence; @senju201118; @surian2020domain; @thoermer2012continuity]. These studies have revealed converging evidence for spontaneous ToM across the human lifespan and even in other primate species.
 
-Across the different measures, the majority of early works on spontaneous ToM in infants and toddlers have reported positive results in the second year of life, and a few studies even within the first year [@kovacs2010social; @luo2010toward; @southgate2014belief], yielding a rich body of coherent and convergent evidence [for reviews see e.g., @barone2019infants; @kampis2020developing; @scott2017early]. This growing body of literature has led to a theoretical transformation of the field. In particular, findings with young infants have paved the way for novel accounts of the development and cognitive foundations of ToM. The previous consensus was that full-fledged ToM emerges only at around age 4, potentially as the result of developing executive functions, complex language skills and other factors [e.g., @perner1991understanding; @wellman2001theory]. In contrast, the newer accounts proposed that some basic forms of ToM may be phylogenetically more ancient and may develop much earlier in ontogeny [e.g., @baillargeon2010false; @carruthers2013mindreading; @kovacs2016belief; @leslie2005developmental].
+Across the different measures, the majority of early works on spontaneous ToM in infants and toddlers have reported positive results in the second year of life, and a few studies even within the first year [@luo201110; @kovacs2010social; @southgate2014belief], yielding a rich body of coherent and convergent evidence [for reviews see e.g., @barone2019infants; @kampis2020developing; @scott2017early]. This growing body of literature has led to a theoretical transformation of the field. In particular, findings with young infants have paved the way for novel accounts of the development and cognitive foundations of ToM. The previous consensus was that full-fledged ToM emerges only at around age 4, potentially as the result of developing executive functions, complex language skills and other factors [e.g., @perner1991understanding; @wellman2001theory]. In contrast, the newer accounts proposed that some basic forms of ToM may be phylogenetically more ancient and may develop much earlier in ontogeny [e.g., @baillargeon2010false; @carruthers2013mindreading; @kovacs2016belief; @leslie2005developmental].
 
 Recently, however, a number of studies have raised uncertainty regarding the empirical foundations of the early-emergence theories, as we review below. In the following sections, we present an overview of the current empirical picture of early understanding of epistemic states and then introduce ManyBabies2 (MB2), a large-scale collaborative project exploring the replicability of ToM in infancy, of which the current study constitutes the first step.
 
@@ -121,7 +829,7 @@ To date, however, no study has probed whether or how children’s (and adults’
 
 ## Design and Predictions of the Present Study
 
-The current study presents 18- to 27-month-old toddlers and adults with animated scenarios while measuring their gaze behavior. Testing adults (and not just toddlers) is crucial to address debates about the validity and interpretation of AL measures of ToM throughout the lifespan [e.g., @schneider2017current]. Following the structure of previous AL paradigms, participants are first familiarized to an agent repeatedly approaching a target (familiarization trials). AL is measured during familiarization trials to probe whether participants understood the agent’s goal and spontaneously anticipate their actions. Subsequently, during test trials the agent’s visual access is manipulated, leading them to be either *knowledgeable* or *ignorant* about the location of the target. Participants’ AL will be measured during test trials to determine whether or not they take into account the agent’s epistemic access and adjust their action anticipation accordingly. Participants’ looking patterns will be recorded using either lab-based corneal reflection eye-tracking or online recording of gaze patterns. We chose to provide the online testing option to increase the flexibility for data collection given the disruption caused by the Covid-19 pandemic. This option will also provide the opportunity to potentially compare in-lab and online testing procedures [@sheskin2020online].
+The current study presents 18- to 27-month-old toddlers and adults with animated scenarios while measuring their gaze behavior. Testing adults (and not just toddlers) is crucial to address debates about the validity and interpretation of AL measures of ToM throughout the lifespan [e.g., @schneider2017current]. Following the structure of previous AL paradigms, participants are first familiarized to an agent repeatedly approaching a target (familiarization trials). AL is measured during familiarization trials to probe whether participants understood the agent’s goal and spontaneously anticipate their actions. Subsequently, during test trials the agent’s visual access is manipulated, leading them to be either *knowledgeable* or *ignorant* about the location of the target. Participants’ AL will be measured during test trials to determine whether or not they take into account the agent’s epistemic access and adjust their action anticipation accordingly. Participants’ looking patterns will be recorded using either lab-based corneal reflection eye-tracking or online recording of gaze patterns. We chose to provide the online testing option to increase the flexibility for data collection given the disruption caused by the COVID-19 pandemic. This option will also provide the opportunity to potentially compare in-lab and online testing procedures [@sheskin2020online].
 Novel animated stimuli were collectively developed within the MB2 consortium on the basis of previous work [e.g., @clements1994implicit] and based on input from collaborators with experience with both successful and failed replication studies [e.g., @grosse2017implicit; @surian2012will]. These animated 3D scenes feature a dynamic interaction aimed to optimally engage participants’ attention: a chasing scenario involving two agents, a *chaser* and a *chasee* (see Figures 1 and 2). As part of the chase, the chasee enters from the top of an upside-down Y-shaped tunnel with two boxes at its exits. The tunnel is opaque so participants cannot see the chasee after it enters the tunnel, but can hear noises that indicate movement. The chasee eventually exits from one of the arms of the Y, and goes into the box on that side. The chaser observes the chasee exit the tunnel and go into a box, and then follows it through the tunnel. During familiarization trials, the chaser always exits the tunnel on the same side as the chasee, and approaches the box where the chasee is currently located. Thus, if participants engage in spontaneous action anticipation during familiarization trials, they should reliably anticipate during the period when the chaser is in the tunnel that it will emerge at the exit that leads to the box containing the chasee.
 During test trials, the chasee always first hides in one of the boxes but shortly thereafter leaves its initial hiding place and hides in the box at the other tunnel exit. Critically, the chaser either does (*knowledge* condition) or does not (*ignorance* condition) have epistemic access to the chasee’s location. During *knowledge* trials, the chaser observes all movements of the chasee. During *ignorance* trials, the chaser observes the chasee enter the tunnel, but then leaves and only returns once the chasee is already hidden inside the second box. The event sequences in the two conditions are thus identical with the only difference between conditions pertaining to what the chaser has or has not seen. They were designed in this way with the long-term aim to implement, in a minimal contrast design, more complex conditions of false/true belief contrasts with the very same event sequences (true belief conditions will then be identical to the knowledge conditions here, but in false belief conditions the chaser witnesses the chasee’s placement in the first box, but then fails to witness the re-location)^[There is thus a certain asymmetry with regard to the interpretation and the consequences of potentially positive and negative results of the present knowledge-ignorance contrast: in the case of positive results, we can conclude that subjects spontaneously engage in basic epistemic state ascription and can move on to test, with the minimal contrast comparison of knowledge-ignorance vs. false belief-true belief, whether this extends to more complex forms of epistemic state attribution. In the case of negative results, though, we cannot draw firm conclusions to the effect that subjects do not engage in spontaneous epistemic state ascription. More caution is in order since the present knowledge-ignorance contrast has been designed in order to be comparable to future belief contrasts rather than to be the simplest implementation possible. Simpler implementations would then need to be devised that involve fewer steps (i.e. the chasee just goes to one location and this is or is not witnessed by the chasee).]. 
 Participants’ AL (their gaze pattern indicating where they expect the chaser to appear) will be assessed during the anticipatory period - that is, the period during which the chaser is going through the tunnel and is not visible. There will be two main dependent measures: first looks, and a differential looking score (DLS). The first look measure will be binary, indicating which of the two tunnel exits participants fixate first: the exit where the chasee is actually hiding, or the other exit. DLS is a measure of the proportion of time spent looking at the correct tunnel exit during the entire anticipatory period.
@@ -158,8 +866,8 @@ In sum, we concluded that this paradigm sufficiently elicits goal-directed actio
 ### Test Trials
 
 All participants will see two test trials, one *knowledge* and one *ignorance* trial. However, in line with common practice in ToM studies, the main comparison concerns the first test trial between-participants to avoid potential carryover effects. In addition, in exploratory analyses, we plan to assess whether results remain the same if both trials are taken into account and whether gaze patterns differ between the two trials (see Exploratory Analyses). If the results remain largely unchanged across the two trials, it may suggest that future studies could increase power by including multiple test trials.
-In test trials, the chasee first hides in one of the boxes, but shortly thereafter the chasee leaves this box and hides in the second box, at the other tunnel exit. Critically, the chaser either witnesses (*knowledge* condition) or does not witness (*ignorance* condition) from which tunnel exit the chasee exited and thus where the chasee is currently hiding (for an overview, see Figure 2). In the *knowledge* trials, the chaser observes all movements of the chasee. The chaser leaves for a brief period of time after the chasee entered the tunnel, but it returns before the chasee exits the tunnel. Therefore, no events take place in the chaser’s absence. In the *ignorance* trials, the chaser sees the chasee enter the tunnel, but then leaves. Therefore, the chaser does not see the chasee entering either box and only returns once the chasee is already hidden in the final location. Finally, the chaser enters the tunnel but does not appear in either exit. Rather, the scene “freezes” for four seconds and participants’ AL is measured. Thus, the *knowledge* and *ignorance* conditions are matched for the chaser leaving for a period of time, but they differ in whether they warrant the chaser’s epistemic access to the location of the chasee. No outcome is shown in either test trials. 
-When designing the *knowledge* and *ignorance* condition, we aimed at keeping all events and their timings parallel, except the crucial manipulation. We show the same events in both conditions. Where possible, all events also have the same duration. In the case of the chaser’s absence in the *knowledge* condition, there were two main options, both with inevitable trade-offs. First, we could have increased the duration of the chaser’s absence in the *knowledge* condition to match the duration of the chaser's absence in both conditions. Yet, this would potentially disrupt the flow of events, such as keeping track of the chasee’s actions and the general scene dynamics, since nothing would happen for a substantial amount of time. Second, the chaser can be absent for a shorter time in the *knowledge* than in the *ignorance* condition, in which case the flow of events – the chasee’s actions and the general scene dynamics – remains natural. We chose the second option because we reasoned that the artificial break in the *knowledge* condition could disrupt the participant’s tracking of the chaser’s epistemic state, thus being a confound that would be more detrimental than the difference in the duration of absence. Further, the current contrast has the advantage that the chasee’s sequence and timing of actions are identical in both conditions, thus minimizing the difference between conditions. Finally, with the current design, the duration of the chaser’s absence will be closely matched in the later planned false belief - true belief contrast, because in the future false belief condition, the chaser has to be absent for fewer events (because the chaser witnesses the first hiding events after the chasee reappeared at the other side of the tunnel).
+In test trials, the chasee first hides in one of the boxes, but shortly thereafter the chasee leaves this box and hides in the second box, at the other tunnel exit. Critically, the chaser either witnesses (*knowledge* condition) or does not witness (*ignorance* condition) from which tunnel exit the chasee exited and thus where the chasee is currently hiding (for an overview, see Figure 2). In the *knowledge* trials, the chaser observes all movements of the chasee. The chaser leaves for a brief period of time after the chasee entered the tunnel, but it returns before the chasee exited the tunnel. Therefore, no events take place in the chaser’s absence. In the *ignorance* trials, the chaser sees the chasee enter the tunnel, but then leaves. Therefore, the chaser does not see the chasee entering either box and only returns once the chasee is already hidden in the final location. Finally, the chaser enters the tunnel but does not appear in either exit. Rather, the scene “freezes” for four seconds and participants’ AL is measured. Thus, the *knowledge* and *ignorance* conditions are matched for the chaser leaving for a period of time, but they differ in whether they warrant the chaser’s epistemic access to the location of the chasee. No outcome is shown in either test trials. 
+When designing the *knowledge* and *ignorance* condition, we aimed at keeping all events and their timings parallel, except the crucial manipulation. We show the same events in both conditions. Where possible, all events also have the same duration. In the case of the chaser’s absence in the *knowledge* condition, there were two main options, both with inevitable trade-offs. First, we could have increased the duration of the chaser’s absence in the *knowledge* condition to match the duration of the chaser's absence in both conditions. Yet, this would potentially disrupt the flow of events, such as keeping track of the chasee’s actions and the general scene dynamics, since nothing would happen for a substantial amount of time. Second, the chaser can be absent for a shorter time in the *knowledge* than in the *ignorance* condition, in which case the flow of events – the chasee’s actions and the general scene dynamics – would remain natural. We chose the second option because we reasoned that the artificial break in the *knowledge* condition could disrupt the participant’s tracking of the chaser’s epistemic state, thus being a confound that would be more detrimental than the difference in the duration of absence. Further, the current contrast has the advantage that the chasee’s sequence and timing of actions are identical in both conditions, thus minimizing the difference between conditions. Finally, with the current design, the duration of the chaser’s absence will be closely matched in the later planned false belief - true belief contrast, because in the future false belief condition, the chaser has to be absent for fewer events (because the chaser witnesses the first hiding events after the chasee reappeared at the other side of the tunnel).
 
 ```{r fig2, fig.cap="Schematic overview of stimuli and conditions of the test trials. \\newline{} \\textit{Note}. After the familiarization phase, participants know about the agent’s goal (chaser wants to find chasee), perceptual access (chaser can see what happens on the other side of the fence), and situational constraints (boxes can be reached by walking through the forking tunnel). In the \\textit{knowledge} condition, the chaser witnesses the chasee walking through the tunnel and jumping in and out of the first box. While the chasee is in the box, the chaser briefly leaves the scene through the door in the back and returns shortly after. Subsequently, the chaser watches the chasee jumping out of the box again and hiding in the second box. In the \\textit{ignorance} condition, the chaser turns around and stands on the other side of the door in the back of the scene, thus unable to witness any of the chasee’s actions. The chaser then returns and enters the tunnel to look for the chasee. During the test phase (4 seconds still frame), AL towards the end of the tunnels is measured.", fig.align="center", out.width = "6.5in"}
 include_graphics(here("paper","Figure2.jpg"),rel_path=FALSE)
@@ -167,7 +875,7 @@ include_graphics(here("paper","Figure2.jpg"),rel_path=FALSE)
 
 ### Trial Randomization 
 
-We will vary the starting location of the chasee (left or right half of the upper part of the scene) and the box the chasee ended up (left or right box) in both familiarization and test trials. The presentation of the familiarization trials will be counterbalanced in two pseudo-randomized orders. Each lab signs up for one or two sets of 16-trial-combinations, for each of their tested age groups.
+We will vary the starting location of the chasee (left or right half of the upper part of the scene) and the box the chasee ended up (left or right box) in both familiarization and test trials. The presentation of the familiarization trials will be counterbalanced in two pseudo-randomized orders (LRRL and RLLR). Each lab signs up for one or two sets of 16-trial-combinations, for each of their tested age groups.
 
 ## Lab Participation Details
 
@@ -176,7 +884,7 @@ We will vary the starting location of the chasee (left or right half of the uppe
 The contributing labs will start data collection as soon as they are able to once our Registered Report receives an in-principle acceptance. The study will be submitted for Stage 2 review within one year after in-principle acceptance (i.e., post-Stage 1 review). We anticipate that this time window gives the individual labs enough flexibility to contribute the committed sample sizes; however, if this timeline needs adjusting due to the Covid-19 pandemic this decision will be made prior to any data analysis.
 
 ### Participation Criterion 
-The participating labs were recruited from the MB2 consortium. In July 2020, we asked via the MB2 listserv which labs plan to contribute how many participants for the respective age group (toddlers and/or adults). The Supplemental Material provides an overview of participating labs. Each lab made a commitment to collecting data from at least 16 participants (toddlers or adults), but we will not exclude any contributed data on the basis of the total sample size contributed by that lab. Labs will be allowed to test using either in-lab eye-tracking or online methods. 
+The participating labs were recruited from the MB2 consortium. In July 2020, we asked via the MB2 listserv which labs planned to contribute how many participants for the respective age group (toddlers and/or adults). The Supplemental Material provides an overview of participating labs. Each lab made a commitment to collecting data from at least 16 participants (toddlers or adults), but we will not exclude any contributed data on the basis of the total sample size contributed by that lab. Labs will be allowed to test using either in-lab eye-tracking or online methods. 
 
 ### Ethics 
 All labs will be responsible for obtaining ethics approval from their appropriate institutional review board. The labs will contribute de-identified data for central data analysis (i.e., eye-tracking raw data/coded gaze behavior, demographic information). Video recordings of the participants will be stored at each lab according to the approved local data handling protocol. If allowed by the local institutional review board, video recordings will be made available to other researchers via the video library Databrary (https://nyu.databrary.org/).
@@ -412,31 +1120,32 @@ Their mean age was `r round(age_stat_adults_included$mean, 2)` years (*SD*: `r r
 ## Apparatus and Procedure
 
 ### Eye-tracking Methods
-We expect that participating labs will use one of three types of eye-tracker brands to track the participant's gaze patterns: Tobii, EyeLink, or SMI. Thus, apparatus setup will slightly vary in individual labs (e.g., different sampling rates and distances at which the participants are seated in front of the monitor). Participating labs will report their eye-tracker specifications and study procedure alongside the collected data. To minimize variation between labs, all labs using the same type of eye-tracker will use the same presentation study file specific to that eye-tracker type. The Supplemental Material will provide an overview of employed eye-trackers, stimulus presentation softwares, sampling rates and screen dimensions.
+We expect that participating labs will use one of three types of eye-tracker brands to track the participant's gaze patterns: Tobii, EyeLink, or SMI. Thus, apparatus setup will slightly vary in individual labs (e.g., different sampling rates and distances at which the participants were seated in front of the monitor). Participating labs will report their eye-tracker specifications and study procedure alongside the collected data. To minimize variation between labs, all labs using the same type of eye-tracker will use the same presentation study file specific to that eye-tracker type. The Supplemental Material will provide an overview of employed eye-trackers, stimulus presentation softwares, sampling rates and screen dimensions.
 
 ### Online Gaze Recording
-To allow for the participation of labs that do not have access to an eye-tracker, or are not able to invite participants to their facilities due to current restrictions regarding the COVID-19 pandemic, labs can choose to collect data via online testing. Specifically, labs may choose to manually code gaze direction during stimulus presentation on a frame-by-frame basis from video recordings of a camera facing the participant (e.g., a webcam). Labs that choose to collect data virtually will utilize the platform of their choice (e.g., LookIt, YouTube, Zoom, Labvanced, etc.). Further, labs may also choose to use webcam eye-tracking with tools like WebGazer.js [@papoutsaki2016proceedings]. In our analyses, we control for and quantify potential sources of variability due to these different methods.
+To allow for the participation of labs that do not have access to an eye-tracker, or are not able to invite participants to their facilities due to current restrictions regarding the COVID-19 pandemic, labs can choose to collect data via online testing. We initially anticipated for labs to flexibly choose between different methods for coding gaze direction, including manual frame-by-frame coding from video recordings or using various online platforms for virtual data collection (e.g., LookIt, YouTube, Zoom, Labvanced). Additionally, we considered the possibility of webcam eye-tracking using tools such as WebGazer.js [@papoutsaki2016proceedings]. However, we later decided that all labs would conduct only supervised testing, leading to the exclusive use of the MB-ManyWebcams WebGazer setup for data collection [@steffan2024validation; see also Supplemental Material S2]. This ensured a standardized approach across all participating labs.
 
 ### Testing Procedure
-Toddlers will be seated either on their caregiver’s lap or in a highchair. The distance from the monitor will depend on the data collection method. Caregivers will be asked to refrain from interacting with their child and close their eyes during stimulus presentation or wear a set of opaque sunglasses. Adult participants will be seated on a chair within the respective appropriate distance from the monitor. Once the participant is seated, the experimenter will initiate the eye-tracker-specific calibration procedure. Additionally, we will present another calibration stimulus before and after the presentation of the task. This allows for evaluating the accuracy of the calibration procedure across labs [cf., @frank2012measuring].
+Toddlers were seated either on their caregiver’s lap or in a highchair. The distance from the monitor depended on the data collection method. Caregivers were asked to refrain from interacting with their child and closed their eyes during stimulus presentation or wore a set of opaque sunglasses. Adult participants were seated on a chair at the appropriate distance from the monitor. Once the participant was seated, the experimenter initiated the eye-tracker-specific calibration procedure. Additionally, we presented another calibration stimulus before and after the presentation of the task. This allowed for evaluating the accuracy of the calibration procedure across labs [cf., @frank2012measuring].
 
 ## General Lab Practices
 
-To ensure standardization of procedure, materials for testing practices and instructions will be prepared and distributed to the participating labs. Each lab will be responsible for maintaining these practices and report all relevant details on testing sessions (for details see the Supplemental Material).
+To ensure standardization of our experimental procedure, materials for testing practices and instructions were prepared and distributed to the participating labs. Each lab was responsible for maintaining these practices and reported all relevant details on testing sessions (for details see the Supplemental Material).
 
 ### Videos of Participants
-As with all MB projects, we strongly encourage labs to record video data of their own lab procedures and each testing session, provided that this is in line with regulations of the respective institutional ethics review board and the given informed consent. Participating labs that cannot contribute participant videos will be asked to provide a video walk-through of their experimental set-up and procedure instead. If no institutional ethics review board restrictions occur, labs are encouraged to share video recordings of the test sessions via DataBrary.
+As with all MB projects, we strongly encouraged labs to record video data of their own lab procedures and each testing session, provided that this was in line with regulations of the respective institutional ethics review board and the given informed consent. Participating labs that could not contribute participant videos were asked to provide a video walk-through of their experimental set-up and procedure instead. If no institutional ethics review board restrictions occurred, labs were encouraged to share video recordings of the test sessions via Databrary.
 
 ## Design Analysis
 
-Here we provide a simulation of the predicted findings because a traditional frequentist power analysis is not applicable for our project for two reasons. First, we use Bayesian methods to quantify the strength of our evidence for or against our hypotheses, rather than assessing the probability of rejecting the null hypothesis. In particular, we compute a Bayes factor (BF; a likelihood ratio comparing two competing hypotheses), which allows us to compare models. Second, because of the many-labs nature of the study, the sample size will not be determined by power analysis, but by the amount of data that participating labs are able to contribute within the pre-established timeframe. Even if the effect size is much smaller than what we anticipate (e.g., less than Cohen’s *d* = 0.20), the results would be informative as our study is expected to be dramatically larger than any previous study in this area. If, due to unforeseen reasons, the participating labs will not be able to collect a minimum number of 300 participants per age group within the proposed time period, we plan to extend the time for data collection until this minimum number is reached. Or in contrast, if the effect size is large (e.g., more than Cohen’s *d* = 0.80), the resulting increased precision of our model will allow us to test a number of other theoretically and methodologically important hypotheses (see Results section).
-Although we did not determine our sample size based on power analysis, here we provide a simulation-based design analysis to demonstrate the range of BFs we might expect to see, given a plausible range of effect sizes and parameters. We focus this analysis on our key analysis of the test trials (as specified below), namely the difference in AL on the first test trial that participants saw. We describe below the simulation for the child sample, but based on our specifications, we expect that a design analysis for adult data would produce similar results. 
-We first ran a simulation for the first look analysis. In each iteration of our simulation, we used a set of parameters to simulate an experiment, using a first look (described below) as the key measure. For the key effect size parameter for condition (*knowledge* vs. *ignorance*), we sampled a range of effect sizes in logit space spanning from small to large effects (Cohen’s *d* = 0.20 - 0.80; log odds from 0.36 - 1.45). For each experiment, the betas for age and the age x condition interaction were sampled uniformly between -0.20 and 0.20. The age of each participant was sampled uniformly between 18 and 27 months and then centered. The intercept was sampled from a normal distribution (1, 0.25), corresponding to an average looking proportion of 0.73. Lab intercepts and the lab slope by condition were set to 0.1, and other lab random effects were set to 0 as we do not expect them to be meaningfully non-zero. These values were chosen based on pilot data (average looking proportion), but also to have a large range of possible outcomes (lab intercept, age and age x condition interaction). We are confident that the results would be robust to different choices. We then used these simulated data to simulate an experiment with 22 labs and 440 toddlers and computed the resulting BFs, as specified in the analysis plan below. We adopted all of the priors specified in the results section below^[After the design analysis, additional labs expressed their interest in contributing data, which is why the anticipated sample sizes and the numbers this design analysis is based on differ. Given the uncertainty in determining the final sample size in this project, we kept the design analysis as is to have a more conservative estimate of the study’s power.]. We ran 349 simulations and, in 72% of them, the BF showed strong evidence in favor of the full model (BF > 10); in 6% the BF showed substantial evidence (10 > BF > 3); it was inconclusive 14% of the time (1/10 > BF > 3), and in 8% of cases the null model was substantially favored (see Supplement). The BF was not < 1/10 in any of the simulations.. Thus, under the parameters chosen here for our simulations, it is likely that the planned experiment is of sufficient size to detect the expected effect.
+Here we provide a simulation of the predicted findings because a traditional frequentist power analysis was not applicable for our project for two reasons. First, we used Bayesian methods to quantify the strength of our evidence for or against our hypotheses, rather than assessing the probability of rejecting the null hypothesis. In particular, we computed a Bayes factor (BF; a likelihood ratio comparing two competing hypotheses), which allowed us to compare models. Second, because of the many-labs nature of the study, the sample size was not determined by power analysis, but by the amount of data that participating labs were able to contribute within the pre-established timeframe. Even if the effect size was much smaller than what we anticipated (e.g., less than Cohen’s *d* = 0.20), the results would have been informative as our study was expected to be dramatically larger than any previous study in this area. If, due to unforeseen reasons, the participating labs were not able to collect a minimum number of 300 participants per age group within the proposed time period, we planned to extend the time for data collection until this minimum number was reached. Conversely, if the effect size was large (e.g., more than Cohen’s *d* = 0.80), the resulting increased precision of our model would allow us to test a number of other theoretically and methodologically important hypotheses (see Results section).
+Although we did not determine our sample size based on power analysis, here we provide a simulation-based design analysis to demonstrate the range of BFs we might expect to see, given a plausible range of effect sizes and parameters. We focus this analysis on our key analysis of the test trials (as specified below), namely the difference in AL on the first test trial that participants saw. We describe below the simulation for the child sample, but based on our specifications, we expected that a design analysis for adult data would produce similar results. 
+We first ran a simulation for the first look analysis. In each iteration of our simulation, we used a set of parameters to simulate an experiment, using a first look (described below) as the key measure. For the key effect size parameter for condition (*knowledge* vs. *ignorance*), we sampled a range of effect sizes in logit space spanning from small to large effects (Cohen’s *d* = 0.20 - 0.80; log odds from 0.36 - 1.45). For each experiment, the betas for age and the age x condition interaction were sampled uniformly between -0.20 and 0.20. The age of each participant was sampled uniformly between 18 and 27 months and then centered. The intercept was sampled from a normal distribution (1, 0.25), corresponding to an average looking proportion of 0.73. Lab intercepts and the lab slope by condition were set to 0.1, and other lab random effects were set to 0 as we do not expect them to be meaningfully non-zero. These values were chosen based on pilot data (average looking proportion), but also to have a large range of possible outcomes (lab intercept, age and age x condition interaction). We are confident that the results would be robust to different choices. We then used these simulated data to simulate an experiment with 22 labs and 440 toddlers and computed the resulting BFs, as specified in the analysis plan below. We adopted all of the priors specified in the results section below^[After the design analysis, additional labs expressed their interest in contributing data, which is why the anticipated sample sizes and the numbers this design analysis is based on differ. Given the uncertainty in determining the final sample size in this project, we kept the design analysis as is to have a more conservative estimate of the study’s power.]. We ran 349 simulations and, in 72% of them, the BF showed strong evidence in favor of the full model (BF > 10); in 6% the BF showed substantial evidence (10 > BF > 3); it was inconclusive 14% of the time (1/10 > BF > 3), and in 8% of cases the null model was substantially favored (see Supplement). The BF was not < 1/10 in any of the simulations. Thus, under the parameters chosen here for our simulations, it was likely that the planned experiment was of sufficient size to detect the expected effect.
+We also ran a design analysis for the proportional looking analysis. We used the same experimental parameters (number of labs, participants, ages, etc.). For generating simulated data, we drew the condition effect from a uniform distribution between .05 and .20 (in proportion space). The age and age x condition interaction effects were drawn from uniform distributions between -.05 and .05. Sigma, the overall noise in the experiment, was drawn from a uniform distribution between .05 and .1. The intercept was drawn from a normal distribution with mean .65 and a standard deviation of .05. The by-lab standard deviation for the intercept and condition slope was set to .01. Priors were as described in the main text. We ran 119 simulations, and in all 119 we obtained a BF greater than 10, suggesting that, under our assumptions, the study was well-powered.
 
 ## Data Preprocessing
 
 ### Eye-tracking
-Raw gaze position data (x- and y-coordinates) will be extracted in the time window starting from the first frame at which the chaser enters the tunnel until the last frame before it exits the tunnel in the last familiarisation trial and in the test trial. For data collected from labs using a binocular eye-tracker, gaze positions of the left and the right eye will be averaged.
+Raw gaze position data (x- and y-coordinates) was extracted in the time window starting from the first frame at which the chaser entered the tunnel until the last frame before it exited the tunnel in the last familiarization trial and in the test trial. For data collected from labs using a binocular eye-tracker, gaze positions of the left and the right eye were averaged.
 We will use the peekds R package (https://github.com/peekbank/peekbankr) to convert eye-tracking data from disparate trackers into a common format. Because not all eye-trackers record data with the same frequency or regularity, we will resample all data to be at a common rate of 40 Hz (samples per second). 
 We will exclude individual trials if more than 50% of the gaze data is missing (defined as off-screen or unavailable point of gaze during the whole trial, not just the anticipatory period). Applying this criterion would have caused us to exclude 4% of the trials in our pilot data, which inspection of our pilot data suggested was an appropriate trade-off between not excluding too much usable data and not analyzing trials which were uninformative.
 For each monitor size, we will determine the specific AOIs and compute whether the specific x- and y-position for each participant, trial, and time point fall within their screen resolution-specific AOIs. Our goal is to determine whether participants are anticipating the emergence of the chaser from one of the two tunnel exits. Thus, we defined AOIs on the stimulus by creating a rectangular region around the tunnel exit that is D units from the top, bottom, left, and right of the boundary of the tunnel exit, where D is the diameter of the tunnel exits. We then expanded the sides of the AOI rectangles by 25% in all directions to account for tracker calibration error. Our rationale was that, if we made the AOI too small, we might fail to capture anticipations by participants with poor calibrations. In contrast, if we made the regions too large, we might capture some fixations by participants looking at the box where the chasee actually is. On the other hand, these chasee looks would not be expected to vary between conditions and so would only affect our baseline level of looking. Thus, the chosen AOIs aim at maximizing our ability to capture between-condition differences. For an illustration of the tunnel exit AOIs see Figure 3. We are not analyzing looks to the boxes, since they can less unambiguously be interpreted as epistemic state-based action predictions and because we observed few anticipatory looks to the boxes in the pilot studies. For more detailed information about the AOI definition process see the description of the pilot study results in the Supplemental Material.
@@ -463,8 +1172,8 @@ We define two primary dependent variables:
 format_bayes_factor <- function(bf) {
   if (bf > 1000) {
     return("BF > 1000")
-  } else if (bf < 0.1) {
-    return("BF < 0.1")
+  } else if (bf < 0.01) {
+    return("BF < 0.01")
   } else {
     return(sprintf("BF = %.1f", bf))  # Keep two decimal places
   }
@@ -484,84 +1193,6 @@ include_graphics(here("paper","Figure5.png"),rel_path=FALSE)
 ```
 
 ```{r Results table of Bayesian regression models, warning=FALSE}
-# # Add model names
-# e_bm_fam_aoi_toddlers <- bm_fam_aoi_toddlers_intercept_effect %>% transmute(
-#     model = "PTL toddlers",
-#     term = "Intercept Effect",
-#     estimate = b_Intercept,
-#     conf.low = b_Intercept.lower,
-#     conf.high = b_Intercept.upper
-#   )
-# e_bm_fam_aoi_adults <- bm_fam_aoi_adults_intercept_effect %>% transmute(
-#     model = "PTL adults",
-#     term = "Intercept Effect",
-#     estimate = b_Intercept,
-#     conf.low = b_Intercept.lower,
-#     conf.high = b_Intercept.upper
-#   )
-# e_bm_fam_first_look_toddlers <- bm_fam_first_look_toddlers_intercept_effect %>% transmute(
-#     model = "First Look toddlers",
-#     term = "Intercept Effect",
-#     estimate = b_Intercept,
-#     conf.low = .lower,
-#     conf.high = .upper
-#   )
-# e_bm_fam_first_look_adults <-  bm_fam_first_look_adults_intercept_effect %>% transmute(
-#     model = "First Look adults",
-#     term = "Intercept Effect",
-#     estimate = b_Intercept,
-#     conf.low = .lower,
-#     conf.high = .upper
-#   )
-# e_bm_aoi_toddlers <- bm_aoi_toddlers_condition_effect  %>% transmute(
-#     model = "PTL toddlers",
-#     term = "Condition Effect",
-#     estimate = b_condition_c,
-#     conf.low = b_condition_c.lower,
-#     conf.high = b_condition_c.upper
-#   )
-# e_bm_aoi_adults <- bm_aoi_adults_condition_effect %>% transmute(
-#     model = "PTL adults",
-#     term = "Condition Effect",
-#     estimate = b_condition_c,
-#     conf.low = b_condition_c.lower,
-#     conf.high = b_condition_c.upper
-# )
-# e_bm_test_first_look_toddlers <- bm_test_first_look_toddlers_condition_effect %>% transmute(
-#     model = "First Look toddlers",
-#     term = "Condition Effect",
-#     estimate = b_condition_c,
-#     conf.low = .lower,
-#     conf.high = .upper
-#   )
-# e_bm_test_first_look_adults <- bm_test_first_look_adults_condition_effect %>% transmute(
-#     model = "First Look adults",
-#     term = "Condition Effect",
-#     estimate = b_condition_c,
-#     conf.low = .lower,
-#     conf.high = .upper
-#   )
-# 
-# combined_brm_results_fam <- bind_rows(e_bm_fam_aoi_toddlers, e_bm_fam_aoi_adults, e_bm_fam_first_look_toddlers, e_bm_fam_first_look_adults)
-# 
-# combined_brm_results_test <- bind_rows(e_bm_aoi_toddlers, e_bm_aoi_adults, e_bm_test_first_look_toddlers, e_bm_test_first_look_adults)
-# 
-# library(kableExtra)
-# 
-# # Create the table
-# combined_brm_results_fam <- combined_brm_results_fam %>%
-#   select(model, term, estimate, conf.low, conf.high) %>%
-#   mutate(term = case_when(
-#       term == "familiarization_trial_num_4" ~ "Trial number",
-#       term == "(Intercept)" ~ "Intercept"))
-# 
-# combined_brm_results_test <- combined_brm_results_test %>%
-#   select(model, term, estimate, conf.low, conf.high) %>%
-#   mutate(term = case_when(
-#       term == "condition_c" ~ "Condition",
-#       term == "age_mo_c" ~ "Age",
-#       term == "condition_c:age_mo_c" ~ "Condition x Age",
-#       term == "(Intercept)" ~ "Intercept"))
 
 combined_brm_results_fam_with_blanks <- combined_brm_results_fam %>%
   group_by(model) %>%
@@ -770,12 +1401,13 @@ In contrast, for adults, the Bayes Factor of `r  format_bayes_factor(test_m_comp
 include_graphics(here("paper","Figure6b.png"),rel_path=FALSE)
 ```
 
-#### AL as a function of number of gaze shifts between mouse and bear during location change 
+#### AL as a function of number of gaze shifts between mouse and bear during location change
+
 In order to examine the effect of condition and the number of shifts between mouse and bear during location change of the mouse on anticipatory looking, we fitted Bayesian mixed-effects models for each age cohort separately (see Figure 9). The dependent variable was PTL in the anticipation period. The fixed effects included the main effects of condition, the number of shifts, and their interaction. We also included random intercepts and slopes for number of shifts within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
-For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_shifts_al$bf)` was computed, indicating that the data strongly favors the null model over the full model. This suggests that the interaction with condition included in the full model did not improve the explanation of the observed data compared to the null model without this interaction.
+For toddlers, comparing this model to a simpler model without the interaction of condition and number of shifts, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_shifts_al$bf)` was computed, indicating that the data extremely favored the null model over the full model. A Bayes Factor comparison also provided extreme evidence against including the fixed effect of number of shifts, `r format_bayes_factor(test_m_comparison_toddlers_shifts_al_num_shifts$bf)`. These results suggest that, for toddlers, condition influenced proportional DLS, but the number of location shifts—either alone or in interaction with condition—did not meaningfully contribute to explaining variation in their looking behavior.
 
-For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of number of shifts on proportion looking at test was larger in the knowledge condition than in the ignorance condition. The estimated Bayes factor comparing the full model to the null model was approximately `r format_bayes_factor(test_m_comparison_adults_shifts_al$bf)`, providing strong evidence in favor of the full model over the null model.
+For adults, the number of shifts showed a small but credible positive effect, suggesting that more shifts were associated with an increase in PTL. The interaction between condition and the number of shifts was negative and credible, indicating that the effect of number of shifts on proportion looking at test was larger in the knowledge condition than in the ignorance condition. Due to limitations with bridge sampling, Bayes factors were computed using the Savage-Dickey density ratio method. The Bayesian analysis of the interaction effect produced an extremely high Bayes Factor of `r format_bayes_factor(1 / h_test_m_comparison_adults_shifts_al_interaction$hypothesis$Evid.Ratio)`, strongly supporting the presence of this interaction. The effect of the number of shifts also received very strong evidence, `r format_bayes_factor(1 / h_test_m_comparison_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio)`, indicating a meaningful contribution of this predictor to the model.
 
 ```{r fig9, fig.cap="AL as a function of number of shifts between mouse and bear during location change of mouse in the test phase for toddlers and adults. Error bands represent 95% CIs.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure7.png"),rel_path=FALSE)

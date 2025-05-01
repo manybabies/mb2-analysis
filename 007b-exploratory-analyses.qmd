@@ -2825,6 +2825,9 @@ bm_test_toddlers_shifts_al <- brm(
   control = default_control_list,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
 )
+
+bm_test_toddlers_shifts_al <- readRDS(here(model_fits_dir, "bm_test_toddlers_shifts_al.rds"))
+
 summary(bm_test_toddlers_shifts_al)
 prior_summary(bm_test_toddlers_shifts_al)
 
@@ -2889,6 +2892,7 @@ summary(bm_test_toddlers_shifts_al_num_shifts_null)
 
 saveRDS(bm_test_toddlers_shifts_al_num_shifts_null, 
         file = here(model_fits_dir, "bm_test_toddlers_shifts_al_num_shifts_null.rds"))
+test_m_comparison_toddlers_shifts_al_num_shifts <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_toddlers_shifts_al_num_shifts.rds"))
 
 test_m_comparison_toddlers_shifts_al_num_shifts <- brms::bayes_factor(bm_test_toddlers_shifts_al, 
                                                            bm_test_toddlers_shifts_al_num_shifts_null)
@@ -2903,6 +2907,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 # remove Bayes model fits
 rm(bm_test_toddlers_shifts_al)
 rm(bm_test_toddlers_shifts_al_null)
+rm(bm_test_toddlers_shifts_al_num_shifts_null)
 gc()
 ```
 
@@ -2932,6 +2937,8 @@ prior_summary(bm_test_adults_shifts_al)
 
 saveRDS(bm_test_adults_shifts_al,
         file = here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
+bm_test_adults_shifts_al <- readRDS(here(model_fits_dir, "bm_test_adults_shifts_al.rds"))
+
 ```
 
 ```{r}
@@ -2963,6 +2970,18 @@ saveRDS(bm_test_adults_shifts_al_condition_num_shifts_interaction,
 
 ##### Interaction
 
+Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_adults_shifts_al_interaction <- hypothesis(bm_test_adults_shifts_al, "condition_c:num_shifts = 0", class = "b")
+h_test_adults_shifts_al_interaction
+#plot(h_test_adults_shifts_al_num_shifts)
+# evidence in favor of condition being different from zero
+1 / h_test_adults_shifts_al_interaction$hypothesis$Evid.Ratio
+saveRDS(h_test_adults_shifts_al_interaction, 
+        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_interaction.rds"))
+```
+
 Compute Bayes factor using bridge sampling
 
 ```{r}
@@ -2982,18 +3001,24 @@ saveRDS(test_m_comparison_adults_shifts_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al.rds"))
 ```
 
-Alternative bayes factor computation for interaction effect (due to challenges with bridge sampling)
+##### Number of Shifts
+
+Alternative bayes factor computation for number of shifts (due to challenges with bridge sampling)
 
 ```{r}
+<<<<<<< Updated upstream
 h_test_adults_shifts_al_interaction <- hypothesis(bm_test_adults_shifts_al, "condition_c:num_shifts = 0", class = "b")
 h_test_adults_shifts_al_interaction
+=======
+h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
+h_test_adults_shifts_al_num_shifts
+plot(h_test_adults_shifts_al_num_shifts)
+>>>>>>> Stashed changes
 # evidence in favor of condition being different from zero
 1 / h_test_adults_shifts_al_interaction$hypothesis$Evid.Ratio
 saveRDS(h_test_adults_shifts_al_interaction, 
         file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_interaction.rds"))
 ```
-
-##### Number of Shifts
 
 Bridge sampling Bayes factor approach: Number of shifts Effect
 
@@ -3011,18 +3036,6 @@ test_m_comparison_adults_shifts_al_num_shifts <- brms::bayes_factor(bm_test_adul
  
 saveRDS(test_m_comparison_adults_shifts_al_num_shifts, 
         file = here(RESULTS_FOLDER, "test_m_comparison_adults_shifts_al_num_shifts.rds"))
-```
-
-Alternative bayes factor computation for number of shifts (due to challenges with bridge sampling)
-
-```{r}
-h_test_adults_shifts_al_num_shifts <- hypothesis(bm_test_adults_shifts_al, "num_shifts = 0", class = "b")
-h_test_adults_shifts_al_num_shifts
-plot(h_test_adults_shifts_al_num_shifts)
-# evidence in favor of condition being different from zero
-1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
-saveRDS(h_test_adults_shifts_al_num_shifts, 
-        file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
@@ -3218,6 +3231,16 @@ saveRDS(h_test_toddlers_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "h_test_toddlers_diff_mouse_bear_al.rds"))
 ```
 
+Alternative bayes factor computation for diff_mouse_bear effect (due to challenges with bridge sampling)
+
+```{r}
+h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear <- hypothesis(bm_test_toddlers_diff_mouse_bear_al, "diff_mouse_bear_s = 0", class = "b")
+h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear
+# evidence in favor of interaction being different from zero
+1 / h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio
+saveRDS(h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear, 
+        file = here(RESULTS_FOLDER, "h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear.rds"))
+```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
 
@@ -3330,7 +3353,7 @@ h_test_adults_diff_mouse_bear_al_diff_mouse_bear <- hypothesis(bm_test_adults_di
 h_test_adults_diff_mouse_bear_al_diff_mouse_bear
 # evidence in favor of interaction being different from zero
 1 / h_test_adults_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio
-saveRDS(h_test_adults_diff_mouse_bear_al, 
+saveRDS(h_test_adults_diff_mouse_bear_al_diff_mouse_bear, 
         file = here(RESULTS_FOLDER, "h_test_adults_diff_mouse_bear_al_diff_mouse_bear.rds"))
 ```
 

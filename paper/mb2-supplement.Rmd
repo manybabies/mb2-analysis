@@ -21,7 +21,6 @@ documentclass     : "apa6"
 classoption       : "man, donotrepeattitle"
 output            : papaja::apa6_pdf
 ---
-
 ```{r setup, include = FALSE}
 library(papaja)
 library(knitr)
@@ -37,7 +36,7 @@ source(here('helper','ensure_repo_structure.R'))
 
 This document contains supplemental material of the manuscript:
 
-Schuwerk, T.\*, Kampis, D.\*, Baillargeon, R., Biro, S., Bohn, M., Byers-Heinlein, K., Dörrenberg, S., Fisher, C., Franchin, L., Fulcher, T., Garbisch, I., Geraci, A., Grosse Wiesmann, C., Hamlin, J. K., Hepach, R., Hunnius, S., Hyde, D. C., Kármán, P., Kosakowski, H. L., Kovács, Á. M., Krämer, A., Kulke, L., Lee, C., Lew-Williams, C., Liszkowski, U., Mahowald, K., Mascaro, O., Meyer, M., Moreau, D., Perner, J., Poulin-Dubois, D., Powell, L. J., Prein, J., Priewasser, B., Proft, M., Raz, G., Reschke, P., Ross, J., Rothmaler, K., Saxe, R., Schneider, D., Southgate, V., Surian, L., Tebbe, A.-L., Träuble, B., Tsui, A. S. M., Wertz, A. E., Woodward, A., Yuen, F., Yuile, A. R., Zellner, L., Frank, M.C., & Rakoczy, H. (2021, February 14). Action anticipation based on an agent's epistemic state in toddlers and adults. [Manuscript submitted for publication] (*shared co-first authorship).
+Schuwerk, T.\*, Kampis, D.\*, et al. (2025, XXX XX). Action anticipation based on an agent's epistemic state in toddlers and adults. [Manuscript submitted for publication] (*shared co-first authorship).
 
 # S1. Pilot Studies
 
@@ -358,8 +357,10 @@ If multiple reasons for exclusion are applicable to a participant, the criteria 
 format_bayes_factor <- function(bf) {
   if (bf > 1000) {
     return("BF > 1000")
+  } else if (bf < 0.01) {
+    return("BF < 0.01")
   } else {
-    return(sprintf("BF = %.1f", bf))  # Keep two decimal places
+    return(sprintf("BF = %.1f", bf))  # Keep one decimal places
   }
 }
 ```
@@ -401,8 +402,8 @@ bayesian_results <- data.frame(
                  "Weakly Informative", "Less Informative", 
                  "Weakly Informative", "Less Informative", 
                  "Weakly Informative", "Less Informative"),
-  BF = c(16, 10763, 15324130, ">100000000", 
-         2.5, 1, 157115, 1889),
+  BF = c(7180, 10763, 2242713044, "5201436143831125852160", 
+         2.4, 1, 157455, 1889),
   Parameter_Estimates = c(
     "Intercept: 0.44, Main Effect: -0.22",
     "Intercept: 0.45, Main Effect: -0.23",
@@ -430,7 +431,10 @@ bayesian_results <- data.frame(
 tS3_caption <- "Summary of Bayesian Results Across Phases and Priors."
 
 kable(bayesian_results, caption = tS3_caption, format = "latex", booktabs=TRUE, align=c("l","l","l","r","l","l"),col.names = c("Age Cohort","Phase", "Prior", "Bayes Factor","Parameter Estimates", "Sensitivity"),rep("c",4)) %>%
-  kable_styling(latex_options="scale_down")
+  kable_styling(latex_options="scale_down") %>%
+  footnote(general = "BFs reported for the familiarization phase are model comparisons without the intercept. BFS reported for the test phase are model comparisons without the fixed effect of condition.",
+           threeparttable = TRUE, 
+           footnote_as_chunk = TRUE)
 
 #landscape(kable_input, margin = NULL)
 
@@ -462,12 +466,13 @@ b_adults_diff_mouse_bear_estimate_diff_mouse_bear_interaction <- bm_test_adults_
 
 ```
 
-In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately. The dependent variable was the proportion of target looking. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
+In order to examine the effect of condition and the difference in looking times for mouse and bear during location change of the mouse on anticipatory looking, we fitted a Bayesian mixed-effects model for both age cohorts separately. The dependent variable was the proportion DLS. The fixed effects included the main effects of condition, the difference in fixation times of mouse and bear, and their interaction. We also included random intercepts and slopes for differences in fixation times of mouse and bear within each participant and within each lab, allowing us to account for the hierarchical structure of the data and potential variability between labs and participants.
 
-For toddlers, the fixed effect of difference in mouse-bear looking on anticipatory looking was essentially zero, Estimate = `r round(b_toddlers_diff_mouse_bear_estimate_diff_mouse_bear, 3)`, as was the interaction between condition and the difference in mouse-bear looking, Estimate = `r round(b_toddlers_diff_mouse_bear_estimate_diff_mouse_bear_interaction, 3)` (see Figure S5). These results indicate that neither the main effect of fixation time differences nor its interaction with condition meaningfully predicted anticipatory looking. Comparing this model to a simpler model without the interaction of condition and difference in mouse-bear looking, a Bayes Factor of `r format_bayes_factor(test_m_comparison_toddlers_diff_mouse_bear_al$bf)` was computed.  This provides overwhelming evidence that the inclusion of condition and the difference in fixation times improves model fit. However, the individual contributions of the difference in mouse-bear looking and its interaction with condition appear negligible, as indicated by their near-zero estimates and confidence intervals.
+Due to limitations with bridge sampling, Bayes factors were computed using the Savage-Dickey density ratio method. These analyses provided moderate evidence against including both the fixed effect of difference in fixation times of mouse and bear, `r format_bayes_factor(1 / h_test_toddlers_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio)`, and its interaction with condition, `r format_bayes_factor(1 / h_test_toddlers_diff_mouse_bear_al$hypothesis$Evid.Ratio)`. These results suggest that the difference in looking time to mouse versus bear, either alone or in interaction with condition, did not meaningfully account for variance in toddlers’ proportional DLS.
 
-For adults, the regression results indicated the following: 
-The coefficient for the difference in mouse-bear looking was essentially zero, Estimate = `r round(b_adults_diff_mouse_bear_estimate_diff_mouse_bear, 3)`, suggesting no notable effect of the difference in fixation times on anticipatory looking. Additionally, the interaction between condition and the difference in mouse-bear looking was non-significant, Estimate = `r round(b_adults_diff_mouse_bear_estimate_diff_mouse_bear_interaction, 3)`, indicating that the relationship between condition and anticipatory looking did not vary meaningfully with changes in fixation time difference. When comparing this full model with a simpler model that excluded the interaction between condition and the difference in mouse-bear looking, we obtained a Bayes factor of `r format_bayes_factor(test_m_comparison_adults_diff_mouse_bear_al$bf)`. This provides very strong evidence in favor of the simpler model, suggesting that the interaction between condition and fixation time difference does not substantially improve the model’s fit. Overall, these results imply that while condition affects anticipatory looking, the difference in fixation times between the mouse and bear, and its interaction with condition, do not meaningfully contribute to the prediction of target looking behavior.
+To assess whether proportional DLS in adults was predicted by condition, the difference in looking time between the mouse and bear, and their interaction, we fit a Bayesian mixed-effects model. There was a strong negative main effect of condition, indicating lower proportional DLS in the ignorance condition compared to the knowledge condition (Estimate = –0.21, 95% CI [–0.29, –0.13]). We also observed a negative main effect of mouse-bear looking difference, with greater looking toward the bear (relative to the mouse) associated with higher proportion DLS (Estimate = –0.04, 95% CI [–0.05, –0.02]). The interaction between condition and looking difference was close to zero and uncertain (Estimate = 0.01, 95% CI [–0.02, 0.04]).
+
+Bayes factors computed using the Savage-Dickey method provided overwhelming evidence in favor of including the fixed effect of the difference in looking time between the mouse and bear, `r format_bayes_factor(1 / h_test_adults_diff_mouse_bear_al_diff_mouse_bear$hypothesis$Evid.Ratio)`, and moderate evidence against including the interaction term, `r format_bayes_factor(1 / h_test_adults_diff_mouse_bear_al$hypothesis$Evid.Ratio)`. These results suggest that both condition and mouse-versus-bear looking independently predict proportional DLS in adults, but their interaction does not appear to contribute meaningfully.
 
 ```{r fig10, fig.cap="AL as a function of the difference in looking time to mouse and bear during location change of mouse (in ms) for each age cohort and each condition.", fig.align="center", out.width = "6.8in"}
 include_graphics(here("paper","Figure8.png"),rel_path=FALSE)
