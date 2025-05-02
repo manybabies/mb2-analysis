@@ -8,10 +8,12 @@ author:
     corresponding: yes
     address: "Leopoldstr. 13, 80802 München, Germany"
     email: tobias.schuwerk@psy.lmu.de
+    equal_contrib: yes
   - name: Dora Kampis
     affiliation: "2"
     corresponding: no
     email: dk@psy.ku.dk
+    equal_contrib: yes
   - name: Nicolás Alessandroni
     affiliation: "3"
     corresponding: no
@@ -33,696 +35,600 @@ author:
     corresponding: no
     email: rbaillar@illinois.edu
   - name: Anna-Elisabeth Baumann
-    affiliation: "8,9"
+    affiliation: "3,8"
     corresponding: no
     email: anna.baumann@ucalgary.ca
   - name: Cyann Bernard
-    affiliation: "10"
+    affiliation: "9"
     corresponding: no
     email: cyann.bernard@etu.u-paris.fr
   - name: Szilvia Biro
-    affiliation: "11,12"
+    affiliation: "10,11"
     corresponding: no
     email: sbiro@fsw.leidenuniv.nl
   - name: Tashauna L. Blankenship
-    affiliation: "13"
+    affiliation: "12"
     corresponding: no
     email: tashauna.blankenshi@umb.edu
   - name: Isa Blomberg
-    affiliation: "14"
+    affiliation: "13"
     corresponding: no
     email: isa.blomberg@uni-goettingen.de
   - name: Manuel Bohn
-    affiliation: "15,16"
+    affiliation: "14,15"
     corresponding: no
     email: manuel.bohn@leuphana.de
   - name: Elisabeth E. F. Bradford
-    affiliation: "17"
+    affiliation: "16"
     corresponding: no
     email: eefb@st-andrews.ac.uk
   - name: Krista Byers-Heinlein
-    affiliation: "18"
+    affiliation: "3"
     corresponding: no
+    email: K.Byers@concordia.ca
   - name: Irene Canudas Grabolosa
-    affiliation: "19"
+    affiliation: "17"
     corresponding: no
     email: Irenecanudas@gmail.com
   - name: Emily M. Chen
-    affiliation: "20,21"
+    affiliation: "18,19"
     corresponding: no
     email: echen15@mit.edu
   - name: Xiaoyun Chen
-    affiliation: "22"
+    affiliation: "20"
     corresponding: no
     email: x.chen24@lancaster.ac.uk
   - name: John Corbit
-    affiliation: "23"
+    affiliation: "21"
     corresponding: no
     email: jcorbit@stfx.ca
   - name: Cynthia Fisher
-    affiliation: "24"
+    affiliation: "7"
     corresponding: no
     email: clfishe@illinois.edu
   - name: Samuel H. Forbes
-    affiliation: "25"
+    affiliation: "22"
     corresponding: no
     email: samuel.forbes@durham.ac.uk
   - name: Laura Franchin
-    affiliation: "26"
+    affiliation: "23"
     corresponding: no
     email: laura.franchin@unitn.it
   - name: Tess Fulcher
-    affiliation: "27"
+    affiliation: "24"
     corresponding: no
     email: mtfulcher@uchicago.edu
   - name: Alessandra Geraci
-    affiliation: "28"
+    affiliation: "25"
     corresponding: no
     email: alessandra.geraci@unict.it
   - name: Nayeli Gonzalez-Gomez
-    affiliation: "29"
+    affiliation: "26"
     corresponding: no
     email: ngonzalez-gomez@brookes.ac.uk
   - name: Paul Grohmann
-    affiliation: "16"
+    affiliation: "15"
     corresponding: no
     email: paulgrohmann@posteo.de
   - name: Charlotte Grosse Wiesmann
-    affiliation: "30,31"
+    affiliation: "27,28"
     corresponding: no
     email: wiesmann@cbs.mpg.de
   - name: J. Kiley Hamlin
-    affiliation: "32"
+    affiliation: "29"
     corresponding: no
     email: Kiley.hamlin@psych.ubc.ca
   - name: Daniel Haun
-    affiliation: "33"
+    affiliation: "15"
     corresponding: no
     email: haun@eva.mpg.de
   - name: Naomi Havron
-    affiliation: "34,35"
+    affiliation: "30,31"
     corresponding: no
     email: nhavron@psy.haifa.ac.il
   - name: Robert Hepach
-    affiliation: "36"
+    affiliation: "32"
     corresponding: no
     email: robert.hepach@psy.ox.ac.uk
   - name: Tone K. Hermansen
-    affiliation: "37"
+    affiliation: "33"
     corresponding: no
     email: t.k.hermansen@psykologi.uio.no
   - name: Mikołaj Hernik
-    affiliation: "38"
+    affiliation: "34"
     corresponding: no
     email: mikolaj.l.hernik@uit.no
   - name: Michael Huemer
-    affiliation: "39"
+    affiliation: "17"
     corresponding: no
     email: michael.huemer32@gmail.com
   - name: Sabine Hunnius
-    affiliation: "40"
+    affiliation: "35"
     corresponding: no
     email: sabine.hunnius@donders.ru.nl
   - name: Daniel C. Hyde
-    affiliation: "41"
+    affiliation: "7"
     corresponding: no
     email: dchyde@illinois.edu
   - name: Sagi Jaffe-Dax
-    affiliation: "42"
+    affiliation: "36"
     corresponding: no
     email: jaffedax@tauex.tau.ac.il
   - name: Krisztina V. Jakobsen
-    affiliation: "43"
+    affiliation: "37"
     corresponding: no
     email: jakobskv@jmu.edu
   - name: Natalia Kartushina
-    affiliation: "44"
+    affiliation: "38"
     corresponding: no
     email: natalia.kartushina@iln.uio.no
   - name: Coral Kfir
-    affiliation: "45"
+    affiliation: "36"
     corresponding: no
     email: coralkfir@mail.tau.ac.il
   - name: Manar Khalaila
-    affiliation: "46"
+    affiliation: "36"
     corresponding: no
     email: manarkhalaily4@gmail.com
   - name: Osman S. Kingo
-    affiliation: "47"
+    affiliation: "39"
     corresponding: no
     email: osman@psy.au.dk
   - name: Mona M. Klau
-    affiliation: "48"
+    affiliation: "40"
     corresponding: no
     email: m.klau@uva.nl
   - name: Ada Koleini
-    affiliation: "37"
+    affiliation: "33"
     corresponding: no
     email: adako@uio.no
   - name: Abhinav Kona
-    affiliation: "49"
+    affiliation: "41"
     corresponding: no
     email: ak161@rice.edu
   - name: Shannon P. Kong
-    affiliation: "29"
+    affiliation: "26"
     corresponding: no
     email: 19062026@brookes.ac.uk
   - name: Heather L. Kosakowski
-    affiliation: "50,51"
+    affiliation: "42,43"
     corresponding: no
     email: heatherlkosakowski@gmail.com
   - name: Anna Krämer
-    affiliation: "52"
+    affiliation: "44"
     corresponding: no
     email: anna.kraemer@plus.ac.at
   - name: Judith L. Krief
-    affiliation: "53"
+    affiliation: "2"
     corresponding: no
     email: kriefjudith@gmail.com
   - name: Peter Krøjgaard
-    affiliation: "54"
+    affiliation: "39"
     corresponding: no
     email: peter@psy.au.dk
   - name: Louisa Kulke
-    affiliation: "55"
+    affiliation: "45"
     corresponding: no
     email: kulke@uni-bremen.de
   - name: Crystal Y. Lee
-    affiliation: "56"
+    affiliation: "46"
     corresponding: no
     email: cl40@princeton.edu
   - name: Edward W. Legg
-    affiliation: "57,58"
+    affiliation: "47,48"
     corresponding: no
     email: edward.legg@uniri.hr
   - name: Tiffany S. Leung
-    affiliation: "59"
+    affiliation: "49"
     corresponding: no
     email: tsl51@miami.edu
   - name: Casey Lew-Williams
-    affiliation: "60"
+    affiliation: "46"
     corresponding: no
     email: caseylw@princeton.edu
   - name: Yixun Li
-    affiliation: "61"
+    affiliation: "50"
     corresponding: no
     email: lyixun@eduhk.hk
   - name: Ulf Liszkowski
-    affiliation: "62"
+    affiliation: "51"
     corresponding: no
     email: ulf.liszkowski@uni-hamburg.de
   - name: Liquan Liu
-    affiliation: "63,64"
+    affiliation: "52,53"
     corresponding: no
     email: liquan.liu@uts.edu.au
   - name: Yiyu Liu
-    affiliation: "65"
+    affiliation: "7"
     corresponding: no
     email: yiyuliu2@illinois.edu
   - name: Alexander Mackiel
-    affiliation: "66"
+    affiliation: "24"
     corresponding: no
     email: amackiel@uchicago.edu
   - name: Kyle Mahowald
-    affiliation: "67"
+    affiliation: "54"
     corresponding: no
     email: mahowald@utexas.edu
   - name: Milena Marx
-    affiliation: "68"
+    affiliation: "55"
     corresponding: no
     email: milena.marx@psychologie.uni-heidelberg.de
   - name: Olivier Mascaro
-    affiliation: "10"
+    affiliation: "9"
     corresponding: no
     email: olivier.mascaro@gmail.com
   - name: Magda Matetovici
-    affiliation: "69"
+    affiliation: "56"
     corresponding: no
     email: magda.matetovici@mpi.nl
   - name: Marlena Mayer
-    affiliation: "62"
+    affiliation: "51"
     corresponding: no
     email: marlena.mayer@uni-hamburg.de
   - name: Julien Mayor
-    affiliation: "37"
+    affiliation: "33"
     corresponding: no
     email: julien.mayor@psykologi.uio.no
   - name: Marek Meristo
-    affiliation: "70"
+    affiliation: "57"
     corresponding: no
     email: marek.meristo@psy.gu.se
   - name: Marlene Meyer
-    affiliation: "71"
+    affiliation: "35"
     corresponding: no
     email: marlene.meyer@donders.ru.nl
   - name: David Moreau
-    affiliation: "72"
+    affiliation: "58"
     corresponding: no
     email: d.moreau@auckland.ac.nz
   - name: Hay Mar Myat Kyaw
-    affiliation: "61"
+    affiliation: "50"
     corresponding: no
     email: mhaymar@eduhk.hk
   - name: Andreea A. Nistor
-    affiliation: "73"
+    affiliation: "32"
     corresponding: no
     email: alexandranistorr@outlook.com
   - name: Josef Perner
-    affiliation: "52"
+    affiliation: "44"
     corresponding: no
     email: josef.perner@plus.ac.at
   - name: Stefanie Peykarjou
-    affiliation: "74,75"
+    affiliation: "55,59"
     corresponding: no
     email: stefanie.peykarjou@charlotte-fresenius-uni.de
   - name: Que Anh Pham
-    affiliation: "76"
+    affiliation: "12"
     corresponding: no
     email: queanh.pham001@umb.edu
   - name: Diane Poulin-Dubois
-    affiliation: "77"
+    affiliation: "3"
     corresponding: no
     email: diane.poulindubois@concordia.ca
   - name: Lindsey J. Powell
-    affiliation: "78"
+    affiliation: "60"
     corresponding: no
     email: ljpowell@ucsd.edu
   - name: Julia C. Prein
-    affiliation: "16,79"
+    affiliation: "14,15"
     corresponding: no
     email: julia.prein@leuphana.de
   - name: Beate Priewasser
-    affiliation: "80"
+    affiliation: "61"
     corresponding: no
     email: beate.priewasser@pmu.ac.at
   - name: Marina Proft
-    affiliation: "81"
+    affiliation: "13"
     corresponding: no
     email: mproft@uni-goettingen.de
   - name: Alyssa A. Quinn
-    affiliation: "82"
+    affiliation: "6"
     corresponding: no
     email: Alyssa.Quinn1998@gmail.com
   - name: Peter J. Reschke
-    affiliation: "83"
+    affiliation: "62"
     corresponding: no
     email: peter_reschke@byu.edu
   - name: Josephine Ross
-    affiliation: "84"
+    affiliation: "63"
     corresponding: no
     email: juross@dundee.ac.uk
   - name: Audun Rosslund
-    affiliation: "37,85"
+    affiliation: "33,38"
     corresponding: no
     email: audunrosslund@gmail.com
   - name: Katrin Rothmaler
-    affiliation: "86"
+    affiliation: "28"
     corresponding: no
     email: katrin.rothmaler@uni-leipzig.de
   - name: Petra Šarić
-    affiliation: "57,87"
+    affiliation: "47,47"
     corresponding: no
     email: ppetrasaric@gmail.com
   - name: Karola Schlegelmilch
-    affiliation: "88,89"
+    affiliation: "64,65"
     corresponding: no
     email: Karola.schlegelmilch@uni-leipzig.de
   - name: Dana Schneider
-    affiliation: "90"
+    affiliation: "66"
     corresponding: no
     email: msdanaschneider@gmail.com
   - name: Melanie S. Schreiner
-    affiliation: "91"
+    affiliation: "13"
     corresponding: no
     email: melanie.schreiner@psych.uni-goettingen.de
   - name: Lital Shapiro
-    affiliation: "92"
+    affiliation: "36"
     corresponding: no
     email: litalshapiro@gmail.com
   - name: Elizabeth A. Simpson
-    affiliation: "93"
+    affiliation: "49"
     corresponding: no
     email: simpsone@miami.edu
   - name: Lauren Smith
-    affiliation: "94"
+    affiliation: "60"
     corresponding: no
     email: l7smith@ucsd.edu
   - name: Trine Sonne
-    affiliation: "47"
+    affiliation: "39"
     corresponding: no
     email: trines@psy.au.dk
   - name: Adrian Steffan
-    affiliation: "95"
+    affiliation: "1"
     corresponding: no
     email: adrian.steffan@hotmail.de
   - name: Yanjie Su
-    affiliation: "96"
+    affiliation: "67"
     corresponding: no
     email: yjsu@pku.edu.cn
   - name: Alvin W. M. Tan
-    affiliation: "97"
+    affiliation: "19"
     corresponding: no
     email: tanawm@stanford.edu
   - name: Anna-Lena Tebbe
-    affiliation: "98,99"
+    affiliation: "28,68"
     corresponding: no
     email: tebbe@cbs.mpg.de
   - name: Ingmar Visser
-    affiliation: "48"
+    affiliation: "40"
     corresponding: no
     email: i.visser@uva.nl
   - name: Yanwei Wang
-    affiliation: "96"
+    affiliation: "67"
     corresponding: no
     email: ywwang@stu.pku.edu.cn
   - name: Annie E. Wertz
-    affiliation: "100,101"
+    affiliation: "69,70"
     corresponding: no
     email: wertz@ucsb.edu
   - name: Gert Westermann
-    affiliation: "22"
+    affiliation: "20"
     corresponding: no
     email: g.westermann@lancaster.ac.uk
   - name: Amanda L. Woodward
-    affiliation: "102"
+    affiliation: "24"
     corresponding: no
     email: woodward@uchicago.edu
   - name: Yukun Yu
-    affiliation: "103"
+    affiliation: "7"
     corresponding: no
     email: yukunyu2@illinois.edu
   - name: Francis Yuen
-    affiliation: "104"
+    affiliation: "29"
     corresponding: no
     email: francis.yuen@psych.ubc.ca
   - name: Amanda Rose Yuile
-    affiliation: "105,106"
+    affiliation: "7,71"
     corresponding: no
     email: ayuile@purdue.edu
   - name: Zhen Zeng
-    affiliation: "107,108"
+    affiliation: "72,73"
     corresponding: no
     email: zh.zeng2015@gmail.com
   - name: Martin Zettersten
-    affiliation: "109"
+    affiliation: "74"
     corresponding: no
     email: mzettersten@ucsd.edu
   - name: Lucie Zimmer
-    affiliation: "110"
+    affiliation: "1"
     corresponding: no
     email: lucie.zimmer@psy.lmu.de
   - name: Michael C. Frank
-    affiliation: "111"
+    affiliation: "19"
     corresponding: no
     email: mcfrank@stanford.edu
   - name: Hannes Rakoczy
-    affiliation: "112"
+    affiliation: "13"
     corresponding: no
     email: Hannes.Rakoczy@psych.uni-goettingen.de
 
 affiliation:
   - id: "1"
     institution: Department of Psychology, Ludwig-Maximilians-Universität München,
-      München, Bayern, Germany
+      München, Germany
   - id: "2"
-    institution: Department of Psychology, University of Copenhagen
+    institution: Department of Psychology, Centre for Early Childhood Cognition, University of Copenhagen, Copenhagen, Denmark
   - id: "3"
     institution: Department of Psychology, Concordia University, Montréal, Canada
   - id: "4"
-    institution: Psycholinguistics, School of Humanities, University of Mannheim
+    institution: School of Humanities, University of Mannheim, Mannheim, Germany
   - id: "5"
     institution: Facultad de Psicología, Universidad Autónoma de México, CdMx, México
   - id: "6"
     institution: School of Psychological Sciences, University of Newcastle, Australia
   - id: "7"
     institution: Department of Psychology, University of Illinois Urbana-Champaign,
-      Champaign, United States
+      Champaign, IL, USA
   - id: "8"
     institution: University of Calgary, Calgary, Canada
   - id: "9"
-    institution: Department of Psychology, Concordia University, Montreal, Canada
+    institution: Université Paris Cité, INCC UMR 8002, CNRS, Paris, France
   - id: "10"
-    institution: Université Paris Cité, INCC UMR 8002, CNRS, F-75006 Paris, France
-  - id: "11"
     institution: Leiden Institute of Education and Child Studies, Leiden University,
       Leiden, The Netherlands
-  - id: "12"
+  - id: "11"
     institution: Leiden Institute for Brain and Cognition, Leiden University, Leiden,
       The Netherlands
+  - id: "12"
+    institution: Department of Psychology, University of Massachusetts Boston, Boston, Massachusetts, USA
   - id: "13"
-    institution: University of Massachusetts Boston
+    institution: Department of Developmental Psychology, University of Göttingen, Göttingen, Germany
   - id: "14"
-    institution: Department of Developmental Psychology, University of Göttingen
-  - id: "15"
-    institution: Institute of Psychology in Education, Leuphana University Lüneburg,
+    institution: Department of Developmental Psychology, Institute of Psychology in Education, Leuphana University Lüneburg,
       Lüneburg, Germany
-  - id: "16"
+  - id: "15"
     institution: Department of Comparative Cultural Psychology, Max Planck Institute
       for Evolutionary Anthropology, Leipzig, Germany
-  - id: "17"
+  - id: "16"
     institution: School of Psychology & Neuroscience, University of St Andrews, Scotland,
       UK
+  - id: "17"
+    institution: Laboratory for Developmental Studies, Department of Psychology, Harvard University, Cambridge, MA, USA
   - id: "18"
-    institution: Department of Psychology, Concordia University
-  - id: "19"
-    institution: Department of Psychology, Faculty of Arts and Sciences, Harvard University,  Cambridge
-      (MA), USA
-  - id: "20"
     institution: Department of Brain and Cognitive Sciences, Massachusetts Institute
-      of Technology, Cambridge, MA, United States of America
-  - id: "21"
-    institution: Department of Psychology, Stanford University, Stanford, CA, United
-      States of America
-  - id: "22"
+      of Technology, Cambridge, MA, USA
+  - id: "19"
+    institution: Department of Psychology, Stanford University, Stanford, CA, USA
+  - id: "20"
     institution: Department of Psychology, Lancaster University, Lancaster, UK
+  - id: "21"
+    institution: Psychology Department, St. Francis Xavier University, Antigonish, Canada
+  - id: "22"
+    institution: Department of Psychology, Durham University, Durham, UK
   - id: "23"
-    institution: Psychology Department, St. Francis Xavier University, Antigonish,
-      Nova Scotia, Canada
+    institution: Department of Psychology and Cognitive Science, University of Trento, Italyå
   - id: "24"
-    institution: Psychology Department, University of Illinois Urbana Champaign
+    institution: Department of Psychology, University of Chicago, Chicago, IL, USA
   - id: "25"
-    institution: Department of Psychology, Durham University, Durham, United Kingdom
-  - id: "26"
-    institution: Department of Psychology and Cognitive Science, University of Trento
-  - id: "27"
-    institution: University of Chicago
-  - id: "28"
     institution: Department of Educational Sciences, University of Catania, Catania,
       Italia
-  - id: "29"
+  - id: "26"
     institution: Centre for Psychological Research, Oxford Brookes University, Oxford,
       UK
-  - id: "30"
+  - id: "27"
     institution: Cognitive Neuroscience Lab, Department of Liberal Arts and Sciences,
       University of Technology Nuremberg, Germany
-  - id: "31"
+  - id: "28"
     institution: Research Group Milestones of Early Cognitive Development, Max Planck
       Institute for Cognitive and Brain Sciences, Leipzig, Germany
-  - id: "32"
-    institution: Department of Psychology, University of British Columbia
-  - id: "33"
-    institution: Department of Comparative Cultural Psychology, Max Planck Institute
-      for Evolutionary Anthropology,  Leipzig, Germany
-  - id: "34"
+  - id: "29"
+    institution: Department of Psychology, University of British Columbia, Vancouver, Canada
+  - id: "30"
     institution: School of Psychological Sciences, Faculty of Social Sciences, University
       of Haifa, Haifa, Israel
-  - id: "35"
+  - id: "31"
     institution: The Institute of Information Processing and Decision Making, University
       of Haifa, Haifa, Israel
-  - id: "36"
+  - id: "32"
     institution: Department of Experimental Psychology, University of Oxford, Oxford,
-      United Kingdom
-  - id: "37"
+      UK
+  - id: "33"
     institution: Department of Psychology, University of Oslo, Oslo, Norway
-  - id: "38"
+  - id: "34"
     institution: Department of Psychology, UiT The Arctic University of Norway, Tromsø,
       Norway
-  - id: "39"
-    institution: Department of Psychology, Harvard University, Cambridge, MA, USA
-  - id: "40"
+  - id: "35"
     institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University
-      Nijmegen
-  - id: "41"
-    institution: Department of Psychology, University of Illinois Urbana-Champaign
-  - id: "42"
+      Nijmegen, the Netherlands
+  - id: "36"
     institution: School of Psychological Sciences and Sagol School of Neuroscience,
       Tel Aviv University, Tel Aviv, Israel
-  - id: "43"
-    institution: Department of Psychology, James Madison University, Harrisonburg,
-      USA
-  - id: "44"
-    institution: Institute for Linguistics and Scandinavian Studies, University of
-      Oslo
-  - id: "45"
-    institution: School of Psychology, Tel Aviv University, Tel Aviv, Israel
-  - id: "46"
-    institution: Department of Psychology, Tel Aviv University, Tel Aviv, Israel
-  - id: "47"
+  - id: "37"
+    institution: Department of Psychology, James Madison University, Harrisonburg, VA, USA
+  - id: "38"
+    institution: Department of Linguistics and Scandinavian Studies, University of Oslo, Oslo, Norway
+  - id: "39"
     institution: Department of Psychology and Behavioural Sciences, Aarhus University,
       Aarhus, Denmark
-  - id: "48"
-    institution: Department of Psychology, University of Amsterdam
-  - id: "49"
-    institution: Department of BioSciences, Rice University, Houston, USA
-  - id: "50"
+  - id: "40"
+    institution: Department of Psychology, University of Amsterdam, Amsterdam, the Netherlands
+  - id: "41"
+    institution: Department of BioSciences, Rice University, Houston, TX, USA
+  - id: "42"
     institution: Department of Psychology, Center for Brain Science, Harvard University,
       Cambridge, MA, USA
-  - id: "51"
+  - id: "43"
     institution: Department of Psychology, University of Southern California, Los
       Angeles, MA, USA
-  - id: "52"
+  - id: "44"
     institution: Centre for Cognitive Neuroscience & Department of Psychology, University
       of Salzburg, Salzburg, Austria
-  - id: "53"
-    institution: Department of Psychology, Centre for Early Childhood Cognition, University
-      of Copenhagen
-  - id: "54"
-    institution: Department of Psychology and the Behavioural Sciences, Aarhus University,
-      Aarhus, Denmark
-  - id: "55"
+  - id: "45"
     institution: Department of Developmental Psychology with Educational Psychology,
-      University of Bremen
-  - id: "56"
-    institution: Department of Psychology, Princeton University, Princeton, NJ
-  - id: "57"
+      University of Bremen, Bremen, Germany
+  - id: "46"
+    institution: Department of Psychology, Princeton University, Princeton, NJ, USA
+  - id: "47"
     institution: Division of Cognitive Sciences, University of Rijeka, Rijeka, Croatia
-  - id: "58"
+  - id: "48"
     institution: Centre for Mind and Behaviour, University of Rijeka, Rijeka, Croatia
-  - id: "59"
-    institution: Department of Psychology, University of Miami, Coral Gables, USA
-  - id: "60"
-    institution: Department of Psychology, Princeton University, Princeton, New Jersey,
-      USA
-  - id: "61"
+  - id: "49"
+    institution: Department of Psychology, University of Miami, Coral Gables, FL, USA
+  - id: "50"
     institution: Department of Early Childhood Education, The Education University
       of Hong Kong, Hong Kong
-  - id: "62"
-    institution: Universität Hamburg
-  - id: "63"
+  - id: "51"
+    institution: Department of Developmental Psychology, University of Hamburg, Hamburg, Germany
+  - id: "52"
     institution: Graduate School of Health, University of Technology Sydney, Sydney,
       Australia
-  - id: "64"
+  - id: "53"
     institution: School of Psychology, Western Sydney University, Sydney, Australia
-  - id: "65"
-    institution: Department of Psychology, University of Illinois at Urbana-Champaign,
-      Champaign, Champaign, Illinois, USA
-  - id: "66"
-    institution: Department of Psychology, University of Chicago, Chicago, United
-      States
-  - id: "67"
-    institution: Department of Linguistics, The University of Texas at Austin, USA
-  - id: "68"
-    institution: Psychological Institute, Heidelberg University, Heidelberg, Germany
-  - id: "69"
-    institution: Max Planck Institute for Psycholinguistics, Nijmegen, The Netherlands
-  - id: "70"
-    institution: Department of Psychology, University of Gothenburg, Sweden
-  - id: "71"
-    institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University,
-      the Netherlands
-  - id: "72"
+  - id: "54"
+    institution: Department of Linguistics, The University of Texas at Austin, Austin, TX, USA
+  - id: "55"
+    institution: Developmental and Biological Psychology, Heidelberg University, Heidelberg, Germany
+  - id: "56"
+    institution: Language Development Department, Max Planck Institute for Psycholinguistics, Nijmegen, the Netherlands
+  - id: "57"
+    institution: Department of Psychology, University of Gothenburg, Gothenburg, Sweden
+  - id: "58"
     institution: School of Psychology, University of Auckland, Auckland, New Zealand
-  - id: "73"
-    institution: University of Oxford, Oxford, United Kingdom
-  - id: "74"
-    institution: Developmental and Biological Psychology, Heidelberg University, Heidelberg,
-      Germany
-  - id: "75"
+  - id: "59"
     institution: Developmental and Pedagogical Psychology, Charlotte Fresenius Hochschule
       Wiesbaden, Wiesbaden, Germany
-  - id: "76"
-    institution: Department of Psychology, University of Massachusetts Boston, Boston,
-      Massachusetts, USA
-  - id: "77"
-    institution: Psychology Department, Concordia University, Montréal, Canada
-  - id: "78"
-    institution: Department of Psychology, University of California, San Diego, La
+  - id: "60"
+    institution: Department of Psychology, University of California San Diego, La
       Jolla, CA, USA
-  - id: "79"
-    institution: Department of Developmental Psychology, Institute of Psychology in
-      Education, Leuphana University Lüneburg, Lüneburg, Germany
-  - id: "80"
+  - id: "61"
     institution: Institute Early Life Care, Paracelsus Medical University, Salzburg,
       Austria
-  - id: "81"
-    institution: University of Göttingen
-  - id: "82"
-    institution: School of Psychological Science, University of Newcastle, Australia
-  - id: "83"
-    institution: School of Family Life, Brigham Young University, Provo, UT, United
-      States
-  - id: "84"
+  - id: "62"
+    institution: School of Family Life, Brigham Young University, Provo, UT, USA
+  - id: "63"
     institution: Department of Psychology, University of Dundee, Scotland, UK
-  - id: "85"
-    institution: Department of Linguistics and Scandinavian Studies, University of
-      Oslo, Oslo, Norway
-  - id: "86"
-    institution: Max Planck Institute for Human Cognitive and Brain Sciences, Leipzig,
-      Germany
-  - id: "87"
-    institution: Department of Psychology, University of Rijeka, Rijeka, Croatia
-  - id: "88"
-    institution: Leipzig University, Leipzig, Germany
-  - id: "89"
-    institution: Max Planck Institute for Human Development, Berlin, Germany
-  - id: "90"
-    institution: Friedrich-Schiller-University Jena, Jena, Germany
-  - id: "91"
-    institution: Department of Developmental Psychology, University of Göttingen,
-      Göttingen, Germany
-  - id: "92"
-    institution: School of Psychological Sciences, Tel Aviv University, Tel Aviv,
-      Israel
-  - id: "93"
-    institution: Department of Psychology, University of Miami, Coral Gables, Florida,
-      USA
-  - id: "94"
-    institution: University of California San Diego
-  - id: "95"
-    institution: Department of Psychology, Ludwig-Maximilians-Universität München,
-      Munich, Germany
-  - id: "96"
+  - id: "64"
+    institution: Institute of Biology, Department of Human Biology and Primate Cognition, University of Leipzig, Leipzig, Germany
+  - id: "65"
+    institution: Max Planck Research Group Naturalistic Social Cognition, Max Planck Institute for Human Development, Berlin, Germany
+  - id: "66"
+    institution: Institute of Psychology, Friedrich-Schiller-University Jena, Jena, Germany
+  - id: "67"
     institution: School of Psychological and Cognitive Sciences, Peking University,
       Beijing, China
-  - id: "97"
-    institution: Department of Psychology, Stanford University, Stanford, United States
-  - id: "98"
-    institution: Max Planck Institute for Human Cognitive and Brain Sciences
-  - id: "99"
-    institution: University of Florida
-  - id: "100"
+  - id: "68"
+    institution: Department of Psychology, University of Florida, Gainesville, FL, USA
+  - id: "69"
     institution: Department of Psychological & Brain Sciences, University of California,
       Santa Barbara, Santa Barbara, California, USA
-  - id: "101"
+  - id: "70"
     institution: Max Planck Research Group Naturalistic Social Cognition, Max Planck
       Institute for Human Development, Berlin, Germany
-  - id: "102"
-    institution: Psychology, University of Chicago, Chicago, IL
-  - id: "103"
-    institution: Department of Psychology, University of Illinois Urbana-Champaign,
-      Champaign, IL, USA
-  - id: "104"
-    institution: Department of Psychology, University of British Columbia, Vancouver,
-      Canada
-  - id: "105"
+  - id: "71"
     institution: Department of Speech, Language, and Hearing Sciences, Purdue University
-  - id: "106"
-    institution: Department of Psychology, University of Illinois at Urbana-Champaign
-  - id: "107"
+  - id: "72"
     institution: Department of Linguistics and Modern Languages, The Chinese University
       of Hong Kong, Hong Kong SAR, China
-  - id: "108"
+  - id: "73"
     institution: MARCS Institute for Brain, Behaviour and Development, Western Sydney
       University, Sydney, Australia
-  - id: "109"
+  - id: "74"
     institution: Department of Cognitive Science, University of California San Diego,
       La Jolla, California
-  - id: "110"
-    institution: Ludwig-Maximilians-Universität München, Munich, Germany
-  - id: "111"
-    institution: Department of Psychology, Stanford University, Stanford, CA, USA
-  - id: "112"
-    institution: Department of Psychology, University of Göttingen, Göttingen, Germany
+      
+authornote: |
+ The registered Stage 1 manuscript unchanged from the point of IPA can be found on the Open Science Framework: https://osf.io/7ubkw. We have no known conflicts of interests to disclose. Data are available at the following URL: https://osf.io/jmuvd/. The analytic code necessary to reproduce the preregistered analyses presented in this paper is available at https://github.com/manybabies/mb2-analysis. The materials necessary to attempt to replicate the findings presented here are publicly accessible at the following URL:https://osf.io/pd35f/files.
 
 abstract: |
  Do toddlers and adults engage in spontaneous Theory of Mind (ToM)? Evidence from anticipatory looking (AL) studies suggests they do. But a growing body of failed replication studies raised questions about the paradigm’s suitability, urging the need to test the robustness of AL as a spontaneous measure of ToM. In a multi-lab collaboration we examine whether 18- to 27-month- olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In adults [n = 703 included, 68 % FEMALE], we found clear support for epistemic state-based action anticipation: they engaged in simple goal-based action anticipation in pilot studies, and clearly differentiated between knowledge and ignorance conditions in the main study as predicted. In toddlers [n = 521 included, 49 % FEMALE], in contrast, the results were less clear. They did engage in simple goal-based action anticipation in pilot studies, but did not show the clear differentiation between knowledge and ignorance conditions in the main study as predicted. Future research with adults can now move on to probe whether their spontaneous action anticipation is also sensitive to more complex kinds of epistemic states, such as true and false beliefs. Future research with toddlers will first need to investigate more systematically the source of the puzzling findings in the present study and clarify whether they indicate competence or mere performance limitations.

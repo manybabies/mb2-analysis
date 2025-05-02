@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  1 MAY 2025 15:26
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.29)  2 MAY 2025 17:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -586,26 +586,26 @@ LaTeX Warning: Label `tab:Results table of Bayesian regression models' multiply 
 )
 \openout1 = `mb2-paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 233.
-LaTeX Font Info:    ... okay on input line 233.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 237.
+LaTeX Font Info:    ... okay on input line 237.
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 *geometry* verbose mode - [ preamble ] result:
@@ -652,19 +652,19 @@ Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/lmr/m/n --> TU/lmr/m/n on input line 233.
+(Font)                  OT1/lmr/m/n --> TU/lmr/m/n on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/lmr/m/it --> TU/lmr/m/it on input line 233.
+(Font)                  OT1/lmr/m/it --> TU/lmr/m/it on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/lmr/bx/n --> TU/lmr/bx/n on input line 233.
+(Font)                  OT1/lmr/bx/n --> TU/lmr/bx/n on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/lmss/m/n --> TU/lmss/m/n on input line 233.
+(Font)                  OT1/lmss/m/n --> TU/lmss/m/n on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/lmss/bx/n --> TU/lmss/bx/n on input line 233.
+(Font)                  OT1/lmss/bx/n --> TU/lmss/bx/n on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/lmtt/m/n --> TU/lmtt/m/n on input line 233.
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/m/n on input line 237.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/lmtt/m/n --> TU/lmtt/bx/n on input line 233.
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/bx/n on input line 237.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999970497384594.
@@ -692,7 +692,7 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(0)/m/n' will be
-(Font)              scaled to size 12.0pt on input line 233.
+(Font)              scaled to size 12.0pt on input line 237.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999970497384594.
@@ -728,15 +728,15 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 12.0pt on input line 233.
+(Font)              scaled to size 12.0pt on input line 237.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 233.
+(Font)              `operators' in the math version `normal' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/lmr/m/n --> TU/latinmodern-math.otf(1)/m/n on input line 233.
+(Font)                  OT1/lmr/m/n --> TU/latinmodern-math.otf(1)/m/n on input line 237.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 233.
+(Font)              `operators' in the math version `bold' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/lmr/bx/n --> TU/latinmodern-math.otf(1)/b/n on input line 233.
+(Font)                  OT1/lmr/bx/n --> TU/latinmodern-math.otf(1)/b/n on input line 237.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999970497384594.
@@ -802,13 +802,13 @@ Package fontspec Info:
 (fontspec)             <->s*[1.000097049443433]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
-(Font)              `symbols' in the math version `normal' on input line 233.
+(Font)              `symbols' in the math version `normal' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
-(Font)                  OMS/lmsy/m/n --> TU/latinmodern-math.otf(2)/m/n on input line 233.
+(Font)                  OMS/lmsy/m/n --> TU/latinmodern-math.otf(2)/m/n on input line 237.
 LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
-(Font)              `symbols' in the math version `bold' on input line 233.
+(Font)              `symbols' in the math version `bold' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
-(Font)                  OMS/lmsy/b/n --> TU/latinmodern-math.otf(2)/b/n on input line 233.
+(Font)                  OMS/lmsy/b/n --> TU/latinmodern-math.otf(2)/b/n on input line 237.
 
 Package fontspec Info: 
 (fontspec)             latinmodern-math scale = 0.9999970497384594.
@@ -868,50 +868,64 @@ Package fontspec Info:
 (fontspec)             <->s*[0.9998970500334856]"[latinmodern-math.otf]/OT:script=math;language=dflt;"
 
 LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
-(Font)              `largesymbols' in the math version `normal' on input line 233.
+(Font)              `largesymbols' in the math version `normal' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
-(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/m/n on input line 233.
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/m/n on input line 237.
 LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
-(Font)              `largesymbols' in the math version `bold' on input line 233.
+(Font)              `largesymbols' in the math version `bold' on input line 237.
 LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
-(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/b/n on input line 233.
-Package hyperref Info: Link coloring OFF on input line 233.
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/b/n on input line 237.
+Package hyperref Info: Link coloring OFF on input line 237.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 8.4pt on input line 235.
+(Font)              scaled to size 8.4pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 235.
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 235.
+(Font)              scaled to size 6.0pt on input line 239.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 239.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 12.0011pt on input line 235.
+(Font)              scaled to size 12.0011pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 8.40076pt on input line 235.
+(Font)              scaled to size 8.40076pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 6.00055pt on input line 235.
+(Font)              scaled to size 6.00055pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 11.99872pt on input line 235.
+(Font)              scaled to size 11.99872pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 8.3991pt on input line 235.
+(Font)              scaled to size 8.3991pt on input line 239.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 5.99936pt on input line 235.
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 235.
+(Font)              scaled to size 5.99936pt on input line 239.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 239.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 235.
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 239.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 235.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 239.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 235.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 239.
 (/Users/mellischreiner/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
+LaTeX Font Info:    Calculating math sizes for size <8.4> on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 5.87996pt on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 4.2pt on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 5.8805pt on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 4.20038pt on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 5.87932pt on input line 239.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 4.19954pt on input line 239.
+
 
 [1
 
@@ -936,13 +950,13 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [5]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [6]
 
 [7]
+Underfull \vbox (badness 1838) has occurred while \output is active []
+
+
 
 [8]
 Underfull \vbox (badness 1838) has occurred while \output is active []
@@ -950,35 +964,35 @@ Underfull \vbox (badness 1838) has occurred while \output is active []
 
 
 [9]
-Underfull \vbox (badness 1838) has occurred while \output is active []
-
-
 
 [10]
 
 [11]
 
 [12]
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 7.0pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 5.0pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 10.00092pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 7.00064pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 5.00046pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 9.99893pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 6.99925pt on input line 270.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 4.99947pt on input line 270.
+
 
 [13]
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 10.00092pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.00064pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 5.00046pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 266.
-LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 266.
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
 
 
 [14]
@@ -987,11 +1001,11 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [15]
+
+[16]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
-
-[16]
 
 [17]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1004,17 +1018,17 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [19]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1.jpg Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1.jpg>
+
+Overfull \hbox (21.68134pt too wide) in paragraph at lines 292--293
+ [][] 
+ []
 
 
 
 [20]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1.jpg Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure1.jpg>
-
-Overfull \hbox (21.68134pt too wide) in paragraph at lines 288--289
- [][] 
- []
+Underfull \vbox (badness 2189) has occurred while \output is active []
 
 
 
@@ -1024,11 +1038,6 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 
 
 [22]
-Underfull \vbox (badness 2189) has occurred while \output is active []
-
-
-
-[23]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2.jpg Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure2.jpg>
 
@@ -1036,18 +1045,23 @@ Underfull \vbox (badness 2189) has occurred while \output is active []
 
 
 
+[23]
+
 [24]
 
 [25]
-
-[26]
 \openout3 = `mb2-paper.ttt'.
 
 (mb2-paper.ttt)
 
+[26]
+
 [27]
 
 [28]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [29]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1055,13 +1069,8 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [30]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [31]
-
-[32]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure4.jpg>
 
@@ -1069,122 +1078,127 @@ Underfull \vbox (badness 7047) has occurred while \output is active []
 
 
 
-[33]
+[32]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[34]
+[33]
 
-[35]
+[34]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure5.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 548--549
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 552--553
  [][] 
  []
+
+
+
+[35]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [36]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
-
-[37]
 Underfull \vbox (badness 3179) has occurred while \output is active []
 
 
 
+[37]
+
 [38]
 
 [39]
-
-[40]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_test_timecourse_plot_anticipation_phase.png>
 
-Overfull \hbox (21.67989pt too wide) in paragraph at lines 685--686
+Overfull \hbox (21.67989pt too wide) in paragraph at lines 689--690
  [][] 
  []
+
+
+
+[40]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [41]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [42]
-
-[43]
 Underfull \vbox (badness 3977) has occurred while \output is active []
 
 
 
-[44]
+[43]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure_PTL_bothtrials.png>
 
-Overfull \hbox (21.692pt too wide) in paragraph at lines 725--726
+Overfull \hbox (21.692pt too wide) in paragraph at lines 729--730
  [][] 
  []
 
 
 
-[45]
+[44]
 
-[46]
+[45]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[47]
+[46]
 Underfull \vbox (badness 7649) has occurred while \output is active []
 
 
 
-[48]
+[47]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/correlation_plot_fam_test.png>
 
-Overfull \hbox (21.68977pt too wide) in paragraph at lines 795--796
+Overfull \hbox (21.68977pt too wide) in paragraph at lines 799--800
  [][] 
  []
 
 
 
-[49]
+[48]
 
-[50]
+[49]
 File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png Graphic file (type bmp)
 </Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure6b.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 853--854
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 857--858
  [][] 
  []
+
+
+
+[50]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [51]
+File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
+</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
+
+Overfull \hbox (21.6843pt too wide) in paragraph at lines 906--907
+ [][] 
+ []
+
+
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [52]
-File: /Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png Graphic file (type bmp)
-</Users/mellischreiner/Documents/GitHub/mb2-analysis/paper/Figure7.png>
 
-Overfull \hbox (21.6843pt too wide) in paragraph at lines 902--903
- [][] 
- []
-
-
+[53]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
-
-[53]
 
 [54]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1207,20 +1221,20 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [58]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [59]
-
-[60]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
+
+[60]
 
 [61]
 
 [62]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [63]
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1257,23 +1271,22 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
-[70]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+[70] AED endfloat: Processing end Figures and Tables
 
-
-
-[71] AED endfloat: Processing end Figures and Tables
-
-[72] (./mb2-paper.ttt [73
+[71] (./mb2-paper.ttt [72
 
 
 ]
 
-[74] [75
+[73] [74
 
 ]
 
-[76]
+[75]
+
+[76
+
+]
 
 [77
 
@@ -1285,13 +1298,9 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [79
 
-]
-
-[80
-
 ])
 
-[81
+[80
 
 ] (./mb2-paper.aux)
  ***********
@@ -1303,12 +1312,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 22486 strings out of 475848
- 424565 string characters out of 5773546
- 1027045 words of memory out of 5000000
- 45082 multiletter control sequences out of 15000+600000
- 591552 words of font info for 111 fonts, out of 8000000 for 9000
+ 22513 strings out of 475848
+ 425322 string characters out of 5773546
+ 1025033 words of memory out of 5000000
+ 45103 multiletter control sequences out of 15000+600000
+ 601231 words of font info for 131 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 90i,12n,114p,10874b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,114p,7856b,663s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mb2-paper.pdf (81 pages).
+Output written on mb2-paper.pdf (80 pages).
