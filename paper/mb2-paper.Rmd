@@ -458,36 +458,30 @@ affiliation:
   - id: "6"
     institution: School of Psychological Sciences, University of Newcastle, Australia
   - id: "7"
-    institution: Department of Psychology, University of Illinois Urbana-Champaign,
-      Champaign, IL, USA
+    institution: Department of Psychology, University of Illinois Urbana-Champaign, Champaign, IL, USA
   - id: "8"
     institution: University of Calgary, Calgary, Canada
   - id: "9"
     institution: Université Paris Cité, INCC UMR 8002, CNRS, Paris, France
   - id: "10"
-    institution: Leiden Institute of Education and Child Studies, Leiden University,
-      Leiden, The Netherlands
+    institution: Leiden Institute of Education and Child Studies, Leiden University, Leiden, The Netherlands
   - id: "11"
     institution: Leiden Institute for Brain and Cognition, Leiden University, Leiden,
       The Netherlands
   - id: "12"
-    institution: Department of Psychology, University of Massachusetts Boston, Boston, Massachusetts, USA
+    institution: Department of Psychology, University of Massachusetts Boston, Boston, MA, USA
   - id: "13"
     institution: Department of Developmental Psychology, University of Göttingen, Göttingen, Germany
   - id: "14"
-    institution: Department of Developmental Psychology, Institute of Psychology in Education, Leuphana University Lüneburg,
-      Lüneburg, Germany
+    institution: Department of Developmental Psychology, Institute of Psychology in Education, Leuphana University Lüneburg, Lüneburg, Germany
   - id: "15"
-    institution: Department of Comparative Cultural Psychology, Max Planck Institute
-      for Evolutionary Anthropology, Leipzig, Germany
+    institution: Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany
   - id: "16"
-    institution: School of Psychology & Neuroscience, University of St Andrews, Scotland,
-      UK
+    institution: School of Psychology & Neuroscience, University of St Andrews, Scotland, UK
   - id: "17"
     institution: Laboratory for Developmental Studies, Department of Psychology, Harvard University, Cambridge, MA, USA
   - id: "18"
-    institution: Department of Brain and Cognitive Sciences, Massachusetts Institute
-      of Technology, Cambridge, MA, USA
+    institution: Department of Brain and Cognitive Sciences, Massachusetts Institute of Technology, Cambridge, MA, USA
   - id: "19"
     institution: Department of Psychology, Stanford University, Stanford, CA, USA
   - id: "20"
@@ -497,66 +491,51 @@ affiliation:
   - id: "22"
     institution: Department of Psychology, Durham University, Durham, UK
   - id: "23"
-    institution: Department of Psychology and Cognitive Science, University of Trento, Italyå
+    institution: Department of Psychology and Cognitive Science, University of Trento, Italy
   - id: "24"
     institution: Department of Psychology, University of Chicago, Chicago, IL, USA
   - id: "25"
-    institution: Department of Educational Sciences, University of Catania, Catania,
-      Italia
+    institution: Department of Educational Sciences, University of Catania, Catania, Italy
   - id: "26"
-    institution: Centre for Psychological Research, Oxford Brookes University, Oxford,
-      UK
+    institution: Centre for Psychological Research, Oxford Brookes University, Oxford, UK
   - id: "27"
-    institution: Cognitive Neuroscience Lab, Department of Liberal Arts and Sciences,
-      University of Technology Nuremberg, Germany
+    institution: Cognitive Neuroscience Lab, Department of Liberal Arts and Sciences, University of Technology Nuremberg, Nuremberg, Germany
   - id: "28"
-    institution: Research Group Milestones of Early Cognitive Development, Max Planck
-      Institute for Cognitive and Brain Sciences, Leipzig, Germany
+    institution: Research Group Milestones of Early Cognitive Development, Max Planck Institute for Cognitive and Brain Sciences, Leipzig, Germany
   - id: "29"
     institution: Department of Psychology, University of British Columbia, Vancouver, Canada
   - id: "30"
-    institution: School of Psychological Sciences, Faculty of Social Sciences, University
-      of Haifa, Haifa, Israel
+    institution: School of Psychological Sciences, Faculty of Social Sciences, University of Haifa, Haifa, Israel
   - id: "31"
-    institution: The Institute of Information Processing and Decision Making, University
-      of Haifa, Haifa, Israel
+    institution: The Institute of Information Processing and Decision Making, University of Haifa, Haifa, Israel
   - id: "32"
-    institution: Department of Experimental Psychology, University of Oxford, Oxford,
-      UK
+    institution: Department of Experimental Psychology, University of Oxford, Oxford, UK
   - id: "33"
     institution: Department of Psychology, University of Oslo, Oslo, Norway
   - id: "34"
-    institution: Department of Psychology, UiT The Arctic University of Norway, Tromsø,
-      Norway
+    institution: Department of Psychology, UiT The Arctic University of Norway, Tromsø, Norway
   - id: "35"
-    institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University
-      Nijmegen, the Netherlands
+    institution: Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, Nijmegen, The Netherlands
   - id: "36"
-    institution: School of Psychological Sciences and Sagol School of Neuroscience,
-      Tel Aviv University, Tel Aviv, Israel
+    institution: School of Psychological Sciences and Sagol School of Neuroscience, Tel Aviv University, Tel Aviv, Israel
   - id: "37"
     institution: Department of Psychology, James Madison University, Harrisonburg, VA, USA
   - id: "38"
     institution: Department of Linguistics and Scandinavian Studies, University of Oslo, Oslo, Norway
   - id: "39"
-    institution: Department of Psychology and Behavioural Sciences, Aarhus University,
-      Aarhus, Denmark
+    institution: Department of Psychology and Behavioural Sciences, Aarhus University, Aarhus, Denmark
   - id: "40"
-    institution: Department of Psychology, University of Amsterdam, Amsterdam, the Netherlands
+    institution: Department of Psychology, University of Amsterdam, Amsterdam, The Netherlands
   - id: "41"
     institution: Department of BioSciences, Rice University, Houston, TX, USA
   - id: "42"
-    institution: Department of Psychology, Center for Brain Science, Harvard University,
-      Cambridge, MA, USA
+    institution: Department of Psychology, Center for Brain Science, Harvard University, Cambridge, MA, USA
   - id: "43"
-    institution: Department of Psychology, University of Southern California, Los
-      Angeles, MA, USA
+    institution: Department of Psychology, University of Southern California, Los Angeles, CA, USA
   - id: "44"
-    institution: Centre for Cognitive Neuroscience & Department of Psychology, University
-      of Salzburg, Salzburg, Austria
+    institution: Centre for Cognitive Neuroscience & Department of Psychology, University of Salzburg, Salzburg, Austria
   - id: "45"
-    institution: Department of Developmental Psychology with Educational Psychology,
-      University of Bremen, Bremen, Germany
+    institution: Department of Developmental Psychology with Educational Psychology, University of Bremen, Bremen, Germany
   - id: "46"
     institution: Department of Psychology, Princeton University, Princeton, NJ, USA
   - id: "47"
@@ -566,13 +545,11 @@ affiliation:
   - id: "49"
     institution: Department of Psychology, University of Miami, Coral Gables, FL, USA
   - id: "50"
-    institution: Department of Early Childhood Education, The Education University
-      of Hong Kong, Hong Kong
+    institution: Department of Early Childhood Education, The Education University of Hong Kong, Hong Kong
   - id: "51"
     institution: Department of Developmental Psychology, University of Hamburg, Hamburg, Germany
   - id: "52"
-    institution: Graduate School of Health, University of Technology Sydney, Sydney,
-      Australia
+    institution: Graduate School of Health, University of Technology Sydney, Sydney, Australia
   - id: "53"
     institution: School of Psychology, Western Sydney University, Sydney, Australia
   - id: "54"
@@ -580,20 +557,17 @@ affiliation:
   - id: "55"
     institution: Developmental and Biological Psychology, Heidelberg University, Heidelberg, Germany
   - id: "56"
-    institution: Language Development Department, Max Planck Institute for Psycholinguistics, Nijmegen, the Netherlands
+    institution: Language Development Department, Max Planck Institute for Psycholinguistics, Nijmegen, The Netherlands
   - id: "57"
     institution: Department of Psychology, University of Gothenburg, Gothenburg, Sweden
   - id: "58"
     institution: School of Psychology, University of Auckland, Auckland, New Zealand
   - id: "59"
-    institution: Developmental and Pedagogical Psychology, Charlotte Fresenius Hochschule
-      Wiesbaden, Wiesbaden, Germany
+    institution: Developmental and Pedagogical Psychology, Charlotte Fresenius Hochschule Wiesbaden, Wiesbaden, Germany
   - id: "60"
-    institution: Department of Psychology, University of California San Diego, La
-      Jolla, CA, USA
+    institution: Department of Psychology, University of California San Diego, La Jolla, CA, USA
   - id: "61"
-    institution: Institute Early Life Care, Paracelsus Medical University, Salzburg,
-      Austria
+    institution: Institute Early Life Care, Paracelsus Medical University, Salzburg, Austria
   - id: "62"
     institution: School of Family Life, Brigham Young University, Provo, UT, USA
   - id: "63"
@@ -605,27 +579,22 @@ affiliation:
   - id: "66"
     institution: Institute of Psychology, Friedrich-Schiller-University Jena, Jena, Germany
   - id: "67"
-    institution: School of Psychological and Cognitive Sciences, Peking University,
-      Beijing, China
+    institution: School of Psychological and Cognitive Sciences, Peking University, Beijing, China
   - id: "68"
     institution: Department of Psychology, University of Florida, Gainesville, FL, USA
   - id: "69"
-    institution: Department of Psychological & Brain Sciences, University of California,
-      Santa Barbara, Santa Barbara, California, USA
+    institution: Department of Psychological & Brain Sciences, University of California Santa Barbara, Santa Barbara, CA, USA
   - id: "70"
-    institution: Max Planck Research Group Naturalistic Social Cognition, Max Planck
-      Institute for Human Development, Berlin, Germany
+    institution: Max Planck Research Group Naturalistic Social Cognition, Max Planck Institute for Human Development, Berlin, Germany
   - id: "71"
-    institution: Department of Speech, Language, and Hearing Sciences, Purdue University
+    institution: Department of Speech, Language, and Hearing Sciences, Purdue University, West Lafayette, IN, USA
   - id: "72"
-    institution: Department of Linguistics and Modern Languages, The Chinese University
-      of Hong Kong, Hong Kong SAR, China
+    institution: Department of Linguistics and Modern Languages, The Chinese University of Hong Kong, Hong Kong SAR, China
   - id: "73"
     institution: MARCS Institute for Brain, Behaviour and Development, Western Sydney
       University, Sydney, Australia
   - id: "74"
-    institution: Department of Cognitive Science, University of California San Diego,
-      La Jolla, California
+    institution: Department of Cognitive Science, University of California San Diego, La Jolla, CA, USA
       
 authornote: |
  The registered Stage 1 manuscript unchanged from the point of IPA can be found on the Open Science Framework: https://osf.io/7ubkw. We have no known conflicts of interests to disclose. Data are available at the following URL: https://osf.io/jmuvd/. The analytic code necessary to reproduce the preregistered analyses presented in this paper is available at https://github.com/manybabies/mb2-analysis. The materials necessary to attempt to replicate the findings presented here are publicly accessible at the following URL:https://osf.io/pd35f/files.
