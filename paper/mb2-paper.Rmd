@@ -326,6 +326,10 @@ author:
     affiliation: "6"
     corresponding: no
     email: Alyssa.Quinn1998@gmail.com
+  - name: Gal Raz
+    affiliation: "18"
+    corresponding: no
+    email: galraz@gmail.com
   - name: Peter J. Reschke
     affiliation: "62"
     corresponding: no
@@ -358,6 +362,10 @@ author:
     affiliation: "13"
     corresponding: no
     email: melanie.schreiner@psych.uni-goettingen.de
+  - name: Verena Schuhmann
+    affiliation: "4"
+    corresponding: no
+    email: verena.schuhmann1@gmail.com
   - name: Lital Shapiro
     affiliation: "36"
     corresponding: no
@@ -595,9 +603,14 @@ affiliation:
       University, Sydney, Australia
   - id: "74"
     institution: Department of Cognitive Science, University of California San Diego, La Jolla, CA, USA
-      
+    
 authornote: |
  The registered Stage 1 manuscript unchanged from the point of IPA can be found on the Open Science Framework: https://osf.io/7ubkw. We have no known conflicts of interests to disclose. Data are available at the following URL: https://osf.io/jmuvd/. The analytic code necessary to reproduce the preregistered analyses presented in this paper is available at https://github.com/manybabies/mb2-analysis. The materials necessary to attempt to replicate the findings presented here are publicly accessible at the following URL:https://osf.io/pd35f/files.
+ 
+ Acknowledgements. K.V.J. was supported by Alvin V. Jr. and Nancy C. Baird Professorship; J.P. was supported by Austrian Science Fund FWF I 3518-G24; A.K. was supported by the Austrian Science Fund FWF W1233-B and FWF I 3518; M. Huemer was supported by CareyFund, Harvard University; N.A. was supported by Concordia Horizon Postdoctoral Fellowship, FRQSC Postdoctoral Fellowship; U.L. was supported by DFG FOR2253, LI 1989/3–2; H.R. was supported by DFG RA 2155/7-1; T. Schuwerk was supported by DFG SCHU 3060/2-1; G.W. was supported by ESRC ES/S007113/1; O.M. was supported by FoundTrust, ANR-21-CE28-0017-01; E.W.L. was supported by Marie Sklodowska-Curie grant agreement No 794270; T.S.L. and E.A.S. were supported by NSF CAREER Award 1653737; Y.S. and Y.W. were supported by National Natural Science Foundation of China 32071075; M.P. was supported by RA 2155/7-1; J.C. was supported by RGPIN-2023-05954; A.-E.B. was supported by SSHRC Insight grant (# 435-2017-0564); J.K.H. was supported by SSHRC Partnership Development Grant 890-2020-0059; K.B.-H. was supported by Social Sciences and Humanities Research Council of Canada award #890-2020-0059; D.P.-D. was supported by Social Sciences and Humanity Research Council of Canada , Grant #435-2022-0805; L.L. was supported by The Foundation of Graduates in Early Childhood Studies, Forest Hill Foundation; C.F. was supported by UIUC Campus Research Board grant RB21096; A.E.W. was supported by funding from the Max Planck Society.
+ 
+ We thank William Fabricius for his helpful comments on the results. We are also grateful to Adeline Depierreux, Cathy Dai, Rémi Hagedorn, Heleen Lange, Ariel Pinto, Anne Schuit, Amber Welker, Giulia Vigna, and Yukun Yu for their support with data collection, and to Luise Diekmann (née Zellner) for her help with project administration and preparation for data collection at the ToM Lab Salzburg.
+
 
 abstract: |
  Do toddlers and adults engage in spontaneous Theory of Mind (ToM)? Evidence from anticipatory looking (AL) studies suggests they do. But a growing body of failed replication studies raised questions about the paradigm’s suitability, urging the need to test the robustness of AL as a spontaneous measure of ToM. In a multi-lab collaboration we examine whether 18- to 27-month- olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In adults [n = 703 included, 68 % FEMALE], we found clear support for epistemic state-based action anticipation: they engaged in simple goal-based action anticipation in pilot studies, and clearly differentiated between knowledge and ignorance conditions in the main study as predicted. In toddlers [n = 521 included, 49 % FEMALE], in contrast, the results were less clear. They did engage in simple goal-based action anticipation in pilot studies, but did not show the clear differentiation between knowledge and ignorance conditions in the main study as predicted. Future research with adults can now move on to probe whether their spontaneous action anticipation is also sensitive to more complex kinds of epistemic states, such as true and false beliefs. Future research with toddlers will first need to investigate more systematically the source of the puzzling findings in the present study and clarify whether they indicate competence or mere performance limitations.
