@@ -7,8 +7,36 @@
 \paperw11900\paperh16840\margl1440\margr1440\vieww11820\viewh8700\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\f0\fs24 \cf2 \
-To reproduce the main analyses of MB2P:\
+\f0\fs24 \cf2 ###\
+#\
+# This is the main README for the spin-off study MB2P. It\'92s worth reading this carefully.\
+#\
+###\
+\
+The main project file to open is\'92 MB2P\'92.Rproj\'92. It can take a while to load and working with the file may strain the computer you are working on. \
+\
+The relevant project files can be found in the folder \'91MB2P\'92. Within that folder:\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
+(*) \'91MB2P-diagnosticPlots\'92 contains plots for each subject to help spot cases that need following up on.\
+(*) \'91heatmaps_for_pupil\'92 contains heat map plots for the 5s analysis window during the second test trial.\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf2 \
+The reproduce the targeted analyses:\
+\
+(1) Open MB2P\'92.Rproj\'92.\
+(2) Load \'91008-pupillometry-analysis.qmd\'92 \
+(3) Run the entire script but it may be worth proceeding \'91chunk by chunk\'92. The script prepare the pupillometry-data for the multiverse-analyses. It also creates heatmaps for the target stimulus to illustrate the attention spread during the 5s analysis window. This script should run without any errors. If there are errors, there may be an issue earlier in the pipeline (see Supplementary information below).\
+(4) Open \'91mb2p_multiverse_excluded_participant_linearmodel_model_selection.Rmd\'92 in \'91MB2P-Preregistration\'92.\
+(5)\
+\
+\
+\
+###########\
+# Supplementary information\
+###########\
+\
+If you want to reproduce the main analyses of MB2P (and MB2):\
 \
 (1) Download the most recent version of mb2-analysis from here https://github.com/manybabies/mb2-analysis\
 (2) Go to {\field{\*\fldinst{HYPERLINK "https://drive.google.com/drive/u/0/folders/1zSAQlj8xnTUQKd4xTgZ-9pOXcRo80p7A"}}{\fldrslt https://drive.google.com/drive/u/0/folders/1zSAQlj8xnTUQKd4xTgZ-9pOXcRo80p7A}}\
@@ -21,10 +49,6 @@ To reproduce the main analyses of MB2P:\
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 \cf2 \
 (4) Run \'91mb2p_multiverse_excluded_participant_linearmodel_model_selection.Rmd\'92. Toward the end of the script, a summary table to created for the preregistered ANOVA-like analyses.\
-\
-\cf0 The folders: \
-\
--> \'91MB2P-diagnosticPlots\'92 contains plots for each subject to help spot cases that need following up on.\
--> \'91heatmaps_for_pupil\'92 contains heat map plots for the 5s analysis window during the second test trial.\
-\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
  }

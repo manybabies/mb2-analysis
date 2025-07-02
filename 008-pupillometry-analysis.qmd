@@ -15,20 +15,17 @@ library(assertthat)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-#load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006)) # if we want data post-exclusion
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b)) # if we want data pre-exclusion
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006)) # if we want data post-exclusion
+# load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b)) # if we want data pre-exclusion
 ```
 
 Basic cleaning: 
 1. Remove all web-based data.
-2. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right`.
+2. Create `pupil_size` column which should be the mean of `pupil_left` and `pupil_right` (liberal average).
 3. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
+
 ```{r}
-
-data.ni <- data_preprocessed |> filter(lab_id == "babylabNijmegen")
-
-
-data_pupillometry <- data_preprocessed |> 
+data_pupillometry <- data_preprocessed_post_exclusions |> 
   filter(data_type=="in-lab") |> 
   mutate(pupil_left = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_left should be NA, not 0
                           ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
@@ -37,12 +34,13 @@ data_pupillometry <- data_preprocessed |>
 ```
 
 ```{r}
-# Clear work space and keeo only relevant files
+# Clear workspace and keep only relevant files
 rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDIATE_008")))
 ```
 
 Sanity check.
-Some EyeLink labs have long right tails; Nijmegen also has some density in the very low sizes that might be artefactual.
+Some EyeLink-labs have long right tails; Nijmegen also has some density in the very low sizes that might be artefacts
+
 ```{r}
 data_pupillometry |> 
   filter(age_cohort == "adults") |> 
@@ -79,9 +77,10 @@ data_pupillometry |>
   facet_wrap(~ lab_id, scales = "free")
 ```
 
-Might need to consider deblinking and detransienting to remove artifacts (a lot of the low-value responses are surrounding NA instances); perhaps with a window of 25ms or 50ms.
+(To note: Might need to consider deblinking and detransienting to remove artifacts (a lot of the low-value responses are surrounding NA instances); perhaps with a window of 25ms or 50ms.)
 
-Examining for second test trial---all included participants also have a valid second test trial :)
+The pupillometry analyses are performed on the second test trial only:
+
 ```{r}
 summarized_valid_second_test_trials <- data_pupillometry |> 
   filter(condition %in% c("ignorance","knowledge"),
@@ -108,7 +107,8 @@ data_pupillometry <- data_pupillometry |>
 assert_that(sum(is.na(data_pupillometry$valid_second_test_trial)) == 0)
 ```
 
-Merge in eyetracker info + Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI
+Merge in eyetracker info + Create new variable that contains eyetracker info: Eyelink, Tobii, or SMI.
+
 ```{r}
 dataset_sheet <- read_csv(here("metadata", "dataset_sheet.csv"))
 data_pupillometry <- data_pupillometry |> 
@@ -124,13 +124,15 @@ data_pupillometry <- data_pupillometry |>
   mutate(eyetracker_type = str_remove(tracker_type.y, " .*"))
 ```
 
-Create new variable that contains outcome info: congruent, incongruent
+Create new variable that contains outcome info: congruent, incongruent.
+
 ```{r}
 data_pupillometry$outcome <- ifelse(grepl("_CON$", data_pupillometry$media_name), "congruent",
                      ifelse(grepl("_INC$", data_pupillometry$media_name), "incongruent", NA))
 ```
 
-Saving pupillometry dataset to use for multiverse
+Saving pupillometry dataset to use for multiverse:
+
 ```{r}
 save(data_pupillometry, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 ```
