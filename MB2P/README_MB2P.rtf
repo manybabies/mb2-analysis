@@ -4,33 +4,36 @@
 {\*\expandedcolortbl;;\cssrgb\c0\c0\c0\cname textColor;}
 {\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
 {\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11820\viewh8700\viewkind0
+\paperw11900\paperh16840\margl1440\margr1440\vieww14880\viewh10680\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs24 \cf2 ###\
 #\
 # This is the main README for the spin-off study MB2P. It\'92s worth reading this carefully.\
 #\
+# Last edit July 12th RH\
 ###\
 \
-The main project file to open is\'92 MB2P\'92.Rproj\'92. It can take a while to load and working with the file may strain the computer you are working on. \
+The main project file to open is\'92 MB2P\'92.Rproj\'92. It can take a while to load and it may \'91strain\'92 the computer you are working on. \
 \
 The relevant project files can be found in the folder \'91MB2P\'92. Within that folder:\
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 \cf0 \
-(*) \'91MB2P-diagnosticPlots\'92 contains plots for each subject to help spot cases that need following up on.\
-(*) \'91heatmaps_for_pupil\'92 contains heat map plots for the 5s analysis window during the second test trial.\
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
-\cf2 \
+(*) \'91MB2P-diagnosticPlots\'92 contains plots for each subject to help spot cases that need following up on. If the folder is empty, you will need to run the scripts (see below) to create the plots.\
+(*) \'91/manual_data_checking_pupil/heatmaps_for_pupil\'92 contains heat map plots for the 5s analysis window during the second test trial. Here, too, the plots may only show up once the script are run.\
+(*) \'91MB2P-LegacyFiles\'92 contains previous files not needed anymore.\
+(*) \'91MB2P-Preregistration\'92 contains the relevant scripts to run the pupillometry analyses.\
+(*) \'91MB2P-Preregistration/mb2p_multiverse_excluded_participant_linearmodel_model_selection\'92 This is the main script needed to run the analyses (and create the plots).\
+(*) \'91MB2P-Preregistration/MB2P_preliminary_summary\'92 is currently empty but this is where we will summarise the analyses in line with the structure of the preregistration.\
+(*) \'91MB2P-Preregistration/plots\'92 visualise the time course of pupil size change for each of the datasets within the multiverse.\
+(*) \'91MB2P-Preregistration/MB2P_Multiverse_shinyapp\'92 provide an interactive means to explore the multiverse approach.\cf2 \
+\
 The reproduce the targeted analyses:\
 \
 (1) Open MB2P\'92.Rproj\'92.\
 (2) Load \'91008-pupillometry-analysis.qmd\'92 \
-(3) Run the entire script but it may be worth proceeding \'91chunk by chunk\'92. The script prepare the pupillometry-data for the multiverse-analyses. It also creates heatmaps for the target stimulus to illustrate the attention spread during the 5s analysis window. This script should run without any errors. If there are errors, there may be an issue earlier in the pipeline (see Supplementary information below).\
+(3) Run the entire script but it may be worth proceeding \'91chunk by chunk\'92. The script prepares the pupillometry-data for the multiverse-analyses. It also creates heatmaps for the target stimulus to illustrate the attention spread during the 5s analysis window. This script should run without any errors. If there are errors, there may be an issue earlier in the pipeline (see Supplementary information below).\
 (4) Open \'91mb2p_multiverse_excluded_participant_linearmodel_model_selection.Rmd\'92 in \'91MB2P-Preregistration\'92.\
-(5)\
-\
-\
 \
 ###########\
 # Supplementary information\
