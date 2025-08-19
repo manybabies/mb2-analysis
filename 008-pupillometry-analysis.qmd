@@ -11,12 +11,13 @@ library(tidyverse)
 library(here)
 library(glue)
 library(assertthat)
+library(arrow)
 
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006)) # if we want data post-exclusion
-# load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b)) # if we want data pre-exclusion
+data_preprocessed_post_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect() # if we want data post-exclusion
+# data_preprocessed_pre_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b_par), format = "parquet") %>% collect() # if we want data pre-exclusion
 ```
 
 Basic cleaning: 

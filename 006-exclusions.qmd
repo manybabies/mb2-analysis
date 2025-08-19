@@ -10,12 +10,14 @@ library(tidyverse)
 library(here)
 library(assertthat)
 library(knitr)
+library(arrow)
 library("papaja")
 
 source(here('helper','ensure_repo_structure.R'))
 source(here('helper','exclusion_helper.R'))
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
+data_preprocessed <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_005_par), format = "parquet")
+
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
 ```
 
@@ -31,8 +33,13 @@ combined_demo <- combined_demo %>% unite(col = "participant_lab_id",
 Compare participants in the eyetracking data and participants in the demographics data.
 
 ```{r}
+
+et_ids <- data_preprocessed %>%
+  distinct(participant_lab_id) %>%
+  pull(participant_lab_id)
+
 #participants who appear in the demographics data but not in the eyetracking data
-participants_demo_only <- setdiff(combined_demo$participant_lab_id, unique(data_preprocessed$participant_lab_id))
+participants_demo_only <- setdiff(combined_demo$participant_lab_id, et_ids)
 #add a column to combined_demo to track this
 combined_demo <- combined_demo %>%
   mutate(
@@ -42,7 +49,7 @@ combined_demo <- combined_demo %>%
 # TO-DO: validate against session exclusions
 
 #participants who appear in the eyetracking data but not in the demographics data
-participants_et_only <- setdiff(unique(data_preprocessed$participant_lab_id),combined_demo$participant_lab_id)
+participants_et_only <- setdiff(et_ids,combined_demo$participant_lab_id)
 #validate
 assert_that(length(participants_et_only)==0)
 ```
@@ -60,8 +67,9 @@ unique_et_participants_calib_removed <- unique_et_participants_trials %>%
   filter(!(media_name %in% c("Pupil_Calibration","star_calib"))) %>%
   distinct(participant_lab_id) %>%
   pull(participant_lab_id)
+
 participants_with_only_calibration_et <- setdiff(
-  unique(unique_et_participants_trials$participant_lab_id), 
+  unique_et_participants_trials %>% distinct(participant_lab_id) %>% pull(participant_lab_id),
   unique_et_participants_calib_removed)
 #to handle this exception, let's create a specific column to track this issue in combined_demo
 combined_demo <- combined_demo %>%
@@ -111,8 +119,14 @@ manual_exclusions <- bind_rows(
   select(participant_lab_id, media_name = trial, man_exclude)
 
 #ensure that all participants with blank media name info are not in data preprocessed
-valid_media_names <- unique(data_preprocessed$media_name)
-assert_that(!any(unique(filter(manual_exclusions,!(media_name %in% valid_media_names))$participant_lab_id) %in% unique(data_preprocessed$participant_lab_id)))
+valid_media_names <- data_preprocessed %>%
+  distinct(media_name) %>%
+  pull(media_name)
+
+assert_that(!any(unique(filter(manual_exclusions,!(media_name %in% valid_media_names))$participant_lab_id) %in%
+                   (data_preprocessed %>%
+                   distinct(participant_lab_id) %>%
+                   pull(participant_lab_id))))
 
 # join into unique_et_participants_trials
 unique_et_participants_trials <- unique_et_participants_trials %>%
@@ -206,7 +220,7 @@ summarized_valid_looks <- data_preprocessed %>%
     total_frames=n(),
     total_valid_looks = sum(valid_xy_look),
     prop_valid_looks = total_valid_looks / total_frames
-  )
+  ) %>% collect()
 ```
 
 Inspect the resulting valid looking data
@@ -221,6 +235,7 @@ Exclude trials that do not meet the 50% valid looking criterion (exclude more th
 
 ```{r}
 summarized_valid_looks <- summarized_valid_looks %>%
+  collect() %>% 
   mutate(
     valid_looking_trial = case_when(
       prop_valid_looks >= 0.5 ~ 1,
@@ -272,7 +287,7 @@ unique_et_participants_trials <- unique_et_participants_trials %>%
       trial_error_lab_reported == "yes" ~ "lab reported trial error",
       !is.na(man_exclude) & man_exclude==TRUE ~ "manual webcam exclusion",
       trial_error_valid_looking == "yes" ~ "insufficient looking",
-      TRUE ~ NA
+      TRUE ~ NA_character_
     )
   )
 ```
@@ -302,7 +317,7 @@ unique_et_participants_trials <- unique_et_participants_trials %>%
   left_join(summarized_valid_familiarization_trials)
 
 #check if any participants are missing familiarization information
-assert_that(sum(is.na(unique_et_participants_trials$sufficient_fam_trials))==0)
+assert_that(sum(is.na(unique_et_participants_trials %>% pull(sufficient_fam_trials)))==0)
 ```
 
 ## Valid First Test Trial
@@ -319,6 +334,7 @@ summarized_valid_first_test_trials <- unique_et_participants_trials %>%
   filter(condition %in% c("ignorance","knowledge")) %>%
   # TO-DO: make sure this is a robust way of identifying the first test trial
   filter(trial_num==5) %>%
+  collect() %>%
   mutate(
     valid_first_test_trial = case_when(
       trial_error == "no" ~ 1,
@@ -355,6 +371,7 @@ assert_that(sum(is.na(unique_et_participants_trials$valid_first_test_trial))==0)
 
 ```{r}
 unique_et_participants_trials <- unique_et_participants_trials %>%
+  collect() %>% 
   mutate(
     trial_based_participant_exclusion = case_when(
       #step 5 (insufficient familiarization trials)
@@ -486,7 +503,11 @@ write_csv(d_participants,
 ## Write the dataset pre-exclusions
 
 ```{r}
-save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b))
+arrow::write_dataset(data_preprocessed, 
+                     here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b_par),
+                     partitioning = "lab_id",
+                      existing_data_behavior="overwrite")
+
 ```
 
 ## Apply all exclusions
@@ -500,12 +521,18 @@ data_preprocessed_post_exclusions <- data_preprocessed %>%
   filter(trial_error=="no") %>%
   #filter based on trial errors
   filter(trial_based_participant_exclusion=="no")
+
 ```
 
 ## Write the dataset post-exclusions
 
 ```{r saving}
-save(data_preprocessed_post_exclusions, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+
+arrow::write_dataset(data_preprocessed_post_exclusions,
+                     here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par),
+                     partitioning = "lab_id",
+                      existing_data_behavior="overwrite")
+
 ```
 
 # Summarize lab and participant information

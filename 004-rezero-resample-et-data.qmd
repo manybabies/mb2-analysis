@@ -7,6 +7,7 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
+library(arrow)
 
 source(here('helper','ensure_repo_structure.R'))
 source(here('helper', 'resampling_helper.R'))
@@ -20,7 +21,6 @@ Rezero times
 
 
 ```{r}
-data_o <- data 
 
 #filter data without associated events
 data <- data %>%
@@ -50,5 +50,6 @@ data_normalized <- data_rezeroed %>%
 Now save the resampled data locally.
 
 ```{r saving}
-save(data_normalized, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
+
+arrow::write_dataset(data_normalized, here(INTERMEDIATE_FOLDER, INTERMEDIATE_004_par),partitioning = "lab_id" ,existing_data_behavior="overwrite")
 ```

@@ -21,6 +21,7 @@ library(QuickJSR)
 library(rstan)
 # remotes::install_github("stan-dev/cmdstanr")
 library(cmdstanr)
+library(arrow)
 
 source(here("helper", "ensure_repo_structure.R"))
 source(here("helper", "analysis_helper.R"))
@@ -29,7 +30,7 @@ paper_path <- here("paper")
 model_fits_dir <- here(RESULTS_FOLDER, "bayes_model_fits")
 
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_002B))
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+data_preprocessed_post_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect()
 ```
 
 # Load data

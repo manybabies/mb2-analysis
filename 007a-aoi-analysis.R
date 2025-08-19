@@ -14,13 +14,14 @@ library(ggpubr)
 library(StanHeaders)
 library(QuickJSR)
 library(rstan)
+library(arrow)
 
 source(here('helper','ensure_repo_structure.R'))
 source(here('helper','analysis_helper.R'))
 plot_path <- here("plots")
 paper_path <- here("paper")
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
+data_preprocessed_post_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect()
 
 
 ## -----------------------------------------------------------------------------

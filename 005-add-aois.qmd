@@ -7,12 +7,13 @@ format: html
 library(tidyverse)
 library(here)
 library(assertthat)
+library(arrow)
 
 source(here('helper','ensure_repo_structure.R'))
 ```
 
 ```{r}
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004))
+data_normalized <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_004_par), format = "parquet")
 ```
 
 ```{r}
@@ -59,7 +60,8 @@ data_trimmed <- data_corrected_origin  %>%
 # The original x and y values are now saved in x_screen and y_screen
 source(here('helper', 'aoi_helper.R'))
 data_with_aois <- data_trimmed %>%
-  rename(target_side = target) %>% 
+  rename(target_side = target) %>%
+  collect() %>%
   create_aoi_timepoints()
 
 ```
@@ -142,9 +144,6 @@ data_with_aois %>%
 # preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
 data_with_aois <- data_with_aois %>% ungroup()
 
-# TODO: Investigate NAs for coords
-data_with_aois <- data_with_aois
-
 CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
 dir.create(CHECKING_LSGRAPH_DIR, showWarnings = FALSE)
 
@@ -197,20 +196,21 @@ data_with_aois %>%
 
 ```
 
-```{r }
+```{r saving}
+CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
+CHECKING_LSGRAPH_CSV <- here(CHECKING_DIR, 'lookingscore_graphs_checked.csv')
+CHECKING_HEATMAP_DIR <- here(CHECKING_DIR, 'heatmaps')
+
+# checklist to see what labs have already been checked and accepted
+CHECKING_HEATMAP_CSV <- here(CHECKING_DIR, 'heatmaps_checked.csv')
+
 usable_labs <- intersect(
   (read.csv(CHECKING_LSGRAPH_CSV) %>% filter(data_fine == "yes"))$lab_id,
   (read.csv(CHECKING_HEATMAP_CSV) %>% filter(data_fine == "yes"))$lab_id
 )
 
-data_preprocessed <- data_with_aois %>% filter(lab_id %in% usable_labs)
-```
+arrow::write_dataset(data_with_aois %>% filter(lab_id %in% usable_labs), 
+                     here(INTERMEDIATE_FOLDER, INTERMEDIATE_005_par),
+                      existing_data_behavior="overwrite", partition="lab_id")
 
-```{r saving}
-
-data_preprocessed <- data_with_aois
-
-save(data_preprocessed, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_005))
-
-#write.csv(data_preprocessed, here("data", "preprocessed.csv"), row.names = F)
 ```
