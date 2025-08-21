@@ -61,14 +61,23 @@ data_trimmed <- data_corrected_origin  %>%
 source(here('helper', 'aoi_helper.R'))
 data_with_aois <- data_trimmed %>%
   rename(target_side = target) %>%
-  collect() %>%
-  create_aoi_timepoints()
-
+  create_aoi_timepoints() %>% ungroup()
 ```
 
+```{r saving data with the aois}
+arrow::write_dataset(data_with_aois,
+                     here(INTERMEDIATE_FOLDER, INTERMEDIATE_005_par),
+                      existing_data_behavior="overwrite", partition="lab_id")
+```
+
+
+Optional sanity checking code form here on
+
 ```{r visualize AOIs and data}
+# OPTIONAL: You dont need to run this if you are not sanity checking the data
+
 source(here('helper', 'aoi_helper.R'))
-data_with_aois <- data_with_aois %>% ungroup()
+data_with_aois <- data_with_aois %>% collect()
 
 draw_aoi <- function(aoi_name, color){
   return(
@@ -142,7 +151,10 @@ data_with_aois %>%
 
 ```{r}
 # preliminary checking if the lookingscore pattern for a given lab/cohort looks sensible
-data_with_aois <- data_with_aois %>% ungroup()
+
+# OPTIONAL: You dont need to run this if you are not sanity checking the data
+
+data_with_aois <- data_with_aois %>% collect()
 
 CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
 dir.create(CHECKING_LSGRAPH_DIR, showWarnings = FALSE)
@@ -197,13 +209,7 @@ data_with_aois %>%
 ```
 
 ```{r saving}
-CHECKING_LSGRAPH_DIR <- here(CHECKING_DIR, 'lookingscore_graphs')
-CHECKING_LSGRAPH_CSV <- here(CHECKING_DIR, 'lookingscore_graphs_checked.csv')
-CHECKING_HEATMAP_DIR <- here(CHECKING_DIR, 'heatmaps')
-
-# checklist to see what labs have already been checked and accepted
-CHECKING_HEATMAP_CSV <- here(CHECKING_DIR, 'heatmaps_checked.csv')
-
+# saving if checking is in progress
 usable_labs <- intersect(
   (read.csv(CHECKING_LSGRAPH_CSV) %>% filter(data_fine == "yes"))$lab_id,
   (read.csv(CHECKING_HEATMAP_CSV) %>% filter(data_fine == "yes"))$lab_id

@@ -109,10 +109,47 @@ aoi_region_sets <- tibble(
 #  plot(axes = T, ylim = c(1, height(.))) # plot with inverted y axis
 
 
-
 create_aoi_timepoints <- function(xy_timepoints) {
   xy_timepoints |>
-    cross_join(aoi_region_sets) |>
+    mutate(
+      # arrow does not support crossjoin, so this is a terrible replacement
+      l_x_min = aoi_region_sets$l_x_min,
+      l_x_max = aoi_region_sets$l_x_max,
+      l_y_min = aoi_region_sets$l_y_min,
+      l_y_max = aoi_region_sets$l_y_max,
+      r_x_min = aoi_region_sets$r_x_min,
+      r_x_max = aoi_region_sets$r_x_max,
+      r_y_min = aoi_region_sets$r_y_min,
+      r_y_max = aoi_region_sets$r_y_max,
+      lb_x_min = aoi_region_sets$lb_x_min,
+      lb_x_max = aoi_region_sets$lb_x_max,
+      lb_y_min = aoi_region_sets$lb_y_min,
+      lb_y_max = aoi_region_sets$lb_y_max,
+      rb_x_min = aoi_region_sets$rb_x_min,
+      rb_x_max = aoi_region_sets$rb_x_max,
+      rb_y_min = aoi_region_sets$rb_y_min,
+      rb_y_max = aoi_region_sets$rb_y_max,
+      w_x_min = aoi_region_sets$w_x_min,
+      w_x_max = aoi_region_sets$w_x_max,
+      w_y_min = aoi_region_sets$w_y_min,
+      w_y_max = aoi_region_sets$w_y_max,
+      lbig_x_min = aoi_region_sets$lbig_x_min,
+      lbig_x_max = aoi_region_sets$lbig_x_max,
+      lbig_y_min = aoi_region_sets$lbig_y_min,
+      lbig_y_max = aoi_region_sets$lbig_y_max,
+      rbig_x_min = aoi_region_sets$rbig_x_min,
+      rbig_x_max = aoi_region_sets$rbig_x_max,
+      rbig_y_min = aoi_region_sets$rbig_y_min,
+      rbig_y_max = aoi_region_sets$rbig_y_max,
+      bearwatch_x_min = aoi_region_sets$bearwatch_x_min,
+      bearwatch_x_max = aoi_region_sets$bearwatch_x_max,
+      bearwatch_y_min = aoi_region_sets$bearwatch_y_min,
+      bearwatch_y_max = aoi_region_sets$bearwatch_y_max,
+      mousepath_x_min = aoi_region_sets$mousepath_x_min,
+      mousepath_x_max = aoi_region_sets$mousepath_x_max,
+      mousepath_y_min = aoi_region_sets$mousepath_y_min,
+      mousepath_y_max = aoi_region_sets$mousepath_y_max,
+    ) |>
     mutate(
       x_screen = x,
       y_screen = y,
@@ -127,7 +164,7 @@ create_aoi_timepoints <- function(xy_timepoints) {
         x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "left",
         x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "right",
         !is.na(x) & !is.na(y) ~ "other",
-        TRUE ~ as.character(NA)
+        TRUE ~ NA_character_
       ),
       aoitype = dplyr::case_when(
         x > l_x_min & x < l_x_max & y > l_y_min & y < l_y_max ~ "exit",
@@ -138,7 +175,7 @@ create_aoi_timepoints <- function(xy_timepoints) {
         x > lbig_x_min & x < lbig_x_max & y > lbig_y_min & y < lbig_y_max ~ "general",
         x > rbig_x_min & x < rbig_x_max & y > rbig_y_min & y < rbig_y_max ~ "general",
         !is.na(x) & !is.na(y) ~ "other",
-        TRUE ~ as.character(NA)
+        TRUE ~ NA_character_
       ),
       aoi = dplyr::case_when(
         side %in% c("left", "right") & side == target_side ~ "target",
@@ -150,7 +187,7 @@ create_aoi_timepoints <- function(xy_timepoints) {
         x > bearwatch_x_min & x < bearwatch_x_max & y > bearwatch_y_min & y < bearwatch_y_max ~ "bear",
         x > mousepath_x_min & x < mousepath_x_max & y > mousepath_y_min & y < mousepath_y_max ~ "mouse",
         !is.na(x) & !is.na(y) ~ "other",
-        TRUE ~ as.character(NA)
+        TRUE ~ NA_character_
       ),
     ) %>%
     select(-colnames(aoi_region_sets))
