@@ -63,7 +63,7 @@ data_pupillometry <- data_pupillometry |>
   rowwise() |> 
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
   ungroup() |>
-  group_by(participant_id) |> # Scale pupil-value #! Should we be using participant_lab_id here?
+  group_by(participant_lab_id) |> # Scale pupil-value 
   mutate(average_z = (average - mean(average, na.rm = TRUE)) / sd(average, na.rm = TRUE)) |>
   ungroup() |>  
   filter(t_norm >= -1000 & t_norm < 5000)  
@@ -94,10 +94,10 @@ rm("summarize_participant_test_both_trials")
 
 # # For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm (according to Tobii).
 # data_smaller2mm <- data_pupillometry |> 
-#   dplyr::filter(eyetracker_type != "EyeLink") |>
-#   group_by(participant_id) |>
+#   dplyr::filter(eyetracker_type != "EyeLink") |> 
+#   group_by(participant_lab_id) |>
 #   dplyr::filter(average <= 2) |>
-#   dplyr::select(participant_id, average, average_z) |>
+#   dplyr::select(participant_lab_id, average, average_z) |>
 #   arrange(average_z) |>
 #   ungroup()
 # #
@@ -111,9 +111,9 @@ rm("summarize_participant_test_both_trials")
 # ##
 # temp <- data_pupillometry |> 
 #   filter(eyetracker_type != "EyeLink") |>
-#   group_by(participant_id) |>
+#   group_by(participant_lab_id) |>
 #   filter(average >= 8) |>
-#   select(participant_id, average, average_z) |>
+#   select(participant_lab_id, average, average_z) |>
 #   arrange(average_z) |>
 #   ungroup()
 # #
@@ -135,6 +135,12 @@ This results in 2 datasets; (plausible vs. implausible values)
 # data_plausible <- data_pupillometry |> 
 #     mutate(average = ifelse(average_z < 0.8000874 , NA, average)) |>
 #     mutate(average_z = ifelse(average_z < 0.8000874, NA, average_z))
+
+#check on Tobii data distributions
+ggplot(filter(data_pupillometry,eyetracker_type == "Tobii"),aes(average))+
+  geom_histogram() +
+  facet_wrap(~lab_id)
+#Trento, Heidelberg, Munich, Goettingen all have different scales from the rest
 
 data_plausible <- data_pupillometry |> 
   mutate(average = ifelse(eyetracker_type != "EyeLink" & average <= 2 , NA, average),
@@ -211,6 +217,12 @@ data_df2 |>
   }) # Adjustments across all eyetracking systems. Makes sense. 
 ```
 
+```{r}
+rm(data_df1)
+gc()
+```
+
+
 # Third degree of freedom: moving average filtered vs unfiltered data
 This results in 8 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not).
 
@@ -220,7 +232,7 @@ WINDOW_SIZE = 5
 data_avg <- data_df2 |> 
   mutate(data = map(data, \(d) { 
     d |> 
-      group_by(participant_id, trial_num) |> 
+      group_by(participant_lab_id, trial_num) |> 
       mutate(average = rollapply(average, width = WINDOW_SIZE, 
                                      FUN = mean, na.rm = TRUE, 
                                      fill = NA, align = "right"),
@@ -274,7 +286,7 @@ This results in 24 datasets; 2 (plausible vs. implausible values) * 2 (on-screen
 
 baseline_correct <- function(data, TIME_WINDOW = 1000) {
   data |>
-    group_by(participant_id, condition, outcome, lab_id) |>
+    group_by(participant_lab_id, condition, outcome, lab_id) |>
     mutate(average = {
       avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
@@ -284,7 +296,7 @@ baseline_correct <- function(data, TIME_WINDOW = 1000) {
 #
 baseline_correctZ <- function(data, TIME_WINDOW = 1000) {
   data |>
-    group_by(participant_id, condition, outcome, lab_id) |>
+    group_by(participant_lab_id, condition, outcome, lab_id) |>
     mutate(average_z = {
       avg_filtered <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
@@ -351,7 +363,7 @@ no_exclusions <- data_pupillometry |>
       session_error == "noerror",
       age_exclusion == "no",
       sufficient_fam_trials == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 valid_second_ids <- data_pupillometry |> 
   filter(pilot == "no",
@@ -359,7 +371,7 @@ valid_second_ids <- data_pupillometry |>
       age_exclusion == "no",
       sufficient_fam_trials == 1,
       valid_second_test_trial == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 valid_both_ids <- data_pupillometry |> 
   filter(pilot == "no",
@@ -368,20 +380,20 @@ valid_both_ids <- data_pupillometry |>
       sufficient_fam_trials == 1,
       valid_second_test_trial == 1,
       valid_first_test_trial == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 
 data_no_exclusions <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% no_exclusions)
+    d |> filter(participant_lab_id %in% no_exclusions)
   }))
 data_valid_second <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% valid_second_ids)
+    d |> filter(participant_lab_id %in% valid_second_ids)
   }))
 data_valid_both <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% valid_both_ids)
+    d |> filter(participant_lab_id %in% valid_both_ids)
   }))
 
 data_df5 <- bind_rows(
@@ -498,7 +510,7 @@ run_model_lm <- function(df) {
     # Fit the model if conditions are met
     df.short <- df |>
       filter(t_norm >= 0 & t_norm < 5000) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -517,7 +529,7 @@ run_model_lmer <- function(df) {
     # Fit the model if conditions are met
     df.short <- df |>
       filter(t_norm >= 0 & t_norm < 5000) |>      
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -536,7 +548,7 @@ run_model_TIMElmer <- function(df) {
     #! Reduce dataset to average across the 5 seconds, i.e., 1 value per participant per trial? 
     df.short <- df |>
       filter(t_norm > 0) |>
-      group_by(participant_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
+      group_by(participant_lab_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -705,7 +717,7 @@ get_descriptives <- function(df) {
 
    df.short <- df |>
       dplyr::filter(t_norm > 0 & t_norm < 5000 & !is.na(average_z)) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort, prop_exit) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort, prop_exit) |>
       summarize(AveragePD = mean(average_z, na.rm=T), SDPD = sd(average_z, na.rm=T), N = n()) |>
       ungroup()
   return(df.short)
@@ -720,7 +732,7 @@ run_model_anova <- function(df) {
       
     df.short <- df |>
       dplyr::filter(t_norm > 0 & t_norm < 5000) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -761,7 +773,7 @@ run_model_anova <- function(df) {
     # Hypothesis 1.1 &  Hypothesis 1.2
     df.short <- df |>
      dplyr::filter(t_norm > 0) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     #
