@@ -561,35 +561,38 @@ run_model_lmer <- function(df) {
   }
 }
 
-run_model_TIMElmer <- function(df) {
-  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
-      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
-    # Fit the model if conditions are met
-    
-    #! Reduce dataset to average across the 5 seconds, i.e., 1 value per participant per trial? 
-    df.short <- df |>
-      filter(t_norm > 0) |>
-      group_by(participant_lab_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
-      summarize(Average = mean(average_z, na.rm=T)) |>
-      ungroup()
-    
-    lmer(Average ~ t_norm*condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
-  } else {
-    # Return NULL if conditions aren't met
-    NULL
-  }
-}
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# run_model_TIMElmer <- function(df) {
+#   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+#       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+#     # Fit the model if conditions are met
+#     
+#     #! Reduce dataset to average across the 5 seconds, i.e., 1 value per participant per trial? 
+#     df.short <- df |>
+#       filter(t_norm > 0) |>
+#       group_by(participant_lab_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
+#       summarize(Average = mean(average_z, na.rm=T)) |>
+#       ungroup()
+#     
+#     lmer(Average ~ t_norm*condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
+#   } else {
+#     # Return NULL if conditions aren't met
+#     NULL
+#   }
+# }
 
 
 
 # Apply the model function across the list of dataframes in the list-column
 results_lm <- map(data_df5_list, run_model_lm)
 results_lmer <- map(data_df5_list, run_model_lmer)
-results_TIMElmer <- map(data_df5_list, run_model_TIMElmer)
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#results_TIMElmer <- map(data_df5_list, run_model_TIMElmer)
 # Filter out NULL values (dataframes that didn't meet the condition)
 lm_results <- compact(results_lm)
 lmer_results <- compact(results_lmer)
-TIMElmer_results <- compact(results_TIMElmer)
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#TIMElmer_results <- compact(results_TIMElmer)
 ```
 
 
@@ -647,21 +650,23 @@ extract_model_metrics_LMER <- function(model) {
   )
 }
 
-timeLMER_model_metrics <- map(TIMElmer_results, function(model) {
-  broom.mixed::tidy(model)
-})
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# timeLMER_model_metrics <- map(TIMElmer_results, function(model) {
+#   broom.mixed::tidy(model)
+# })
 
-extract_model_metrics_timeLMER <- function(model) {
-  r2 <- performance::r2(model)  # Extract R^2 values
-  data.frame(
-    AIC = AIC(model),
-    BIC = BIC(model),
-    logLik = logLik(model),
-    marginal_R2 = r2$R2_marginal,   # Marginal R^2
-    conditional_R2 = r2$R2_conditional,  # Conditional R^2
-    fixed_effects = paste(names(fixef(model)), round(fixef(model), 3), collapse = ", ")
-  )
-}
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# extract_model_metrics_timeLMER <- function(model) {
+#   r2 <- performance::r2(model)  # Extract R^2 values
+#   data.frame(
+#     AIC = AIC(model),
+#     BIC = BIC(model),
+#     logLik = logLik(model),
+#     marginal_R2 = r2$R2_marginal,   # Marginal R^2
+#     conditional_R2 = r2$R2_conditional,  # Conditional R^2
+#     fixed_effects = paste(names(fixef(model)), round(fixef(model), 3), collapse = ", ")
+#   )
+# }
 
 # Apply the extraction function across all models and filter out NULL results
 LM_model_metrics <- map(lm_results, extract_model_metrics)
@@ -670,18 +675,21 @@ LM_model_metrics <- compact(LM_model_metrics)  # Remove any NULL elements
 LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)
 LMER_model_metrics <-compact(LMER_model_metrics) # Remove any NULL elements
 
-timeLMER_model_metrics <- map(TIMElmer_results, extract_model_metrics_timeLMER)
-timeLMER_model_metrics <- compact(LMER_model_metrics)  # Remove any 
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#timeLMER_model_metrics <- map(TIMElmer_results, extract_model_metrics_timeLMER)
+#timeLMER_model_metrics <- compact(LMER_model_metrics)  # Remove any 
 
 # Convert to a tidy dataframe
 LMmodel_metrics_df <- bind_rows(LM_model_metrics, .id = "model_id")
 LMERmodel_metrics_df <- bind_rows(LMER_model_metrics, .id = "model_id")
-timeLMERmodel_metrics_df <- bind_rows(timeLMER_model_metrics, .id = "model_id")
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#timeLMERmodel_metrics_df <- bind_rows(timeLMER_model_metrics, .id = "model_id")
 
 # Check the structure of model_metrics_df to confirm columns are present
 str(LMmodel_metrics_df)
 str(LMERmodel_metrics_df)
-str(timeLMERmodel_metrics_df)
+#MZ removing the time model evaluation because I do not think this model is appropriate
+#str(timeLMERmodel_metrics_df)
 
 # Plot the specification curve (preparatory step):
 
@@ -697,10 +705,11 @@ LMERmodel_metrics_df <- LMERmodel_metrics_df %>%
   mutate(model_order = row_number()) %>%
   ungroup()
 #
-timeLMERmodel_metrics_df <- timeLMERmodel_metrics_df %>%
-  group_by(fixed_effects) %>%
-  mutate(model_order = row_number()) %>%
-  ungroup()
+#MZ removing the time model evaluation because I do not think this model is appropriate
+# timeLMERmodel_metrics_df <- timeLMERmodel_metrics_df %>%
+#   group_by(fixed_effects) %>%
+#   mutate(model_order = row_number()) %>%
+#   ungroup()
 ```
 
 # Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
@@ -914,17 +923,18 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
       # color = "Predictor") +
   theme_minimal() 
 
+#MZ removing the time model evaluation because I do not think this model is appropriate
 #BIC LMER time
-ggplot(timeLMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
-  geom_point() +                                # Points for estimates
- # geom_errorbar(aes(ymin = BIC - std.error, ymax = BIC + std.error), 
-            #    width = 0.2) +                  # Error bars
-  #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
-  labs(title = "Specification Curve for BIC",
-       x = "Model Order",
-       y = "BIC") +
-      # color = "Predictor") +
-  theme_minimal() 
+# ggplot(timeLMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
+#   geom_point() +                                # Points for estimates
+#  # geom_errorbar(aes(ymin = BIC - std.error, ymax = BIC + std.error), 
+#             #    width = 0.2) +                  # Error bars
+#   #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
+#   labs(title = "Specification Curve for BIC",
+#        x = "Model Order",
+#        y = "BIC") +
+#       # color = "Predictor") +
+#   theme_minimal() 
 
 
 #AIC LM
