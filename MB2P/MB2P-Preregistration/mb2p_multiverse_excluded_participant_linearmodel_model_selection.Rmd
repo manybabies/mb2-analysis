@@ -42,6 +42,9 @@ theme_set(theme_classic())
 # load pupillometry data
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDIATE_008", "RESULTS_FOLDER")))
+
+# param controlling whether all plots get recreated in Part 3; set to TRUE to regenerate all plots
+CREATE_MULTIVERSE_PLOTS = FALSE
 ```
 
 ## The Multiverse forking paths of pupillometry preprocessing 
@@ -218,10 +221,10 @@ data_df2 |>
 ```
 
 ```{r}
+#remove previous datasets to free up memory
 rm(data_df1)
 gc()
 ```
-
 
 # Third degree of freedom: moving average filtered vs unfiltered data
 This results in 8 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not).
@@ -271,6 +274,12 @@ data_df3 |>
   summarise(AVE = mean(average_z, na.rm =T))
   })  
 
+```
+
+```{r}
+#remove previous datasets to free up memory
+rm(data_df2)
+gc()
 ```
 
 # Fourth degree of freedom: 1s, 0.5s, or 0.25s before the bear resolution.
@@ -352,6 +361,12 @@ data_df4 |>
 
 ```
 
+```{r}
+#remove previous datasets to free up memory
+rm(data_df3)
+gc()
+```
+
 # Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
@@ -412,11 +427,17 @@ data_df5 |>
 
 ```
 
+```{r}
+#remove previous datasets to free up memory
+rm(data_df4)
+gc()
+```
+
 ###
 # PART 3 MAKING SENSE OF THE MULTIVERSE (visual)
 ###
 
-```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, out.width='90%'}
+```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, eval=CREATE_MULTIVERSE_PLOTS,out.width='90%'}
 # work-around for different time points for now: rounding to the nearest 25ms; Need to check this again.
 data_df5 <- data_df5 |> 
   mutate(data = map(data, ~ .x |> mutate(t_norm_downsampled = floor(t_norm / 25) * 25)))
@@ -778,18 +799,20 @@ run_model_anova <- function(df) {
       ungroup()
     #
     df.modelFull <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
-    df.modelRedByOutome <- lm(Average ~ condition_c * age_cohort_c, data = df.short)
-    df.modelFullRedOutcome <- anova(df.modelRedByOutome, df.modelFull)
+    # reduced model removes ONLY the simple fixed effect of outcome
+    df.modelRedByOutcome <- lm(Average ~ condition_c + age_cohort_c + condition_c:age_cohort_c + outcome_c:age_cohort_c + condition_c:outcome_c + condition_c:outcome_c:age_cohort_c, data = df.short)
+    df.modelFullRedOutcome <- anova(df.modelRedByOutcome, df.modelFull)
     
     Fvalue <- df.modelFullRedOutcome$F[2]
-    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByOutome)$r.squared
+    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByOutcome)$r.squared
     
     df.return <- df.return |>
     mutate(F.FullRedByOutcome = Fvalue, R2.FullRedByOutcome = R2)
     rm("Fvalue", "R2")
     
     # Hypothesis 1.3 &  Hypothesis 1.4
-    df.modelRedByCondition <- lm(Average ~ outcome_c * age_cohort_c, data = df.short)
+    # reduced model removes ONLY the simple fixed effect of condition
+    df.modelRedByCondition <- lm(Average ~ outcome_c + age_cohort_c + condition_c:age_cohort_c + outcome_c:age_cohort_c + condition_c:outcome_c + condition_c:outcome_c:age_cohort_c, data = df.short)
     df.modelFullRedCondition <- anova(df.modelRedByCondition, df.modelFull)
     
     Fvalue <- df.modelFullRedCondition$F[2]
@@ -865,7 +888,7 @@ ggplot(df.DesStats.additional[[12]], aes(x = prop_exit, y = AveragePD, col = out
 
 ```
 
-# The following offers various plots for the specification curves of teh multiverse model parameters.
+# The following offers various plots for the specification curves of the multiverse model parameters.
 ```{r model parameters plot, echo=TRUE, include=TRUE, out.width='90%'}
 # Create the plot
 # BIC LM
