@@ -520,6 +520,34 @@ data_for_plotting_df5 <- data_df5 |>
 
 ### Summarize data
 
+#### No averaging within lab
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarized_data_by_dataset_id <- data_for_plotting_df5 |> 
+    group_by(t_norm_downsampled, multiverse_label, condition, outcome, age_cohort) |>  
+  summarize(
+    participant_num = n(),
+    mean_pupil_z = mean(average_z, na.rm = TRUE),
+    sd_pupil_z = sd(average_z, na.rm = TRUE),
+    se_pupil_z = sd_pupil_z / sqrt(participant_num),
+    ci_pupil_z = qt(1 - (0.05 / 2), participant_num - 1) * se_pupil_z
+  ) |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+ 
+
+summarized_data_by_dataset_id_mins <- summarized_data_by_dataset_id |> 
+  group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
+  summarize(
+    N=n(),
+    avg_pupil_z = mean(mean_pupil_z, na.rm = TRUE),
+    min_pupil_z = min(mean_pupil_z, na.rm = TRUE),
+    max_pupil_z = max(mean_pupil_z, na.rm = TRUE)
+  )
+```
+
+#### Averaging within lab
+
 ```{r}
 #summarize by lab within each multiverse dataset
 summarized_data_by_lab_and_dataset_id <- data_for_plotting_df5 |> 
@@ -528,15 +556,19 @@ summarized_data_by_lab_and_dataset_id <- data_for_plotting_df5 |>
     grand_averageZ = mean(average_z, na.rm = TRUE), .groups = "drop"
   )
 #summarize across labs within each multiverse dataset
-summarize_data_within_lab_by_multiverse_label <- summarized_data_by_lab_and_dataset_id |> 
+summarize_data_across_lab_by_multiverse_label <- summarized_data_by_lab_and_dataset_id |> 
     group_by(t_norm_downsampled, multiverse_label, condition, outcome, age_cohort) |>  
   summarize(
-    mean_pupil_z = mean(grand_averageZ, na.rm = TRUE), .groups = "drop"
+    lab_num = n(),
+    mean_pupil_z = mean(grand_averageZ, na.rm = TRUE),
+    sd_pupil_z = sd(grand_averageZ, na.rm = TRUE),
+    se_pupil_z = sd_pupil_z / sqrt(lab_num),
+    ci_pupil_z = qt(1 - (0.05 / 2), lab_num - 1) * se_pupil_z
   ) |> 
   ungroup() |> 
   unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
 
-summarized_data_by_lab_and_dataset_id_mins <- summarize_data_within_lab_by_multiverse_label |> 
+summarized_data_by_lab_and_dataset_id_mins <- summarize_data_across_lab_by_multiverse_label |> 
   group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
   summarize(
     N=n(),
@@ -547,6 +579,22 @@ summarized_data_by_lab_and_dataset_id_mins <- summarize_data_within_lab_by_multi
 ```
 
 ### Plots
+
+#### Min-Max plot without first averagining within lab (same as above)
+
+```{r}
+ggplot(summarized_data_by_dataset_id_mins, aes(x = t_norm_downsampled, y = avg_pupil_z, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)") +
+      geom_vline(xintercept = 0) +
+      geom_hline(yintercept = 0) +
+      geom_line() +
+      geom_ribbon(aes(ymin = min_pupil_z, ymax = max_pupil_z, fill = outcome), 
+             alpha = 0.25, color = NA) +
+      scale_color_ptol() +
+      scale_fill_ptol() +
+      facet_grid(condition ~ age_cohort)
+```
 
 #### New Min-Max plot after first averagining within lab
 
@@ -565,13 +613,71 @@ ggplot(summarized_data_by_lab_and_dataset_id_mins, aes(x = t_norm_downsampled, y
       facet_grid(condition ~ age_cohort)
 ```
 
-#### Spaghetti plot to show effect for each multiverse dataset
+#### Spaghetti plot to show effect for each multiverse dataset,no within lab averaging
 
 ```{r}
-
 #spaghetti plot
-ggplot(summarize_data_within_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
   geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+```
+
+```{r}
+#"best" variant
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant <- summarized_data_by_dataset_id |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  geom_line(data=best_multiverse_variant,aes(x=t_norm_downsampled,y=mean_pupil_z,group=outcome,color=outcome),size=1.2)+
+  geom_ribbon(data=best_multiverse_variant,aes(ymin = mean_pupil_z - se_pupil_z, ymax = mean_pupil_z + se_pupil_z,fill=outcome),
+    alpha = .2
+  )+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+```
+
+#### Spaghetti plot to show effect for each multiverse dataset, averaging within lab
+
+```{r}
+#spaghetti plot
+ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+```
+
+Create a spaghetti plot with the "best" variant overlayed
+
+```{r}
+#"best" variant
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant_across_lab <- summarize_data_across_lab_by_multiverse_label |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  geom_line(data=best_multiverse_variant_across_lab,aes(x=t_norm_downsampled,y=mean_pupil_z,group=outcome,color=outcome),size=1.2)+
+  geom_ribbon(data=best_multiverse_variant_across_lab,aes(ymin = mean_pupil_z - se_pupil_z, ymax = mean_pupil_z + se_pupil_z,fill=outcome),
+    alpha = .2
+  )+
   facet_wrap(condition ~ age_cohort)+
   scale_color_ptol() +
   scale_fill_ptol()+
