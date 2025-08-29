@@ -66,16 +66,27 @@ df.short <- df |>
   filter(t_norm >= 0 & t_norm < 5000) |>      
   group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
   summarize(Average = mean(average_z, na.rm=T)) |>
-  ungroup()
+  ungroup() |> 
+  mutate(
+    age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+    age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1),
+  )
 
 m <- lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short)  
 summary(m)
 
-#toddlers only
-m_toddlers <- lmer(Average ~ condition_c * outcome_c + (1|lab_id), data = filter(df.short,age_cohort=="toddlers"))  
+m_toddlers <- lmer(Average ~ condition_c * outcome_c * age_cohort_toddlers + (1|lab_id), data = df.short)  
 summary(m_toddlers)
+
+m_adults <- lmer(Average ~ condition_c * outcome_c * age_cohort_adults + (1|lab_id), data = df.short)  
+summary(m_adults)
+
+#toddlers only
+m_toddlers <- lmer(Average ~ condition_c * outcome_c + (1+condition_c+condition_c:outcome_c||lab_id), data = filter(df.short,age_cohort=="toddlers"))  
+summary(m_toddlers)
+allFit(m_toddlers)
 
 #adults only
 #toddlers only
-m_adults <- lmer(Average ~ condition_c * outcome_c + (1|lab_id), data = filter(df.short,age_cohort=="adults"))  
+m_adults <- lmer(Average ~ condition_c * outcome_c + (1+condition_c|lab_id), data = filter(df.short,age_cohort=="adults"))  
 summary(m_adults)

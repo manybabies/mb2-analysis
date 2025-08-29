@@ -503,6 +503,10 @@ ggplot(grand_avg, aes(x = t_norm_downsampled, y = grand_average, col = outcome, 
       scale_fill_ptol() +
       facet_grid(condition ~ age_cohort)
 ##
+
+#remove the large plots element
+rm(plots)
+gc()
 ```
 
 ## Part 3.1. Visualizations of the multiverse data
@@ -1189,8 +1193,156 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
 
 # PART 5 - Updated Multiverse Modeling Approach
 
+## Source helper functions and additional libraries
 
+```{r}
+library(lmerTest)
+library(buildmer)
+library(broom.mixed)
+library(marginaleffects)
+source(here("MB2P","MB2P-Preregistration","scripts","modelpruning.R"))
 
+#function for fitting lmer model
+run_model_lmer_re_pruning <- function(df) {
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+
+    # Fit the model if conditions are met
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>      
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        )
+    
+    #lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short)
+    prune_lmer_model(df.short)
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+
+#helper function for extracting the random effects structure specifically
+extract_outer_parentheses <- function(text) {
+  start <- regexpr("\\(", text)
+  if (start == -1) return(NA)
+  
+  depth <- 0
+  for (i in seq(start, nchar(text))) {
+    char <- substr(text, i, i)
+    if (char == "(") depth <- depth + 1
+    if (char == ")") depth <- depth - 1
+    if (depth == 0) return(substr(text, start + 1, i - 1))
+  }
+  return(NA)
+}
+
+#extract lmer model results in a tidy fashion
+extract_lmer_model_results_tidy <- function(model) {
+  # Get tidy summary of fixed effects
+  coefs <- broom.mixed::tidy(model, effects = "fixed") %>%
+    select(term, estimate, std.error, df, statistic, p.value)
+
+  # Extract model formula
+  model_formula <- deparse(formula(model)) |> paste(collapse = "")
+  #fixed_formula <- format(rlang::f_rhs(model_formula))  # remove LHS
+  #random_formula <- format(findbars(model_formula))     # extract random part
+
+  # Extract singular fit status
+  singular <- isSingular(model)
+
+  # Add model info to each row
+  coefs <- coefs %>%
+    mutate(
+      model_formula = model_formula,
+      #random_effects = deparse(random_formula),
+      is_singular = singular
+    ) %>%
+    relocate(model_formula, is_singular) %>%
+  mutate(random_effects = sapply(model_formula, extract_outer_parentheses))
+  
+  #compute 95% CIs
+  ci_df <- as.data.frame(confint(model, level = 0.95, method = "Wald"))
+  ci_df$term <- rownames(ci_df)
+  ci_df <- ci_df %>% 
+    filter(!is.na(`2.5 %`))
+  rownames(ci_df) <- NULL
+  ci_df <- ci_df %>% 
+    filter(term %in% coefs$term) %>%
+    rename(conf.low = `2.5 %`, conf.high = `97.5 %`)
+  
+  coefs <- coefs %>%
+    left_join(ci_df, by="term")
+}
+```
+
+## Fit models and extract results
+
+```{r}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning <- data_df5 %>%
+  mutate(
+    models = map(data,run_model_lmer_re_pruning)) %>%
+  select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results <- models_lmer_re_pruning %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning <- models_lmer_re_pruning_w_results %>%
+  select(-models) %>%
+  unnest(results) 
+
+## old strategy focused on data list
+#models_lmer_re_pruning <- map(data_df5_list, extract_lmer_model_results_tidy)
+#results_lmer_re_pruning <- map(models_lmer_re_pruning, extract_lmer_model_results_tidy)
+# results_lmer_re_pruning_df <- results_lmer_re_pruning %>%
+#   #combine list elements into one dataframe
+#   bind_rows(.id = "model_id")
+```
+
+## Plots
+
+### Three-way-interaction
+
+```{r}
+lmer_threewayinteraction_multiverse_results <-results_lmer_re_pruning %>%
+  filter(term=="condition_c:outcome_c:age_cohort_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 3-way interaction (Condition x Outcome x Age Cohort)")
+```
+
+### Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results <-results_lmer_re_pruning %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
+```
 
 
 
