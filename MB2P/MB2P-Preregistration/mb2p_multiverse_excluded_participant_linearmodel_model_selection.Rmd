@@ -50,11 +50,10 @@ CREATE_MULTIVERSE_PLOTS = FALSE
 ## The Multiverse forking paths of pupillometry preprocessing 
 The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2P dataset (see Calignano, Girardi, and Altoé, 2023).
 
-###
-# PART 1 PREPROCESSING (z-transformation)
-###
 
-# The initial preprocessing merges the data across eyetracking systems by performing a z-transformation.
+# PART 1 PREPROCESSING (z-transformation)
+
+The initial preprocessing merges the data across eyetracking systems by performing a z-transformation.
 ```{r preprocess}
 data_pupillometry <- data_pupillometry |> 
   dplyr::filter(trial_num == 6) |>  # filter to second test trial only (data reduction)
@@ -127,11 +126,11 @@ rm("summarize_participant_test_both_trials")
 # ## -> There are no samples with pupil_size ?> 8mm
 ```
 
-###
-# PART 2 FITTING THE MULTIVERSE
-###
 
-# First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+# PART 2 FITTING THE MULTIVERSE
+
+## First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+
 This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
@@ -367,7 +366,7 @@ rm(data_df3)
 gc()
 ```
 
-# Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
+## Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
 This results in 72 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not) * 3 (1s, 0.5s, or 0.25s baseline) * 3 (no exclusions, valid trial 2 or valid trial 1 AND 2).
@@ -433,9 +432,7 @@ rm(data_df4)
 gc()
 ```
 
-###
 # PART 3 MAKING SENSE OF THE MULTIVERSE (visual)
-###
 
 ```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, eval=CREATE_MULTIVERSE_PLOTS,out.width='90%'}
 # work-around for different time points for now: rounding to the nearest 25ms; Need to check this again.
@@ -687,16 +684,12 @@ ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=me
            y = "Pupil size (z-score, relative change)")
 ```
 
-
-
-###
-# PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling)
-###
+# PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling) - original
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
 ## (1) The averaged interaction effect Condition x Outcome.
-# The first bit of code stores the results of 72 analyses (3 types of models fitted) into three containers: lm_results,lmer_results, and TIMElmer_results. The first two containers are need to address (1).
+The first bit of code stores the results of 72 analyses (3 types of models fitted) into three containers: lm_results,lmer_results, and TIMElmer_results. The first two containers are need to address (1).
 
 ```{r modelling, echo=FALSE, include=TRUE, out.width='90%', message=FALSE}
 # Assuming `data_df5$data` is a list of dataframes:
@@ -893,7 +886,8 @@ LMERmodel_metrics_df <- LMERmodel_metrics_df %>%
 #   ungroup()
 ```
 
-# Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
+## Distribution of key statistics
+Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
 
 ```{r table key parameters, echo=TRUE, include=TRUE, out.width='90%', message=FALSE}
 
@@ -1078,7 +1072,8 @@ ggplot(df.DesStats.additional[[12]], aes(x = prop_exit, y = AveragePD, col = out
 
 ```
 
-# The following offers various plots for the specification curves of the multiverse model parameters.
+## Specification curves for multiverse model parameters
+ The following offers various plots for the specification curves of the multiverse model parameters.
 ```{r model parameters plot, echo=TRUE, include=TRUE, out.width='90%'}
 # Create the plot
 # BIC LM
@@ -1191,6 +1186,8 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
       # color = "Predictor") +
   theme_minimal()
 ```
+
+# PART 5 - Updated Multiverse Modeling Approach
 
 
 
