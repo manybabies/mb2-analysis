@@ -62,7 +62,7 @@ data_pupillometry <- data_pupillometry |>
   mutate(pupil_left = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_left),
          pupil_right = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_right)
          ) |>
-  mutate(age_cohort <- as.factor(age_cohort)) |> 
+  mutate(age_cohort = as.factor(age_cohort)) |> 
   rowwise() |> 
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
   ungroup() |>
@@ -477,6 +477,7 @@ walk2(plots, labels, ~ ggsave(
 ))
 
 # (2) Generate grand average plot across all 72 datasets.
+# MZ: issue: this does not first group by lab before averaging within each dataset of the multiverse
 grand_avg <- data_df5 |> 
   pull(data) |> 
   bind_rows(.id = "dataset_id") |>  # Keep dataset ID.
@@ -490,7 +491,7 @@ grand_avg <- data_df5 |>
   group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
     summarize(
     grand_average = mean(grand_averageZ, na.rm = TRUE),  
-    se = sd(grand_averageZ, na.rm = TRUE), N = n_distinct(dataset_id), gMax = max(grand_averageZ, na.rm = TRUE) , gMin = min(grand_averageZ, na.rm = TRUE), .groups = "drop"
+    sd = sd(grand_averageZ, na.rm = TRUE), N = n_distinct(dataset_id), gMax = max(grand_averageZ, na.rm = TRUE) , gMin = min(grand_averageZ, na.rm = TRUE), .groups = "drop"
   )
 ##
 ggplot(grand_avg, aes(x = t_norm_downsampled, y = grand_average, col = outcome, linetype = age_cohort)) +
@@ -506,6 +507,80 @@ ggplot(grand_avg, aes(x = t_norm_downsampled, y = grand_average, col = outcome, 
       facet_grid(condition ~ age_cohort)
 ##
 ```
+
+## Part 3.1. Visualizations of the multiverse data
+
+### Create dataset for plotting
+```{r}
+data_for_plotting_df5 <- data_df5 |> 
+  unite("multiverse_label",  df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion, sep = "_", remove = FALSE) |>  # Combine first 5 column values into a string tracking the multiverse combination
+  unnest(data) |> 
+  dplyr::filter(!is.na(average_z), t_norm >= 0 & t_norm < 5000) 
+```
+
+### Summarize data
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarized_data_by_lab_and_dataset_id <- data_for_plotting_df5 |> 
+    group_by(t_norm_downsampled, multiverse_label, lab_id,condition, outcome, age_cohort) |>  
+  summarize(
+    grand_averageZ = mean(average_z, na.rm = TRUE), .groups = "drop"
+  )
+#summarize across labs within each multiverse dataset
+summarize_data_within_lab_by_multiverse_label <- summarized_data_by_lab_and_dataset_id |> 
+    group_by(t_norm_downsampled, multiverse_label, condition, outcome, age_cohort) |>  
+  summarize(
+    mean_pupil_z = mean(grand_averageZ, na.rm = TRUE), .groups = "drop"
+  ) |> 
+  ungroup() |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+
+summarized_data_by_lab_and_dataset_id_mins <- summarize_data_within_lab_by_multiverse_label |> 
+  group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
+  summarize(
+    N=n(),
+    avg_pupil_z = mean(mean_pupil_z, na.rm = TRUE),
+    min_pupil_z = min(mean_pupil_z, na.rm = TRUE),
+    max_pupil_z = max(mean_pupil_z, na.rm = TRUE)
+  )
+```
+
+### Plots
+
+#### New Min-Max plot after first averagining within lab
+
+```{r}
+# create equivalent min-max plot as above to demonstrate the effect of first averaging within lab
+ggplot(summarized_data_by_lab_and_dataset_id_mins, aes(x = t_norm_downsampled, y = avg_pupil_z, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)") +
+      geom_vline(xintercept = 0) +
+      geom_hline(yintercept = 0) +
+      geom_line() +
+      geom_ribbon(aes(ymin = min_pupil_z, ymax = max_pupil_z, fill = outcome), 
+             alpha = 0.25, color = NA) +
+      scale_color_ptol() +
+      scale_fill_ptol() +
+      facet_grid(condition ~ age_cohort)
+```
+
+#### Spaghetti plot to show effect for each multiverse dataset
+
+```{r}
+
+#spaghetti plot
+ggplot(summarize_data_within_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+```
+
 
 
 ###

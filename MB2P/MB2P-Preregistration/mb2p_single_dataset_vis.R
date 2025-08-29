@@ -61,4 +61,21 @@ ggplot(sum_df_participant, aes(outcome, mean_z,color=outcome))+
   facet_grid(condition ~ age_cohort) +
   labs(x = "Condition", y = "Pupil size (z-scored,relative change)", color = "Outcome") +
   theme_cowplot()
-  
+
+df.short <- df |>
+  filter(t_norm >= 0 & t_norm < 5000) |>      
+  group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
+  summarize(Average = mean(average_z, na.rm=T)) |>
+  ungroup()
+
+m <- lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short)  
+summary(m)
+
+#toddlers only
+m_toddlers <- lmer(Average ~ condition_c * outcome_c + (1|lab_id), data = filter(df.short,age_cohort=="toddlers"))  
+summary(m_toddlers)
+
+#adults only
+#toddlers only
+m_adults <- lmer(Average ~ condition_c * outcome_c + (1|lab_id), data = filter(df.short,age_cohort=="adults"))  
+summary(m_adults)
