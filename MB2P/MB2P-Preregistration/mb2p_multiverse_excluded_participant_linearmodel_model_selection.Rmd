@@ -688,6 +688,12 @@ ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=me
            y = "Pupil size (z-score, relative change)")
 ```
 
+```{r}
+rm(data_for_plotting_df5)
+gc()
+```
+
+
 # PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling) - original
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
@@ -1191,7 +1197,9 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
   theme_minimal()
 ```
 
-# PART 5 - Updated Multiverse Modeling Approach
+# PART 5 - Updated Multiverse LMER Modeling Approach
+
+# Part 5A LMER models
 
 ## Source helper functions and additional libraries
 
@@ -1203,13 +1211,24 @@ library(marginaleffects)
 source(here("MB2P","MB2P-Preregistration","scripts","modelpruning.R"))
 
 #function for fitting lmer model
-run_model_lmer_re_pruning <- function(df) {
+run_model_lmer_re_pruning <- function(df,groups_to_include = c("adults","toddlers")) {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+    lmer_model_type = "main"
+  } else {
+    print("Fitting group-specific models")
+    min_age_cohort_num = 1
+    lmer_model_type = "group"
+  }
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
-      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
 
-    # Fit the model if conditions are met
+    # Process data
     df.short <- df |>
-      filter(t_norm >= 0 & t_norm < 5000) |>      
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
       group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup() |> 
@@ -1218,8 +1237,8 @@ run_model_lmer_re_pruning <- function(df) {
         age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
         )
     
-    #lmer(Average ~ condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short)
-    prune_lmer_model(df.short)
+    #Fit the model if conditions are met
+    prune_main_lmer_model(df.short,model_type=lmer_model_type)
   } else {
     # Return NULL if conditions aren't met
     NULL
@@ -1344,5 +1363,154 @@ ggplot(lmer_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y
   ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
 ```
 
+## Models for each age cohort
 
+### Toddlers
 
+### Fit models and extract results
+
+```{r}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning_toddlers <- data_df5 %>%
+  mutate(
+    models = map2(data,c("toddlers"), run_model_lmer_re_pruning)) %>%
+  select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results_toddlers <- models_lmer_re_pruning_toddlers %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning_toddlers <- models_lmer_re_pruning_w_results_toddlers %>%
+  select(-models) %>%
+  unnest(results) 
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lmer_outcome_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for Effect of Outcome")
+```
+
+#### Plot Condition Effect
+
+```{r}
+lmer_condition_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for Effect of Condition")
+```
+
+### Adults
+
+### Fit models and extract results
+
+```{r}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning_adults <- data_df5 %>%
+  mutate(
+    models = map2(data,c("adults"), run_model_lmer_re_pruning)) %>%
+  select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results_adults <- models_lmer_re_pruning_adults %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning_adults <- models_lmer_re_pruning_w_results_adults %>%
+  select(-models) %>%
+  unnest(results) 
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lmer_outcome_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for Effect of Outcome")
+```
+
+#### Plot Condition Effect
+
+```{r}
+lmer_condition_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for Effect of Condition")
+```
+
+# Part 5B LM models

@@ -3,9 +3,14 @@ library(lmerTest)
 library(buildmer)
 
 # Define the function to fit models in the specified pruning order
-prune_lmer_model <- function(data,age_cohort_predictor_name="age_cohort_c") {
-  # Shared part of the formula
-  shared_formula <- paste0("Average ~ condition_c * outcome_c * ",age_cohort_predictor_name)
+prune_main_lmer_model <- function(data,model_type = "main",age_cohort_predictor_name="age_cohort_c") {
+  if (model_type=="main") {
+    # Shared part of the formula
+    shared_formula <- paste0("Average ~ condition_c * outcome_c * ",age_cohort_predictor_name)
+  } else if (model_type=="group") {
+    # Shared part of the formula
+    shared_formula <- paste0("Average ~ condition_c * outcome_c")
+  }
   
   # Define the list of formulas in pruning order, with only the random effects changing
   formulas <- list(
