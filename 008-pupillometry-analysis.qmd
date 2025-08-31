@@ -15,8 +15,8 @@ library(assertthat)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006)) # if we want data post-exclusion
-# load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b)) # if we want data pre-exclusion
+# load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006)) # if we want data post-exclusion
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b)) # if we want data pre-exclusion # Need to change l. 28, too.
 ```
 
 Basic cleaning: 
@@ -25,7 +25,7 @@ Basic cleaning:
 3. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
 
 ```{r}
-data_pupillometry <- data_preprocessed_post_exclusions |> 
+data_pupillometry <- data_preprocessed |> 
   filter(data_type=="in-lab") |> 
   mutate(pupil_left = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_left should be NA, not 0
                           ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
