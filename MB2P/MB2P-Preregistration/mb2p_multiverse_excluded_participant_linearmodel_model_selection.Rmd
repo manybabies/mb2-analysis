@@ -491,7 +491,7 @@ labels <- paste0(seq_along(labels), "_", labels)
 
 # Save each plot with a meaningful filename
 walk2(plots, labels, ~ ggsave(
-  filename = file.path(output_dir, paste0(.y, ".png")),
+  filename = file.path(plot_output_path, paste0(.y, ".png")),
   plot = .x,
   width = 8, height = 6, dpi = 300
 ))
@@ -1409,7 +1409,7 @@ lmer_threewayinteraction_multiverse_results <-results_lmer_re_pruning %>%
   mutate(
     significant = ifelse(p.value<0.05,"significant","non-significant")
   )
-ggplot(lmer_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate))+
+ggplot(lmer_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
   geom_hline(yintercept=0, linetype="dashed")+
   geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
   geom_point(size=2)+
