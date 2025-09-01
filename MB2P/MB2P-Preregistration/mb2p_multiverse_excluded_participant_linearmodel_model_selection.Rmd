@@ -693,6 +693,7 @@ ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=me
   geom_hline(yintercept = 0) +
   labs(x = "Time (ms)",
            y = "Pupil size (z-score, relative change)")
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_firstaveragewithinlab.png"),width = 10, height = 6, dpi = 300)
 ```
 
 Create a spaghetti plot with the "best" variant overlayed
@@ -716,6 +717,8 @@ ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=me
   geom_hline(yintercept = 0) +
   labs(x = "Time (ms)",
            y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combination_overlay_firstaveragewithinlab.png"),width = 10, height = 6, dpi = 300)
 ```
 
 ```{r}
