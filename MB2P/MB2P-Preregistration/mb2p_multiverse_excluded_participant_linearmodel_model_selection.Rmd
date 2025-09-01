@@ -1230,7 +1230,7 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
   theme_minimal()
 ```
 
-# PART 5 - Updated Multiverse LMER Modeling Approach
+# PART 5 - Updated Multiverse LMER and LM Modeling Approach
 
 # Part 5A LMER models
 
