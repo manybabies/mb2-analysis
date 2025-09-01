@@ -22,6 +22,7 @@ library(MASS)
 library(zoo)
 library(mgcv)
 library(here)
+#make sure here is set to the mb2-analysis root folder
 library(dplyr)
 library(tidyverse)
 library(stringi)
@@ -45,6 +46,25 @@ rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDI
 
 # param controlling whether all plots get recreated in Part 3; set to TRUE to regenerate all plots
 CREATE_INDIVIDUAL_MULTIVERSE_PLOTS = FALSE
+#model output path
+model_output_path <- here("MB2P","MB2P-Preregistration","model_outputs")
+# Check if the directory exists
+if (!dir.exists(model_output_path)) {
+  # If it doesn't exist, create it
+  dir.create(model_output_path, showWarnings = FALSE)
+  message("Directory created successfully.")
+} else {
+  message("Directory already exists.")
+}
+plot_output_path <- here("MB2P","MB2P-Preregistration","plots")
+# Check if the directory exists
+if (!dir.exists(plot_output_path)) {
+  # If it doesn't exist, create it
+  dir.create(plot_output_path, showWarnings = FALSE)
+  message("Directory created successfully.")
+} else {
+  message("Directory already exists.")
+}
 ```
 
 ## The Multiverse forking paths of pupillometry preprocessing 
@@ -438,6 +458,10 @@ gc()
 # work-around for different time points for now: rounding to the nearest 25ms; Need to check this again.
 data_df5 <- data_df5 |> 
   mutate(data = map(data, ~ .x |> mutate(t_norm_downsampled = floor(t_norm / 25) * 25)))
+
+# reorder exclusion levels to be more intuitive
+data_df5$df5_ppt_exclusion <- factor(data_df5$df5_ppt_exclusion, levels = c("no exclusion", "second test trial valid", "both test trials valid"))
+
 ```
 
 
@@ -464,10 +488,6 @@ labels <- data_df5 |>
 
 # Add numbers before labels
 labels <- paste0(seq_along(labels), "_", labels)
-
-# Define output directory
-output_dir <- "plots"
-dir.create(output_dir, showWarnings = FALSE)
 
 # Save each plot with a meaningful filename
 walk2(plots, labels, ~ ggsave(
@@ -633,6 +653,8 @@ ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
   geom_hline(yintercept = 0) +
   labs(x = "Time (ms)",
            y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti.png"),width = 10, height = 6, dpi = 300)
 ```
 
 ```{r}
@@ -654,6 +676,8 @@ ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
   geom_hline(yintercept = 0) +
   labs(x = "Time (ms)",
            y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combination_overlay.png"),width = 10, height = 6, dpi = 300)
 ```
 
 #### Spaghetti plot to show effect for each multiverse dataset, averaging within lab
@@ -1342,32 +1366,37 @@ results_lmer_re_pruning <- models_lmer_re_pruning_w_results %>%
 #   bind_rows(.id = "model_id")
 ```
 
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results.Rds"))
+save(results_lmer_re_pruning, file = here(model_output_path, "pupillometry_results_lmer_re_pruning.Rds"))
+```
+
 ## Plots
 
 ### How does filtering affect number of observations?
-
 
 ```{r}
 lmer_multiverse_combos_obs <- results_lmer_re_pruning %>%
   distinct(df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion,n_obs,n_labs)
 
-ggplot(lmer_multiverse_combos_obs,aes(x=df1_extreme_values,y=n_obs))+
+ggplot(lmer_multiverse_combos_obs,aes(x=df5_ppt_exclusion,y=n_obs))+
   geom_point()+
   geom_line(aes(group=1))+
-  facet_grid(df4_baseline_correction+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
-  ylab("Number of observations in LMER model")
+  facet_grid(df3_moving_average+df4_baseline_correction ~ df1_extreme_values+df2_screen_fixation)+
+  ylab("Number of observations in LMER model")+
+  scale_x_discrete(limits = c("no exclusion","second test trial valid","both test trials valid"))+
+  theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1))
 
-ggplot(lmer_multiverse_combos_obs,aes(x=df1_extreme_values,y=n_labs))+
+ggplot(lmer_multiverse_combos_obs,aes(x=df5_ppt_exclusion,y=n_labs))+
   geom_point()+
   geom_line(aes(group=1))+
-  facet_grid(df4_baseline_correction+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
-  ylab("Number of labs in LMER model")
+  facet_grid(df3_moving_average+df4_baseline_correction ~ df1_extreme_values+df2_screen_fixation)+
+  ylab("Number of labs in LMER model")+
+  scale_x_discrete(limits = c("no exclusion","second test trial valid","both test trials valid"))+
+  theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1))
 
 ```
-
-
-
-
 
 ### Three-way-interaction
 
@@ -1384,6 +1413,8 @@ ggplot(lmer_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("Lmer Model Estimate for 3-way interaction (Condition x Outcome x Age Cohort)")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_threewayinteraction.png"),width = 9, height = 6, dpi = 300)
 ```
 
 ### Outcome by Condition Interaction
@@ -1394,6 +1425,7 @@ lmer_conditionXoutcome_multiverse_results <-results_lmer_re_pruning %>%
   mutate(
     significant = ifelse(p.value<0.05,"significant","non-significant")
   )
+
 ggplot(lmer_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
   geom_hline(yintercept=0, linetype="dashed")+
   geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
@@ -1401,6 +1433,8 @@ ggplot(lmer_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome.png"),width = 10, height = 6, dpi = 300)
 ```
 
 ## Models for each age cohort
@@ -1428,6 +1462,12 @@ results_lmer_re_pruning_toddlers <- models_lmer_re_pruning_w_results_toddlers %>
   unnest(results) 
 ```
 
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results_toddlers, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results_toddlers.Rds"))
+save(results_lmer_re_pruning_toddlers, file = here(model_output_path, "pupillometry_results_lmer_re_pruning_toddlers.Rds"))
+```
+
 #### Plot Outcome by Condition Interaction
 
 ```{r}
@@ -1443,6 +1483,8 @@ ggplot(lmer_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_cor
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("TODDLERS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
 #### Plot Outcome Effect
@@ -1502,6 +1544,12 @@ results_lmer_re_pruning_adults <- models_lmer_re_pruning_w_results_adults %>%
   unnest(results) 
 ```
 
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results_adults, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results_adults.Rds"))
+save(results_lmer_re_pruning_adults, file = here(model_output_path, "pupillometry_results_lmer_re_pruning_adults.Rds"))
+```
+
 #### Plot Outcome by Condition Interaction
 
 ```{r}
@@ -1517,6 +1565,8 @@ ggplot(lmer_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_corre
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("ADULTS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
 ```
 
 #### Plot Outcome Effect
@@ -1641,6 +1691,12 @@ results_lm_main <- models_lm_w_results %>%
   unnest(results) 
 ```
 
+```{r}
+#save the output
+save(models_lm_w_results, file = here(model_output_path, "pupillometry_models_lm_w_results.Rds"))
+save(results_lm_main, file = here(model_output_path, "pupillometry_results_lm_main.Rds"))
+```
+
 ## Plots
 
 ### Three-way-interaction
@@ -1651,13 +1707,15 @@ lm_threewayinteraction_multiverse_results <-results_lm_main %>%
   mutate(
     significant = ifelse(p.value<0.05,"significant","non-significant")
   )
-ggplot(lm_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate))+
+ggplot(lm_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
   geom_hline(yintercept=0, linetype="dashed")+
   geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("Lm Model Estimate for 3-way interaction (Condition x Outcome x Age Cohort)")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_threewayinteraction.png"),width = 10, height = 6, dpi = 300)
 ```
 
 ### Outcome by Condition Interaction
@@ -1675,6 +1733,8 @@ ggplot(lm_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y=e
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("Lm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome.png"),width = 10, height = 6, dpi = 300)
 ```
 
 ### Toddlers
@@ -1700,6 +1760,12 @@ results_lm_main_toddlers <- models_lm_w_results_toddlers %>%
   unnest(results) 
 ```
 
+```{r}
+#save the output
+save(models_lm_w_results_toddlers, file = here(model_output_path, "pupillometry_models_lm_w_results_toddlers.Rds"))
+save(results_lm_main_toddlers, file = here(model_output_path, "pupillometry_results_lm_main_toddlers.Rds"))
+```
+
 #### Plot Outcome by Condition Interaction
 
 ```{r}
@@ -1715,6 +1781,8 @@ ggplot(lm_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_corre
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("TODDLERS\nLm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
 #### Plot Outcome Effect
@@ -1774,6 +1842,12 @@ results_lm_main_adults <- models_lm_w_results_adults %>%
   unnest(results) 
 ```
 
+```{r}
+#save the output
+save(models_lm_w_results_adults, file = here(model_output_path, "pupillometry_models_lm_w_results_adults.Rds"))
+save(results_lm_main_adults, file = here(model_output_path, "pupillometry_results_lm_main_adults.Rds"))
+```
+
 #### Plot Outcome by Condition Interaction
 
 ```{r}
@@ -1789,6 +1863,8 @@ ggplot(lm_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_correct
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("ADULTS\nLm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
 ```
 
 #### Plot Outcome Effect
