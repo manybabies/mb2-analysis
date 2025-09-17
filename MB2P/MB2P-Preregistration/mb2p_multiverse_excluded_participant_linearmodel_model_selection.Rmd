@@ -1297,7 +1297,7 @@ extract_outer_parentheses <- function(text) {
 extract_lmer_model_results_tidy <- function(model) {
   # Get tidy summary of fixed effects
   coefs <- broom.mixed::tidy(model, effects = "fixed") %>%
-    select(term, estimate, std.error, df, statistic, p.value)
+    dplyr::select(term, estimate, std.error, df, statistic, p.value)
 
   # Extract model formula
   model_formula <- deparse(formula(model)) |> paste(collapse = "")
@@ -1348,7 +1348,7 @@ extract_lmer_model_results_tidy <- function(model) {
 models_lmer_re_pruning <- data_df5 %>%
   mutate(
     models = map(data,run_model_lmer_re_pruning)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lmer_re_pruning_w_results <- models_lmer_re_pruning %>%
@@ -1358,7 +1358,7 @@ models_lmer_re_pruning_w_results <- models_lmer_re_pruning %>%
 
 #extract results into data frame
 results_lmer_re_pruning <- models_lmer_re_pruning_w_results %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 
 ## old strategy focused on data list
@@ -1451,7 +1451,7 @@ ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXou
 models_lmer_re_pruning_toddlers <- data_df5 %>%
   mutate(
     models = map2(data,c("toddlers"), run_model_lmer_re_pruning)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lmer_re_pruning_w_results_toddlers <- models_lmer_re_pruning_toddlers %>%
@@ -1461,7 +1461,7 @@ models_lmer_re_pruning_w_results_toddlers <- models_lmer_re_pruning_toddlers %>%
 
 #extract results into data frame
 results_lmer_re_pruning_toddlers <- models_lmer_re_pruning_w_results_toddlers %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 ```
 
@@ -1533,7 +1533,7 @@ ggplot(lmer_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,
 models_lmer_re_pruning_adults <- data_df5 %>%
   mutate(
     models = map2(data,c("adults"), run_model_lmer_re_pruning)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lmer_re_pruning_w_results_adults <- models_lmer_re_pruning_adults %>%
@@ -1543,7 +1543,7 @@ models_lmer_re_pruning_w_results_adults <- models_lmer_re_pruning_adults %>%
 
 #extract results into data frame
 results_lmer_re_pruning_adults <- models_lmer_re_pruning_w_results_adults %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 ```
 
@@ -1652,7 +1652,7 @@ fit_lm_main <- function(df,groups_to_include = c("adults","toddlers")) {
 extract_lm_model_results_tidy <- function(model) {
   # Get tidy summary of fixed effects
   coefs <- broom::tidy(model) %>%
-    select(term, estimate, std.error, statistic, p.value)
+    dplyr::select(term, estimate, std.error, statistic, p.value)
 
   #compute 95% CIs
   ci_df <- as.data.frame(confint(model, level = 0.95, method = "Wald"))
@@ -1680,7 +1680,7 @@ extract_lm_model_results_tidy <- function(model) {
 models_lm <- data_df5 %>%
   mutate(
     models = map(data,fit_lm_main)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lm_w_results <- models_lm  %>%
@@ -1690,7 +1690,7 @@ models_lm_w_results <- models_lm  %>%
 
 #extract results into data frame
 results_lm_main <- models_lm_w_results %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 ```
 
@@ -1749,7 +1749,7 @@ ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome.png
 models_lm_toddlers <- data_df5 %>%
   mutate(
     models = map2(data,c("toddlers"), fit_lm_main)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lm_w_results_toddlers <- models_lm_toddlers %>%
@@ -1759,7 +1759,7 @@ models_lm_w_results_toddlers <- models_lm_toddlers %>%
 
 #extract results into data frame
 results_lm_main_toddlers <- models_lm_w_results_toddlers %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 ```
 
@@ -1831,7 +1831,7 @@ ggplot(lm_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=
 models_lm_adults <- data_df5 %>%
   mutate(
     models = map2(data,c("adults"), fit_lm_main)) %>%
-  select(-data) 
+  dplyr::select(-data) 
 
 #add results
 models_lm_w_results_adults <- models_lm_adults %>%
@@ -1841,7 +1841,7 @@ models_lm_w_results_adults <- models_lm_adults %>%
 
 #extract results into data frame
 results_lm_main_adults <- models_lm_w_results_adults %>%
-  select(-models) %>%
+  dplyr::select(-models) %>%
   unnest(results) 
 ```
 
