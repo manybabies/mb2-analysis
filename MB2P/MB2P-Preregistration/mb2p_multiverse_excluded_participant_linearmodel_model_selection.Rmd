@@ -1611,16 +1611,14 @@ ggplot(lmer_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=
 ## Helper functions
 
 ```{r}
-#function for fitting lmer model
+#function for fitting lm model
 fit_lm_main <- function(df,groups_to_include = c("adults","toddlers")) {
   if (length(groups_to_include)>1) {
     print("Fitting model across groups")
     min_age_cohort_num = 2
-    lmer_model_type = "main"
   } else {
     print("Fitting group-specific models")
     min_age_cohort_num = 1
-    lmer_model_type = "group"
   }
   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
@@ -1637,9 +1635,14 @@ fit_lm_main <- function(df,groups_to_include = c("adults","toddlers")) {
         age_cohort_adults = ifelse(age_cohort=="adults",0,1),
         age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
         )
-    
-    #Fit the model if conditions are met
-    m <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
+    if (min_age_cohort_num ==1) {
+      #Fit the model if conditions are met
+      m <- lm(Average ~ condition_c * outcome_c, data = df.short)
+    } else if (min_age_cohort_num ==1) {
+      #Fit the model if conditions are met
+      m <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
+    }
+   
     m
   } else {
     # Return NULL if conditions aren't met
@@ -1903,3 +1906,7 @@ ggplot(lm_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=es
   xlab("Baseline Correction Window")+
   ylab("ADULTS\nLm Model Estimate for Effect of Condition")
 ```
+
+# PART 6: Correlation between anticipatory looking and pupil dilation
+
+These analyses correspond to main question 3 in the preregistration: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? 
