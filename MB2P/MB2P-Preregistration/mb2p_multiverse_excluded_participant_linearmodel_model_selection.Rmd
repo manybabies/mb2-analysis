@@ -2132,6 +2132,25 @@ ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lm_knowledge_only_outcome_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
 #### Adults
 
 ##### Fit models and extract results
