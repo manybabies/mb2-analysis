@@ -1635,10 +1635,10 @@ fit_lm_main <- function(df,groups_to_include = c("adults","toddlers")) {
         age_cohort_adults = ifelse(age_cohort=="adults",0,1),
         age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
         )
-    if (min_age_cohort_num ==1) {
+    if (min_age_cohort_num == 1) {
       #Fit the model if conditions are met
       m <- lm(Average ~ condition_c * outcome_c, data = df.short)
-    } else if (min_age_cohort_num ==1) {
+    } else if (min_age_cohort_num == 2) {
       #Fit the model if conditions are met
       m <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
     }
@@ -1679,7 +1679,7 @@ extract_lm_model_results_tidy <- function(model) {
 ## Fit models and extract results
 
 ```{r, warning=F, message=F}
-#fit the lmer models with random effects pruning
+#fit the lm models
 models_lm <- data_df5 %>%
   mutate(
     models = map(data,fit_lm_main)) %>%
@@ -1748,7 +1748,7 @@ ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome.png
 ### Fit models and extract results
 
 ```{r, warning=F, message=F}
-#fit the lmer models with random effects pruning
+#fit the lm models
 models_lm_toddlers <- data_df5 %>%
   mutate(
     models = map2(data,c("toddlers"), fit_lm_main)) %>%
@@ -1830,7 +1830,7 @@ ggplot(lm_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=
 ### Fit models and extract results
 
 ```{r, warning=F, message=F}
-#fit the lmer models with random effects pruning
+#fit the lm models
 models_lm_adults <- data_df5 %>%
   mutate(
     models = map2(data,c("adults"), fit_lm_main)) %>%
@@ -1910,3 +1910,220 @@ ggplot(lm_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=es
 # PART 6: Correlation between anticipatory looking and pupil dilation
 
 These analyses correspond to main question 3 in the preregistration: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? 
+
+# Part 6A: LM Models
+
+## Helper functions
+
+```{r}
+#function for fitting lm model for anticipatory looking and pupil dilation analyses
+## this function automatically expands the interactions included depending on the number of groups and conditions included
+## (up to a four-way interaction between anticipatory looking, outcome, condition, and age cohort)
+fit_al_pd_lm <- function(df,groups_to_include = c("adults","toddlers"), conditions_to_include = c("knowledge","ignorance")) {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+  } else {
+    print("Fitting group-specific model")
+    min_age_cohort_num = 1
+  }
+  if (length(conditions_to_include)>1) {
+    print("Fitting model across conditions")
+    min_condition_num = 2
+  } else {
+    print("Fitting condition-specific model")
+    min_condition_num = 1
+  }
+  if (is.data.frame(df) && n_distinct(df$condition_c) >= min_condition_num & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      #filter data to conditions to include
+      filter(condition %in% conditions_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id,prop_exit) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        ) |> 
+      # center prop_exit/ anticipatory looking
+      mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+      
+    if (min_age_cohort_num ==1) {
+      if (min_condition_num ==1) {
+        #Fit the model for a specific condition (2-way interaction: outcome * AL)
+        m <- lm(Average ~ outcome_c * prop_exit_c, data = df.short)
+      } else if (min_condition_num ==2) {
+        #Fit the model for both conditions (3-way interaction: outcome * AL * condition)
+        m <- lm(Average ~ outcome_c * prop_exit_c * condition_c, data = df.short)
+      }
+    } else if (min_age_cohort_num == 2) {
+      if (min_condition_num ==1) {
+        #Fit the model for a specific condition (3-way interaction: outcome * AL * age cohort)
+        m <- lm(Average ~ outcome_c * prop_exit_c * age_cohort_c, data = df.short)
+      } else if (min_condition_num ==2) {
+        #Fit the model for both conditions (4-way interaction: outcome * AL * age cohort * condition)
+        m <- lm(Average ~ outcome_c * prop_exit_c * age_cohort_c * condition_c, data = df.short)
+      }
+    }
+    m
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+```
+
+## Fit models and extract results
+
+Our main analysis focuses specifically on group-wise results (separately for toddlers and adults) in the knowledge condition.
+
+### Toddlers
+
+#### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_al_pd_lm_knowledge_only_toddlers <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("toddlers"),c("knowledge")),
+      fit_al_pd_lm
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lm_knowledge_only_w_results_toddlers <- models_al_pd_lm_knowledge_only_toddlers %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lm_knowledge_only_toddlers <- models_al_pd_lm_knowledge_only_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lm_knowledge_only_w_results_toddlers, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_toddlers.Rds"))
+save(results_al_pd_lm_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_main_toddlers.Rds"))
+```
+
+#### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for 2-way interaction Outcome X AL")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Plot Anticiptory Looking Effect
+
+```{r}
+al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Anticipatory Looking")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+### Adults
+
+#### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_al_pd_lm_knowledge_only_adults <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("adults"),c("knowledge")),
+      fit_al_pd_lm
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lm_knowledge_only_w_results_adults <- models_al_pd_lm_knowledge_only_adults %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lm_knowledge_only_adults <- models_al_pd_lm_knowledge_only_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lm_knowledge_only_w_results_adults, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_adults.Rds"))
+save(results_al_pd_lm_knowledge_only_adults, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_main_adults.Rds"))
+```
+
+#### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for 2-way interaction Outcome X AL")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Plot Anticiptory Looking Effect
+
+```{r}
+al_pd_lm_knowledge_only_anticipation_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Anticipatory Looking")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
