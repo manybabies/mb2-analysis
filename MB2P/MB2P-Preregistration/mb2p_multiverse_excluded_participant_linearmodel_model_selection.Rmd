@@ -623,7 +623,7 @@ ggplot(summarized_data_by_dataset_id_mins, aes(x = t_norm_downsampled, y = avg_p
       facet_grid(condition ~ age_cohort)
 ```
 
-#### New Min-Max plot after first averagining within lab
+#### New Min-Max plot after first averaging within lab
 
 ```{r}
 # create equivalent min-max plot as above to demonstrate the effect of first averaging within lab
@@ -1911,9 +1911,85 @@ ggplot(lm_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=es
 
 These analyses correspond to main question 3 in the preregistration: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? 
 
-# Part 6A: LM Models
+## Preliminary plotting
 
-## Helper functions
+### Create dataset for plotting
+```{r}
+data_for_plotting_df5 <- data_df5 |> 
+  unite("multiverse_label",  df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion, sep = "_", remove = FALSE) |>  # Combine first 5 column values into a string tracking the multiverse combination
+  unnest(data) |> 
+  dplyr::filter(!is.na(average_z), t_norm >= 0 & t_norm < 5000) 
+```
+
+### Summarize data by participant
+
+(no within-lab averaging)
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarize_participant_data_by_dataset_id <- data_for_plotting_df5 |> 
+    group_by(multiverse_label, participant_lab_id, lab_id, condition, outcome, age_cohort) |>  
+  summarize(
+    mean_pupil_z = mean(average_z, na.rm = TRUE),
+    prop_exit = prop_exit[1]
+  ) |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+```
+
+### Plots
+
+#### Plot to show effect for each multiverse dataset,no within lab averaging
+
+```{r}
+#MV plot
+summarize_participant_data_by_dataset_id %>%
+  ggplot(aes(prop_exit,y=mean_pupil_z))+
+  geom_smooth(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05,method="lm",se=F)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  facet_wrap(~ age_cohort+condition)+
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis.png"),width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+#"best" variant
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant_participant_data <- summarize_participant_data_by_dataset_id |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+ggplot(summarize_participant_data_by_dataset_id,aes(x=prop_exit,y=mean_pupil_z,color=outcome))+
+  #geom_point(alpha=0.05)+
+  geom_smooth(data=best_multiverse_variant_participant_data,aes(x=prop_exit,y=mean_pupil_z),size=1.2,method="lm")+
+  facet_wrap(~ age_cohort+condition)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_hline(yintercept = 0) +
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis_best_variant.png"),width = 10, height = 6, dpi = 300)
+
+ggplot(summarize_participant_data_by_dataset_id,aes(x=prop_exit,y=mean_pupil_z,color=outcome))+
+  geom_smooth(aes(group=multiverse_id_wcond,color=outcome,fill=outcome),method="lm",se=F)+
+  geom_smooth(data=best_multiverse_variant_participant_data,aes(x=prop_exit,y=mean_pupil_z),size=1.2,method="lm")+
+  facet_wrap(~ age_cohort+condition)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_hline(yintercept = 0) +
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis_final_combination_overlay.png"),width = 10, height = 6, dpi = 300)
+```
+
+
+## Part 6A: LM Models
+
+### Helper functions
 
 ```{r}
 #function for fitting lm model for anticipatory looking and pupil dilation analyses
@@ -1981,13 +2057,13 @@ fit_al_pd_lm <- function(df,groups_to_include = c("adults","toddlers"), conditio
 }
 ```
 
-## Fit models and extract results
+### Fit models and extract results
 
 Our main analysis focuses specifically on group-wise results (separately for toddlers and adults) in the knowledge condition.
 
-### Toddlers
+#### Toddlers
 
-#### Fit models and extract results
+##### Fit models and extract results
 
 ```{r, warning=F, message=F}
 #fit the lm models
@@ -2015,10 +2091,10 @@ results_al_pd_lm_knowledge_only_toddlers <- models_al_pd_lm_knowledge_only_w_res
 ```{r}
 #save the output
 save(models_al_pd_lm_knowledge_only_w_results_toddlers, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_toddlers.Rds"))
-save(results_al_pd_lm_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_main_toddlers.Rds"))
+save(results_al_pd_lm_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_toddlers.Rds"))
 ```
 
-#### Plot Outcome by Anticipatory Looking Interaction
+##### Plot Outcome by Anticipatory Looking Interaction
 
 ```{r}
 al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
@@ -2037,7 +2113,7 @@ ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
-#### Plot Anticiptory Looking Effect
+##### Plot Anticiptory Looking Effect
 
 ```{r}
 al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
@@ -2056,9 +2132,9 @@ ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
-### Adults
+#### Adults
 
-#### Fit models and extract results
+##### Fit models and extract results
 
 ```{r, warning=F, message=F}
 #fit the lm models
@@ -2086,10 +2162,10 @@ results_al_pd_lm_knowledge_only_adults <- models_al_pd_lm_knowledge_only_w_resul
 ```{r}
 #save the output
 save(models_al_pd_lm_knowledge_only_w_results_adults, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_adults.Rds"))
-save(results_al_pd_lm_knowledge_only_adults, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_main_adults.Rds"))
+save(results_al_pd_lm_knowledge_only_adults, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_adults.Rds"))
 ```
 
-#### Plot Outcome by Anticipatory Looking Interaction
+##### Plot Outcome by Anticipatory Looking Interaction
 
 ```{r}
 al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
@@ -2108,7 +2184,7 @@ ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults,ae
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
 ```
 
-#### Plot Anticiptory Looking Effect
+##### Plot Anticiptory Looking Effect
 
 ```{r}
 al_pd_lm_knowledge_only_anticipation_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
@@ -2127,3 +2203,25 @@ ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
 ```
 
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lm_knowledge_only_outcome_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+## Part 6B: LMER Models
+
+To Do
