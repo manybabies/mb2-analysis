@@ -161,7 +161,7 @@ rle_data_voe <- data_voe %>%
   group_by(
     age_cohort, participant_lab_id, lab_id,
     participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
-    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session
+    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
   ) %>%
   reframe(
     lengths = rle(aoi)$lengths,
@@ -184,7 +184,8 @@ rle_data_voe <- rle_data_voe %>%
   ) %>%
   #compute cumulative on-screen looking time within a trial
   mutate(
-    cum_looking_time = cumsum(onscreen_looking_index * times)
+    cum_looking_time = cumsum(onscreen_looking_index * times),
+    cum_total_time = cumsum(times)
   ) 
 
 lt_data_voe <- data_voe %>%
@@ -195,7 +196,7 @@ lt_data_voe <- data_voe %>%
   group_by(
     age_cohort, participant_lab_id, lab_id,
     participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
-    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session
+    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
   ) %>%
   reframe(
     lengths = rle(onscreen_looking)$lengths,
@@ -213,7 +214,9 @@ lt_data_voe <- data_voe %>%
     participant_id, participant_trial_id, trial_num) %>%
   #compute cumulative on-screen looking time within a trial
   mutate(
-    cumulative_looking_time = cumsum(onscreen_looking_index * times)
+    cumulative_looking_time = cumsum(onscreen_looking_index * times),
+    #cumulative total time
+    cumulative_total_time = cumsum(times)
   ) %>%
   #cumulative number of distinct on-screen looks
   mutate(
