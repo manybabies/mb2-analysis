@@ -2108,7 +2108,7 @@ ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("TODDLERS\nLm Model Estimate for 2-way interaction Outcome X AL")
+  ylab("TODDLERS\nLm Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2127,7 +2127,7 @@ ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("TODDLERS\nLm Model Estimate for Effect of Anticipatory Looking")
+  ylab("TODDLERS\nLm Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2146,7 +2146,7 @@ ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_toddlers,aes(x=df4_bas
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("TODDLERS\nLm Model Estimate for Effect of Outcome")
+  ylab("TODDLERS\nLm Model Estimate for Effect of Outcome in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2198,7 +2198,7 @@ ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults,ae
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("ADULTS\nLm Model Estimate for 2-way interaction Outcome X AL")
+  ylab("ADULTS\nLm Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2217,7 +2217,7 @@ ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("ADULTS\nLm Model Estimate for Effect of Anticipatory Looking")
+  ylab("ADULTS\nLm Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2236,7 +2236,7 @@ ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_adults,aes(x=df4_basel
   geom_point(size=2)+
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
-  ylab("ADULTS\nLm Model Estimate for Effect of Outcome")
+  ylab("ADULTS\nLm Model Estimate for Effect of Outcome in Knowledge Condition")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_adults.png"),width = 10, height = 6, dpi = 300)
 ```
@@ -2244,3 +2244,48 @@ ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_
 ## Part 6B: LMER Models
 
 To Do
+
+## Exploratory
+
+Here, I'm just using the best-variant fit for now to explore the three-way interaction that includes condition.
+
+```{r}
+best_multiverse_variant_participant_data <- best_multiverse_variant_participant_data |> 
+  ungroup() |> 
+mutate(
+    age_cohort_c = case_when(
+      age_cohort == "adults" ~ -0.5,
+      age_cohort == "toddlers" ~ 0.5
+    ),
+    condition_c = case_when(
+      condition == "knowledge" ~ -0.5,
+      condition == "ignorance" ~ 0.5
+    ),
+    outcome_c = case_when(
+      outcome == "congruent" ~ -0.5,
+      outcome == "incongruent" ~ 0.5)
+    ) |> 
+  mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+```
+
+### Three-Way Interaction: Outcome * Anticipatory Looking * Condition
+
+#### Toddlers
+
+```{r}
+#fit lmer model
+## including random slopes for outcome seems to not allow for convergence
+m_al_3wayint_toddlers <- lmer(mean_pupil_z ~ outcome_c * prop_exit_c * condition_c+(1+ prop_exit_c*condition_c|lab_id), data = filter(best_multiverse_variant_participant_data, age_cohort=="toddlers"))
+summary(m_al_3wayint_toddlers)
+```
+
+#### Adults
+
+```{r}
+#fit lmer model
+## including random slopes for outcome or condition seems to not allow for convergence
+m_al_3wayint_adults <- lmer(mean_pupil_z ~ outcome_c * prop_exit_c * condition_c+(1+ prop_exit_c|lab_id), data = filter(best_multiverse_variant_participant_data, age_cohort=="adults"))
+summary(m_al_3wayint_adults)
+```
