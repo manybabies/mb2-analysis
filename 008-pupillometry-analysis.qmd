@@ -137,6 +137,93 @@ Saving pupillometry dataset to use for multiverse:
 save(data_pupillometry, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 ```
 
+# Create looking time dataset
+
+## Select relevant trials/ window
+
+- only second trial
+- window: 0-60s post outcome
+
+```{r}
+data_voe <- data_pupillometry %>%
+  filter(
+    trial_num == 6, #second trial only
+    t_norm >= 0 & t_norm <= 60000 #0-60s window post outcome
+  )
+
+```
+
+## Convert to RLE
+
+```{r}
+# convert to rle data
+rle_data_voe <- data_voe %>%
+  group_by(
+    age_cohort, participant_lab_id, lab_id,
+    participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
+    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session
+  ) %>%
+  reframe(
+    lengths = rle(aoi)$lengths,
+    values = rle(aoi)$values
+  ) 
+```
+
+## Convert to on-screen looking time data
+
+```{r}
+rle_data_voe <- rle_data_voe %>%
+  #convert to ms
+  mutate(
+    times = lengths * 25 #25ms samples
+  ) %>%
+  #on-screen looking
+  mutate(
+    onscreen_looking = ifelse(values == "NA_NA","off","on"),
+    onscreen_looking_index = ifelse(values == "NA_NA",0,1)
+  ) %>%
+  #compute cumulative on-screen looking time within a trial
+  mutate(
+    cum_looking_time = cumsum(onscreen_looking_index * times)
+  ) 
+
+lt_data_voe <- data_voe %>%
+  #on-screen looking
+  mutate(
+    onscreen_looking = ifelse(aoi == "NA_NA","off","on")
+  ) %>%
+  group_by(
+    age_cohort, participant_lab_id, lab_id,
+    participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
+    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session
+  ) %>%
+  reframe(
+    lengths = rle(onscreen_looking)$lengths,
+    values = rle(onscreen_looking)$values
+  ) %>%
+  #convert to ms
+  mutate(
+    times = lengths * 25 #25ms samples
+  ) %>%
+  mutate(
+    onscreen_looking_index = ifelse(values == "off",0,1)
+  ) %>%
+  group_by(
+    age_cohort, participant_lab_id, lab_id,
+    participant_id, participant_trial_id, trial_num) %>%
+  #compute cumulative on-screen looking time within a trial
+  mutate(
+    cumulative_looking_time = cumsum(onscreen_looking_index * times)
+  ) %>%
+  #cumulative number of distinct on-screen looks
+  mutate(
+    cumulative_number_of_looks = cumsum(ifelse(values == "on",1,0))
+  )
+  
+```
+
+# Heatmaps
+
 Creating heatmaps for 5s-window after the point of disambiguation
 ```{r}
 library(png)
