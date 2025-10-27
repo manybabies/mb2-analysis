@@ -2113,7 +2113,7 @@ ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,
 ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
 ```
 
-##### Plot Anticiptory Looking Effect
+##### Plot Anticipatory Looking Effect
 
 ```{r}
 al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
@@ -2243,7 +2243,242 @@ ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_
 
 ## Part 6B: LMER Models
 
-To Do
+
+```{r}
+#function for fitting lm model for anticipatory looking and pupil dilation analyses
+## this function automatically expands the interactions included depending on the number of groups
+## (up to a three-way interaction between anticipatory looking, outcome, and age cohort)
+## restricted to only using one condition for now (rather than full four-way interaction)
+run_al_pd_lmer_re_pruning <- function(df,groups_to_include = c("adults","toddlers"),condition_to_include = "knowledge") {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+    lmer_model_type = "main"
+  } else {
+    print("Fitting group-specific model")
+    min_age_cohort_num = 1
+    lmer_model_type = "group"
+  }
+  if (condition_to_include=="knowledge") {
+    print("Fitting model for Knowledge condition")
+  } else if (condition_to_include == "ignorance") {
+    print("Fitting model for Ignorance condition")
+  } else {
+    print("condition name not recognized. Unexpected condition name:")
+    print(toString(condition_to_include))
+    # Return NULL if condition parameter has unexpected value
+    NULL
+  }
+  if (is.data.frame(df) && 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      #filter data to conditions to include
+      filter(condition == condition_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id,prop_exit) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        ) |> 
+      # center prop_exit/ anticipatory looking
+      mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+    
+    #Fit the model if conditions are met
+    prune_al_lmer_model(df.short,model_type=lmer_model_type)
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+```
+
+### Fit models and extract results
+
+Our main analysis focuses specifically on group-wise results (separately for toddlers and adults) in the knowledge condition.
+
+#### Toddlers
+
+```{r, warning=F, message=F}
+#fit the lmer models
+models_al_pd_lmer_knowledge_only_toddlers <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("toddlers"),"knowledge"),
+      run_al_pd_lmer_re_pruning
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lmer_knowledge_only_w_results_toddlers <- models_al_pd_lmer_knowledge_only_toddlers %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lmer_knowledge_only_toddlers <- models_al_pd_lmer_knowledge_only_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lmer_knowledge_only_w_results_toddlers, file = here(model_output_path, "pupillometry_models_al_pd_lmer_knowledge_only_w_results_toddlers.Rds"))
+save(results_al_pd_lmer_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_results_al_pd_lmer_knowledge_only_toddlers.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticipatory Looking Effect
+
+```{r}
+al_pd_lmer_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lmer_knowledge_only_outcome_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_outcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Adults
+
+```{r, warning=F, message=F}
+#fit the lmer models
+models_al_pd_lmer_knowledge_only_adults <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("adults"),"knowledge"),
+      run_al_pd_lmer_re_pruning
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lmer_knowledge_only_w_results_adults <- models_al_pd_lmer_knowledge_only_adults %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lmer_knowledge_only_adults <- models_al_pd_lmer_knowledge_only_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lmer_knowledge_only_w_results_adults, file = here(model_output_path, "pupillometry_models_al_pd_lmer_knowledge_only_w_results_adults.Rds"))
+save(results_al_pd_lmer_knowledge_only_adults, file = here(model_output_path, "pupillometry_results_al_pd_lmer_knowledge_only_adults.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticipatory Looking Effect
+
+```{r}
+al_pd_lmer_knowledge_only_anticipation_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lmer_knowledge_only_outcome_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_outcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
 
 ## Exploratory
 
@@ -2288,4 +2523,28 @@ summary(m_al_3wayint_toddlers)
 ## including random slopes for outcome or condition seems to not allow for convergence
 m_al_3wayint_adults <- lmer(mean_pupil_z ~ outcome_c * prop_exit_c * condition_c+(1+ prop_exit_c|lab_id), data = filter(best_multiverse_variant_participant_data, age_cohort=="adults"))
 summary(m_al_3wayint_adults)
+```
+
+### Effect of anticipation in on pupil size in incongruent, knowledge condition specifically?
+
+#### Toddlers
+
+```{r}
+m_al_incongruent_knowledge_toddlers <- lmer(
+  mean_pupil_z ~ prop_exit_c +(1+ prop_exit_c|lab_id),
+  filter(best_multiverse_variant_participant_data, age_cohort=="toddlers"& condition=="knowledge" & outcome=="incongruent"))
+summary(m_al_incongruent_knowledge_toddlers)
+```
+
+#### Adults
+
+```{r}
+#issues with convergence of lmer model
+# m_al_incongruent_knowledge_adults <- lmer(
+#   mean_pupil_z ~ prop_exit_c +(1|lab_id),
+#   filter(best_multiverse_variant_participant_data, age_cohort=="adults"& condition=="knowledge" & outcome=="incongruent"))
+m_al_incongruent_knowledge_adults <- lm(
+  mean_pupil_z ~ prop_exit,
+  filter(best_multiverse_variant_participant_data, age_cohort=="adults"& condition=="knowledge" & outcome=="incongruent"))
+summary(m_al_incongruent_knowledge_adults)
 ```
