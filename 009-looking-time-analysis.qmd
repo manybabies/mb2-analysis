@@ -1,0 +1,214 @@
+---
+title: "MB2 Pupillometry Analysis"
+format: html
+---
+
+```{r}
+# Clear work space:
+rm(list = ls())
+
+library(tidyverse)
+library(here)
+library(glue)
+library(assertthat)
+library(gghalves)
+library(cowplot)
+
+source(here('helper','ensure_repo_structure.R'))
+
+# load pupillometry data
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
+
+# paths
+plot_output_path <- here("MB2P","MB2P-Preregistration","plots")
+
+```
+
+# Create looking time dataset
+
+## Select relevant trials/ window
+
+- only second trial
+- window: 0-60s post outcome
+
+```{r}
+data_voe <- data_pupillometry %>%
+  filter(
+    trial_num == 6, #second trial only
+    t_norm >= 0 & t_norm <= 60000 #0-60s window post outcome
+  )
+
+## specify grouping parameters (add to this as needed)
+grouping_params <- quos(age_cohort,participant_lab_id, lab_id,participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, outcome, has_ending,target_side,eyetracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial)
+
+```
+
+## Convert to run-length encoding format
+
+This format creates a look-based format (each row represents the duration of a cluster of looking, in sequence, e.g. duration of look to one AOI) based on the AOIs predefined in the main analysis.
+
+```{r}
+# convert to rle data
+rle_data_voe <- data_voe %>%
+  group_by(
+    !!!grouping_params
+  ) %>%
+  reframe(
+    lengths = rle(aoi)$lengths,
+    values = rle(aoi)$values
+  ) %>%
+  #convert to ms
+  mutate(
+    times = lengths * 25 #25ms samples
+  ) %>%
+  #on-screen looking
+  mutate(
+    onscreen_looking = ifelse(values == "NA_NA","off","on"),
+    onscreen_looking_index = ifelse(values == "NA_NA",0,1)
+  ) %>%
+  #compute cumulative on-screen looking time within a trial
+  mutate(
+    cum_looking_time = cumsum(onscreen_looking_index * times),
+    cum_total_time = cumsum(times)
+  ) 
+```
+
+## Convert to on-screen looking time data
+
+This format creates a look-based format based only on whether looking was on or off screen (each row represents the duration of a cluster of looking to the screen or off-screen).
+
+```{r}
+lt_data_voe <- data_voe %>%
+  #on-screen looking
+  mutate(
+    onscreen_looking = ifelse(aoi == "NA_NA","off","on")
+  ) %>%
+  group_by(
+    !!!grouping_params
+  ) %>%
+  reframe(
+    lengths = rle(onscreen_looking)$lengths,
+    values = rle(onscreen_looking)$values
+  ) %>%
+  #convert to ms
+  mutate(
+    times = lengths * 25 #25ms samples
+  ) %>%
+  mutate(
+    onscreen_looking_index = ifelse(values == "off",0,1)
+  ) %>%
+  group_by(
+    age_cohort, participant_lab_id, lab_id,
+    participant_id, participant_trial_id, trial_num) %>%
+  #compute cumulative on-screen looking time within a trial
+  mutate(
+    cumulative_looking_time = cumsum(onscreen_looking_index * times),
+    #cumulative total time
+    cumulative_total_time = cumsum(times)
+  ) %>%
+  #cumulative number of distinct on-screen looks
+  mutate(
+    cumulative_number_of_onscreen_looks = cumsum(ifelse(values == "on",1,0))
+  )
+
+#store dataset
+save(lt_data_voe, file = here(INTERMEDIATE_FOLDER, "009-looking-time-data-unfiltered.Rds"))
+```
+
+## Implement criteria
+
+As an example, I implement the criteria (look-away criterion, required cumulative looking, max looking time) from the first preregistered analysis (update the parameters)
+
+```{r}
+## PARAMETERS
+look_away_criterion <- 2000
+cumulative_looking_required <- 2000
+max_looking_time <- 30000
+
+
+lt_data_voe_criterion <- lt_data_voe %>%
+  #look away criterion: if children looked for longer than X seconds
+  #set flag for looks offscreen longer than criterion
+  mutate(
+    look_away = case_when(
+      values == "off" & times >= look_away_criterion ~ 1,
+      TRUE ~ 0
+    ),
+    # only count look aways post sufficient looking
+    look_away_post_suff_looking = case_when(
+      look_away == 1 & cumulative_looking_time >= cumulative_looking_required ~ 1,
+      TRUE ~ 0
+    )) %>%
+  # Cumulative group index that increments on each look away
+  mutate(
+    look_away_count = cumsum(lag(look_away, default = FALSE)),
+    look_away_count_post_suff_looking = cumsum(lag(look_away_post_suff_looking, default = FALSE))) %>%
+  # if there has been a look away AND there is sufficient existing cumulative looking, truncate
+  filter(
+    look_away_count_post_suff_looking == 0
+  ) %>%
+  # truncate at max time
+  mutate(
+    cumulative_total_looking_time_truncated_at_max = pmin(cumulative_looking_time, max_looking_time)
+  ) %>%
+  filter(lag(cumulative_looking_time) <= max_looking_time)
+
+#summarize final looking times by participant
+total_participant_lt_data_voe_criterion <- lt_data_voe_criterion %>%
+  group_by(
+    !!!grouping_params
+  ) %>%
+  summarise(
+    total_look_aways_pre_criterion = max(look_away_count),
+    total_cumulative_looking_time = max(cumulative_total_looking_time_truncated_at_max),
+    total_screen_time = max(cumulative_total_time)
+  )
+```
+
+## Quick summary and overview
+
+```{r}
+#visualize basic looking time distributions
+ggplot(total_participant_lt_data_voe_criterion,aes(total_cumulative_looking_time, color=outcome))+
+  geom_density()+
+  facet_wrap(~condition+age_cohort)
+
+#summarize by participant
+avg_lt_data_voe_criterion <- total_participant_lt_data_voe_criterion %>%
+  ungroup() %>%
+  group_by(age_cohort,condition,outcome) %>%
+  summarize(
+    mean_looking_time = mean(total_cumulative_looking_time),
+    sd_looking_time = sd(total_cumulative_looking_time),
+    n = n(),
+    se_looking_time = sd_looking_time / sqrt(n),
+    ci_lower = mean_looking_time - qt(1 - (0.05 / 2), n - 1) * se_looking_time,
+    ci_upper = mean_looking_time + qt(1 - (0.05 / 2), n - 1) * se_looking_time
+  )
+
+#visualize average effects
+ggplot(
+  total_participant_lt_data_voe_criterion,
+  aes(x = outcome, y = total_cumulative_looking_time, color = outcome)
+) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_half_violin(
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.5, position=position_nudge(x = .2, y = 0)) +
+  theme_cowplot() +
+  ylab("Total Looking Time (ms)")+
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  facet_wrap(~condition+age_cohort) +
+  theme(legend.position = "none") 
+
+#old: more basic bar plot
+# ggplot(avg_lt_data_voe_criterion,aes(x=outcome,y=mean_looking_time, fill=outcome))+
+#   geom_bar(stat="identity", position=position_dodge())+
+#   geom_errorbar(aes(ymin=ci_lower, ymax=ci_upper), width=0.2, position=position_dodge(0.9))+
+#   facet_wrap(~condition+age_cohort)
+
+#save figure
+ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_looking_time,"_lookaway_",look_away_criterion,".png")),width = 9, height = 6, dpi = 300)
+```
