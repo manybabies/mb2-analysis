@@ -173,6 +173,21 @@ ggplot(total_participant_lt_data_voe_criterion,aes(total_cumulative_looking_time
   geom_density()+
   facet_wrap(~condition+age_cohort)
 
+#just toddlers
+ggplot(filter(total_participant_lt_data_voe_criterion,age_cohort=="toddlers"),aes(total_cumulative_looking_time, fill=outcome))+
+  geom_histogram()+
+  facet_wrap(outcome~condition)
+ggplot(filter(total_participant_lt_data_voe_criterion,age_cohort=="toddlers"),aes(outcome,total_cumulative_looking_time, fill=outcome,color=outcome))+
+  geom_jitter(width=0.05,height=0.025,alpha=0.5,stroke=NA)+
+  geom_half_violin(data=filter(total_participant_lt_data_voe_criterion,age_cohort=="toddlers"&outcome=="congruent"),
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.5
+  ) +
+  geom_half_violin(data=filter(total_participant_lt_data_voe_criterion,age_cohort=="toddlers"&outcome=="incongruent"),
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.5
+  ) +
+  facet_wrap(~condition)+
+  theme_cowplot()
+
 #summarize by participant
 avg_lt_data_voe_criterion <- total_participant_lt_data_voe_criterion %>%
   ungroup() %>%
