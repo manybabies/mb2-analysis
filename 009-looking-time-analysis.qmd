@@ -230,7 +230,11 @@ ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_
 
 ## Alternative: No censoring (max time or lookaway)
 
+Remove the various censoring decisions, but require a minimum looking time for inclusion
+
 ```{r}
+#min looking time
+min_looking_time <- 2000
 #summarize final looking times by participant
 total_participant_lt_data_voe_no_crit <- lt_data_voe %>%
   group_by(
@@ -242,7 +246,9 @@ total_participant_lt_data_voe_no_crit <- lt_data_voe %>%
     log_looking_time = case_when(
       total_cumulative_looking_time ==0 ~ NA,
       TRUE ~ log(total_cumulative_looking_time))
-  )
+  ) %>%
+  #implement a minimum looking time
+  filter(total_cumulative_looking_time >= min_looking_time)
 ```
 
 ### summary/overview
@@ -250,6 +256,9 @@ total_participant_lt_data_voe_no_crit <- lt_data_voe %>%
 ```{r}
 #visualize basic looking time distributions
 ggplot(total_participant_lt_data_voe_no_crit,aes(total_cumulative_looking_time, color=outcome))+
+  geom_density()+
+  facet_wrap(~condition+age_cohort)
+ggplot(total_participant_lt_data_voe_no_crit,aes(log_looking_time, color=outcome))+
   geom_density()+
   facet_wrap(~condition+age_cohort)
 
@@ -293,7 +302,4 @@ ggplot(
   scale_fill_brewer(palette = "Dark2") +
   facet_wrap(~condition+age_cohort) +
   theme(legend.position = "none") 
-
-#save figure
-ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_looking_time,"_lookaway_",look_away_criterion,".png")),width = 9, height = 6, dpi = 300)
 ```
