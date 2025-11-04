@@ -1,5 +1,5 @@
 ---
-title: "MB2 Pupillometry Analysis"
+title: "MB2 Looking Time Analysis (within MB2P)"
 format: html
 ---
 
