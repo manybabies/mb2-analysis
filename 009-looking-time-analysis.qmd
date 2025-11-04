@@ -227,3 +227,73 @@ ggplot(
 #save figure
 ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_looking_time,"_lookaway_",look_away_criterion,".png")),width = 9, height = 6, dpi = 300)
 ```
+
+## Alternative: No censoring (max time or lookaway)
+
+```{r}
+#summarize final looking times by participant
+total_participant_lt_data_voe_no_crit <- lt_data_voe %>%
+  group_by(
+    !!!grouping_params
+  ) %>%
+  summarise(
+    total_cumulative_looking_time = max(cumulative_looking_time),
+    total_screen_time = max(cumulative_total_time),
+    log_looking_time = case_when(
+      total_cumulative_looking_time ==0 ~ NA,
+      TRUE ~ log(total_cumulative_looking_time))
+  )
+```
+
+### summary/overview
+
+```{r}
+#visualize basic looking time distributions
+ggplot(total_participant_lt_data_voe_no_crit,aes(total_cumulative_looking_time, color=outcome))+
+  geom_density()+
+  facet_wrap(~condition+age_cohort)
+
+ggplot(filter(total_participant_lt_data_voe_no_crit,age_cohort=="toddlers"),aes(outcome,total_cumulative_looking_time, fill=outcome,color=outcome))+
+  geom_jitter(width=0.05,height=0.025,alpha=0.5,stroke=NA)+
+  geom_half_violin(data=filter(total_participant_lt_data_voe_no_crit,age_cohort=="toddlers"&outcome=="congruent"),
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.5
+  ) +
+  geom_half_violin(data=filter(total_participant_lt_data_voe_no_crit,age_cohort=="toddlers"&outcome=="incongruent"),
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.5
+  ) +
+  facet_wrap(~condition)+
+  theme_cowplot()
+
+#summarize by participant
+avg_lt_data_voe_no_crit<- total_participant_lt_data_voe_no_crit %>%
+  ungroup() %>%
+  group_by(age_cohort,condition,outcome) %>%
+  summarize(
+    mean_looking_time = mean(total_cumulative_looking_time,na.rm=T),
+    sd_looking_time = sd(total_cumulative_looking_time,na.rm=T),
+    n = n(),
+    se_looking_time = sd_looking_time / sqrt(n),
+    ci_lower = mean_looking_time - qt(1 - (0.05 / 2), n - 1) * se_looking_time,
+    ci_upper = mean_looking_time + qt(1 - (0.05 / 2), n - 1) * se_looking_time
+  )
+
+#visualize average effects
+ggplot(
+  total_participant_lt_data_voe_no_crit,
+  aes(x = outcome, y = total_cumulative_looking_time, color = outcome)
+) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_half_violin(
+    aes(fill = outcome), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  stat_summary(fun.data = "mean_cl_boot", size = 0.5, position=position_nudge(x = .2, y = 0)) +
+  theme_cowplot() +
+  ylab("Total Looking Time (ms)")+
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  facet_wrap(~condition+age_cohort) +
+  theme(legend.position = "none") 
+
+#save figure
+ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_looking_time,"_lookaway_",look_away_criterion,".png")),width = 9, height = 6, dpi = 300)
+```
