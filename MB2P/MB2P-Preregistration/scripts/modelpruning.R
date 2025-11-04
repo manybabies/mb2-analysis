@@ -81,12 +81,12 @@ prune_al_lmer_model <- function(data, model_type = "main",age_cohort_predictor_n
   # Define the list of formulas in pruning order, with only the random effects changing
   formulas <- list(
     full_model = paste(shared_formula, "+ (outcome_c * prop_exit_c | lab_id)"),
-    prun1_model = paste(shared_formula, "+ (1+prop_exit_c+prop_exit_c : outcome_c | lab_id)"),
-    prun2_model = paste(shared_formula, "+ (1+outcome_c+prop_exit_c : outcome_c | lab_id)"),
-    prun3_model = paste(shared_formula, "+ (1+outcome_c : prop_exit_c  | lab_id)"),
-    prun4_model = paste(shared_formula, "+ (1+prop_exit_c + outcome_c | lab_id)"),
-    prun5_model = paste(shared_formula, "+ (1+prop_exit_c | lab_id)"),
-    prun6_model = paste(shared_formula, "+ (1+outcome_c | lab_id)"),
+    prun1_model = paste(shared_formula, "+ (1 + prop_exit_c + outcome_c : prop_exit_c | lab_id)"),
+    prun2_model = paste(shared_formula, "+ (1 + outcome_c + outcome_c : prop_exit_c  | lab_id)"),
+    prun3_model = paste(shared_formula, "+ (1 + outcome_c : prop_exit_c  | lab_id)"),
+    prun4_model = paste(shared_formula, "+ (1 + outcome_c + prop_exit_c | lab_id)"),
+    prun5_model = paste(shared_formula, "+ (1 + prop_exit_c | lab_id)"),
+    prun6_model = paste(shared_formula, "+ (1 + outcome_c | lab_id)"),
     prun7_model = paste(shared_formula, "+ (1 | lab_id)")
   )
   

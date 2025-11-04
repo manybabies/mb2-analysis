@@ -155,24 +155,20 @@ data_voe <- data_pupillometry %>%
 
 ## Convert to RLE
 
+This format creates a look-based format (each row represents the duration of a cluster of looking, in sequence, e.g. duration of look to one AOI) based on the AOIs predefined in the main analysis.
+
 ```{r}
 # convert to rle data
 rle_data_voe <- data_voe %>%
   group_by(
     age_cohort, participant_lab_id, lab_id,
     participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
-    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
+    eyetracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
   ) %>%
   reframe(
     lengths = rle(aoi)$lengths,
     values = rle(aoi)$values
-  ) 
-```
-
-## Convert to on-screen looking time data
-
-```{r}
-rle_data_voe <- rle_data_voe %>%
+  ) %>%
   #convert to ms
   mutate(
     times = lengths * 25 #25ms samples
@@ -187,7 +183,13 @@ rle_data_voe <- rle_data_voe %>%
     cum_looking_time = cumsum(onscreen_looking_index * times),
     cum_total_time = cumsum(times)
   ) 
+```
 
+## Convert to on-screen looking time data
+
+This format creates a look-based format based only on whether looking was on or off screen (each row represents the duration of a cluster of looking to the screen or off-screen).
+
+```{r}
 lt_data_voe <- data_voe %>%
   #on-screen looking
   mutate(
@@ -196,7 +198,7 @@ lt_data_voe <- data_voe %>%
   group_by(
     age_cohort, participant_lab_id, lab_id,
     participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, has_ending,target_side,
-    tracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
+    eyetracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial
   ) %>%
   reframe(
     lengths = rle(onscreen_looking)$lengths,
@@ -220,7 +222,7 @@ lt_data_voe <- data_voe %>%
   ) %>%
   #cumulative number of distinct on-screen looks
   mutate(
-    cumulative_number_of_looks = cumsum(ifelse(values == "on",1,0))
+    cumulative_number_of_onscreen_looks = cumsum(ifelse(values == "on",1,0))
   )
   
 ```
