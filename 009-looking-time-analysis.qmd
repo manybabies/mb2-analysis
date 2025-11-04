@@ -261,6 +261,9 @@ ggplot(total_participant_lt_data_voe_no_crit,aes(total_cumulative_looking_time, 
 ggplot(total_participant_lt_data_voe_no_crit,aes(log_looking_time, color=outcome))+
   geom_density()+
   facet_wrap(~condition+age_cohort)
+ggplot(filter(total_participant_lt_data_voe_no_crit,age_cohort=="toddlers"),aes(total_cumulative_looking_time, fill=outcome))+
+  geom_histogram()+
+  facet_wrap(outcome~condition)
 
 ggplot(filter(total_participant_lt_data_voe_no_crit,age_cohort=="toddlers"),aes(outcome,total_cumulative_looking_time, fill=outcome,color=outcome))+
   geom_jitter(width=0.05,height=0.025,alpha=0.5,stroke=NA)+
