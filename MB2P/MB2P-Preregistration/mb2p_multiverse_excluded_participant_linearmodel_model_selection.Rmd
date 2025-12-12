@@ -114,36 +114,6 @@ summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize
 data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
 rm("summarize_participant_test_both_trials")
 
-# # For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm (according to Tobii).
-# data_smaller2mm <- data_pupillometry |> 
-#   dplyr::filter(eyetracker_type != "EyeLink") |> 
-#   group_by(participant_lab_id) |>
-#   dplyr::filter(average <= 2) |>
-#   dplyr::select(participant_lab_id, average, average_z) |>
-#   arrange(average_z) |>
-#   ungroup()
-# #
-# data_smaller2mm |>
-#   summarise(ZMean.2mm = mean(average_z, na.rm = T), ZMedian.2mm = median(average_z, na.rm = T), Min.2mm = min(average, na.rm = T), Max.2mm = max(average, na.rm = T),
-#             ZMin.2mm = min(average_z, na.rm = T), ZMax.2mm = max(average_z, na.rm = T))
-# 
-# ## -> Lower bound: z = 0.8000874
-# hist(data_smaller2mm$average_z)
-# rm("temp")
-# ##
-# temp <- data_pupillometry |> 
-#   filter(eyetracker_type != "EyeLink") |>
-#   group_by(participant_lab_id) |>
-#   filter(average >= 8) |>
-#   select(participant_lab_id, average, average_z) |>
-#   arrange(average_z) |>
-#   ungroup()
-# #
-# temp |>
-#   summarise(Min.8mm = min(average, na.rm = T), Max.8mm = max(average, na.rm = T),
-#             ZMin.8mm = min(average_z, na.rm = T), ZMax.8mm = max(average_z, na.rm = T))
-# 
-# ## -> There are no samples with pupil_size ?> 8mm
 ```
 
 
@@ -154,9 +124,6 @@ rm("summarize_participant_test_both_trials")
 This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
-# data_plausible <- data_pupillometry |> 
-#     mutate(average = ifelse(average_z < 0.8000874 , NA, average)) |>
-#     mutate(average_z = ifelse(average_z < 0.8000874, NA, average_z))
 
 #check on Tobii data distributions
 ggplot(filter(data_pupillometry,eyetracker_type == "Tobii"),aes(average))+
@@ -658,11 +625,12 @@ ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti.png"),width = 1
 ```
 
 ```{r}
-#"best" variant
+#"best" variant, This plot is used in the abstract.
 #filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
 best_multiverse_variant <- summarized_data_by_dataset_id |> 
   filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
 
+# ICIS26
 ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
   geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
   geom_line(data=best_multiverse_variant,aes(x=t_norm_downsampled,y=mean_pupil_z,group=outcome,color=outcome),size=1.2)+
@@ -719,6 +687,14 @@ ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=me
            y = "Pupil size (z-score, relative change)")
 
 ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combination_overlay_firstaveragewithinlab.png"),width = 10, height = 6, dpi = 300)
+
+
+# ICIS26
+# Get descriptives
+best_multiverse_variant.DESCRIPTIVES <- best_multiverse_variant |>
+  group_by(condition, outcome, age_cohort) |>
+  summarize(MEANPerPart = mean(mean_pupil_z, na.rm=T), SDPerPart = sd(mean_pupil_z, na.rm=T)) |>
+  ungroup()
 ```
 
 ```{r}
@@ -728,6 +704,8 @@ gc()
 
 
 # PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling) - original
+
+# Ignore from here.
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
@@ -1230,6 +1208,9 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
   theme_minimal()
 ```
 
+
+# Begin here again.
+
 # PART 5 - Updated Multiverse LMER and LM Modeling Approach
 
 # Part 5A LMER models
@@ -1488,6 +1469,10 @@ ggplot(lmer_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_cor
   ylab("TODDLERS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+
+#ICIS26
+range(lmer_conditionXoutcome_multiverse_results_toddlers$estimate)
+
 ```
 
 #### Plot Outcome Effect
@@ -1505,6 +1490,7 @@ ggplot(lmer_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=
   facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
   xlab("Baseline Correction Window")+
   ylab("TODDLERS\nLmer Model Estimate for Effect of Outcome")
+
 ```
 
 #### Plot Condition Effect
@@ -1570,6 +1556,10 @@ ggplot(lmer_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_corre
   ylab("ADULTS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
 
 ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+
+#ICIS26
+range(lmer_conditionXoutcome_multiverse_results_adults$estimate)
+
 ```
 
 #### Plot Outcome Effect
