@@ -166,6 +166,12 @@ data_df1 |>
   group_by(eyetracker_type) |>
   summarise(AVE = mean(average_z, na.rm =T))
   })  # Makes sense that only Tobii-data were adjusted.
+
+data_pupillometry |>
+  filter(average > 1.8) |>
+  select(lab_id, average, eyetracker_type)
+
+# We may need to revisit the 2mm criterion given that some data are within 1.8 and 2. However, this really only affects 200ish data points of +245k...
 ```
 
 # Second degree of freedom: gaze within the screen vs outside the screen
