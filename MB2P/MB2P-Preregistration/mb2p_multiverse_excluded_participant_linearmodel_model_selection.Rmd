@@ -116,6 +116,39 @@ rm("summarize_participant_test_both_trials")
 
 ```
 
+Get descriptives
+
+```{r}
+#load in helper file with ages
+#this helped file was created by pulling key demographic columns from INTERMEDIATE_006
+ages <- read.csv(here("MB2P","MB2P-Preregistration","helper_data","mb2_age_demographics_helper_006.csv"))
+
+descriptives <- data_pupillometry |>
+  # apply core filtering steps
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1) |> 
+  distinct(lab_id,participant_lab_id,participant_gender,age_cohort,condition,outcome) |> 
+  left_join(ages) |>
+  group_by(age_cohort) |> 
+  summarize(
+    N=n(),
+    age_years_m = mean(age_years_n,na.rm=TRUE),
+    age_years_sd = sd(age_years_n,na.rm=TRUE),
+    age_years_min = min(age_years_n,na.rm=TRUE),
+    age_years_max = max(age_years_n,na.rm=TRUE),
+    age_months_m = mean(age_mo,na.rm=TRUE),
+    age_months_sd = sd(age_mo,na.rm=TRUE),
+    age_months_min = min(age_mo,na.rm=TRUE),
+    age_months_max = max(age_mo,na.rm=TRUE),
+    percent_female = sum(
+      participant_gender == "woman" | participant_gender == "girl"
+    ) / sum(!is.na(participant_gender))
+  )
+
+```
+
 
 # PART 2 FITTING THE MULTIVERSE
 
@@ -169,7 +202,7 @@ data_df1 |>
 
 data_pupillometry |>
   filter(average > 1.8) |>
-  select(lab_id, average, eyetracker_type)
+  dplyr::select(lab_id, average, eyetracker_type)
 
 # We may need to revisit the 2mm criterion given that some data are within 1.8 and 2. However, this really only affects 200ish data points of +245k...
 ```
@@ -697,9 +730,28 @@ ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combinati
 
 # ICIS26
 # Get descriptives
-best_multiverse_variant.DESCRIPTIVES <- best_multiverse_variant |>
+
+#first, select the best multiverse variant data
+best_multiverse_data <- data_for_plotting_df5 |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+#summarize pupil change cross full window by participant
+participant_cross_window_summary_best_multiverse_variant <- best_multiverse_data |> 
+  group_by(participant_lab_id,lab_id,condition, outcome, age_cohort) |>
+  summarize(
+    mean_pupil_z = mean(average_z, na.rm = TRUE)
+  )
+
+#summarize across participants
+best_multiverse_variant.DESCRIPTIVES <- participant_cross_window_summary_best_multiverse_variant |>
   group_by(condition, outcome, age_cohort) |>
-  summarize(MEANPerPart = mean(mean_pupil_z, na.rm=T), SDPerPart = sd(mean_pupil_z, na.rm=T)) |>
+  summarize(
+    N=n(),
+    mean_pupil_change = mean(mean_pupil_z, na.rm=T), 
+    sd_pupil_change = sd(mean_pupil_z, na.rm=T),
+    ci_pupil_change = qt(1 - (0.05 / 2), N - 1) * (sd_pupil_change / sqrt(N)),
+    lower_ci = mean_pupil_change - ci_pupil_change,
+    upper_ci = mean_pupil_change + ci_pupil_change
+      ) |>
   ungroup()
 ```
 

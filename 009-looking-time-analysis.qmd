@@ -36,7 +36,12 @@ data_voe <- data_pupillometry %>%
   filter(
     trial_num == 6, #second trial only
     t_norm >= 0 & t_norm <= 60000 #0-60s window post outcome
-  )
+  ) |> 
+  # apply core filtering steps
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1)
 
 ## specify grouping parameters (add to this as needed)
 grouping_params <- quos(age_cohort,participant_lab_id, lab_id,participant_id, participant_trial_id, trial_num, trial_file_name,media_name, condition, outcome, has_ending,target_side,eyetracker_type,trial_error,trial_error_type,total_valid_fam_trials,sufficient_fam_trials,valid_first_test_trial,trial_based_participant_exclusion,trial_based_participant_exclusion_type,pilot,session_error,session_error_info,exclude_session,valid_second_test_trial)
@@ -201,8 +206,21 @@ avg_lt_data_voe_criterion <- total_participant_lt_data_voe_criterion %>%
     ci_upper = mean_looking_time + qt(1 - (0.05 / 2), n - 1) * se_looking_time
   )
 
+# averaging just the congruent vs. incongruent conditions
+avg_lt_data_outcome_voe_criterion <- total_participant_lt_data_voe_criterion %>%
+  ungroup() %>%
+  group_by(age_cohort,outcome) %>%
+  summarize(
+    mean_looking_time = mean(total_cumulative_looking_time),
+    sd_looking_time = sd(total_cumulative_looking_time),
+    n = n(),
+    se_looking_time = sd_looking_time / sqrt(n),
+    ci_lower = mean_looking_time - qt(1 - (0.05 / 2), n - 1) * se_looking_time,
+    ci_upper = mean_looking_time + qt(1 - (0.05 / 2), n - 1) * se_looking_time
+  )
+
 #visualize average effects
-ggplot(
+p <- ggplot(
   total_participant_lt_data_voe_criterion,
   aes(x = outcome, y = total_cumulative_looking_time, color = outcome)
 ) +
@@ -213,10 +231,13 @@ ggplot(
   stat_summary(fun.data = "mean_cl_boot", size = 0.5, position=position_nudge(x = .2, y = 0)) +
   theme_cowplot() +
   ylab("Total Looking Time (ms)")+
-  scale_color_brewer(palette = "Dark2") +
-  scale_fill_brewer(palette = "Dark2") +
+  #scale_color_brewer(palette = "Dark2") +
+  #scale_fill_brewer(palette = "Dark2") +
+  scale_color_ptol() +
+  scale_fill_ptol()+
   facet_wrap(~condition+age_cohort) +
   theme(legend.position = "none") 
+p
 
 #old: more basic bar plot
 # ggplot(avg_lt_data_voe_criterion,aes(x=outcome,y=mean_looking_time, fill=outcome))+
@@ -226,6 +247,25 @@ ggplot(
 
 #save figure
 ggsave(filename = here(plot_output_path,paste0("looking_time_analysis_max_",max_looking_time,"_lookaway_",look_away_criterion,".png")),width = 9, height = 6, dpi = 300)
+```
+
+### For ICIS 2026 Abstract: Simple inferential stats
+
+```{r}
+# t-test for congruence condition
+t.test(
+  total_participant_lt_data_voe_criterion %>% ungroup() %>% filter(age_cohort=="toddlers" & outcome=="congruent") %>% select(total_cumulative_looking_time),
+  total_participant_lt_data_voe_criterion %>% ungroup() %>% filter(age_cohort=="toddlers" & outcome=="incongruent") %>% select(total_cumulative_looking_time),
+  var.equal = TRUE)
+
+#interaction
+total_participant_lt_data_voe_criterion <- total_participant_lt_data_voe_criterion %>%
+  mutate(
+    outcome_c = ifelse(outcome=="congruent",0.5, -0.5),
+    condition_c = ifelse(condition=="knowledge",0.5, -0.5)
+  )
+m <- lm(total_cumulative_looking_time ~ outcome_c * condition_c, data=filter(total_participant_lt_data_voe_criterion,age_cohort=="toddlers"))
+summary(m)
 ```
 
 ## Alternative: No censoring (max time or lookaway)
