@@ -297,6 +297,7 @@ ggsave(here(paper_path, "Figure_PTL_bothtrials.png"),
 Plot the effect by age
 
 ```{r}
+#linear fit
 kid_prop_by_age_both <- ggplot(filter(summarize_participant_test_both_trials, 
                                       N_exit >= 5 & age_cohort == "toddlers"), 
                                aes(x = age_mo, y = prop_exit, color = condition)) +
@@ -311,6 +312,23 @@ kid_prop_by_age_both <- ggplot(filter(summarize_participant_test_both_trials,
   scale_fill_brewer(palette = "Set1")
 kid_prop_by_age_both
 ggsave(here(plot_path, "kids_proportion_both_trials_target_exit_looking_by_age.png"), 
+       bg = "white", width = 9, height = 6)
+
+#loess fit
+kid_prop_by_age_loess_both <- ggplot(filter(summarize_participant_test_both_trials, 
+                                      N_exit >= 5 & age_cohort == "toddlers"), 
+                               aes(x = age_mo, y = prop_exit, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess") +
+  xlab("Age (in months)") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, Both Trials)") +
+  theme_cowplot() +
+  facet_wrap(~test_trial_num) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
+kid_prop_by_age_loess_both
+ggsave(here(plot_path, "kids_proportion_both_trials_target_exit_looking_by_age_loess.png"), 
        bg = "white", width = 9, height = 6)
 ```
 
@@ -2071,6 +2089,7 @@ ggsave(here(plot_path, "overall_p_test_box.png"),
 Plot the effect by age
 
 ```{r}
+#linear fit
 kid_prop_by_age_box <- ggplot(filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"), 
                               aes(x = age_mo, y = prop_box, color = condition)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
@@ -2083,6 +2102,21 @@ kid_prop_by_age_box <- ggplot(filter(summarize_participant_test_first_trial, N_e
   scale_fill_brewer(palette = "Set1")
 kid_prop_by_age_box
 ggsave(here(plot_path, "kids_proportion_first_trial_target_box_looking_by_age.png"), 
+       bg = "white", width = 9, height = 6)
+
+#loess fit
+kid_prop_by_age_box_loess <- ggplot(filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"), 
+                              aes(x = age_mo, y = prop_box, color = condition)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess") +
+  xlab("Age (in months)") +
+  ylab("Proportion Looking to Box\n(Anticipatory Window, First Trial)") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
+kid_prop_by_age_box_loess
+ggsave(here(plot_path, "kids_proportion_first_trial_target_box_looking_by_age_loess.png"), 
        bg = "white", width = 9, height = 6)
 ```
 

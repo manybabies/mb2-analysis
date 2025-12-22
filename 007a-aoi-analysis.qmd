@@ -644,6 +644,7 @@ ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking.png"),
 Plot the effect by age
 
 ```{r}
+# linear effect
 kid_prop_by_age <- ggplot(
   filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
   aes(x = age_mo, y = prop_exit, color = condition)
@@ -658,6 +659,24 @@ kid_prop_by_age <- ggplot(
   scale_fill_brewer(palette = "Set1")
 kid_prop_by_age
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age.png"),
+  bg = "white", width = 9, height = 6
+)
+
+#loess
+kid_prop_by_age_loess <- ggplot(
+  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  aes(x = age_mo, y = prop_exit, color = condition)
+) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess") +
+  xlab("Age (in months)") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
+kid_prop_by_age_loess
+ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age_loess.png"),
   bg = "white", width = 9, height = 6
 )
 ```
