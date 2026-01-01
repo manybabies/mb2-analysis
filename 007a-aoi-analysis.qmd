@@ -580,7 +580,7 @@ Splitting plot by lab and age cohort
 
 ```{r}
 adults_prop <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "adults"),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
   geom_half_violin(
@@ -601,7 +601,7 @@ ggsave(here(plot_path, "adults_proportion_first_trial_target_exit_looking.png"),
 )
 
 kids_prop <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
   geom_half_violin(
@@ -627,7 +627,7 @@ Plot the effect by age
 ```{r}
 # linear effect
 kid_prop_by_age <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
   aes(x = age_mo, y = prop_exit, color = condition)
 ) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
@@ -645,7 +645,7 @@ ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age.p
 
 #loess
 kid_prop_by_age_loess <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
   aes(x = age_mo, y = prop_exit, color = condition)
 ) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
@@ -757,6 +757,10 @@ effects_by_lab <- ds_by_lab %>%
   left_join(hedgesg_by_lab) %>%
   #filter labs for which we can't compute effects
   filter(!is.na(hedgesg))
+
+ggsave(here(plot_path, "forest_dls_condition_effect.png"),
+  bg = "white", width = 9, height = 12
+)
 ```
 
 Next, compute meta-analytic effect sizes and prepare a forest plot dataset for plotting
