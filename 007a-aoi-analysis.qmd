@@ -128,7 +128,8 @@ ggplot(summarize_participant_familiarization, aes(N_exit)) +
 ```{r}
 # plot average proportion looking
 overall_p_fam <- ggplot(
-  filter(summarize_participant_familiarization, N_exit >= 5),
+  #filter(summarize_participant_familiarization, N_exit >= 5),
+  summarize_participant_familiarization,
   aes(x = as.factor(familiarization_trial_num), y = prop_exit, color = condition)
 ) +
   # geom_violin()+
@@ -661,6 +662,58 @@ ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age_l
   bg = "white", width = 9, height = 6
 )
 ```
+
+Effect of age after splitting by age bins.
+
+```{r}
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  mutate(
+    age_bin_2m = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 20 ~ "18-19 months",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 22 ~ "20-21 months",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 24 ~ "22-23 months",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 26 ~ "24-25 months",
+      age_cohort == "toddlers" & age_mo >= 26 & age_mo < 28 ~ ">26 months",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  mutate(
+    age_bin = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 19 ~ "18 mos",
+      age_cohort == "toddlers" & age_mo >= 19 & age_mo < 20 ~ "19 mos",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 21 ~ "20 mos",
+      age_cohort == "toddlers" & age_mo >= 21 & age_mo < 22 ~ "21 mos",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 23 ~ "22 mos",
+      age_cohort == "toddlers" & age_mo >= 23 & age_mo < 24 ~ "23 mos",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 25 ~ "24 mos",
+      age_cohort == "toddlers" & age_mo >= 25 & age_mo < 26 ~ "25 mos",
+      age_cohort == "toddlers" & age_mo >= 26 ~ ">=26 mos",
+      TRUE ~ NA_character_
+    )
+  )
+
+kids_prop_age_bin <- ggplot(
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
+  aes(x = condition, y = prop_exit, color = condition)
+) +
+  geom_half_violin(
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~ age_bin,ncol=3) +
+  theme(legend.position = "none") +
+  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+kids_prop_age_bin
+ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_age_bins.png"),
+  bg = "white", width = 16, height = 10
+)
+```
+
 
 ### Summary Statistics
 
@@ -1964,7 +2017,7 @@ ggplot(
 ```{r}
 summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num == 5) %>%
-  group_by(age_cohort, participant_lab_id, lab_id, participant_id, condition) %>%
+  group_by(age_cohort, participant_lab_id, lab_id, participant_id,age_years_n,age_mo, condition) %>%
   summarize(
     N = n(),
     prop_correct_first_look = mean(first_look == "target_exit"),
@@ -2021,6 +2074,92 @@ ggsave(here(plot_path, "overall_test_trial_first_look_first_trial.png"),
   bg = "white", width = 9, height = 6
 )
 ```
+
+#### Plot by Toddler Age
+
+##### Continuous Age
+
+```{r}
+ggplot(
+  filter(summarize_participant_test_first_look_first_trial,age_cohort=="toddlers"),
+  aes(age_mo,prop_correct_first_look, color = condition)
+) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_smooth(method="loess")+
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  ylim(0, 1) +
+  xlab("Age (months)")+
+  ylab("First Look to Target Exit\n(First Trial Only)")
+ggsave(here(plot_path, "overall_test_trial_first_look_first_trial_age_continuous.png"),bg = "white", width = 9, height = 6)
+```
+
+##### Age Bins
+
+```{r}
+summarize_participant_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
+  mutate(
+    age_bin_2m = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 20 ~ "18-19 months",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 22 ~ "20-21 months",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 24 ~ "22-23 months",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 26 ~ "24-25 months",
+      age_cohort == "toddlers" & age_mo >= 26 & age_mo < 28 ~ ">26 months",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  mutate(
+    age_bin = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 19 ~ "18 mos",
+      age_cohort == "toddlers" & age_mo >= 19 & age_mo < 20 ~ "19 mos",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 21 ~ "20 mos",
+      age_cohort == "toddlers" & age_mo >= 21 & age_mo < 22 ~ "21 mos",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 23 ~ "22 mos",
+      age_cohort == "toddlers" & age_mo >= 23 & age_mo < 24 ~ "23 mos",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 25 ~ "24 mos",
+      age_cohort == "toddlers" & age_mo >= 25 & age_mo < 26 ~ "25 mos",
+      age_cohort == "toddlers" & age_mo >= 26 ~ "26 mos",
+      TRUE ~ NA_character_
+    )
+  )
+
+summarize_overall_test_first_look_first_trial_age_bins <- summarize_participant_test_first_look_first_trial %>%
+  group_by(age_cohort, age_bin, condition) %>%
+  summarize(
+    N = sum(!is.na(prop_correct_first_look)),
+    prop_target_first_look = mean(prop_correct_first_look, na.rm = T),
+    sd_target_first_look = sd(prop_correct_first_look, na.rm = T),
+    se_target_first_look = sd_target_first_look / sqrt(N),
+    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look,
+    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
+  )
+
+overall_fl_test_age_bin <- ggplot(
+  filter(summarize_overall_test_first_look_first_trial_age_bins,age_cohort=="toddlers"),
+  aes(condition, prop_target_first_look, color = condition)
+) +
+  geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0) +
+  geom_point(size = 5) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  facet_wrap(~age_cohort) +
+  theme_cowplot() +
+  ggtitle("Test") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  ylim(0, 1) +
+  ylab("First Look to Target Exit\n(First Trial Only)")+
+  facet_wrap(~age_bin,ncol=3)
+overall_fl_test_age_bin
+ggsave(here(plot_path, "overall_test_trial_first_look_first_trial_age_bins.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
+
 
 ## Main Model
 
