@@ -18,6 +18,7 @@ library(corrr)
 library(ggpubr)
 library(bayesplot)
 library(broom.mixed)
+library(metafor)
 
 #FIT BAYESIAN MODELS
 # parameter for controlling whether to fit the Bayesian models (or load from disk)
@@ -701,7 +702,7 @@ summarize_participant_test_first_trial <- summarize_participant_test_first_trial
       age_cohort == "toddlers" & age_mo >= 23 & age_mo < 24 ~ "23 mos",
       age_cohort == "toddlers" & age_mo >= 24 & age_mo < 25 ~ "24 mos",
       age_cohort == "toddlers" & age_mo >= 25 & age_mo < 26 ~ "25 mos",
-      age_cohort == "toddlers" & age_mo >= 26 ~ ">=26 mos",
+      age_cohort == "toddlers" & age_mo >= 26 ~ "26 mos",
       TRUE ~ NA_character_
     )
   )
@@ -824,10 +825,6 @@ effects_by_lab <- ds_by_lab %>%
   left_join(hedgesg_by_lab) %>%
   #filter labs for which we can't compute effects
   filter(!is.na(hedgesg))
-
-ggsave(here(plot_path, "forest_dls_condition_effect.png"),
-  bg = "white", width = 9, height = 12
-)
 ```
 
 Next, compute meta-analytic effect sizes and prepare a forest plot dataset for plotting
@@ -970,6 +967,9 @@ forest_plot <- ggplot(forest_data, aes(x = unique_lab, y = effects)) +
   scale_color_manual(values = color_list,guide = FALSE)
 
 forest_plot
+ggsave(here(plot_path, "forest_dls_condition_effect.png"),
+  bg = "white", width = 9, height = 12
+)
 ```
 
 
