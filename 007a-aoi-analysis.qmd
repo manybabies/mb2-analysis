@@ -19,6 +19,10 @@ library(ggpubr)
 library(bayesplot)
 library(broom.mixed)
 
+#FIT BAYESIAN MODELS
+# parameter for controlling whether to fit the Bayesian models (or load from disk)
+FIT_BAYES_MODELS = TRUE
+
 source(here("helper", "ensure_repo_structure.R"))
 plot_path <- here("plots")
 paper_path <- here("paper")
@@ -206,7 +210,7 @@ summarize_fam_aoi_by_trial %>%
 
 #### Toddlers
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
@@ -246,6 +250,12 @@ saveRDS(bm_fam_aoi_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers.rds")
 )
 ```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers.rds"))
+```
+
 
 Organize table in a tidy format
 
@@ -311,14 +321,23 @@ saveRDS(bm_fam_aoi_toddlers_trial_number_effect,
 
 Compute the Bayes factor using bridge sampling
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
+#fit the updated model
 bm_fam_aoi_toddlers_null <- update(bm_fam_aoi_toddlers, formula = ~ . - 1) # remove intercept
 summary(bm_fam_aoi_toddlers_null)
 
 saveRDS(bm_fam_aoi_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds"))
+```
+
+```{r}
+#compute Bayes factor
 fam_m_comparision_PTL_toddlers <- brms::bayes_factor(
   bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null
 )
@@ -564,30 +583,11 @@ adults_prop <- ggplot(
   filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "adults"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
-  # geom_violin()+
-  # geom_boxplot()+
   geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "adults"),
-    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "adults"),
-    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "adults"),
-    side = "l", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "adults"),
-    side = "r", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_beeswarm(alpha = 0.5) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
@@ -604,30 +604,11 @@ kids_prop <- ggplot(
   filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
-  # geom_violin()+
-  # geom_boxplot()+
   geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "toddlers"),
-    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "toddlers"),
-    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "toddlers"),
-    side = "l", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "toddlers"),
-    side = "r", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_beeswarm(alpha = 0.5) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
@@ -726,6 +707,200 @@ saveRDS(summarize_test_aoi,
   file = here(RESULTS_FOLDER, "summary_test_aoi_overall.rds")
 )
 ```
+
+### Meta-analysis
+
+First, we create a data frame computing effect sizes by lab and cohort
+
+```{r}
+avgs_by_lab <- summarize_participant_test_first_trial |>
+  filter(!is.na(prop_exit)) |> 
+   group_by(age_cohort, lab_id, condition) |>
+  summarise(mean = mean(prop_exit, na.rm = TRUE),
+            sd = sd(prop_exit, na.rm = TRUE),
+            n = sum(!is.na(prop_exit)), .groups = "drop",
+            mean_age_mo = mean(age_mo,na.rm=TRUE)) %>%
+  pivot_wider(names_from = condition, values_from = c(mean, sd, n, mean_age_mo)) 
+
+ds_by_lab <- avgs_by_lab %>%
+  mutate(
+    pooled_sd = sqrt(((n_ignorance - 1) * sd_ignorance^2 + (n_knowledge - 1) * sd_knowledge^2) /
+                     (n_ignorance + n_knowledge - 2)),
+    d = (mean_knowledge - mean_ignorance) / pooled_sd,
+    d_var = (n_ignorance + n_knowledge) / (n_ignorance * n_knowledge) +
+      (d^2) / (2 * (n_ignorance + n_knowledge)),
+    mean_age = (mean_age_mo_ignorance*n_ignorance + mean_age_mo_knowledge*n_knowledge) / (n_ignorance + n_knowledge)
+  )
+
+#compute hedges g and variance
+hedgesg_by_lab <- avgs_by_lab %>%
+  transmute(
+    age_cohort,
+    lab_id,
+    d_stats = pmap(
+      list(
+        m1i = .data[["mean_knowledge"]], 
+        sd1i = .data[["sd_knowledge"]], 
+        n1i = .data[["n_knowledge"]],
+        m2i = .data[["mean_ignorance"]], 
+        sd2i = .data[["sd_ignorance"]], 
+        n2i = .data[["n_ignorance"]]
+      ),
+      \(...) escalc(measure = "SMD", ...) #note: set correct=FALSE here to compute cohen's d - yielding identical results to the by-hand calculations above
+    )
+  ) %>%
+  unnest_wider(d_stats) %>%
+  rename(hedgesg = yi, hedgesg_var = vi)
+
+#join
+effects_by_lab <- ds_by_lab %>%
+  left_join(hedgesg_by_lab) %>%
+  #filter labs for which we can't compute effects
+  filter(!is.na(hedgesg))
+```
+
+Next, compute meta-analytic effect sizes and prepare a forest plot dataset for plotting
+
+```{r meta-analytic effects}
+# Next, we fit a meta-analytic model, including the moderator age_cohort, and prep the data for the forest plot.
+# intercept-only model
+intercept_mod <- metafor::rma(hedgesg ~ 1,
+  vi = hedgesg_var, slab = lab_id, data = effects_by_lab,
+  method = "REML"
+)
+
+# model including the moderator age_cohort
+age_mod <- metafor::rma(hedgesg ~ age_cohort,
+  vi = hedgesg_var, slab = lab_id, data = effects_by_lab, method = "REML"
+)
+
+s# get fitted estimates for all labs
+f <- fitted(intercept_mod)
+p <- predict(intercept_mod)
+
+alpha <- .05
+
+forest_data <- data.frame(
+  effects = as.numeric(intercept_mod$yi.f),
+  variances = intercept_mod$vi.f
+) |>
+  mutate(
+    effects.cil = effects -
+      qnorm(alpha / 2, lower.tail = FALSE) * sqrt(variances),
+    effects.cih = effects +
+      qnorm(alpha / 2, lower.tail = FALSE) * sqrt(variances),
+    estimate = as.numeric(f),
+    lab = factor(names(f)),
+    estimate.cil = p$ci.lb,
+    estimate.cih = p$ci.ub,
+    inverse_vars = 1 / variances,
+    identity = 1,
+    lab = str_replace(lab, "\\.[1-9]", ""),
+    index = 1:n()
+  ) |>
+  bind_cols(ungroup(effects_by_lab)  |> select(lab_id, age_cohort,hedgesg)) |>
+  # reorder data
+  arrange(effects)
+
+# predict MA means for age cohort
+mf <- fitted(age_mod)
+mp <- predict(age_mod,
+  newmods = c(0,1),
+  intercept = TRUE
+)
+
+# Add meta-analytic estimate
+forest_data <- bind_rows(
+  forest_data,
+  tibble(
+    lab = "Meta-Analytic Estimate",
+    age_cohort = "",
+    effects = summary(intercept_mod)$b[1],
+    effects.cil = summary(intercept_mod)$ci.lb,
+    effects.cih = summary(intercept_mod)$ci.ub
+  ),
+  tibble(
+    lab = "Meta-Analytic Estimate",
+    age_cohort = c(
+      "adults","toddlers"
+    ),
+    effects = mp$pred,
+    effects.cil = mp$ci.lb,
+    effects.cih = mp$ci.ub
+  )
+) |>
+  mutate(
+    age_cohort = fct_rev(fct_relevel(age_cohort, "")),
+    lab = fct_relevel(lab, "Meta-Analytic Estimate")
+  )
+
+# determine order of labs based on effect size
+forest_data <- forest_data |>
+  # make lab names unique
+  mutate(
+    unique_lab = case_when(
+      age_cohort=="" ~ lab,
+      TRUE ~ paste0(lab,"-",age_cohort)
+    )
+  )
+forest_data_lab_names_in_order <- unique(as.character(forest_data$unique_lab))
+forest_data$unique_lab <- factor(forest_data$unique_lab, levels = rev(forest_data_lab_names_in_order))
+```
+
+Create a meta-analytic forest plot of the condition effect.
+
+```{r}
+color_list <- c("#1b9e77", "#C46F3EFF")
+forest_plot <- ggplot(forest_data, aes(x = unique_lab, y = effects)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_linerange(
+    aes(
+      ymin = effects - sqrt(variances) * 1.96,
+      ymax = effects + sqrt(variances) * 1.96,
+      group = index
+    ),
+    alpha = .5,
+    position = position_dodge(width = .5)
+  ) +
+  geom_point(
+    data = filter(forest_data, lab != "Meta-Analytic Estimate"),
+    aes(
+      y = effects, size = inverse_vars, col = age_cohort,
+      group = index
+    ),
+    alpha = 1,
+    position = position_dodge(width = .5)
+  ) +
+  geom_point(
+    data = filter(forest_data, lab == "Meta-Analytic Estimate"),
+    pch = 5
+  ) +
+  geom_linerange(
+    data = filter(forest_data, lab == "Meta-Analytic Estimate"),
+    aes(ymin = effects.cil, ymax = effects.cih),
+    alpha = .5
+  ) +
+  facet_grid(age_cohort ~ ., scales = "free", space = "free") +
+  coord_flip() +
+  scale_size_continuous(guide = FALSE) +
+  xlab("Lab") +
+  ylab("Effect Size") +
+  theme(axis.text.y = element_text(size = 15)) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    panel.grid = element_blank(),
+    axis.title.x = element_text(face = "bold", size = 15),
+    axis.text.x = element_text(size = 14),
+    axis.title.y = element_text(face = "bold", size = 15),
+    axis.text.y = element_text(size = 11),
+    strip.text= element_text(size = 15, face = "bold") # was 15
+  ) +
+  scale_color_manual(values = color_list,guide = FALSE)
+
+forest_plot
+```
+
 
 ### Main Model
 
