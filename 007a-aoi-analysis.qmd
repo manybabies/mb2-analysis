@@ -22,6 +22,8 @@ library(broom.mixed)
 #FIT BAYESIAN MODELS
 # parameter for controlling whether to fit the Bayesian models (or load from disk)
 FIT_BAYES_MODELS = TRUE
+# parameter for controlling whether to compute Bayes factors (ocomputationally expensive)
+COMPUTE_BAYES_FACTORS = TRUE
 
 source(here("helper", "ensure_repo_structure.R"))
 plot_path <- here("plots")
@@ -337,7 +339,7 @@ saveRDS(bm_fam_aoi_toddlers_null,
 bm_fam_aoi_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds"))
 ```
 
-```{r}
+```{r, eval = COMPUTE_BAYES_FACTORS}
 #compute Bayes factor
 fam_m_comparision_PTL_toddlers <- brms::bayes_factor(
   bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null
@@ -358,7 +360,7 @@ rm(bm_fam_aoi_toddlers_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_aoi_adults <- brm(
   prop_exit_adj ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -381,6 +383,11 @@ summary(bm_fam_aoi_adults)
 saveRDS(bm_fam_aoi_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -435,14 +442,21 @@ saveRDS(bm_fam_aoi_adults_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_aoi_adults_null <- update(bm_fam_aoi_adults, formula = ~ . - 1) # remove intercept
 summary(bm_fam_aoi_adults_null)
 
 saveRDS(bm_fam_aoi_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_PTL_adults <- brms::bayes_factor(
   bm_fam_aoi_adults, bm_fam_aoi_adults_null
 )
@@ -965,7 +979,7 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
@@ -1005,6 +1019,12 @@ residual_variance <- as.numeric(random_effects$residual$sd[1])^2
 
 icc <- lab_variance / (lab_variance + residual_variance)
 ```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers.rds"))
+```
+
 
 Organize table in a tidy format
 
@@ -1093,14 +1113,22 @@ ggsave(here(plot_path, "test_toddlers_model_coefficients.png"),
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_condition_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c)
 summary(bm_aoi_toddlers_condition_null)
 
 saveRDS(bm_aoi_toddlers_condition_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_condition_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_condition_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_condition_null.rds"))
+```
+
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_toddlers <- brms::bayes_factor(
   bm_aoi_toddlers, bm_aoi_toddlers_condition_null
 )
@@ -1112,14 +1140,21 @@ saveRDS(test_m_comparison_PTL_toddlers,
 
 Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_interaction_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c * age_mo_c)
 summary(bm_aoi_toddlers_interaction_null)
 
 saveRDS(bm_aoi_toddlers_interaction_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_interaction_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
   bm_aoi_toddlers, bm_aoi_toddlers_interaction_null
 )
@@ -1127,11 +1162,8 @@ test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
 saveRDS(test_m_comparison_PTL_toddlers_interaction,
   file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_interaction.rds")
 )
-```
 
-Alternative approach to computing Bayes factor (just as a sanity check that we are using sufficient iterations - these Bayes factors should converge)
-
-```{r}
+#Alternative approach to computing Bayes factor (just as a sanity check that we are using sufficient iterations - these Bayes factors should converge)
 h_aoi_toddlers_interaction <- hypothesis(bm_aoi_toddlers, "condition_c*age_mo_c = 0", class = "b")
 h_aoi_toddlers_interaction
 plot(h_aoi_toddlers_interaction)
@@ -1139,9 +1171,10 @@ plot(h_aoi_toddlers_interaction)
 1 / h_aoi_toddlers_interaction$hypothesis$Evid.Ratio
 ```
 
-Investigate robustness of the result using a model that better captures zero/1-inflation
+Investigate robustness of the result using a model that better captures zero/1-inflation (preliminary investigation)
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
+#preliminary attempt to fit a zero/one-inflated beta regression model
 bm_aoi_toddlers_01inflation_formula <- bf(
   prop_exit ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
     (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
@@ -1175,7 +1208,7 @@ rm(bm_aoi_toddlers_interaction_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults <- brm(
   prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = gaussian,
@@ -1197,6 +1230,10 @@ saveRDS(bm_aoi_adults,
 )
 ```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults.rds"))
+```
 
 Organize table in a tidy format
 
@@ -1231,14 +1268,21 @@ saveRDS(bm_aoi_adults_condition_effect,
 
 Alternate Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_null <- update(bm_aoi_adults, formula = ~ . - condition_c)
 summary(bm_aoi_adults_null)
 
 saveRDS(bm_aoi_adults_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_adults <- brms::bayes_factor(
   bm_aoi_adults, bm_aoi_adults_null
 )
@@ -1250,7 +1294,7 @@ saveRDS(test_m_comparison_PTL_adults,
 
 Robustness: beta regression
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors_01inflation <- c(
   set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
@@ -2159,15 +2203,13 @@ ggsave(here(plot_path, "overall_test_trial_first_look_first_trial_age_bins.png")
 )
 ```
 
-
-
 ## Main Model
 
 ### Familiarization Data
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
@@ -2201,6 +2243,11 @@ summary(bm_fam_first_look_toddlers)
 saveRDS(bm_fam_first_look_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers.rds"))
 ```
 
 Organize table in a tidy format
@@ -2256,14 +2303,21 @@ saveRDS(bm_fam_first_look_toddlers_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_toddlers_null <- update(bm_fam_first_look_toddlers, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_toddlers_null)
 
 saveRDS(bm_fam_first_look_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_toddlers <- brms::bayes_factor(
   bm_fam_first_look_toddlers, bm_fam_first_look_toddlers_null
 )
@@ -2283,7 +2337,7 @@ rm(bm_fam_first_look_toddlers_null)
 Because the BF is sensitive to the choice of prior, we will also run a secondary analysis with a less informative prior: fixed effect coefficients chosen from a normal distribution with mean 0 and SD of 3, and random effect standard deviations drawn from a normal prior with a mean of 0 and SD of 0.5. 
 
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # 2nd set of priors
 priors_less_informative <- c(
   set_prior("normal(0, 3)", class = "Intercept"), # uniform distribution for intercept
@@ -2314,6 +2368,11 @@ summary(bm_fam_first_look_toddlers_less_inf_prior)
 saveRDS(bm_fam_first_look_toddlers_less_inf_prior,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -2350,14 +2409,21 @@ saveRDS(bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_toddlers_less_inf_prior_null <- update(bm_fam_first_look_toddlers_less_inf_prior, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_toddlers_less_inf_prior_null)
 
 saveRDS(bm_fam_first_look_toddlers_less_inf_prior_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
   bm_fam_first_look_toddlers_less_inf_prior,
   bm_fam_first_look_toddlers_less_inf_prior_null
@@ -2376,7 +2442,7 @@ rm(bm_fam_first_look_toddlers_less_inf_prior_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults <- brm(
   first_look ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -2399,6 +2465,11 @@ summary(bm_fam_first_look_adults)
 saveRDS(bm_fam_first_look_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -2453,14 +2524,21 @@ saveRDS(bm_fam_first_look_adults_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_null <- update(bm_fam_first_look_adults, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_adults_null)
 
 saveRDS(bm_fam_first_look_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_adults <- brms::bayes_factor(
   bm_fam_first_look_adults, bm_fam_first_look_adults_null
 )
@@ -2478,7 +2556,7 @@ rm(bm_fam_first_look_adults_null)
 
 Less informative prior as a robustness check
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_less_inf_prior <- brm(
   first_look ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -2501,6 +2579,11 @@ summary(bm_fam_first_look_adults_less_inf_prior)
 saveRDS(bm_fam_first_look_adults_less_inf_prior,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -2535,14 +2618,21 @@ saveRDS(bm_fam_first_look_adults_less_inf_prior_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_less_inf_prior_null <- update(bm_fam_first_look_adults_less_inf_prior, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_adults_less_inf_prior_null)
 
 saveRDS(bm_fam_first_look_adults_less_inf_prior_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
   bm_fam_first_look_adults_less_inf_prior,
   bm_fam_first_look_adults_less_inf_prior_null
@@ -2598,7 +2688,7 @@ d_anticipatory_test <- d_anticipatory_test %>%
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
@@ -2628,6 +2718,11 @@ summary(bm_test_first_look_toddlers)
 saveRDS(bm_test_first_look_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers.rds"))
 ```
 
 ```{r}
@@ -2691,7 +2786,7 @@ saveRDS(bm_test_first_look_toddlers_condition_age_interaction,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c)
 summary(bm_test_first_look_toddlers_null)
 
@@ -2699,7 +2794,14 @@ summary(bm_test_first_look_toddlers_null)
 saveRDS(bm_test_first_look_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers <- brms::bayes_factor(
   bm_test_first_look_toddlers, bm_test_first_look_toddlers_null
 )
@@ -2711,12 +2813,20 @@ saveRDS(test_m_comparison_FL_toddlers,
 
 Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c * age_mo_c)
 summary(bm_test_first_look_toddlers_interaction_null)
 
 saveRDS(bm_test_first_look_toddlers_interaction_null, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_interaction_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
+```
+
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers_interaction <- brms::bayes_factor(
   bm_test_first_look_toddlers,
   bm_test_first_look_toddlers_interaction_null
@@ -2732,10 +2842,9 @@ rm(bm_test_first_look_toddlers_null)
 rm(bm_test_first_look_interaction_null)
 ```
 
-
 Less informative priors
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_less_inf_prior <- brm(
   correct_first_look ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
     (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
@@ -2757,6 +2866,11 @@ summary(bm_test_first_look_toddlers_less_inf_prior)
 saveRDS(bm_test_first_look_toddlers_less_inf_prior,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 ```{r}
@@ -2784,14 +2898,21 @@ saveRDS(bm_test_first_look_toddlers_less_inf_prior_condition_effect,
 
 Alternate Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_less_inf_prior_null <- update(bm_test_first_look_toddlers_less_inf_prior, formula = ~ . - condition_c)
 summary(bm_test_first_look_toddlers_less_inf_prior_null)
 
 saveRDS(bm_test_first_look_toddlers_less_inf_prior_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
   bm_test_first_look_toddlers_less_inf_prior,
   bm_test_first_look_toddlers_less_inf_prior_null
@@ -2811,7 +2932,7 @@ rm(bm_test_first_look_toddlers_less_inf_prior_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults <- brm(
   correct_first_look ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = bernoulli(link = "logit"),
@@ -2832,6 +2953,11 @@ summary(bm_test_first_look_adults)
 saveRDS(bm_test_first_look_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -2869,14 +2995,21 @@ saveRDS(bm_test_first_look_adults_condition_effect,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_null <- update(bm_test_first_look_adults, formula = ~ . - condition_c)
 summary(bm_test_first_look_adults_null)
 
 saveRDS(bm_test_first_look_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_adults <- brms::bayes_factor(
   bm_test_first_look_adults, bm_test_first_look_adults_null
 )
@@ -2894,7 +3027,7 @@ rm(bm_test_first_look_adults_null)
 
 Less informative priors
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_less_inf_prior <- brm(
   correct_first_look ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = bernoulli(link = "logit"),
@@ -2917,6 +3050,11 @@ saveRDS(bm_test_first_look_adults_less_inf_prior,
 )
 ```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior.rds"))
+```
+
 Summarize outcomes
 
 ```{r}
@@ -2934,14 +3072,21 @@ saveRDS(bm_test_first_look_adults_less_inf_prior_condition_effect,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_less_inf_prior_null <- update(bm_test_first_look_adults_less_inf_prior, formula = ~ . - condition_c)
 summary(bm_test_first_look_adults_less_inf_prior_null)
 
 saveRDS(bm_test_first_look_adults_less_inf_prior_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_nulll.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
   bm_test_first_look_adults_less_inf_prior,
   bm_test_first_look_adults_less_inf_prior_null
