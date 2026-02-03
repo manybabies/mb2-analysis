@@ -2839,7 +2839,7 @@ saveRDS(test_m_comparison_FL_toddlers_interaction, file = here(RESULTS_FOLDER, "
 # remove Bayes model fits
 rm(bm_test_first_look_toddlers)
 rm(bm_test_first_look_toddlers_null)
-rm(bm_test_first_look_interaction_null)
+rm(bm_test_first_look_toddlers_interaction_null)
 ```
 
 Less informative priors
