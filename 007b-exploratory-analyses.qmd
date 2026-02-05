@@ -22,6 +22,12 @@ library(rstan)
 # remotes::install_github("stan-dev/cmdstanr")
 library(cmdstanr)
 
+#FIT BAYESIAN MODELS
+# parameter for controlling whether to fit the Bayesian models (or load from disk)
+FIT_BAYES_MODELS = TRUE
+# parameter for controlling whether to compute Bayes factors (computationally expensive)
+COMPUTE_BAYES_FACTORS = TRUE
+
 source(here("helper", "ensure_repo_structure.R"))
 source(here("helper", "analysis_helper.R"))
 plot_path <- here("plots")
@@ -378,7 +384,7 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 #### Toddlers
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
 #Note: the Bayes factors we obtained for this model were more variable,
 #so we increased the number of iterations in an attempt to obtain more stable
 # Bayes factor estimates (using bridge sampling)
@@ -410,6 +416,11 @@ if (!dir.exists(model_fits_dir)) {
 
 saveRDS(bm_aoi_toddlers_both, 
         file = here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_both <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_both.rds"))
 ```
 
 Summarize outcomes
@@ -444,7 +455,7 @@ saveRDS(bm_aoi_toddlers_both_condition_age_interaction,
 
 Compute the Bayes factor using bridge sampling
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
 bm_aoi_toddlers_both_null <- update(bm_aoi_toddlers_both, 
                                     formula = ~ . - condition_c,
                                     cores = n_cores)
@@ -458,6 +469,11 @@ test_comparison_aoi_toddlers_both <- brms::bayes_factor(bm_aoi_toddlers_both,
 
 saveRDS(test_comparison_aoi_toddlers_both, 
         file = here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both.rds"))
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_both_null <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_both_null.rds"))
 ```
 
 Alternative bayes factor computation (for comparison, due to the above-mentioned challenges with bridge sampling)
@@ -517,7 +533,7 @@ bm_aoi_adults_both_null <- update(bm_aoi_adults_both,
 summary(bm_aoi_adults_both_null)
 
 saveRDS(bm_aoi_adults_both_null, 
-        file = here(model_fits_dir, "bm_fam_aoi_adults_null.rds"))
+        file = here(model_fits_dir, "bm_aoi_adults_both_null.rds"))
 
 test_comparison_aoi_adults_both <- brms::bayes_factor(bm_aoi_adults_both, 
                                                       bm_aoi_adults_both_null)
@@ -732,6 +748,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 # remove Bayes model fits
 rm(bm_aoi_adults_both_order)
 rm(bm_aoi_adults_both_order_null)
+rm(bm_aoi_adults_both_order_interaction_null)
 gc()
 ```
 
@@ -1108,7 +1125,7 @@ gc()
 
 ```{r}
 bm_aoi_adults_correct_final_fam_trial <- brm_default(
-  prop_exit ~ 1 + condition_c + + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
+  prop_exit ~ 1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c +
     (1 + condition_c + correct_first_look_final_fam_trial_c + condition_c * correct_first_look_final_fam_trial_c | lab_id),
   family = gaussian,
   prior = priors_default,

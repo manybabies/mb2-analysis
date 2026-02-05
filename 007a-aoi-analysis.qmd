@@ -1141,7 +1141,7 @@ saveRDS(test_m_comparison_PTL_toddlers,
 Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_toddlers_interaction_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c * age_mo_c)
+bm_aoi_toddlers_interaction_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c : age_mo_c)
 summary(bm_aoi_toddlers_interaction_null)
 
 saveRDS(bm_aoi_toddlers_interaction_null,
@@ -2814,7 +2814,7 @@ saveRDS(test_m_comparison_FL_toddlers,
 Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
-bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c * age_mo_c)
+bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c : age_mo_c)
 summary(bm_test_first_look_toddlers_interaction_null)
 
 saveRDS(bm_test_first_look_toddlers_interaction_null, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
@@ -2872,14 +2872,6 @@ saveRDS(bm_test_first_look_toddlers_less_inf_prior,
 # if model is not fit, load from disk
 bm_test_first_look_toddlers_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior.rds"))
 ```
-
-```{r}
-# quick and dirty binomial test just for exploratory purposes
-sum_correct_first_looks_knowledge <- sum(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort == "toddlers" & test_first_look_first_trial$condition == "knowledge"], na.rm = TRUE)
-sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort == "toddlers" & test_first_look_first_trial$condition == "knowledge"]))
-binom.test(sum_correct_first_looks_knowledge, sum_total_first_looks_knowledge, alternative = "two.sided", p = 0.5)
-```
-
 
 Summarize outcomes
 
