@@ -1328,6 +1328,365 @@ rm(bm_aoi_adults)
 rm(bm_aoi_adults_null)
 ```
 
+### Above/Below Chance Looking per Condition 
+
+Fitting the main Bayesian hierarchical model with adjusted coding for condition to test for above or below chance performance in each condition (ignorance and knowledge) on first-trial proportion target looking during the anticipatory window.
+
+#### Toddlers Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+# set the prior
+priors <- c(
+  set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor
+
+# Adjust proportion looking to exit for chance level and respective condition to be set to 0
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  mutate(
+    prop_exit_adj = prop_exit - 0.5, # adjusting for chance
+    condition_k = case_when(
+      condition == "knowledge" ~ 0, # knowledge as reference condition
+      condition == "ignorance" ~ 1), 
+    condition_i = case_when(
+      condition == "knowledge" ~ -1, # ignorance as reference condition
+      condition == "ignorance" ~ 0)
+  )
+
+bm_aoi_toddlers_knowledge <- brm(
+  prop_exit_adj ~ 1 + condition_k * age_mo_c + 
+    (1 + condition_k * age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_toddlers_knowledge)
+# prior_summary(bm_aoi_toddlers_knowledge)
+
+saveRDS(bm_aoi_toddlers_knowledge,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_toddlers_knowledge_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_toddlers_knowledge_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_toddlers_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in knowledge condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_toddlers_knowledge_null <- update(bm_aoi_toddlers_knowledge, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_toddlers_knowledge_null)
+
+saveRDS(bm_aoi_toddlers_knowledge_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_toddlers_knowledge <- brms::bayes_factor(
+  bm_aoi_toddlers_knowledge, bm_aoi_toddlers_knowledge_null
+)
+
+saveRDS(test_m_comparison_PTL_toddlers_knowledge,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_knowledge.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_toddlers_knowledge)
+rm(bm_aoi_toddlers_knowledge_null)
+```
+
+#### Toddlers Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_toddlers_ignorance <- brm(
+  prop_exit_adj ~ 1 + condition_i * age_mo_c + 
+    (1 + condition_i * age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_toddlers_ignorance)
+# prior_summary(bm_aoi_toddlers_ignorance)
+
+saveRDS(bm_aoi_toddlers_ignorance,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_toddlers_ignorance_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_toddlers_ignorance_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_toddlers_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in ignorance condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_toddlers_ignorance_null <- update(bm_aoi_toddlers_ignorance, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_toddlers_ignorance_null)
+
+saveRDS(bm_aoi_toddlers_ignorance_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_toddlers_ignorance <- brms::bayes_factor(
+  bm_aoi_toddlers_ignorance, bm_aoi_toddlers_ignorance_null
+)
+
+saveRDS(test_m_comparison_PTL_toddlers_ignorance,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_ignorance.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_toddlers_ignorance)
+rm(bm_aoi_toddlers_ignorance_null)
+```
+
+#### Adults Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_adults_knowledge <- brm(
+  prop_exit_adj ~ 1 + condition_k + 
+    (1 + condition_k | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_adults_knowledge)
+# prior_summary(bm_aoi_adults_knowledge)
+
+saveRDS(bm_aoi_adults_knowledge,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_adults_knowledge_tidy_summary <- as_tibble(summary(bm_aoi_adults_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_adults_knowledge_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_adults_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in knowledge condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_adults_knowledge_null <- update(bm_aoi_adults_knowledge, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_adults_knowledge_null)
+
+saveRDS(bm_aoi_adults_knowledge_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_adults_knowledge <- brms::bayes_factor(
+  bm_aoi_adults_knowledge, bm_aoi_adults_knowledge_null
+)
+
+saveRDS(test_m_comparison_PTL_adults_knowledge,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_knowledge.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_adults_knowledge)
+rm(bm_aoi_adults_knowledge_null)
+```
+
+#### Adults Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_adults_ignorance <- brm(
+  prop_exit_adj ~ 1 + condition_i + 
+    (1 + condition_i | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_adults_ignorance)
+# prior_summary(bm_aoi_adults_ignorance)
+
+saveRDS(bm_aoi_adults_ignorance,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_adults_ignorance_tidy_summary <- as_tibble(summary(bm_aoi_adults_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_adults_ignorance_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_adults_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in ignorance condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_adults_ignorance_null <- update(bm_aoi_adults_ignorance, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_adults_ignorance_null)
+
+saveRDS(bm_aoi_adults_ignorance_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_adults_ignorance <- brms::bayes_factor(
+  bm_aoi_adults_ignorance, bm_aoi_adults_ignorance_null
+)
+
+saveRDS(test_m_comparison_PTL_adults_ignorance,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_ignorance.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_adults_ignorance)
+rm(bm_aoi_adults_ignorance_null)
+```
+
 # Timecourse extension
 
 ```{r}
@@ -3093,6 +3452,374 @@ saveRDS(test_m_comparison_FL_adults_less_inf_prior,
 # remove Bayes model fits
 rm(bm_test_first_look_adults_less_inf_prior)
 rm(bm_test_first_look_adults_less_inf_prior_null)
+```
+
+### Above/Below Chance Looking per Condition 
+
+Fitting the exploratory Bayesian hierarchical model testing above chance performance in each condition (ignorance and knowledge) on first-trial first looks during the anticipatory window.
+
+```{r}
+# select first test trial
+test_first_look_first_trial <- d_anticipatory_test %>%
+  filter(trial_num == 5) %>%
+  group_by(age_cohort, age_mo, age_years_n, participant_lab_id, lab_id, participant_id, condition) %>%
+  summarize(
+    N = n(),
+    correct_first_look = mean(first_look == "target_exit")
+  ) %>%
+  ungroup() %>%
+  # center age and set reference condition to 0
+  mutate(
+    age_mo_c = age_mo - mean(age_mo, na.rm = TRUE),
+    condition_k = case_when(
+      condition == "knowledge" ~ 0,
+      condition == "ignorance" ~ 1
+    ), 
+    condition_i = case_when(
+      condition == "knowledge" ~ -1,
+      condition == "ignorance" ~ 0
+    )
+  )
+```
+
+#### Toddlers Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+# set the prior
+priors <- c(
+  set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, 2)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .1)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_test_first_look_toddlers_knowledge <- brm(
+  correct_first_look ~ 1 + condition_k * age_mo_c +
+    (1 + condition_k * age_mo_c | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_toddlers_knowledge)
+# prior_summary(bm_test_first_look_toddlers_knowledge)
+
+saveRDS(bm_test_first_look_toddlers_knowledge,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_toddlers_knowledge_tidy_summary <- as_tibble(summary(bm_test_first_look_toddlers_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_toddlers_knowledge_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_toddlers_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_toddlers_knowledge_null <- update(bm_test_first_look_toddlers_knowledge, formula = ~ . - 1)
+summary(bm_test_first_look_toddlers_knowledge_null)
+
+# cache
+saveRDS(bm_test_first_look_toddlers_knowledge_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_toddlers_knowledge <- brms::bayes_factor(
+  bm_test_first_look_toddlers_knowledge, bm_test_first_look_toddlers_knowledge_null
+)
+
+saveRDS(test_m_comparison_FL_toddlers_knowledge,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_knowledge.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_toddlers_knowledge)
+rm(bm_test_first_look_toddlers_knowledge_null)
+```
+
+#### Toddlers Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_test_first_look_toddlers_ignorance <- brm(
+  correct_first_look ~ 1 + condition_i * age_mo_c +
+    (1 + condition_i * age_mo_c | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_toddlers_ignorance)
+# prior_summary(bm_test_first_look_toddlers_ignorance)
+
+saveRDS(bm_test_first_look_toddlers_ignorance,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_toddlers_ignorance_tidy_summary <- as_tibble(summary(bm_test_first_look_toddlers_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_toddlers_ignorance_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_toddlers_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in ignorance condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_toddlers_ignorance_null <- update(bm_test_first_look_toddlers_ignorance, formula = ~ . - 1)
+summary(bm_test_first_look_toddlers_ignorance_null)
+
+# cache
+saveRDS(bm_test_first_look_toddlers_ignorance_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_toddlers_ignorance <- brms::bayes_factor(
+  bm_test_first_look_toddlers_ignorance, bm_test_first_look_toddlers_ignorance_null
+)
+
+saveRDS(test_m_comparison_FL_toddlers_ignorance,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_ignorance.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_toddlers_ignorance)
+rm(bm_test_first_look_toddlers_ignorance_null)
+```
+
+#### Adults Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_test_first_look_adults_knowledge <- brm(
+  correct_first_look ~ 1 + condition_k + (1 + condition_k | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_adults_knowledge)
+# prior_summary(bm_test_first_look_adults_knowledge)
+
+saveRDS(bm_test_first_look_adults_knowledge,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_adults_knowledge_tidy_summary <- as_tibble(summary(bm_test_first_look_adults_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_adults_knowledge_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_adults_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_knowledge_null <- update(bm_test_first_look_adults_knowledge, formula = ~ . - 1)
+summary(bm_test_first_look_adults_knowledge_null)
+
+# cache
+saveRDS(bm_test_first_look_adults_knowledge_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_adults_knowledge <- brms::bayes_factor(
+  bm_test_first_look_adults_knowledge, bm_test_first_look_adults_knowledge_null
+)
+
+saveRDS(test_m_comparison_FL_adults_knowledge,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults_knowledge.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_adults_knowledge)
+rm(bm_test_first_look_adults_knowledge_null)
+```
+
+#### Adults Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_ignorance <- brm(
+  correct_first_look ~ 1 + condition_i + (1 + condition_i | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_adults_ignorance)
+# prior_summary(bm_test_first_look_adults_ignorance)
+
+saveRDS(bm_test_first_look_adults_ignorance,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_adults_ignorance_tidy_summary <- as_tibble(summary(bm_test_first_look_adults_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_adults_ignorance_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_adults_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_ignorance_null <- update(bm_test_first_look_adults_ignorance, formula = ~ . - 1)
+summary(bm_test_first_look_adults_ignorance_null)
+
+# cache
+saveRDS(bm_test_first_look_adults_ignorance_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_adults_ignorance <- brms::bayes_factor(
+  bm_test_first_look_adults_ignorance, bm_test_first_look_adults_ignorance_null
+)
+
+saveRDS(test_m_comparison_FL_adults_ignorance,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults_ignorance.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_adults_ignorance)
+rm(bm_test_first_look_adults_ignorance_null)
 ```
 
 # Plotting PTL and First Look for familiarization and test
