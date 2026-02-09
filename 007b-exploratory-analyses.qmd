@@ -601,7 +601,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
-    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
+    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id) +
+    (1 | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers")
@@ -723,7 +724,8 @@ gc()
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
-    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id),
+    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id) +
+    (1 | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "adults")
