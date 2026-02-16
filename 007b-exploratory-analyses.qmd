@@ -723,8 +723,8 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_both_order <- brm_default(
-  prop_exit ~ 1 + condition_c + test_trial_num + condition_c * test_trial_num + 
-    (1 + condition_c + test_trial_num + condition_c * test_trial_num | lab_id) +
+  prop_exit ~ 1 + condition_c + test_trial_num + condition_c : test_trial_num + 
+    (1 + condition_c + test_trial_num + condition_c : test_trial_num | lab_id) +
     (1 | participant_lab_id), # we decided not to include random slopes because we have only 2 observations per participant (to avoid over-parameterization)
   family = gaussian,
   prior = priors_default,
@@ -1164,7 +1164,7 @@ Compute the Bayes factor using bridge sampling - first_trial_prop_exit effect
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_second_trial_first_trial_null <- update(bm_aoi_adults_second_trial, 
-                                          formula = ~ . - condition_c : first_trial_prop_exit_c,
+                                          formula = ~ . - first_trial_prop_exit_c,
                                           cores = n_cores)
 summary(bm_aoi_adults_second_trial_first_trial_null)
 
