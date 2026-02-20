@@ -989,8 +989,8 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor
 
 bm_aoi_toddlers <- brm(
-  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_exit ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -1176,14 +1176,14 @@ Investigate robustness of the result using a model that better captures zero/1-i
 ```{r, eval = FIT_BAYES_MODELS}
 #preliminary attempt to fit a zero/one-inflated beta regression model
 bm_aoi_toddlers_01inflation_formula <- bf(
-  prop_exit ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  phi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  zoi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  coi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_exit ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  phi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  zoi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  coi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = zero_one_inflated_beta())
 bm_aoi_toddlers_01inflation <- brm(
   formula = bm_aoi_toddlers_01inflation_formula,
@@ -1356,8 +1356,8 @@ summarize_participant_test_first_trial <- summarize_participant_test_first_trial
   )
 
 bm_aoi_toddlers_knowledge <- brm(
-  prop_exit_adj ~ 1 + condition_k * age_mo_c + 
-    (1 + condition_k * age_mo_c | lab_id),
+  prop_exit_adj ~ 1 + condition_k + age_mo_c + condition_k : age_mo_c + 
+    (1 + condition_k + age_mo_c + condition_k : age_mo_c  | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -1440,8 +1440,8 @@ rm(bm_aoi_toddlers_knowledge_null)
 ```{r, eval = FIT_BAYES_MODELS}
 
 bm_aoi_toddlers_ignorance <- brm(
-  prop_exit_adj ~ 1 + condition_i * age_mo_c + 
-    (1 + condition_i * age_mo_c | lab_id),
+  prop_exit_adj ~ 1 + condition_i + age_mo_c + condition_i : age_mo_c + 
+    (1 + condition_i + age_mo_c + condition_i : age_mo_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -3057,8 +3057,8 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_test_first_look_toddlers <- brm(
-  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -3170,7 +3170,7 @@ saveRDS(test_m_comparison_FL_toddlers,
 )
 ```
 
-Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+Compute Bayes Factor (bridge sampling approach) - Condition:Age Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c : age_mo_c)
@@ -3205,8 +3205,8 @@ Less informative priors
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_less_inf_prior <- brm(
-  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors_less_informative,
   save_pars = save_pars(all = TRUE),
@@ -3494,8 +3494,8 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_test_first_look_toddlers_knowledge <- brm(
-  correct_first_look ~ 1 + condition_k * age_mo_c +
-    (1 + condition_k * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_k + age_mo_c + condition_k : age_mo_c +
+    (1 + condition_k + age_mo_c + condition_k : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -3578,8 +3578,8 @@ rm(bm_test_first_look_toddlers_knowledge_null)
 ```{r, eval = FIT_BAYES_MODELS}
 
 bm_test_first_look_toddlers_ignorance <- brm(
-  correct_first_look ~ 1 + condition_i * age_mo_c +
-    (1 + condition_i * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_i + age_mo_c + condition_i : age_mo_c +
+    (1 + condition_i + age_mo_c + condition_i : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors,
   save_pars = save_pars(all = TRUE),
