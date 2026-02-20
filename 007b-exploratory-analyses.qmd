@@ -389,9 +389,9 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 #so we increased the number of iterations in an attempt to obtain more stable
 # Bayes factor estimates (using bridge sampling)
 bm_aoi_toddlers_both <- brm(
-  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c + 
+  prop_exit ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c + 
     (1 + condition_c | participant_lab_id) + 
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers") %>%
@@ -602,7 +602,7 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 bm_aoi_toddlers_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c : test_trial_num + 
     (1 + condition_c + test_trial_num + condition_c : test_trial_num | lab_id) +
-    (1 | participant_lab_id), # we decided not to include random slopes because we have only 2 observations per participant (to avoid over-parameterization)
+    (1 + condition_c | participant_lab_id), # to be consistent, we decided to include random slope for condition within participant (if model converges) 
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "toddlers")
@@ -725,7 +725,7 @@ gc()
 bm_aoi_adults_both_order <- brm_default(
   prop_exit ~ 1 + condition_c + test_trial_num + condition_c : test_trial_num + 
     (1 + condition_c + test_trial_num + condition_c : test_trial_num | lab_id) +
-    (1 | participant_lab_id), # we decided not to include random slopes because we have only 2 observations per participant (to avoid over-parameterization)
+    (1 + condition_c | participant_lab_id), # to be consistent, we decided to include random slope for condition within participant (if model converges) 
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials, age_cohort == "adults")
@@ -866,8 +866,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_second_trial <- brm_default(
-  second_trial_prop_exit ~ 1 + condition_c * first_trial_prop_exit_c +
-    (1 + condition_c * first_trial_prop_exit_c | lab_id),
+  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit_c + condition_c : first_trial_prop_exit_c +
+    (1 + condition_c + first_trial_prop_exit_c + condition_c : first_trial_prop_exit_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_second_trial, age_cohort == "toddlers")
@@ -1051,8 +1051,8 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_second_trial <- brm_default(
-  second_trial_prop_exit ~ 1 + condition_c * first_trial_prop_exit_c +
-    (1 + condition_c * first_trial_prop_exit_c | lab_id),
+  second_trial_prop_exit ~ 1 + condition_c + first_trial_prop_exit_c + condition_c : first_trial_prop_exit_c +
+    (1 + condition_c + first_trial_prop_exit_c + condition_c : first_trial_prop_exit_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_second_trial, age_cohort == "adults")
@@ -2169,8 +2169,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_sufficient_fam_prop_looking <- brm_default(
-  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
-    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c : successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c : successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial_all_fam_trials, age_cohort == "toddlers")
@@ -2280,8 +2280,8 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_sufficient_fam_prop_looking <- brm_default(
-  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c +
-    (1 + condition_c + successful_fam_anticipation_c + condition_c * successful_fam_anticipation_c | lab_id),
+  prop_exit ~ 1 + condition_c + successful_fam_anticipation_c + condition_c : successful_fam_anticipation_c +
+    (1 + condition_c + successful_fam_anticipation_c + condition_c : successful_fam_anticipation_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial_all_fam_trials, age_cohort == "adults")
@@ -2563,8 +2563,8 @@ Fitting the main Bayesian hierarchical model testing the effect of condition (ig
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_method <- brm_default(
-  prop_exit ~ 1 + condition_c + method_c + condition_c * method_c + 
-    (1 + condition_c + method_c + condition_c * method_c | lab_id),
+  prop_exit ~ 1 + condition_c + method_c + condition_c : method_c + 
+    (1 + condition_c + method_c + condition_c : method_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
@@ -2653,8 +2653,8 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_method <- brm_default(
-  prop_exit ~ 1 + condition_c * method_c + 
-    (1 + condition_c * method_c | lab_id),
+  prop_exit ~ 1 + condition_c + method_c + condition_c : method_c + 
+    (1 + condition_c + method_c + condition_c : method_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
@@ -2836,8 +2836,8 @@ Toddlers: difference between conditions for boxes slightly smaller than for exit
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_box_toddlers <- brm_default(
-  prop_box ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_box ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
@@ -2942,11 +2942,11 @@ saveRDS(test_box_m_comparison_PTL_toddlers,
 test_box_m_comparison_PTL_toddlers <- readRDS(here(RESULTS_FOLDER, "test_box_m_comparison_PTL_toddlers.rds"))
 ```
 
-Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+Compute Bayes Factor (bridge sampling approach) - Condition:Age Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_box_toddlers_interaction_null <- update(bm_box_toddlers, 
-                                           formula = ~ . - condition_c * age_mo_c,
+                                           formula = ~ . - condition_c : age_mo_c,
                                            cores = n_cores)
 summary(bm_box_toddlers_interaction_null)
 
@@ -2977,8 +2977,8 @@ test_box_m_comparison_PTL_toddlers_interaction <- readRDS(here(RESULTS_FOLDER, "
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_box_adults <- brm_default(
-  prop_box ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_box ~ 1 + condition_c +
+    (1 + condition_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial, age_cohort == "adults")
@@ -3009,39 +3009,21 @@ bm_box_adults_condition_effect <- bm_box_adults %>%
 saveRDS(bm_box_adults_condition_effect,
   file = here(RESULTS_FOLDER, "bm_box_adults_condition_effect.rds")
 )
-
-bm_box_adults_age_effect <- bm_box_adults %>%
-  spread_draws(b_age_mo_c, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-# cache
-saveRDS(bm_box_adults_age_effect,
-  file = here(RESULTS_FOLDER, "bm_box_adults_age_effect.rds")
-)
-
-bm_box_adults_condition_age_interaction <- bm_box_adults %>%
-  spread_draws(`b_condition_c:age_mo_c`, sigma) %>%
-  mean_hdi(.width = 0.95)
-
-# cache
-saveRDS(bm_box_adults_condition_age_interaction,
-  file = here(RESULTS_FOLDER, "bm_box_adults_condition_age_interaction.rds")
-)
 ```
 
 Visualize model coefficients
 
 ```{r}
 bm_box_adults %>%
-  spread_draws(b_condition_c, b_age_mo_c, `b_condition_c:age_mo_c`, sigma) %>%
+  spread_draws(b_condition_c, sigma) %>%
   pivot_longer(cols = starts_with("b_"), names_to = "coefficient", values_to = "b") %>%
   ggplot(aes(x = coefficient, y = b)) +
   stat_halfeye() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_cowplot() +
   scale_x_discrete(
-    limits = c("b_condition_c:age_mo_c", "b_age_mo_c", "b_condition_c"),
-    labels = c("Condition x Age", "Age", "Condition")
+    limits = c("b_condition_c"),
+    labels = c("Condition")
   ) +
   ylab("Model Coefficient Estimate") +
   xlab("Model Predictor") +
@@ -3080,37 +3062,6 @@ saveRDS(test_box_m_comparison_PTL_adults,
 ```{r, eval = !COMPUTE_BAYES_FACTORS}
 # if BF is not computed, load from disk
 test_box_m_comparison_PTL_adults <- readRDS(here(RESULTS_FOLDER, "test_box_m_comparison_PTL_adults.rds"))
-```
-
-Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_box_adults_interaction_null <- update(bm_box_adults, 
-                                           formula = ~ . - condition_c * age_mo_c,
-                                           cores = n_cores)
-summary(bm_box_adults_interaction_null)
-
-saveRDS(bm_box_adults_interaction_null,
-  file = here(model_fits_dir, "bm_box_adults_interaction_null.rds")
-)
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_box_adults_interaction_null <- readRDS(here(model_fits_dir, "bm_box_adults_interaction_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_box_m_comparison_PTL_adults_interaction <- brms::bayes_factor(
-  bm_box_adults, bm_box_adults_interaction_null)
-
-saveRDS(test_box_m_comparison_PTL_adults_interaction,
-  file = here(RESULTS_FOLDER, "test_box_m_comparison_PTL_adults_interaction.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_box_m_comparison_PTL_adults_interaction <- readRDS(here(RESULTS_FOLDER, "test_box_m_comparison_PTL_adults_interaction.rds"))
 ```
 
 ## 5. Looking patterns during mouse's change of location
@@ -3251,9 +3202,9 @@ d_location_change <- d_location_change %>%
   ))
 
 bm_test_shifts_age_cohort <- brm_default(
-  num_shifts ~ 1 + condition_c + age_cohort_c + condition_c * age_cohort_c +
+  num_shifts ~ 1 + condition_c + age_cohort_c + condition_c : age_cohort_c +
     (1 + condition_c | participant_lab_id) + 
-    (1 + condition_c + age_cohort_c + condition_c * age_cohort_c | lab_id),
+    (1 + condition_c + age_cohort_c + condition_c : age_cohort_c | lab_id),
   family = poisson(),
   prior = priors_default,
   data = d_location_change
@@ -3377,19 +3328,50 @@ saveRDS(test_m_comparison_shifts_age_cohort_condition,
 test_m_comparison_shifts_age_cohort_condition <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort_condition.rds"))
 ```
 
+Bayes factor for Age effect
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_shifts_age_cohort_age_null <- update(bm_test_shifts_age_cohort, 
+                                         formula = ~ . - age_cohort_c,
+                                         cores = n_cores)
+summary(bm_test_shifts_age_cohort_age_null)
+
+saveRDS(bm_test_shifts_age_cohort_age_null, 
+        file = here(model_fits_dir, "bm_test_shifts_age_cohort_age_null.rds"))
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_shifts_age_cohort_age_null <- readRDS(here(model_fits_dir, "bm_test_shifts_age_cohort_age_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_shifts_age_cohort_age <- brms::bayes_factor(bm_test_shifts_age_cohort, 
+                                                          bm_test_shifts_age_cohort_age_null)
+
+saveRDS(test_m_comparison_shifts_age_cohort_age, 
+        file = here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort_age.rds"))
+```
+
+```{r, eval = !COMPUTE_BAYES_FACTORS}
+# if BF is not computed, load from disk
+test_m_comparison_shifts_age_cohort_age <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_shifts_age_cohort_age.rds"))
+```
+
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_test_shifts_age_cohort)
 rm(bm_test_shifts_age_cohort_null)
+rm(bm_test_shifts_age_cohort_condition_null)
+rm(bm_test_shifts_age_cohort_age_null)
 gc()
 ```
 
 #### Toddlers
 
 ```{r, eval = FIT_BAYES_MODELS}
-
 bm_test_shifts_toddlers <- brm_default(
   num_shifts ~ 1 + condition_c +
     (1 + condition_c | participant_lab_id) + 
@@ -3640,9 +3622,9 @@ ggsave(here(paper_path, "Figure7.png"),
 #### Toddlers
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_toddlers_shifts_al <- brm(
-  prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
-    (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
-    (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
+  prop_exit ~ 1 + condition_c + num_shifts + condition_c : num_shifts + 
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c + num_shifts + condition_c : num_shifts | lab_id),
   family = gaussian,
   prior = priors_default,
     save_pars = save_pars(all = TRUE),
@@ -3791,9 +3773,9 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_adults_shifts_al <- brm(
-  prop_exit ~ 1 + condition_c + num_shifts + condition_c * num_shifts + 
-    (1 + condition_c + num_shifts + condition_c * num_shifts | participant_lab_id) + 
-    (1 + condition_c + num_shifts + condition_c * num_shifts | lab_id),
+  prop_exit ~ 1 + condition_c + num_shifts + condition_c : num_shifts + 
+    (1 + condition_c | participant_lab_id) + 
+    (1 + condition_c + num_shifts + condition_c : num_shifts | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults") %>%
@@ -4095,9 +4077,9 @@ summarize_participant_test_both_trials_lc <- summarize_participant_test_both_tri
   mutate(diff_mouse_bear_s = diff_mouse_bear / 1000)
 
 bm_test_toddlers_diff_mouse_bear_al <- brm_default(
-  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s + 
-    (1 + condition_c * diff_mouse_bear_s | lab_id) +
-    (1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s | participant_lab_id),
+  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c : diff_mouse_bear_s + 
+    (1 + condition_c + diff_mouse_bear_s + condition_c : diff_mouse_bear_s | lab_id) +
+    (1 + condition_c | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
@@ -4258,9 +4240,9 @@ gc()
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_adults_diff_mouse_bear_al <- brm_default(
-  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s +
-    (1 + condition_c * diff_mouse_bear_s | lab_id) +
-    (1 + condition_c + diff_mouse_bear_s + condition_c * diff_mouse_bear_s | participant_lab_id),
+  prop_exit ~ 1 + condition_c + diff_mouse_bear_s + condition_c : diff_mouse_bear_s +
+    (1 + condition_c + diff_mouse_bear_s + condition_c : diff_mouse_bear_s | lab_id) +
+    (1 + condition_c | participant_lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "adults")
@@ -4483,8 +4465,8 @@ d_distraction <- d_location_change |>
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_distraction_toddlers <- brm_default(
-  total_fixation ~ 1 + condition_c + animal_c + condition_c * animal_c +
-    (1 + condition_c + animal_c + condition_c * animal_c | lab_id),
+  total_fixation ~ 1 + condition_c + animal_c + condition_c : animal_c +
+    (1 + condition_c + animal_c + condition_c : animal_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(d_distraction, age_cohort == "toddlers")
@@ -4568,8 +4550,8 @@ test_m_comparison_toddlers_distraction <- readRDS(here(RESULTS_FOLDER, "test_m_c
 
 ```{r, eval = FIT_BAYES_MODELS}
 bm_distraction_adults <- brm_default(
-  total_fixation ~ 1 + condition_c + animal_c + condition_c * animal_c +
-    (1 + condition_c + animal_c + condition_c * animal_c | lab_id),
+  total_fixation ~ 1 + condition_c + animal_c + condition_c : animal_c +
+    (1 + condition_c + animal_c + condition_c : animal_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(d_distraction, age_cohort == "adults")
@@ -4693,8 +4675,8 @@ summarize_participant <- summarize_participant %>%
 
 # AT: this model took ~15min to run on my M1 laptop
 bm_al_cohort <- brm_default(
-  absolute_looking ~ 1 + trial_num_fct + age_cohort_c + trial_num_fct * age_cohort_c + 
-    (1 + trial_num_fct + age_cohort_c + trial_num_fct * age_cohort_c | lab_id),
+  absolute_looking ~ 1 + trial_num_fct + age_cohort_c + trial_num_fct : age_cohort_c + 
+    (1 + trial_num_fct + age_cohort_c + trial_num_fct : age_cohort_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = summarize_participant
@@ -4844,7 +4826,7 @@ ggsave(here(plot_path, "test_first_trial_half.png"),
 ```
 
 ## 8. AOI “box”
-compare looks to target box between KNOW and IG: difference in “reality bias” between conditions (also informs hypothesis above about interactive context (No.9)
+compare looks to target box between KNOW and IG: difference in “reality bias” between conditions (also informs hypothesis above about interactive context (No.9))
 
 ## 9. Latency of first look to target AOI (longer latency as indicator of uncertainty)
 Hypothesis: Longer latency  in KNOW vs. IG
@@ -5144,7 +5126,7 @@ summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_t
 #### Toddlers
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_toddlers_location_al <- brm_default(
-  prop_exit ~ 1 + condition_c * location_c +
+  prop_exit ~ 1 + condition_c + location_c + condition_c : location_c +
     (1 + condition_c | lab_id),
   family = gaussian,
   prior = priors_default,
@@ -5259,7 +5241,7 @@ gc()
 #### Adults
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_adults_location_al <- brm_default(
-  prop_exit ~ 1 + condition_c * location_c +
+  prop_exit ~ 1 + condition_c + location_c + condition_c : location_c +
     (1 + condition_c | lab_id),
   family = gaussian,
   prior = priors_default,
@@ -5400,7 +5382,7 @@ priors <- c(
 )
 
 bm_fam_toddlers_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_c +
+  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
@@ -5526,7 +5508,7 @@ priors <- c(
 )
 
 bm_fam_adults_location_al <- brm(
-  prop_exit_adj ~ 1 + prev_location_c * familiarization_trial_num_c +
+  prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c +
     (1 | participant_id) + (1 | lab_id),
   family = gaussian,
   prior = priors,
