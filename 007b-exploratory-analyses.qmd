@@ -3443,7 +3443,8 @@ bm_test_shifts_toddlers_null <- readRDS(here(model_fits_dir, "bm_test_shifts_tod
 ```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_shifts_toddlers <- brms::bayes_factor(bm_test_shifts_toddlers, 
                                                           bm_test_shifts_toddlers_null)
-
+# Warning: logml could not be estimated within maxiter, rerunning with adjusted starting value. 
+# Estimate might be more variable than usual.
 saveRDS(test_m_comparison_shifts_toddlers, 
         file = here(RESULTS_FOLDER, "test_m_comparison_shifts_toddlers.rds"))
 ```
@@ -3904,7 +3905,7 @@ h_test_adults_shifts_al_num_shifts
 plot(h_test_adults_shifts_al_num_shifts)
 # evidence in favor of condition being different from zero
 1 / h_test_adults_shifts_al_num_shifts$hypothesis$Evid.Ratio
-saveRDS(h_test_adults_shifts_num_shifts, 
+saveRDS(h_test_adults_shifts_al_num_shifts, 
         file = here(RESULTS_FOLDER, "h_test_m_comparison_adults_shifts_al_num_shifts.rds"))
 ```
 
@@ -4084,9 +4085,7 @@ bm_test_toddlers_diff_mouse_bear_al <- brm_default(
   prior = priors_default,
   data = filter(summarize_participant_test_both_trials_lc, age_cohort == "toddlers")
 )
-# Warning: There were 36000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12.
-# See https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
-# Warning: Examine the pairs() plot to diagnose sampling problems
+
 summary(bm_test_toddlers_diff_mouse_bear_al)
 prior_summary(bm_test_toddlers_diff_mouse_bear_al)
 
@@ -4165,7 +4164,8 @@ bm_test_toddlers_diff_mouse_bear_al_null <- readRDS(here(model_fits_dir, "bm_tes
 ```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_toddlers_diff_mouse_bear_al <- brms::bayes_factor(bm_test_toddlers_diff_mouse_bear_al, 
                                                                     bm_test_toddlers_diff_mouse_bear_al_null)
-
+# Warnung: logml could not be estimated within maxiter, rerunning with adjusted starting value. 
+# Estimate might be more variable than usual.
 saveRDS(test_m_comparison_toddlers_diff_mouse_bear_al,
         file = here(RESULTS_FOLDER, "test_m_comparison_toddlers_diff_mouse_bear_al.rds"))
 ```
@@ -4233,6 +4233,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 # remove Bayes model fits
 rm(bm_test_toddlers_diff_mouse_bear_al)
 rm(bm_test_toddlers_diff_mouse_bear_al_null)
+rm(bm_test_toddlers_diff_mouse_bear_al_diff_mouse_bear_null)
 gc()
 ```
 
@@ -4308,8 +4309,6 @@ saveRDS(bm_test_adults_diff_mouse_bear_al_condition_diff_interaction,
 Bridge sampling: interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
-# Warning: 36000 of 36000 (100.0%) transitions hit the maximum treedepth limit of 12.
-# See https://mc-stan.org/misc/warnings for details.
 bm_test_adults_diff_mouse_bear_al_null <- update(bm_test_adults_diff_mouse_bear_al, 
                                                  formula = ~ . - condition_c:diff_mouse_bear_s,
                                                  cores = n_cores)
@@ -4396,6 +4395,7 @@ Remove the Bayes models from the environment (because the model objects are quit
 # remove Bayes model fits
 rm(bm_test_adults_diff_mouse_bear_al)
 rm(bm_test_adults_diff_mouse_bear_al_null)
+rm(bm_test_adults_diff_mouse_bear_al_diff_mouse_bear_null)
 gc()
 ```
 
