@@ -602,15 +602,18 @@ adults_prop <- ggplot(
   geom_half_violin(
     aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_jitter(width = 0.05, height = 0.025, alpha = 0.3, stroke = NA)+
   stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  facet_wrap(~ age_cohort + lab_id) +
-  theme(legend.position = "none") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  facet_wrap(~ lab_id) +
+  theme(legend.position = "none", 
+    axis.title = element_text(size = 20), 
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), 
+    strip.text = element_text(size = 14)) +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 adults_prop
 ggsave(here(plot_path, "adults_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 16, height = 10
@@ -623,18 +626,48 @@ kids_prop <- ggplot(
   geom_half_violin(
     aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  geom_jitter(width = 0.05, height = 0.025, alpha = 0.3, stroke = NA)+
   stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  facet_wrap(~ age_cohort + lab_id) +
-  theme(legend.position = "none") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  facet_wrap(~ lab_id) +
+  ggtitle("Toddlers")
+  theme(legend.position = "none", 
+    axis.title = element_text(size = 20), 
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), 
+    strip.text = element_text(size = 14)) +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 kids_prop
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 16, height = 10
+)
+
+```
+Combine Plots
+
+```{r}
+figure_prop_lab <- ggarrange(
+  adults_prop, kids_prop, 
+  ncol = 1, nrow = 2
+)
+
+figure_prop_lab <- cowplot::plot_grid(
+  adults_prop +
+    theme(
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_blank()
+    ),
+  kids_prop,
+  nrow = 2,
+  align = "v"
+)
+
+figure_prop_lab
+
+ggsave(here(plot_path, "figure_prop_lab_both.png"),
+  bg = "white", width = 16, height = 20
 )
 ```
 
@@ -650,7 +683,7 @@ kid_prop_by_age <- ggplot(
   geom_point(alpha = 0.4) +
   geom_smooth(method = "lm") +
   xlab("Age (in months)") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)") +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1")
@@ -668,10 +701,12 @@ kid_prop_by_age_loess <- ggplot(
   geom_point(alpha = 0.4) +
   geom_smooth(method = "loess") +
   xlab("Age (in months)") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)") +
-  theme_cowplot() +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)") +
+  theme_cowplot(font_size = 24) +
   scale_color_brewer(palette = "Set1") +
-  scale_fill_brewer(palette = "Set1")
+  scale_fill_brewer(palette = "Set1") + 
+  ggtitle("Non-Linear Relation, Age Continuous") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"), plot.title.position = "plot") 
 kid_prop_by_age_loess
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age_loess.png"),
   bg = "white", width = 9, height = 6
@@ -717,12 +752,14 @@ kids_prop_age_bin <- ggplot(
   geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
   stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
-  theme_cowplot() +
+  theme_cowplot(font_size = 24) +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
   facet_wrap(~ age_bin,ncol=3) +
-  theme(legend.position = "none") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  ggtitle("1-Month Age Bins") +
+  theme(legend.position = "none", 
+    plot.title = element_text(hjust = 0.5, face = "bold")) +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 kids_prop_age_bin
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_age_bins.png"),
   bg = "white", width = 16, height = 10
