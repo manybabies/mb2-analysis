@@ -1241,6 +1241,7 @@ summary(bm_aoi_toddlers_01inflation)
 rm(bm_aoi_toddlers)
 rm(bm_aoi_toddlers_condition_null)
 rm(bm_aoi_toddlers_interaction_null)
+rm(bm_aoi_toddlers_01inflation)
 ```
 
 #### Adults
