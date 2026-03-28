@@ -19,7 +19,7 @@ library(ggpubr)
 library(StanHeaders)
 library(QuickJSR)
 library(rstan)
-# remotes::install_github("stan-dev/cmdstanr")
+#remotes::install_github("stan-dev/cmdstanr")
 library(cmdstanr)
 
 #FIT BAYESIAN MODELS
@@ -1383,8 +1383,8 @@ bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_t
   mean_hdi(.width = 0.95)
 
 # cache
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect, 
-        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect.rds"))
+saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction, 
+        file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling
@@ -2435,7 +2435,7 @@ saveRDS(combined_brm_results_fam_test,
 #### Plot 
 
 ```{r}
-correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial,
+correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_all_fam_trials,
                                     aes(fam_prop_exit, prop_exit, color = condition)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   geom_point(alpha = 0.25) +
@@ -2463,7 +2463,7 @@ compute_correlation <- function(data) {
   ))
 }
 # correlation between familiarization and test
-correlation_fam_test_overall <- summarize_participant_test_first_trial %>%
+correlation_fam_test_overall <- summarize_participant_test_first_trial_all_fam_trials %>%
   select(age_cohort, fam_prop_exit, prop_exit) %>%
   group_by(age_cohort) %>%
   nest() %>%
@@ -2475,7 +2475,7 @@ correlation_fam_test_overall <- summarize_participant_test_first_trial %>%
 correlation_fam_test_overall %>%
   knitr::kable()
 
-correlation_fam_test_by_age <- summarize_participant_test_first_trial %>%
+correlation_fam_test_by_age <- summarize_participant_test_first_trial_all_fam_trials %>%
   select(age_cohort, condition, fam_prop_exit, prop_exit) %>%
   group_by(age_cohort, condition) %>%
   nest() %>%
@@ -2496,7 +2496,7 @@ Is there an interaction between condition and the proportion familiarization loo
 ```{r}
 correlation_interaction_fam_test_toddlers <- lm(
   prop_exit ~ fam_prop_exit * condition_c,
-  data = filter(summarize_participant_test_first_trial, age_cohort == "toddlers")
+  data = filter(summarize_participant_test_first_trial_all_fam_trials, age_cohort == "toddlers")
 )
 summary(correlation_interaction_fam_test_toddlers)
 
@@ -2806,7 +2806,7 @@ ggsave(here(plot_path, "kids_proportion_first_trial_target_box_looking_by_age_lo
 Difference in PTL between conditions for boxes smaller than for exits?
 ```{r}
 # something doesn't work in loading all Results RDSs, loading it manually for now here
-summarize_participant_test_first_trial <- readRDS(file = here(RESULTS_FOLDER, "summarize_participant_test_first_trial.rds"))
+#summarize_participant_test_first_trial <- readRDS(file = here(RESULTS_FOLDER, "summarize_participant_test_first_trial.rds"))
 
 diff_box_exit <- summarize_participant_test_first_trial %>%
   group_by(age_cohort, lab_id, participant_lab_id, participant_id, condition) %>%
@@ -4988,11 +4988,11 @@ location_bear_mouse_fam_test <- test_first_trial_final_location_mouse %>%
 ```{r}
 # merge with test data
 
-summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>% 
+summarize_participant_test_first_trial_all_fam_trials <- summarize_participant_test_first_trial_all_fam_trials %>% 
   left_join(location_bear_mouse_fam_test)
 
-summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial %>% 
-  filter(summarize_participant_test_first_trial$location != "NA")
+summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_test_first_trial_all_fam_trials %>% 
+  filter(!is.na(location))
 
 # MSS: Here, we might only want to look at fam_prop_exit of the last fam trial? Currently, we are looking at mean fam_prop_exit of all four familiarization trials.
 correlation_plot_fam_test <- ggplot(summarize_participant_test_first_trial_wo_NA_location,
