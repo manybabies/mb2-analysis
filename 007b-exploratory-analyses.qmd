@@ -1313,7 +1313,7 @@ summarize_test_aoi_correct_final_fam_trial %>%
 
 #### Main Model
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who anticipated correctly during the last familiarization trial (trial 4, first look to target).
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window and its interaction with whether or not participants anticipated correctly during the last familiarization trial (trial 4, first look to target).
 
 ##### Toddlers
 
@@ -1715,7 +1715,7 @@ summarize_test_aoi_sufficient_fam_prop_looking_fam3and4 %>%
 
 ##### Main Model
 
-Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window for only those participants who fixated the target more than half of the time during all familiarization trial.
+Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window and its interaction with whether or not participants fixated the target more than half of the time during all familiarization trials.
 
 ###### Toddlers
 
