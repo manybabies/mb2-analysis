@@ -679,6 +679,18 @@ saveRDS(test_comparison_aoi_toddlers_both_order,
 test_comparison_aoi_toddlers_both_order <- readRDS(here(RESULTS_FOLDER, "test_comparison_aoi_toddlers_both_order.rds"))
 ```
 
+Alternative bayes factor computation for Test Trial Number Effect (due to the challenges with bridge sampling)
+
+```{r}
+h_test_aoi_toddlers_both_order <- hypothesis(bm_aoi_toddlers_both_order, "test_trial_num = 0", class = "b")
+h_test_aoi_toddlers_both_order
+plot(h_test_aoi_toddlers_both_order)
+# evidence in favor of condition being different from zero
+1 / h_test_aoi_toddlers_both_order$hypothesis$Evid.Ratio
+saveRDS(h_test_aoi_toddlers_both_order, 
+        file = here(RESULTS_FOLDER, "h_test_aoi_toddlers_both_order.rds"))
+```
+
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -707,6 +719,18 @@ saveRDS(test_m_comparison_PTL_toddlers_both_order_interaction,
 ```{r, eval = !COMPUTE_BAYES_FACTORS}
 # if BF is not computed, load from disk
 test_m_comparison_PTL_toddlers_both_order_interaction <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_both_order_interaction.rds"))
+```
+
+Alternative bayes factor computation for Condition*Test Trial Number Interaction Effect (due to the challenges with bridge sampling)
+
+```{r}
+h_test_aoi_toddlers_both_order_interaction <- hypothesis(bm_aoi_toddlers_both_order, "condition_c:test_trial_num = 0", class = "b")
+h_test_aoi_toddlers_both_order_interaction
+plot(h_test_aoi_toddlers_both_order_interaction)
+# evidence in favor of condition being different from zero
+1 / h_test_aoi_toddlers_both_order_interaction$hypothesis$Evid.Ratio
+saveRDS(h_test_aoi_toddlers_both_order_interaction, 
+        file = here(RESULTS_FOLDER, "h_test_aoi_toddlers_both_order_interaction.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
@@ -798,6 +822,18 @@ saveRDS(test_comparison_aoi_adults_both_order,
 test_comparison_aoi_adults_both_order <- readRDS(here(RESULTS_FOLDER, "test_comparison_aoi_adults_both_order.rds"))
 ```
 
+Alternative bayes factor computation for Test Trial Number Effect (due to the challenges with bridge sampling)
+
+```{r}
+h_test_aoi_adults_both_order <- hypothesis(bm_aoi_adults_both_order, "test_trial_num = 0", class = "b")
+h_test_aoi_adults_both_order
+plot(h_test_aoi_adults_both_order)
+# evidence in favor of condition being different from zero
+1 / h_test_aoi_adults_both_order$hypothesis$Evid.Ratio
+saveRDS(h_test_aoi_adults_both_order, 
+        file = here(RESULTS_FOLDER, "h_test_aoi_adults_both_order.rds"))
+```
+
 Compute Bayes Factor (bridge sampling approach) - Condition*Test Trial Number Interaction Effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -826,6 +862,18 @@ saveRDS(test_m_comparison_PTL_adults_both_order_interaction,
 ```{r, eval = !COMPUTE_BAYES_FACTORS}
 # if BF is not computed, load from disk
 test_m_comparison_PTL_adults_both_order_interaction <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_both_order_interaction.rds"))
+```
+
+Alternative bayes factor computation for Condition * Test Trial Number Interaction Effect (due to the challenges with bridge sampling)
+
+```{r}
+h_test_aoi_adults_both_order_interaction <- hypothesis(bm_aoi_adults_both_order, "condition_c:test_trial_num = 0", class = "b")
+h_test_aoi_adults_both_order_interaction
+plot(h_test_aoi_adults_both_order_interaction)
+# evidence in favor of condition being different from zero
+1 / h_test_aoi_adults_both_order_interaction$hypothesis$Evid.Ratio
+saveRDS(h_test_aoi_adults_both_order_interaction, 
+        file = here(RESULTS_FOLDER, "h_test_aoi_adults_both_order_interaction.rds"))
 ```
 
 Remove the Bayes models from the environment (because the model objects are quite large).
@@ -915,36 +963,6 @@ saveRDS(bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_inte
         file = here(RESULTS_FOLDER, "bm_aoi_toddlers_second_trial_condition_first_trial_prop_exit_effect_interaction.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_toddlers_second_trial_null <- update(bm_aoi_toddlers_second_trial, 
-                                            formula = ~ . - condition_c * first_trial_prop_exit_c,
-                                            cores = n_cores)
-summary(bm_aoi_toddlers_second_trial_null)
-
-saveRDS(bm_aoi_toddlers_second_trial_null, 
-        file = here(model_fits_dir, "bm_aoi_toddlers_second_trial_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_toddlers_second_trial_null <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_second_trial_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_toddlers_second_trial <- brms::bayes_factor(bm_aoi_toddlers_second_trial, 
-                                                                  bm_aoi_toddlers_second_trial_null)
-
-saveRDS(test_m_comparison_aoi_toddlers_second_trial, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_toddlers_second_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial.rds"))
-```
-
 Compute the Bayes factor using bridge sampling - interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -1005,45 +1023,13 @@ saveRDS(test_m_comparison_aoi_toddlers_second_trial_first_trial,
 test_m_comparison_aoi_toddlers_second_trial_first_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial_first_trial.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling - condition effect
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_toddlers_second_trial_condition_null <- update(bm_aoi_toddlers_second_trial, 
-                                            formula = ~ . - condition_c,
-                                            cores = n_cores)
-summary(bm_aoi_toddlers_second_trial_condition_null)
-
-saveRDS(bm_aoi_toddlers_second_trial_condition_null, 
-        file = here(model_fits_dir, "bm_aoi_toddlers_second_trial_condition_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_toddlers_second_trial_condition_null <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_second_trial_condition_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_toddlers_second_trial_condition <- brms::bayes_factor(bm_aoi_toddlers_second_trial, 
-                                                                  bm_aoi_toddlers_second_trial_condition_null)
-
-saveRDS(test_m_comparison_aoi_toddlers_second_trial_condition, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial_condition.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_toddlers_second_trial_condition <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_second_trial_condition.rds"))
-```
-
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_toddlers_second_trial)
-rm(bm_aoi_toddlers_second_trial_null)
 rm(bm_aoi_toddlers_second_trial_interaction_null)
 rm(bm_aoi_toddlers_second_trial_first_trial_null)
-rm(bm_aoi_toddlers_second_trial_condition_null)
 gc()
 ```
 
@@ -1098,36 +1084,6 @@ bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction <-
 # cache
 saveRDS(bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction, 
         file = here(RESULTS_FOLDER, "bm_aoi_adults_second_trial_condition_first_trial_prop_exit_effect_interaction.rds"))
-```
-
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_adults_second_trial_null <- update(bm_aoi_adults_second_trial, 
-                                          formula = ~ . - condition_c * first_trial_prop_exit_c,
-                                          cores = n_cores)
-summary(bm_aoi_adults_second_trial_null)
-
-saveRDS(bm_aoi_adults_second_trial_null, 
-        file = here(model_fits_dir, "bm_aoi_adults_second_trial_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_adults_second_trial_null <- readRDS(here(model_fits_dir, "bm_aoi_adults_second_trial_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_adults_second_trial <- brms::bayes_factor(bm_aoi_adults_second_trial, 
-                                                                bm_aoi_adults_second_trial_null)
-
-saveRDS(test_m_comparison_aoi_adults_second_trial, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_adults_second_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial.rds"))
 ```
 
 Compute the Bayes factor using bridge sampling - interaction effect
@@ -1190,45 +1146,13 @@ saveRDS(test_m_comparison_aoi_adults_second_trial_first_trial,
 test_m_comparison_aoi_adults_second_trial_first_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial_first_trial.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling - condition effect
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_adults_second_trial_condition_null <- update(bm_aoi_adults_second_trial, 
-                                          formula = ~ . - condition_c,
-                                          cores = n_cores)
-summary(bm_aoi_adults_second_trial_condition_null)
-
-saveRDS(bm_aoi_adults_second_trial_condition_null, 
-        file = here(model_fits_dir, "bm_aoi_adults_second_trial_condition_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_adults_second_trial_condition_null <- readRDS(here(model_fits_dir, "bm_aoi_adults_second_trial_condition_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_adults_second_trial_condition <- brms::bayes_factor(bm_aoi_adults_second_trial, 
-                                                                bm_aoi_adults_second_trial_condition_null)
-
-saveRDS(test_m_comparison_aoi_adults_second_trial_condition, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial_condition.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_adults_second_trial_condition <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_second_trial_condition.rds"))
-```
-
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_adults_second_trial)
-rm(bm_aoi_adults_second_trial_null)
 rm(bm_aoi_adults_second_trial_interaction_null)
 rm(bm_aoi_adults_second_trial_first_trial_null)
-rm(bm_aoi_adults_second_trial_condition_null)
 gc()
 ```
 
@@ -1387,35 +1311,6 @@ saveRDS(bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_fin
         file = here(RESULTS_FOLDER, "bm_aoi_toddlers_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_toddlers_correct_final_fam_trial_null <- update(bm_aoi_toddlers_correct_final_fam_trial, 
-                                                       formula = ~ . - condition_c * correct_first_look_final_fam_trial_c,
-                                                       cores = n_cores)
-summary(bm_aoi_toddlers_correct_final_fam_trial_null)
-
-saveRDS(bm_aoi_toddlers_correct_final_fam_trial_null, 
-        file = here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_toddlers_correct_final_fam_trial_null <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_correct_final_fam_trial_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_toddlers_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_toddlers_correct_final_fam_trial, bm_aoi_toddlers_correct_final_fam_trial_null)
-
-saveRDS(test_m_comparison_aoi_toddlers_correct_final_fam_trial, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_toddlers_correct_final_fam_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_correct_final_fam_trial.rds"))
-```
-
 Compute the Bayes factor using bridge sampling - interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -1479,7 +1374,6 @@ Remove the Bayes models from the environment (because the model objects are quit
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_toddlers_correct_final_fam_trial)
-rm(bm_aoi_toddlers_correct_final_fam_trial_null)
 rm(bm_aoi_toddlers_correct_final_fam_trial_interaction_null)
 rm(bm_aoi_toddlers_correct_final_fam_trial_FL_fam_null)
 gc()
@@ -1554,35 +1448,6 @@ saveRDS(bm_aoi_adults_correct_final_fam_trial_condition_effect,
         file = here(RESULTS_FOLDER, "bm_aoi_adults_correct_final_fam_trial_condition_correct_first_look_final_fam_trial_interaction_effect.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_adults_correct_final_fam_trial_null <- update(bm_aoi_adults_correct_final_fam_trial, 
-                                                     formula = ~ . - condition_c * correct_first_look_final_fam_trial_c,
-                                                     cores = n_cores)
-summary(bm_aoi_adults_correct_final_fam_trial_null)
-
-saveRDS(bm_aoi_adults_correct_final_fam_trial_null, 
-        file = here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_adults_correct_final_fam_trial_null <- readRDS(here(model_fits_dir, "bm_aoi_adults_correct_final_fam_trial_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_adults_correct_final_fam_trial <- brms::bayes_factor(bm_aoi_adults_correct_final_fam_trial, bm_aoi_adults_correct_final_fam_trial_null)
-
-saveRDS(test_m_comparison_aoi_adults_correct_final_fam_trial, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_correct_final_fam_trial.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_adults_correct_final_fam_trial <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_correct_final_fam_trial.rds"))
-```
-
 Compute the Bayes factor using bridge sampling - interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -1645,7 +1510,6 @@ Remove the Bayes models from the environment (because the model objects are quit
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_adults_correct_final_fam_trial)
-rm(bm_aoi_adults_correct_final_fam_trial_null)
 rm(bm_aoi_adults_correct_final_fam_trial_interaction_null)
 rm(bm_aoi_adults_correct_final_fam_trial_FL_fam_null)
 gc()
@@ -1789,36 +1653,6 @@ saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_effect,
         file = here(RESULTS_FOLDER, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_interaction.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null <- update(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4, 
-                                                           formula = ~ . - condition_c * successful_fam_anticipation_c,
-                                                           cores = n_cores)
-summary(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
-
-saveRDS(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null, 
-        file = here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null <- readRDS(here(model_fits_dir, "bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4 <-
-  brms::bayes_factor(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4, bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
-
-saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4, 
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4 <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4.rds"))
-```
-
 Compute the Bayes factor using bridge sampling - interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -1879,13 +1713,11 @@ saveRDS(test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4_fam,
 test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4_fam <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_toddlers_sufficient_fam_prop_looking_3and4_fam.rds"))
 ```
 
-
 Remove the Bayes models from the environment (because the model objects are quite large).
 
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4)
-rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_null)
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_interaction_null)
 rm(bm_aoi_toddlers_sufficient_fam_prop_looking_3and4_fam_null)
 gc()
@@ -1961,35 +1793,6 @@ saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_effect,
         file = here(RESULTS_FOLDER, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_condition_successful_fam_anticipation_interaction.rds"))
 ```
 
-Compute the Bayes factor using bridge sampling
-
-```{r, eval = FIT_BAYES_MODELS}
-bm_aoi_adults_sufficient_fam_prop_looking_3and4_null <- update(bm_aoi_adults_sufficient_fam_prop_looking_3and4, 
-                                                         formula = ~ . - condition_c * successful_fam_anticipation_c,
-                                                         cores = n_cores)
-summary(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
-
-saveRDS(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null, 
-        file = here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_null.rds"))
-```
-
-```{r, eval = !FIT_BAYES_MODELS}
-# if model is not fit, load from disk
-bm_aoi_adults_sufficient_fam_prop_looking_3and4_null <- readRDS(here(model_fits_dir, "bm_aoi_adults_sufficient_fam_prop_looking_3and4_null.rds"))
-```
-
-```{r, eval = COMPUTE_BAYES_FACTORS}
-test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4 <- brms::bayes_factor(bm_aoi_adults_sufficient_fam_prop_looking_3and4, bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
-
-saveRDS(test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4,
-        file = here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4.rds"))
-```
-
-```{r, eval = !COMPUTE_BAYES_FACTORS}
-# if BF is not computed, load from disk
-test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4 <- readRDS(here(RESULTS_FOLDER, "test_m_comparison_aoi_adults_sufficient_fam_prop_looking_3and4.rds"))
-```
-
 Compute the Bayes factor using bridge sampling - interaction effect
 
 ```{r, eval = FIT_BAYES_MODELS}
@@ -2053,7 +1856,6 @@ Remove the Bayes models from the environment (because the model objects are quit
 ```{r}
 # remove Bayes model fits
 rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4)
-rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4_null)
 rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4_interaction_null)
 rm(bm_aoi_adults_sufficient_fam_prop_looking_3and4_fam_null)
 gc()
