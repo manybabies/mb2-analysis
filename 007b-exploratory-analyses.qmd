@@ -4938,7 +4938,7 @@ summarize_participant_test_first_trial_wo_NA_location <- summarize_participant_t
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_toddlers_location_al <- brm_default(
   prop_exit ~ 1 + condition_c + location_c + condition_c : location_c +
-    (1 + condition_c | lab_id),
+    (1 + condition_c + location_c + condition_c : location_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial_wo_NA_location, age_cohort == "toddlers")
@@ -5053,7 +5053,7 @@ gc()
 ```{r, eval = FIT_BAYES_MODELS}
 bm_test_adults_location_al <- brm_default(
   prop_exit ~ 1 + condition_c + location_c + condition_c : location_c +
-    (1 + condition_c | lab_id),
+    (1 + condition_c + location_c + condition_c : location_c | lab_id),
   family = gaussian,
   prior = priors_default,
   data = filter(summarize_participant_test_first_trial_wo_NA_location, age_cohort == "adults")
