@@ -704,9 +704,7 @@ kid_prop_by_age_loess <- ggplot(
   ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)") +
   theme_cowplot(font_size = 24) +
   scale_color_brewer(palette = "Set1") +
-  scale_fill_brewer(palette = "Set1") + 
-  ggtitle("Non-Linear Relation, Age Continuous") + 
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"), plot.title.position = "plot") 
+  scale_fill_brewer(palette = "Set1")  
 kid_prop_by_age_loess
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age_loess.png"),
   bg = "white", width = 9, height = 6
@@ -756,9 +754,7 @@ kids_prop_age_bin <- ggplot(
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
   facet_wrap(~ age_bin,ncol=3) +
-  ggtitle("1-Month Age Bins") +
-  theme(legend.position = "none", 
-    plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "none") +
   ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 kids_prop_age_bin
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_age_bins.png"),
@@ -766,6 +762,23 @@ ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_age_bins
 )
 ```
 
+Combine Loess and age bin plots
+
+```{r}
+figure_prop_age_loess_bin <- ggarrange(
+  kid_prop_by_age_loess, kids_prop_age_bin, 
+  ncol = 1, nrow = 2
+)
+
+figure_prop_age_loess_bin
+
+ggsave(here(plot_path, "figure_prop_age_loess_bin.png"),
+  bg = "white", width = 14, height = 18
+)
+ggsave(here(paper_path, "Figure10.png"),
+  bg = "white", width = 14, height = 18
+)
+```
 
 ### Summary Statistics
 
