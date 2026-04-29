@@ -5194,7 +5194,8 @@ priors <- c(
 
 bm_fam_toddlers_location_al <- brm(
   prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c +
-    (1 | participant_id) + (1 | lab_id),
+    (1 | participant_lab_id) + 
+    (1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -5202,7 +5203,7 @@ bm_fam_toddlers_location_al <- brm(
   warmup = 1000,
   iter = 10000,
   chains = 4,
-  cores = 4,
+  cores = n_cores,
   seed = 123,
   sample_prior = TRUE,
   control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
@@ -5320,7 +5321,8 @@ priors <- c(
 
 bm_fam_adults_location_al <- brm(
   prop_exit_adj ~ 1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c +
-    (1 | participant_id) + (1 | lab_id),
+    (1 | participant_lab_id) + 
+    (1 + prev_location_c + familiarization_trial_num_c + prev_location_c : familiarization_trial_num_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -5328,7 +5330,7 @@ bm_fam_adults_location_al <- brm(
   warmup = 1000,
   iter = 10000,
   chains = 4,
-  cores = 4,
+  cores = n_cores,
   seed = 123,
   sample_prior = TRUE,
   control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
