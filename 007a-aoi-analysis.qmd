@@ -342,11 +342,11 @@ bm_fam_aoi_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm
 
 ```{r, eval = COMPUTE_BAYES_FACTORS}
 #compute Bayes factor
-fam_m_comparision_PTL_toddlers <- brms::bayes_factor(
+fam_m_comparison_PTL_toddlers <- brms::bayes_factor(
   bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null
 )
 
-saveRDS(fam_m_comparision_PTL_toddlers,
+saveRDS(fam_m_comparison_PTL_toddlers,
   file = here(RESULTS_FOLDER, "fam_m_comparison_PTL_toddlers.rds")
 )
 ```
