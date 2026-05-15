@@ -24,7 +24,9 @@ source(here("helper", "ensure_repo_structure.R"))
 plot_path <- here("plots")
 paper_path <- here("paper")
 
-data_preprocessed_post_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect()
+data_preprocessed_post_exclusions2 <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect()
+
+load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006))
 ```
 
 # Preliminaries

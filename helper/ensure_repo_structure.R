@@ -5,12 +5,18 @@ DEMO_DATA_DIR = here(DATA_DIR, '01_demographic_data')
 XY_DATA_DIR = here(DATA_DIR, '01_xy_data')
 INTERMEDIATE_FOLDER <- here(DATA_DIR, "02_intermediates")
 RESULTS_FOLDER <- here(DATA_DIR, "03_preprocessed")
+SIMULATION_DIR <- here(DATA_DIR, "04_simulation")
+SIMULATION_PRECOMP_DIR <- here(SIMULATION_DIR, "precomputed")
+SIMULATION_RUNS_DIR <- here(SIMULATION_DIR, "runs")
 
 for(dir in c(DATA_DIR,
              DEMO_DATA_DIR,
              XY_DATA_DIR,
              INTERMEDIATE_FOLDER,
-             RESULTS_FOLDER)
+             RESULTS_FOLDER,
+             SIMULATION_DIR,
+             SIMULATION_PRECOMP_DIR,
+             SIMULATION_RUNS_DIR)
     ){
   dir.create(here(dir), showWarnings = FALSE)
 }
