@@ -22,6 +22,7 @@ library(MASS)
 library(zoo)
 library(mgcv)
 library(here)
+#make sure here is set to the mb2-analysis root folder
 library(dplyr)
 library(tidyverse)
 library(stringi)
@@ -42,16 +43,37 @@ theme_set(theme_classic())
 # load pupillometry data
 load(here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 rm(list = setdiff(ls(), c("data_pupillometry", "INTERMEDIATE_FOLDER", "INTERMEDIATE_008", "RESULTS_FOLDER")))
+
+# param controlling whether all plots get recreated in Part 3; set to TRUE to regenerate all plots
+CREATE_INDIVIDUAL_MULTIVERSE_PLOTS = FALSE
+#model output path
+model_output_path <- here("MB2P","MB2P-Preregistration","model_outputs")
+# Check if the directory exists
+if (!dir.exists(model_output_path)) {
+  # If it doesn't exist, create it
+  dir.create(model_output_path, showWarnings = FALSE)
+  message("Directory created successfully.")
+} else {
+  message("Directory already exists.")
+}
+plot_output_path <- here("MB2P","MB2P-Preregistration","plots")
+# Check if the directory exists
+if (!dir.exists(plot_output_path)) {
+  # If it doesn't exist, create it
+  dir.create(plot_output_path, showWarnings = FALSE)
+  message("Directory created successfully.")
+} else {
+  message("Directory already exists.")
+}
 ```
 
 ## The Multiverse forking paths of pupillometry preprocessing 
 The following script specifies the preprocessing and analysis steps of the multiverse approach applied to the MB2P dataset (see Calignano, Girardi, and Altoé, 2023).
 
-###
-# PART 1 PREPROCESSING (z-transformation)
-###
 
-# The initial preprocessing merges the data across eyetracking systems by performing a z-transformation.
+# PART 1 PREPROCESSING (z-transformation)
+
+The initial preprocessing merges the data across eyetracking systems by performing a z-transformation.
 ```{r preprocess}
 data_pupillometry <- data_pupillometry |> 
   dplyr::filter(trial_num == 6) |>  # filter to second test trial only (data reduction)
@@ -59,11 +81,11 @@ data_pupillometry <- data_pupillometry |>
   mutate(pupil_left = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_left),
          pupil_right = ifelse(pupil_left < 0 | pupil_right < 0, NA, pupil_right)
          ) |>
-  mutate(age_cohort <- as.factor(age_cohort)) |> 
+  mutate(age_cohort = as.factor(age_cohort)) |> 
   rowwise() |> 
   mutate(average = mean(c(pupil_left, pupil_right), na.rm = TRUE)) |> # switched to liberal avg
   ungroup() |>
-  group_by(participant_id) |> # Scale pupil-value #! Should we be using participant_lab_id here?
+  group_by(participant_lab_id) |> # Scale pupil-value 
   mutate(average_z = (average - mean(average, na.rm = TRUE)) / sd(average, na.rm = TRUE)) |>
   ungroup() |>  
   filter(t_norm >= -1000 & t_norm < 5000)  
@@ -92,49 +114,55 @@ summarize_participant_test_both_trials <- readRDS(here(RESULTS_FOLDER,"summarize
 data_pupillometry <- data_pupillometry %>% left_join(summarize_participant_test_both_trials %>% dplyr::select("participant_lab_id", "trial_num", "prop_exit"), by = c( "participant_lab_id", "trial_num"))
 rm("summarize_participant_test_both_trials")
 
-# # For the subsequent step, i.e., first degree, identify those z-values that correspond to 2mm and 8mm (according to Tobii).
-# data_smaller2mm <- data_pupillometry |> 
-#   dplyr::filter(eyetracker_type != "EyeLink") |>
-#   group_by(participant_id) |>
-#   dplyr::filter(average <= 2) |>
-#   dplyr::select(participant_id, average, average_z) |>
-#   arrange(average_z) |>
-#   ungroup()
-# #
-# data_smaller2mm |>
-#   summarise(ZMean.2mm = mean(average_z, na.rm = T), ZMedian.2mm = median(average_z, na.rm = T), Min.2mm = min(average, na.rm = T), Max.2mm = max(average, na.rm = T),
-#             ZMin.2mm = min(average_z, na.rm = T), ZMax.2mm = max(average_z, na.rm = T))
-# 
-# ## -> Lower bound: z = 0.8000874
-# hist(data_smaller2mm$average_z)
-# rm("temp")
-# ##
-# temp <- data_pupillometry |> 
-#   filter(eyetracker_type != "EyeLink") |>
-#   group_by(participant_id) |>
-#   filter(average >= 8) |>
-#   select(participant_id, average, average_z) |>
-#   arrange(average_z) |>
-#   ungroup()
-# #
-# temp |>
-#   summarise(Min.8mm = min(average, na.rm = T), Max.8mm = max(average, na.rm = T),
-#             ZMin.8mm = min(average_z, na.rm = T), ZMax.8mm = max(average_z, na.rm = T))
-# 
-# ## -> There are no samples with pupil_size ?> 8mm
 ```
 
-###
-# PART 2 FITTING THE MULTIVERSE
-###
+Get descriptives
 
-# First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+```{r}
+#load in helper file with ages
+#this helped file was created by pulling key demographic columns from INTERMEDIATE_006
+ages <- read.csv(here("MB2P","MB2P-Preregistration","helper_data","mb2_age_demographics_helper_006.csv"))
+
+descriptives <- data_pupillometry |>
+  # apply core filtering steps
+  filter(pilot == "no",
+      session_error == "noerror",
+      age_exclusion == "no",
+      sufficient_fam_trials == 1) |> 
+  distinct(lab_id,participant_lab_id,participant_gender,age_cohort,condition,outcome) |> 
+  left_join(ages) |>
+  group_by(age_cohort) |> 
+  summarize(
+    N=n(),
+    age_years_m = mean(age_years_n,na.rm=TRUE),
+    age_years_sd = sd(age_years_n,na.rm=TRUE),
+    age_years_min = min(age_years_n,na.rm=TRUE),
+    age_years_max = max(age_years_n,na.rm=TRUE),
+    age_months_m = mean(age_mo,na.rm=TRUE),
+    age_months_sd = sd(age_mo,na.rm=TRUE),
+    age_months_min = min(age_mo,na.rm=TRUE),
+    age_months_max = max(age_mo,na.rm=TRUE),
+    percent_female = sum(
+      participant_gender == "woman" | participant_gender == "girl"
+    ) / sum(!is.na(participant_gender))
+  )
+
+```
+
+
+# PART 2 FITTING THE MULTIVERSE
+
+## First Degree of freedom: Filtering of extreme yet plausible pupil values, i.e.<2mm, >8mm  
+
 This results in 2 datasets; (plausible vs. implausible values)
 
 ```{r DF1 extreme tonic values, echo=TRUE, include=TRUE, out.width='90%'}
-# data_plausible <- data_pupillometry |> 
-#     mutate(average = ifelse(average_z < 0.8000874 , NA, average)) |>
-#     mutate(average_z = ifelse(average_z < 0.8000874, NA, average_z))
+
+#check on Tobii data distributions
+ggplot(filter(data_pupillometry,eyetracker_type == "Tobii"),aes(average))+
+  geom_histogram() +
+  facet_wrap(~lab_id)
+#Trento, Heidelberg, Munich, Goettingen all have different scales from the rest
 
 data_plausible <- data_pupillometry |> 
   mutate(average = ifelse(eyetracker_type != "EyeLink" & average <= 2 , NA, average),
@@ -171,6 +199,12 @@ data_df1 |>
   group_by(eyetracker_type) |>
   summarise(AVE = mean(average_z, na.rm =T))
   })  # Makes sense that only Tobii-data were adjusted.
+
+data_pupillometry |>
+  filter(average > 1.8) |>
+  dplyr::select(lab_id, average, eyetracker_type)
+
+# We may need to revisit the 2mm criterion given that some data are within 1.8 and 2. However, this really only affects 200ish data points of +245k...
 ```
 
 # Second degree of freedom: gaze within the screen vs outside the screen
@@ -211,6 +245,12 @@ data_df2 |>
   }) # Adjustments across all eyetracking systems. Makes sense. 
 ```
 
+```{r}
+#remove previous datasets to free up memory
+rm(data_df1)
+gc()
+```
+
 # Third degree of freedom: moving average filtered vs unfiltered data
 This results in 8 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not).
 
@@ -220,7 +260,7 @@ WINDOW_SIZE = 5
 data_avg <- data_df2 |> 
   mutate(data = map(data, \(d) { 
     d |> 
-      group_by(participant_id, trial_num) |> 
+      group_by(participant_lab_id, trial_num) |> 
       mutate(average = rollapply(average, width = WINDOW_SIZE, 
                                      FUN = mean, na.rm = TRUE, 
                                      fill = NA, align = "right"),
@@ -261,6 +301,12 @@ data_df3 |>
 
 ```
 
+```{r}
+#remove previous datasets to free up memory
+rm(data_df2)
+gc()
+```
+
 # Fourth degree of freedom: 1s, 0.5s, or 0.25s before the bear resolution.
 
 We consider three possible baseline correction all performed by subtracting the average pupil diameter from all subsequent values between, dividing those values by the average baseline, and averaging the baseline-corrected values vector.
@@ -274,7 +320,7 @@ This results in 24 datasets; 2 (plausible vs. implausible values) * 2 (on-screen
 
 baseline_correct <- function(data, TIME_WINDOW = 1000) {
   data |>
-    group_by(participant_id, condition, outcome, lab_id) |>
+    group_by(participant_lab_id, condition, outcome, lab_id) |>
     mutate(average = {
       avg_filtered <- average[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
@@ -284,7 +330,7 @@ baseline_correct <- function(data, TIME_WINDOW = 1000) {
 #
 baseline_correctZ <- function(data, TIME_WINDOW = 1000) {
   data |>
-    group_by(participant_id, condition, outcome, lab_id) |>
+    group_by(participant_lab_id, condition, outcome, lab_id) |>
     mutate(average_z = {
       avg_filtered <- average_z[t_norm >= -TIME_WINDOW & t_norm < 0]
       avg_mean <- mean(avg_filtered, na.rm = TRUE)
@@ -340,7 +386,13 @@ data_df4 |>
 
 ```
 
-# Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
+```{r}
+#remove previous datasets to free up memory
+rm(data_df3)
+gc()
+```
+
+## Fifth degree of freedom: Participant exclusion (following the criteria of MB2) at the level of the 1st vs 2nd trial. 
 Here we use two strings to exclude participants who provided valid data only on the second test trial (remove_ids_1) or who provided valid data on both test trials (remove_ids_2).
 
 This results in 72 datasets; 2 (plausible vs. implausible values) * 2 (on-screen vs. off-screen) * 2 (filtered or not) * 3 (1s, 0.5s, or 0.25s baseline) * 3 (no exclusions, valid trial 2 or valid trial 1 AND 2).
@@ -351,7 +403,7 @@ no_exclusions <- data_pupillometry |>
       session_error == "noerror",
       age_exclusion == "no",
       sufficient_fam_trials == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 valid_second_ids <- data_pupillometry |> 
   filter(pilot == "no",
@@ -359,7 +411,7 @@ valid_second_ids <- data_pupillometry |>
       age_exclusion == "no",
       sufficient_fam_trials == 1,
       valid_second_test_trial == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 valid_both_ids <- data_pupillometry |> 
   filter(pilot == "no",
@@ -368,20 +420,20 @@ valid_both_ids <- data_pupillometry |>
       sufficient_fam_trials == 1,
       valid_second_test_trial == 1,
       valid_first_test_trial == 1) |> 
-  pull(participant_id) |> 
+  pull(participant_lab_id) |> 
   unique()
 
 data_no_exclusions <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% no_exclusions)
+    d |> filter(participant_lab_id %in% no_exclusions)
   }))
 data_valid_second <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% valid_second_ids)
+    d |> filter(participant_lab_id %in% valid_second_ids)
   }))
 data_valid_both <- data_df4 |> 
   mutate(data = map(data, \(d) {
-    d |> filter(participant_id %in% valid_both_ids)
+    d |> filter(participant_lab_id %in% valid_both_ids)
   }))
 
 data_df5 <- bind_rows(
@@ -400,15 +452,26 @@ data_df5 |>
 
 ```
 
-###
-# PART 3 MAKING SENSE OF THE MULTIVERSE (visual)
-###
+```{r}
+#remove previous datasets to free up memory
+rm(data_df4)
+gc()
+```
 
-```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, out.width='90%'}
+# PART 3 MAKING SENSE OF THE MULTIVERSE (visual)
+
+```{r}
 # work-around for different time points for now: rounding to the nearest 25ms; Need to check this again.
 data_df5 <- data_df5 |> 
   mutate(data = map(data, ~ .x |> mutate(t_norm_downsampled = floor(t_norm / 25) * 25)))
 
+# reorder exclusion levels to be more intuitive
+data_df5$df5_ppt_exclusion <- factor(data_df5$df5_ppt_exclusion, levels = c("no exclusion", "second test trial valid", "both test trials valid"))
+
+```
+
+
+```{r Ploting all 72 datasets and grand average, echo=TRUE, include=TRUE, eval=CREATE_INDIVIDUAL_MULTIVERSE_PLOTS,out.width='90%'}
 # (1) Generate and store all plots for each of the 72 datasets.
 plots <- data_df5 |> 
   pull(data) |> 
@@ -432,18 +495,23 @@ labels <- data_df5 |>
 # Add numbers before labels
 labels <- paste0(seq_along(labels), "_", labels)
 
-# Define output directory
-output_dir <- "plots"
-dir.create(output_dir, showWarnings = FALSE)
-
 # Save each plot with a meaningful filename
 walk2(plots, labels, ~ ggsave(
-  filename = file.path(output_dir, paste0(.y, ".png")),
+  filename = file.path(plot_output_path, paste0(.y, ".png")),
   plot = .x,
   width = 8, height = 6, dpi = 300
 ))
+```
 
+```{r}
+#remove the large plots element
+rm(plots)
+gc()
+```
+
+```{r Ploting grand average, echo=TRUE, include=TRUE,out.width='90%'}
 # (2) Generate grand average plot across all 72 datasets.
+# MZ: issue: this does not first group by lab before averaging within each dataset of the multiverse
 grand_avg <- data_df5 |> 
   pull(data) |> 
   bind_rows(.id = "dataset_id") |>  # Keep dataset ID.
@@ -457,7 +525,7 @@ grand_avg <- data_df5 |>
   group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
     summarize(
     grand_average = mean(grand_averageZ, na.rm = TRUE),  
-    se = sd(grand_averageZ, na.rm = TRUE), N = n_distinct(dataset_id), gMax = max(grand_averageZ, na.rm = TRUE) , gMin = min(grand_averageZ, na.rm = TRUE), .groups = "drop"
+    sd = sd(grand_averageZ, na.rm = TRUE), N = n_distinct(dataset_id), gMax = max(grand_averageZ, na.rm = TRUE) , gMin = min(grand_averageZ, na.rm = TRUE), .groups = "drop"
   )
 ##
 ggplot(grand_avg, aes(x = t_norm_downsampled, y = grand_average, col = outcome, linetype = age_cohort)) +
@@ -471,18 +539,236 @@ ggplot(grand_avg, aes(x = t_norm_downsampled, y = grand_average, col = outcome, 
       scale_color_ptol() +
       scale_fill_ptol() +
       facet_grid(condition ~ age_cohort)
-##
+```
+
+## Part 3.1. Visualizations of the multiverse data
+
+### Create dataset for plotting
+```{r}
+data_for_plotting_df5 <- data_df5 |> 
+  unite("multiverse_label",  df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion, sep = "_", remove = FALSE) |>  # Combine first 5 column values into a string tracking the multiverse combination
+  unnest(data) |> 
+  dplyr::filter(!is.na(average_z), t_norm >= 0 & t_norm < 5000) 
+```
+
+### Summarize data
+
+#### No averaging within lab
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarized_data_by_dataset_id <- data_for_plotting_df5 |> 
+    group_by(t_norm_downsampled, multiverse_label, condition, outcome, age_cohort) |>  
+  summarize(
+    participant_num = n(),
+    mean_pupil_z = mean(average_z, na.rm = TRUE),
+    sd_pupil_z = sd(average_z, na.rm = TRUE),
+    se_pupil_z = sd_pupil_z / sqrt(participant_num),
+    ci_pupil_z = qt(1 - (0.05 / 2), participant_num - 1) * se_pupil_z
+  ) |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+ 
+
+summarized_data_by_dataset_id_mins <- summarized_data_by_dataset_id |> 
+  group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
+  summarize(
+    N=n(),
+    avg_pupil_z = mean(mean_pupil_z, na.rm = TRUE),
+    min_pupil_z = min(mean_pupil_z, na.rm = TRUE),
+    max_pupil_z = max(mean_pupil_z, na.rm = TRUE)
+  )
+```
+
+#### Averaging within lab
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarized_data_by_lab_and_dataset_id <- data_for_plotting_df5 |> 
+    group_by(t_norm_downsampled, multiverse_label, lab_id,condition, outcome, age_cohort) |>  
+  summarize(
+    grand_averageZ = mean(average_z, na.rm = TRUE), .groups = "drop"
+  )
+#summarize across labs within each multiverse dataset
+summarize_data_across_lab_by_multiverse_label <- summarized_data_by_lab_and_dataset_id |> 
+    group_by(t_norm_downsampled, multiverse_label, condition, outcome, age_cohort) |>  
+  summarize(
+    lab_num = n(),
+    mean_pupil_z = mean(grand_averageZ, na.rm = TRUE),
+    sd_pupil_z = sd(grand_averageZ, na.rm = TRUE),
+    se_pupil_z = sd_pupil_z / sqrt(lab_num),
+    ci_pupil_z = qt(1 - (0.05 / 2), lab_num - 1) * se_pupil_z
+  ) |> 
+  ungroup() |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+
+summarized_data_by_lab_and_dataset_id_mins <- summarize_data_across_lab_by_multiverse_label |> 
+  group_by(t_norm_downsampled, condition, outcome, age_cohort) |>  
+  summarize(
+    N=n(),
+    avg_pupil_z = mean(mean_pupil_z, na.rm = TRUE),
+    min_pupil_z = min(mean_pupil_z, na.rm = TRUE),
+    max_pupil_z = max(mean_pupil_z, na.rm = TRUE)
+  )
+```
+
+### Plots
+
+#### Min-Max plot without first averagining within lab (same as above)
+
+```{r}
+ggplot(summarized_data_by_dataset_id_mins, aes(x = t_norm_downsampled, y = avg_pupil_z, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)") +
+      geom_vline(xintercept = 0) +
+      geom_hline(yintercept = 0) +
+      geom_line() +
+      geom_ribbon(aes(ymin = min_pupil_z, ymax = max_pupil_z, fill = outcome), 
+             alpha = 0.25, color = NA) +
+      scale_color_ptol() +
+      scale_fill_ptol() +
+      facet_grid(condition ~ age_cohort)
+```
+
+#### New Min-Max plot after first averaging within lab
+
+```{r}
+# create equivalent min-max plot as above to demonstrate the effect of first averaging within lab
+ggplot(summarized_data_by_lab_and_dataset_id_mins, aes(x = t_norm_downsampled, y = avg_pupil_z, col = outcome, linetype = age_cohort)) +
+      labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)") +
+      geom_vline(xintercept = 0) +
+      geom_hline(yintercept = 0) +
+      geom_line() +
+      geom_ribbon(aes(ymin = min_pupil_z, ymax = max_pupil_z, fill = outcome), 
+             alpha = 0.25, color = NA) +
+      scale_color_ptol() +
+      scale_fill_ptol() +
+      facet_grid(condition ~ age_cohort)
+```
+
+#### Spaghetti plot to show effect for each multiverse dataset,no within lab averaging
+
+```{r}
+#spaghetti plot
+ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti.png"),width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+#"best" variant, This plot is used in the abstract.
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant <- summarized_data_by_dataset_id |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+# ICIS26
+ggplot(summarized_data_by_dataset_id,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  geom_line(data=best_multiverse_variant,aes(x=t_norm_downsampled,y=mean_pupil_z,group=outcome,color=outcome),size=1.2)+
+  geom_ribbon(data=best_multiverse_variant,aes(ymin = mean_pupil_z - se_pupil_z, ymax = mean_pupil_z + se_pupil_z,fill=outcome),
+    alpha = .2
+  )+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combination_overlay.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Spaghetti plot to show effect for each multiverse dataset, averaging within lab
+
+```{r}
+#spaghetti plot
+ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_firstaveragewithinlab.png"),width = 10, height = 6, dpi = 300)
+```
+
+Create a spaghetti plot with the "best" variant overlayed
+
+```{r}
+#"best" variant
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant_across_lab <- summarize_data_across_lab_by_multiverse_label |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+ggplot(summarize_data_across_lab_by_multiverse_label,aes(t_norm_downsampled,y=mean_pupil_z))+
+  geom_line(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05)+
+  geom_line(data=best_multiverse_variant_across_lab,aes(x=t_norm_downsampled,y=mean_pupil_z,group=outcome,color=outcome),size=1.2)+
+  geom_ribbon(data=best_multiverse_variant_across_lab,aes(ymin = mean_pupil_z - se_pupil_z, ymax = mean_pupil_z + se_pupil_z,fill=outcome),
+    alpha = .2
+  )+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (ms)",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_timecourse_spaghetti_final_combination_overlay_firstaveragewithinlab.png"),width = 10, height = 6, dpi = 300)
+
+
+# ICIS26
+# Get descriptives
+
+#first, select the best multiverse variant data
+best_multiverse_data <- data_for_plotting_df5 |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+#summarize pupil change cross full window by participant
+participant_cross_window_summary_best_multiverse_variant <- best_multiverse_data |> 
+  group_by(participant_lab_id,lab_id,condition, outcome, age_cohort) |>
+  summarize(
+    mean_pupil_z = mean(average_z, na.rm = TRUE)
+  )
+
+#summarize across participants
+best_multiverse_variant.DESCRIPTIVES <- participant_cross_window_summary_best_multiverse_variant |>
+  group_by(condition, outcome, age_cohort) |>
+  summarize(
+    N=n(),
+    mean_pupil_change = mean(mean_pupil_z, na.rm=T), 
+    sd_pupil_change = sd(mean_pupil_z, na.rm=T),
+    ci_pupil_change = qt(1 - (0.05 / 2), N - 1) * (sd_pupil_change / sqrt(N)),
+    lower_ci = mean_pupil_change - ci_pupil_change,
+    upper_ci = mean_pupil_change + ci_pupil_change
+      ) |>
+  ungroup()
+```
+
+```{r}
+rm(data_for_plotting_df5)
+gc()
 ```
 
 
-###
-# PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling)
-###
+# PART 4 MAKING SENSE OF THE MULTIVERSE (staistical modelling) - original
+
+# Ignore from here.
 
 As a final step, we investigate (1) the averaged interaction effect Condition x Outcome, (2) the time-course of the interaction effect Condition x Outcome and (3) the non-linear interaction effect of Condition x Outcome considering the time-course of the effect. This approach provides an exploration of whether and how smoothing time enhances the plausibility of statistical modeling of pupil dilation across datasets.
 
 ## (1) The averaged interaction effect Condition x Outcome.
-# The first bit of code stores the results of 72 analyses (3 types of models fitted) into three containers: lm_results,lmer_results, and TIMElmer_results. The first two containers are need to address (1).
+The first bit of code stores the results of 72 analyses (3 types of models fitted) into three containers: lm_results,lmer_results, and TIMElmer_results. The first two containers are need to address (1).
 
 ```{r modelling, echo=FALSE, include=TRUE, out.width='90%', message=FALSE}
 # Assuming `data_df5$data` is a list of dataframes:
@@ -498,7 +784,7 @@ run_model_lm <- function(df) {
     # Fit the model if conditions are met
     df.short <- df |>
       filter(t_norm >= 0 & t_norm < 5000) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -517,7 +803,7 @@ run_model_lmer <- function(df) {
     # Fit the model if conditions are met
     df.short <- df |>
       filter(t_norm >= 0 & t_norm < 5000) |>      
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, lab_id) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -528,35 +814,38 @@ run_model_lmer <- function(df) {
   }
 }
 
-run_model_TIMElmer <- function(df) {
-  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
-      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
-    # Fit the model if conditions are met
-    
-    #! Reduce dataset to average across the 5 seconds, i.e., 1 value per participant per trial? 
-    df.short <- df |>
-      filter(t_norm > 0) |>
-      group_by(participant_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
-      summarize(Average = mean(average_z, na.rm=T)) |>
-      ungroup()
-    
-    lmer(Average ~ t_norm*condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
-  } else {
-    # Return NULL if conditions aren't met
-    NULL
-  }
-}
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# run_model_TIMElmer <- function(df) {
+#   if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+#       n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) > 1) {
+#     # Fit the model if conditions are met
+#     
+#     #! Reduce dataset to average across the 5 seconds, i.e., 1 value per participant per trial? 
+#     df.short <- df |>
+#       filter(t_norm > 0) |>
+#       group_by(participant_lab_id, condition_c, t_norm, outcome_c, age_cohort_c, lab_id) |>
+#       summarize(Average = mean(average_z, na.rm=T)) |>
+#       ungroup()
+#     
+#     lmer(Average ~ t_norm*condition_c * outcome_c * age_cohort_c + (1|lab_id), data = df.short) #! Pending vote; include lab-id here. too! This is where we can include AL as fixed effect.
+#   } else {
+#     # Return NULL if conditions aren't met
+#     NULL
+#   }
+# }
 
 
 
 # Apply the model function across the list of dataframes in the list-column
 results_lm <- map(data_df5_list, run_model_lm)
 results_lmer <- map(data_df5_list, run_model_lmer)
-results_TIMElmer <- map(data_df5_list, run_model_TIMElmer)
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#results_TIMElmer <- map(data_df5_list, run_model_TIMElmer)
 # Filter out NULL values (dataframes that didn't meet the condition)
 lm_results <- compact(results_lm)
 lmer_results <- compact(results_lmer)
-TIMElmer_results <- compact(results_TIMElmer)
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#TIMElmer_results <- compact(results_TIMElmer)
 ```
 
 
@@ -614,21 +903,23 @@ extract_model_metrics_LMER <- function(model) {
   )
 }
 
-timeLMER_model_metrics <- map(TIMElmer_results, function(model) {
-  broom.mixed::tidy(model)
-})
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# timeLMER_model_metrics <- map(TIMElmer_results, function(model) {
+#   broom.mixed::tidy(model)
+# })
 
-extract_model_metrics_timeLMER <- function(model) {
-  r2 <- performance::r2(model)  # Extract R^2 values
-  data.frame(
-    AIC = AIC(model),
-    BIC = BIC(model),
-    logLik = logLik(model),
-    marginal_R2 = r2$R2_marginal,   # Marginal R^2
-    conditional_R2 = r2$R2_conditional,  # Conditional R^2
-    fixed_effects = paste(names(fixef(model)), round(fixef(model), 3), collapse = ", ")
-  )
-}
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+# extract_model_metrics_timeLMER <- function(model) {
+#   r2 <- performance::r2(model)  # Extract R^2 values
+#   data.frame(
+#     AIC = AIC(model),
+#     BIC = BIC(model),
+#     logLik = logLik(model),
+#     marginal_R2 = r2$R2_marginal,   # Marginal R^2
+#     conditional_R2 = r2$R2_conditional,  # Conditional R^2
+#     fixed_effects = paste(names(fixef(model)), round(fixef(model), 3), collapse = ", ")
+#   )
+# }
 
 # Apply the extraction function across all models and filter out NULL results
 LM_model_metrics <- map(lm_results, extract_model_metrics)
@@ -637,18 +928,21 @@ LM_model_metrics <- compact(LM_model_metrics)  # Remove any NULL elements
 LMER_model_metrics <- map(lmer_results, extract_model_metrics_LMER)
 LMER_model_metrics <-compact(LMER_model_metrics) # Remove any NULL elements
 
-timeLMER_model_metrics <- map(TIMElmer_results, extract_model_metrics_timeLMER)
-timeLMER_model_metrics <- compact(LMER_model_metrics)  # Remove any 
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#timeLMER_model_metrics <- map(TIMElmer_results, extract_model_metrics_timeLMER)
+#timeLMER_model_metrics <- compact(LMER_model_metrics)  # Remove any 
 
 # Convert to a tidy dataframe
 LMmodel_metrics_df <- bind_rows(LM_model_metrics, .id = "model_id")
 LMERmodel_metrics_df <- bind_rows(LMER_model_metrics, .id = "model_id")
-timeLMERmodel_metrics_df <- bind_rows(timeLMER_model_metrics, .id = "model_id")
+#MZ commenting out the time model evaluation because I do not think this model is appropriate
+#timeLMERmodel_metrics_df <- bind_rows(timeLMER_model_metrics, .id = "model_id")
 
 # Check the structure of model_metrics_df to confirm columns are present
 str(LMmodel_metrics_df)
 str(LMERmodel_metrics_df)
-str(timeLMERmodel_metrics_df)
+#MZ removing the time model evaluation because I do not think this model is appropriate
+#str(timeLMERmodel_metrics_df)
 
 # Plot the specification curve (preparatory step):
 
@@ -664,13 +958,15 @@ LMERmodel_metrics_df <- LMERmodel_metrics_df %>%
   mutate(model_order = row_number()) %>%
   ungroup()
 #
-timeLMERmodel_metrics_df <- timeLMERmodel_metrics_df %>%
-  group_by(fixed_effects) %>%
-  mutate(model_order = row_number()) %>%
-  ungroup()
+#MZ removing the time model evaluation because I do not think this model is appropriate
+# timeLMERmodel_metrics_df <- timeLMERmodel_metrics_df %>%
+#   group_by(fixed_effects) %>%
+#   mutate(model_order = row_number()) %>%
+#   ungroup()
 ```
 
-# Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
+## Distribution of key statistics
+Building a table to help look at the distribution of key statistics to address the following question: Would we have reached different conclusions given the dataset (as part of the multiverse)?
 
 ```{r table key parameters, echo=TRUE, include=TRUE, out.width='90%', message=FALSE}
 
@@ -705,7 +1001,7 @@ get_descriptives <- function(df) {
 
    df.short <- df |>
       dplyr::filter(t_norm > 0 & t_norm < 5000 & !is.na(average_z)) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort, prop_exit) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort, prop_exit) |>
       summarize(AveragePD = mean(average_z, na.rm=T), SDPD = sd(average_z, na.rm=T), N = n()) |>
       ungroup()
   return(df.short)
@@ -720,7 +1016,7 @@ run_model_anova <- function(df) {
       
     df.short <- df |>
       dplyr::filter(t_norm > 0 & t_norm < 5000) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c, condition, outcome, age_cohort) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     
@@ -761,23 +1057,25 @@ run_model_anova <- function(df) {
     # Hypothesis 1.1 &  Hypothesis 1.2
     df.short <- df |>
      dplyr::filter(t_norm > 0) |>
-      group_by(participant_id, condition_c, outcome_c, age_cohort_c) |>
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort_c) |>
       summarize(Average = mean(average_z, na.rm=T)) |>
       ungroup()
     #
     df.modelFull <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
-    df.modelRedByOutome <- lm(Average ~ condition_c * age_cohort_c, data = df.short)
-    df.modelFullRedOutcome <- anova(df.modelRedByOutome, df.modelFull)
+    # reduced model removes ONLY the simple fixed effect of outcome
+    df.modelRedByOutcome <- lm(Average ~ condition_c + age_cohort_c + condition_c:age_cohort_c + outcome_c:age_cohort_c + condition_c:outcome_c + condition_c:outcome_c:age_cohort_c, data = df.short)
+    df.modelFullRedOutcome <- anova(df.modelRedByOutcome, df.modelFull)
     
     Fvalue <- df.modelFullRedOutcome$F[2]
-    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByOutome)$r.squared
+    R2 <- summary(df.modelFull)$r.squared - summary(df.modelRedByOutcome)$r.squared
     
     df.return <- df.return |>
     mutate(F.FullRedByOutcome = Fvalue, R2.FullRedByOutcome = R2)
     rm("Fvalue", "R2")
     
     # Hypothesis 1.3 &  Hypothesis 1.4
-    df.modelRedByCondition <- lm(Average ~ outcome_c * age_cohort_c, data = df.short)
+    # reduced model removes ONLY the simple fixed effect of condition
+    df.modelRedByCondition <- lm(Average ~ outcome_c + age_cohort_c + condition_c:age_cohort_c + outcome_c:age_cohort_c + condition_c:outcome_c + condition_c:outcome_c:age_cohort_c, data = df.short)
     df.modelFullRedCondition <- anova(df.modelRedByCondition, df.modelFull)
     
     Fvalue <- df.modelFullRedCondition$F[2]
@@ -853,7 +1151,8 @@ ggplot(df.DesStats.additional[[12]], aes(x = prop_exit, y = AveragePD, col = out
 
 ```
 
-# The following offers various plots for the specification curves of teh multiverse model parameters.
+## Specification curves for multiverse model parameters
+ The following offers various plots for the specification curves of the multiverse model parameters.
 ```{r model parameters plot, echo=TRUE, include=TRUE, out.width='90%'}
 # Create the plot
 # BIC LM
@@ -879,17 +1178,18 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
       # color = "Predictor") +
   theme_minimal() 
 
+#MZ removing the time model evaluation because I do not think this model is appropriate
 #BIC LMER time
-ggplot(timeLMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
-  geom_point() +                                # Points for estimates
- # geom_errorbar(aes(ymin = BIC - std.error, ymax = BIC + std.error), 
-            #    width = 0.2) +                  # Error bars
-  #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
-  labs(title = "Specification Curve for BIC",
-       x = "Model Order",
-       y = "BIC") +
-      # color = "Predictor") +
-  theme_minimal() 
+# ggplot(timeLMERmodel_metrics_df, aes(x = model_order, y = BIC, color = model_id)) +
+#   geom_point() +                                # Points for estimates
+#  # geom_errorbar(aes(ymin = BIC - std.error, ymax = BIC + std.error), 
+#             #    width = 0.2) +                  # Error bars
+#   #facet_wrap(~ term, scales = "free_y") +       # Separate panels for each predictor
+#   labs(title = "Specification Curve for BIC",
+#        x = "Model Order",
+#        y = "BIC") +
+#       # color = "Predictor") +
+#   theme_minimal() 
 
 
 #AIC LM
@@ -967,7 +1267,1332 @@ ggplot(LMERmodel_metrics_df, aes(x = model_order, y = conditional_R2, color = mo
 ```
 
 
+# Begin here again.
+
+# PART 5 - Updated Multiverse LMER and LM Modeling Approach
+
+# Part 5A LMER models
+
+## Source helper functions and additional libraries
+
+```{r}
+library(lmerTest)
+library(buildmer)
+library(broom.mixed)
+library(marginaleffects)
+source(here("MB2P","MB2P-Preregistration","scripts","modelpruning.R"))
+
+#function for fitting lmer model
+run_model_lmer_re_pruning <- function(df,groups_to_include = c("adults","toddlers")) {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+    lmer_model_type = "main"
+  } else {
+    print("Fitting group-specific models")
+    min_age_cohort_num = 1
+    lmer_model_type = "group"
+  }
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        )
+    
+    #Fit the model if conditions are met
+    prune_main_lmer_model(df.short,model_type=lmer_model_type)
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+
+#helper function for extracting the random effects structure specifically
+extract_outer_parentheses <- function(text) {
+  start <- regexpr("\\(", text)
+  if (start == -1) return(NA)
+  
+  depth <- 0
+  for (i in seq(start, nchar(text))) {
+    char <- substr(text, i, i)
+    if (char == "(") depth <- depth + 1
+    if (char == ")") depth <- depth - 1
+    if (depth == 0) return(substr(text, start + 1, i - 1))
+  }
+  return(NA)
+}
+
+#extract lmer model results in a tidy fashion
+extract_lmer_model_results_tidy <- function(model) {
+  # Get tidy summary of fixed effects
+  coefs <- broom.mixed::tidy(model, effects = "fixed") %>%
+    dplyr::select(term, estimate, std.error, df, statistic, p.value)
+
+  # Extract model formula
+  model_formula <- deparse(formula(model)) |> paste(collapse = "")
+  #fixed_formula <- format(rlang::f_rhs(model_formula))  # remove LHS
+  #random_formula <- format(findbars(model_formula))     # extract random part
+
+  # Extract singular fit status
+  singular <- isSingular(model)
+
+  # Add model info to each row
+  coefs <- coefs %>%
+    mutate(
+      model_formula = model_formula,
+      #random_effects = deparse(random_formula),
+      is_singular = singular
+    ) %>%
+    relocate(model_formula, is_singular) %>%
+  mutate(random_effects = sapply(model_formula, extract_outer_parentheses))
+  
+  #compute 95% CIs
+  ci_df <- as.data.frame(confint(model, level = 0.95, method = "Wald"))
+  ci_df$term <- rownames(ci_df)
+  ci_df <- ci_df %>% 
+    filter(!is.na(`2.5 %`))
+  rownames(ci_df) <- NULL
+  ci_df <- ci_df %>% 
+    filter(term %in% coefs$term) %>%
+    rename(conf.low = `2.5 %`, conf.high = `97.5 %`)
+  
+  #get number of observations
+  n_obs <- nobs(model)
+  
+  #get number of lab random effect levels
+  n_labs <- ngrps(model)[["lab_id"]]
+  
+  coefs <- coefs %>%
+    left_join(ci_df, by="term") %>%
+    mutate(n_obs = n_obs,
+           n_labs = n_labs)
+    
+}
+```
+
+## Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning <- data_df5 %>%
+  mutate(
+    models = map(data,run_model_lmer_re_pruning)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results <- models_lmer_re_pruning %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning <- models_lmer_re_pruning_w_results %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+
+## old strategy focused on data list
+#models_lmer_re_pruning <- map(data_df5_list, extract_lmer_model_results_tidy)
+#results_lmer_re_pruning <- map(models_lmer_re_pruning, extract_lmer_model_results_tidy)
+# results_lmer_re_pruning_df <- results_lmer_re_pruning %>%
+#   #combine list elements into one dataframe
+#   bind_rows(.id = "model_id")
+```
+
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results.Rds"))
+save(results_lmer_re_pruning, file = here(model_output_path, "pupillometry_results_lmer_re_pruning.Rds"))
+```
+
+## Plots
+
+### How does filtering affect number of observations?
+
+```{r}
+lmer_multiverse_combos_obs <- results_lmer_re_pruning %>%
+  distinct(df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion,n_obs,n_labs)
+
+ggplot(lmer_multiverse_combos_obs,aes(x=df5_ppt_exclusion,y=n_obs))+
+  geom_point()+
+  geom_line(aes(group=1))+
+  facet_grid(df3_moving_average+df4_baseline_correction ~ df1_extreme_values+df2_screen_fixation)+
+  ylab("Number of observations in LMER model")+
+  scale_x_discrete(limits = c("no exclusion","second test trial valid","both test trials valid"))+
+  theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1))
+
+ggplot(lmer_multiverse_combos_obs,aes(x=df5_ppt_exclusion,y=n_labs))+
+  geom_point()+
+  geom_line(aes(group=1))+
+  facet_grid(df3_moving_average+df4_baseline_correction ~ df1_extreme_values+df2_screen_fixation)+
+  ylab("Number of labs in LMER model")+
+  scale_x_discrete(limits = c("no exclusion","second test trial valid","both test trials valid"))+
+  theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1))
+
+```
+
+### Three-way-interaction
+
+```{r}
+lmer_threewayinteraction_multiverse_results <-results_lmer_re_pruning %>%
+  filter(term=="condition_c:outcome_c:age_cohort_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 3-way interaction (Condition x Outcome x Age Cohort)")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_threewayinteraction.png"),width = 9, height = 6, dpi = 300)
+```
+
+### Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results <-results_lmer_re_pruning %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+
+ggplot(lmer_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome.png"),width = 10, height = 6, dpi = 300)
+```
+
+## Models for each age cohort
+
+### Toddlers
+
+### Fit models and extract results
+
+```{r}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning_toddlers <- data_df5 %>%
+  mutate(
+    models = map2(data,c("toddlers"), run_model_lmer_re_pruning)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results_toddlers <- models_lmer_re_pruning_toddlers %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning_toddlers <- models_lmer_re_pruning_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results_toddlers, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results_toddlers.Rds"))
+save(results_lmer_re_pruning_toddlers, file = here(model_output_path, "pupillometry_results_lmer_re_pruning_toddlers.Rds"))
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+
+#ICIS26
+range(lmer_conditionXoutcome_multiverse_results_toddlers$estimate)
+
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lmer_outcome_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLmer Model Estimate for Effect of Outcome")
+
+```
+
+#### Plot Condition Effect
+
+```{r}
+lmer_condition_multiverse_results_toddlers <-results_lmer_re_pruning_toddlers %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLmer Model Estimate for Effect of Condition")
+```
+
+### Adults
+
+### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lmer models with random effects pruning
+models_lmer_re_pruning_adults <- data_df5 %>%
+  mutate(
+    models = map2(data,c("adults"), run_model_lmer_re_pruning)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lmer_re_pruning_w_results_adults <- models_lmer_re_pruning_adults %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lmer_re_pruning_adults <- models_lmer_re_pruning_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_lmer_re_pruning_w_results_adults, file = here(model_output_path, "pupillometry_models_lmer_re_pruning_w_results_adults.Rds"))
+save(results_lmer_re_pruning_adults, file = here(model_output_path, "pupillometry_results_lmer_re_pruning_adults.Rds"))
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lmer_conditionXoutcome_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLmer Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lmer_pruned_conditionXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+
+#ICIS26
+range(lmer_conditionXoutcome_multiverse_results_adults$estimate)
+
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lmer_outcome_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLmer Model Estimate for Effect of Outcome")
+```
+
+#### Plot Condition Effect
+
+```{r}
+lmer_condition_multiverse_results_adults <-results_lmer_re_pruning_adults %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lmer_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLmer Model Estimate for Effect of Condition")
+```
+
+# Part 5B LM models
+
+## Helper functions
+
+```{r}
+#function for fitting lm model
+fit_lm_main <- function(df,groups_to_include = c("adults","toddlers")) {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+  } else {
+    print("Fitting group-specific models")
+    min_age_cohort_num = 1
+  }
+  if (is.data.frame(df) && n_distinct(df$condition_c) > 1 & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        )
+    if (min_age_cohort_num == 1) {
+      #Fit the model if conditions are met
+      m <- lm(Average ~ condition_c * outcome_c, data = df.short)
+    } else if (min_age_cohort_num == 2) {
+      #Fit the model if conditions are met
+      m <- lm(Average ~ condition_c * outcome_c * age_cohort_c, data = df.short)
+    }
+   
+    m
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
 
 
+#extract lm model results in a tidy fashion
+extract_lm_model_results_tidy <- function(model) {
+  # Get tidy summary of fixed effects
+  coefs <- broom::tidy(model) %>%
+    dplyr::select(term, estimate, std.error, statistic, p.value)
+
+  #compute 95% CIs
+  ci_df <- as.data.frame(confint(model, level = 0.95, method = "Wald"))
+  ci_df$term <- rownames(ci_df)
+  ci_df <- ci_df %>% 
+    filter(!is.na(`2.5 %`))
+  rownames(ci_df) <- NULL
+  ci_df <- ci_df %>% 
+    filter(term %in% coefs$term) %>%
+    rename(conf.low = `2.5 %`, conf.high = `97.5 %`)
+  
+  #get number of observations
+  n_obs <- nobs(model)
+  
+  coefs <- coefs %>%
+    left_join(ci_df, by="term") %>%
+    mutate(n_obs = n_obs)
+}
+```
+
+## Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_lm <- data_df5 %>%
+  mutate(
+    models = map(data,fit_lm_main)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lm_w_results <- models_lm  %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lm_main <- models_lm_w_results %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_lm_w_results, file = here(model_output_path, "pupillometry_models_lm_w_results.Rds"))
+save(results_lm_main, file = here(model_output_path, "pupillometry_results_lm_main.Rds"))
+```
+
+## Plots
+
+### Three-way-interaction
+
+```{r}
+lm_threewayinteraction_multiverse_results <-results_lm_main %>%
+  filter(term=="condition_c:outcome_c:age_cohort_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_threewayinteraction_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lm Model Estimate for 3-way interaction (Condition x Outcome x Age Cohort)")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_threewayinteraction.png"),width = 10, height = 6, dpi = 300)
+```
+
+### Outcome by Condition Interaction
+
+```{r}
+lm_conditionXoutcome_multiverse_results <-results_lm_main %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_conditionXoutcome_multiverse_results,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("Lm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome.png"),width = 10, height = 6, dpi = 300)
+```
+
+### Toddlers
+
+### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_lm_toddlers <- data_df5 %>%
+  mutate(
+    models = map2(data,c("toddlers"), fit_lm_main)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lm_w_results_toddlers <- models_lm_toddlers %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lm_main_toddlers <- models_lm_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_lm_w_results_toddlers, file = here(model_output_path, "pupillometry_models_lm_w_results_toddlers.Rds"))
+save(results_lm_main_toddlers, file = here(model_output_path, "pupillometry_results_lm_main_toddlers.Rds"))
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lm_conditionXoutcome_multiverse_results_toddlers <-results_lm_main_toddlers %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_conditionXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lm_outcome_multiverse_results_toddlers <-results_lm_main_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Outcome")
+```
+
+#### Plot Condition Effect
+
+```{r}
+lm_condition_multiverse_results_toddlers <-results_lm_main_toddlers %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_condition_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Condition")
+```
+
+### Adults
+
+### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_lm_adults <- data_df5 %>%
+  mutate(
+    models = map2(data,c("adults"), fit_lm_main)) %>%
+  dplyr::select(-data) 
+
+#add results
+models_lm_w_results_adults <- models_lm_adults %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_lm_main_adults <- models_lm_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_lm_w_results_adults, file = here(model_output_path, "pupillometry_models_lm_w_results_adults.Rds"))
+save(results_lm_main_adults, file = here(model_output_path, "pupillometry_results_lm_main_adults.Rds"))
+```
+
+#### Plot Outcome by Condition Interaction
+
+```{r}
+lm_conditionXoutcome_multiverse_results_adults <-results_lm_main_adults %>%
+  filter(term=="condition_c:outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_conditionXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for 2-way interaction Condition x Outcome")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_lm_conditionXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Plot Outcome Effect
+
+```{r}
+lm_outcome_multiverse_results_adults <-results_lm_main_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Outcome")
+```
+
+#### Plot Condition Effect
+
+```{r}
+lm_condition_multiverse_results_adults <-results_lm_main_adults %>%
+  filter(term=="condition_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(lm_condition_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Condition")
+```
+
+# PART 6: Correlation between anticipatory looking and pupil dilation
+
+These analyses correspond to main question 3 in the preregistration: Does increased pupil dilation in response to goal-incongruent events reflect a surprise response above and beyond it reflecting a novelty response? 
+
+## Preliminary plotting
+
+### Create dataset for plotting
+```{r}
+data_for_plotting_df5 <- data_df5 |> 
+  unite("multiverse_label",  df1_extreme_values,df2_screen_fixation,df3_moving_average,df4_baseline_correction,df5_ppt_exclusion, sep = "_", remove = FALSE) |>  # Combine first 5 column values into a string tracking the multiverse combination
+  unnest(data) |> 
+  dplyr::filter(!is.na(average_z), t_norm >= 0 & t_norm < 5000) 
+```
+
+### Summarize data by participant
+
+(no within-lab averaging)
+
+```{r}
+#summarize by lab within each multiverse dataset
+summarize_participant_data_by_dataset_id <- data_for_plotting_df5 |> 
+    group_by(multiverse_label, participant_lab_id, lab_id, condition, outcome, age_cohort) |>  
+  summarize(
+    mean_pupil_z = mean(average_z, na.rm = TRUE),
+    prop_exit = prop_exit[1]
+  ) |> 
+  unite("multiverse_id_wcond", multiverse_label,condition, outcome, age_cohort, sep = "_", remove = FALSE)
+```
+
+### Plots
+
+#### Plot to show effect for each multiverse dataset,no within lab averaging
+
+```{r}
+#MV plot
+summarize_participant_data_by_dataset_id %>%
+  ggplot(aes(prop_exit,y=mean_pupil_z))+
+  geom_smooth(aes(group=multiverse_id_wcond,color=outcome),alpha=0.05,method="lm",se=F)+
+  facet_wrap(condition ~ age_cohort)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  facet_wrap(~ age_cohort+condition)+
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis.png"),width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+#"best" variant
+#filter (node 1), filter (node 2), filter (node 3), baseline-correction 0.5s (node 4) and valid second test trial only (node 5)
+best_multiverse_variant_participant_data <- summarize_participant_data_by_dataset_id |> 
+  filter(multiverse_label == "plausible_within_filtered_0.5s_second test trial valid") 
+
+ggplot(summarize_participant_data_by_dataset_id,aes(x=prop_exit,y=mean_pupil_z,color=outcome))+
+  #geom_point(alpha=0.05)+
+  geom_smooth(data=best_multiverse_variant_participant_data,aes(x=prop_exit,y=mean_pupil_z),size=1.2,method="lm")+
+  facet_wrap(~ age_cohort+condition)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_hline(yintercept = 0) +
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis_best_variant.png"),width = 10, height = 6, dpi = 300)
+
+ggplot(summarize_participant_data_by_dataset_id,aes(x=prop_exit,y=mean_pupil_z,color=outcome))+
+  geom_smooth(aes(group=multiverse_id_wcond,color=outcome,fill=outcome),method="lm",se=F)+
+  geom_smooth(data=best_multiverse_variant_participant_data,aes(x=prop_exit,y=mean_pupil_z),size=1.2,method="lm")+
+  facet_wrap(~ age_cohort+condition)+
+  scale_color_ptol() +
+  scale_fill_ptol()+
+  geom_hline(yintercept = 0) +
+  labs(x = "Anticipatory Looking",
+           y = "Pupil size (z-score, relative change)")
+
+ggsave(filename = here(plot_output_path,"mv_al_pd_vis_final_combination_overlay.png"),width = 10, height = 6, dpi = 300)
+```
 
 
+## Part 6A: LM Models
+
+### Helper functions
+
+```{r}
+#function for fitting lm model for anticipatory looking and pupil dilation analyses
+## this function automatically expands the interactions included depending on the number of groups and conditions included
+## (up to a four-way interaction between anticipatory looking, outcome, condition, and age cohort)
+fit_al_pd_lm <- function(df,groups_to_include = c("adults","toddlers"), conditions_to_include = c("knowledge","ignorance")) {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+  } else {
+    print("Fitting group-specific model")
+    min_age_cohort_num = 1
+  }
+  if (length(conditions_to_include)>1) {
+    print("Fitting model across conditions")
+    min_condition_num = 2
+  } else {
+    print("Fitting condition-specific model")
+    min_condition_num = 1
+  }
+  if (is.data.frame(df) && n_distinct(df$condition_c) >= min_condition_num & 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      #filter data to conditions to include
+      filter(condition %in% conditions_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id,prop_exit) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        ) |> 
+      # center prop_exit/ anticipatory looking
+      mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+      
+    if (min_age_cohort_num ==1) {
+      if (min_condition_num ==1) {
+        #Fit the model for a specific condition (2-way interaction: outcome * AL)
+        m <- lm(Average ~ outcome_c * prop_exit_c, data = df.short)
+      } else if (min_condition_num ==2) {
+        #Fit the model for both conditions (3-way interaction: outcome * AL * condition)
+        m <- lm(Average ~ outcome_c * prop_exit_c * condition_c, data = df.short)
+      }
+    } else if (min_age_cohort_num == 2) {
+      if (min_condition_num ==1) {
+        #Fit the model for a specific condition (3-way interaction: outcome * AL * age cohort)
+        m <- lm(Average ~ outcome_c * prop_exit_c * age_cohort_c, data = df.short)
+      } else if (min_condition_num ==2) {
+        #Fit the model for both conditions (4-way interaction: outcome * AL * age cohort * condition)
+        m <- lm(Average ~ outcome_c * prop_exit_c * age_cohort_c * condition_c, data = df.short)
+      }
+    }
+    m
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+```
+
+### Fit models and extract results
+
+Our main analysis focuses specifically on group-wise results (separately for toddlers and adults) in the knowledge condition.
+
+#### Toddlers
+
+##### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_al_pd_lm_knowledge_only_toddlers <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("toddlers"),c("knowledge")),
+      fit_al_pd_lm
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lm_knowledge_only_w_results_toddlers <- models_al_pd_lm_knowledge_only_toddlers %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lm_knowledge_only_toddlers <- models_al_pd_lm_knowledge_only_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lm_knowledge_only_w_results_toddlers, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_toddlers.Rds"))
+save(results_al_pd_lm_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_toddlers.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticipatory Looking Effect
+
+```{r}
+al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lm_knowledge_only_outcome_multiverse_results_toddlers <-results_al_pd_lm_knowledge_only_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLm Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Adults
+
+##### Fit models and extract results
+
+```{r, warning=F, message=F}
+#fit the lm models
+models_al_pd_lm_knowledge_only_adults <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("adults"),c("knowledge")),
+      fit_al_pd_lm
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lm_knowledge_only_w_results_adults <- models_al_pd_lm_knowledge_only_adults %>%
+  mutate(
+    results=map(models,extract_lm_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lm_knowledge_only_adults <- models_al_pd_lm_knowledge_only_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lm_knowledge_only_w_results_adults, file = here(model_output_path, "pupillometry_models_al_pd_lm_knowledge_only_w_results_adults.Rds"))
+save(results_al_pd_lm_knowledge_only_adults, file = here(model_output_path, "pupillometry_al_pd_lm_knowledge_only_adults.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipationXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticiptory Looking Effect
+
+```{r}
+al_pd_lm_knowledge_only_anticipation_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lm_knowledge_only_outcome_multiverse_results_adults <-results_al_pd_lm_knowledge_only_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lm_knowledge_only_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLm Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lm_knowledge_only_outcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+## Part 6B: LMER Models
+
+
+```{r}
+#function for fitting lm model for anticipatory looking and pupil dilation analyses
+## this function automatically expands the interactions included depending on the number of groups
+## (up to a three-way interaction between anticipatory looking, outcome, and age cohort)
+## restricted to only using one condition for now (rather than full four-way interaction)
+run_al_pd_lmer_re_pruning <- function(df,groups_to_include = c("adults","toddlers"),condition_to_include = "knowledge") {
+  if (length(groups_to_include)>1) {
+    print("Fitting model across groups")
+    min_age_cohort_num = 2
+    lmer_model_type = "main"
+  } else {
+    print("Fitting group-specific model")
+    min_age_cohort_num = 1
+    lmer_model_type = "group"
+  }
+  if (condition_to_include=="knowledge") {
+    print("Fitting model for Knowledge condition")
+  } else if (condition_to_include == "ignorance") {
+    print("Fitting model for Ignorance condition")
+  } else {
+    print("condition name not recognized. Unexpected condition name:")
+    print(toString(condition_to_include))
+    # Return NULL if condition parameter has unexpected value
+    NULL
+  }
+  if (is.data.frame(df) && 
+      n_distinct(df$outcome_c) > 1 & n_distinct(df$age_cohort_c) >= min_age_cohort_num) {
+
+    # Process data
+    df.short <- df |>
+      filter(t_norm >= 0 & t_norm < 5000) |>
+      #filter data to group to include
+      filter(age_cohort %in% groups_to_include) |> 
+      #filter data to conditions to include
+      filter(condition == condition_to_include) |> 
+      group_by(participant_lab_id, condition_c, outcome_c, age_cohort,age_cohort_c, lab_id,prop_exit) |>
+      summarize(Average = mean(average_z, na.rm=T)) |>
+      ungroup() |> 
+      mutate(
+        age_cohort_adults = ifelse(age_cohort=="adults",0,1),
+        age_cohort_toddlers =  ifelse(age_cohort=="toddlers",0,1)
+        ) |> 
+      # center prop_exit/ anticipatory looking
+      mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+    
+    #Fit the model if conditions are met
+    prune_al_lmer_model(df.short,model_type=lmer_model_type)
+  } else {
+    # Return NULL if conditions aren't met
+    NULL
+  }
+}
+```
+
+### Fit models and extract results
+
+Our main analysis focuses specifically on group-wise results (separately for toddlers and adults) in the knowledge condition.
+
+#### Toddlers
+
+```{r, warning=F, message=F}
+#fit the lmer models
+models_al_pd_lmer_knowledge_only_toddlers <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("toddlers"),"knowledge"),
+      run_al_pd_lmer_re_pruning
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lmer_knowledge_only_w_results_toddlers <- models_al_pd_lmer_knowledge_only_toddlers %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lmer_knowledge_only_toddlers <- models_al_pd_lmer_knowledge_only_w_results_toddlers %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lmer_knowledge_only_w_results_toddlers, file = here(model_output_path, "pupillometry_models_al_pd_lmer_knowledge_only_w_results_toddlers.Rds"))
+save(results_al_pd_lmer_knowledge_only_toddlers, file = here(model_output_path, "pupillometry_results_al_pd_lmer_knowledge_only_toddlers.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipationXoutcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticipatory Looking Effect
+
+```{r}
+al_pd_lmer_knowledge_only_anticipation_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipation_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipation_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lmer_knowledge_only_outcome_multiverse_results_toddlers <-results_al_pd_lmer_knowledge_only_toddlers %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_outcome_multiverse_results_toddlers,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("TODDLERS\nLMER Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_outcome_toddlers.png"),width = 10, height = 6, dpi = 300)
+```
+
+#### Adults
+
+```{r, warning=F, message=F}
+#fit the lmer models
+models_al_pd_lmer_knowledge_only_adults <- data_df5 %>%
+  mutate(
+    models = pmap(
+      list(data,c("adults"),"knowledge"),
+      run_al_pd_lmer_re_pruning
+    )
+  ) %>%
+  dplyr::select(-data) 
+
+#add results
+models_al_pd_lmer_knowledge_only_w_results_adults <- models_al_pd_lmer_knowledge_only_adults %>%
+  mutate(
+    results=map(models,extract_lmer_model_results_tidy)
+  )
+
+#extract results into data frame
+results_al_pd_lmer_knowledge_only_adults <- models_al_pd_lmer_knowledge_only_w_results_adults %>%
+  dplyr::select(-models) %>%
+  unnest(results) 
+```
+
+```{r}
+#save the output
+save(models_al_pd_lmer_knowledge_only_w_results_adults, file = here(model_output_path, "pupillometry_models_al_pd_lmer_knowledge_only_w_results_adults.Rds"))
+save(results_al_pd_lmer_knowledge_only_adults, file = here(model_output_path, "pupillometry_results_al_pd_lmer_knowledge_only_adults.Rds"))
+```
+
+##### Plot Outcome by Anticipatory Looking Interaction
+
+```{r}
+al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="outcome_c:prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipationXoutcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for 2-way interaction Outcome X AL in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipationXoutcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Anticipatory Looking Effect
+
+```{r}
+al_pd_lmer_knowledge_only_anticipation_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="prop_exit_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_anticipation_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for Effect of Anticipatory Looking in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_anticipation_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+##### Plot Outcome Effect
+
+```{r}
+al_pd_lmer_knowledge_only_outcome_multiverse_results_adults <-results_al_pd_lmer_knowledge_only_adults %>%
+  filter(term=="outcome_c") %>%
+  mutate(
+    significant = ifelse(p.value<0.05,"significant","non-significant")
+  )
+ggplot(al_pd_lmer_knowledge_only_outcome_multiverse_results_adults,aes(x=df4_baseline_correction,y=estimate,alpha=significant))+
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width=0)+
+  geom_point(size=2)+
+  facet_grid(df1_extreme_values+df2_screen_fixation ~ df3_moving_average+df5_ppt_exclusion)+
+  xlab("Baseline Correction Window")+
+  ylab("ADULTS\nLMER Model Estimate for Effect of Outcome in Knowledge Condition")
+
+ggsave(filename = here(plot_output_path,"mv_effect_plot_al_pd_lmer_knowledge_only_outcome_adults.png"),width = 10, height = 6, dpi = 300)
+```
+
+## Exploratory
+
+Here, I'm just using the best-variant fit for now to explore the three-way interaction that includes condition.
+
+```{r}
+best_multiverse_variant_participant_data <- best_multiverse_variant_participant_data |> 
+  ungroup() |> 
+mutate(
+    age_cohort_c = case_when(
+      age_cohort == "adults" ~ -0.5,
+      age_cohort == "toddlers" ~ 0.5
+    ),
+    condition_c = case_when(
+      condition == "knowledge" ~ -0.5,
+      condition == "ignorance" ~ 0.5
+    ),
+    outcome_c = case_when(
+      outcome == "congruent" ~ -0.5,
+      outcome == "incongruent" ~ 0.5)
+    ) |> 
+  mutate(
+        prop_exit_c = prop_exit - mean(prop_exit, na.rm=TRUE)
+      )
+```
+
+### Three-Way Interaction: Outcome * Anticipatory Looking * Condition
+
+#### Toddlers
+
+```{r}
+#fit lmer model
+## including random slopes for outcome seems to not allow for convergence
+m_al_3wayint_toddlers <- lmer(mean_pupil_z ~ outcome_c * prop_exit_c * condition_c+(1+ prop_exit_c*condition_c|lab_id), data = filter(best_multiverse_variant_participant_data, age_cohort=="toddlers"))
+summary(m_al_3wayint_toddlers)
+```
+
+#### Adults
+
+```{r}
+#fit lmer model
+## including random slopes for outcome or condition seems to not allow for convergence
+m_al_3wayint_adults <- lmer(mean_pupil_z ~ outcome_c * prop_exit_c * condition_c+(1+ prop_exit_c|lab_id), data = filter(best_multiverse_variant_participant_data, age_cohort=="adults"))
+summary(m_al_3wayint_adults)
+```
+
+### Effect of anticipation in on pupil size in incongruent, knowledge condition specifically?
+
+#### Toddlers
+
+```{r}
+m_al_incongruent_knowledge_toddlers <- lmer(
+  mean_pupil_z ~ prop_exit_c +(1+ prop_exit_c|lab_id),
+  filter(best_multiverse_variant_participant_data, age_cohort=="toddlers"& condition=="knowledge" & outcome=="incongruent"))
+summary(m_al_incongruent_knowledge_toddlers)
+```
+
+#### Adults
+
+```{r}
+#issues with convergence of lmer model
+# m_al_incongruent_knowledge_adults <- lmer(
+#   mean_pupil_z ~ prop_exit_c +(1|lab_id),
+#   filter(best_multiverse_variant_participant_data, age_cohort=="adults"& condition=="knowledge" & outcome=="incongruent"))
+m_al_incongruent_knowledge_adults <- lm(
+  mean_pupil_z ~ prop_exit,
+  filter(best_multiverse_variant_participant_data, age_cohort=="adults"& condition=="knowledge" & outcome=="incongruent"))
+summary(m_al_incongruent_knowledge_adults)
+```

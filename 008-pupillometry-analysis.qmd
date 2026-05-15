@@ -16,8 +16,8 @@ library(arrow)
 source(here('helper','ensure_repo_structure.R'))
 plot_path <- here("plots")
 
-data_preprocessed_post_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par), format = "parquet") %>% collect() # if we want data post-exclusion
-# data_preprocessed_pre_exclusions <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b_par), format = "parquet") %>% collect() # if we want data pre-exclusion
+# data_preprocessed <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006_par),  format = "parquet") %>% collect() # if we want data post-exclusion
+data_preprocessed <- arrow::open_dataset(here(INTERMEDIATE_FOLDER, INTERMEDIATE_006b_par), format = "parquet") %>% collect() # if we want data pre-exclusion
 ```
 
 Basic cleaning: 
@@ -26,7 +26,7 @@ Basic cleaning:
 3. For cases in which `x` and `y` are NA, `pupil_size` should be NA, not 0.
 
 ```{r}
-data_pupillometry <- data_preprocessed_post_exclusions |> 
+data_pupillometry <- data_preprocessed |> 
   filter(data_type=="in-lab") |> 
   mutate(pupil_left = ifelse(is.na(x) & is.na(y), NA, # If both x and y are NA, pupil_left should be NA, not 0
                           ifelse(is.na(pupil_left), pupil_right, pupil_left)), # If pupil_left is NA, take value of pupil_right
@@ -137,6 +137,8 @@ Saving pupillometry dataset to use for multiverse:
 ```{r}
 save(data_pupillometry, file = here(INTERMEDIATE_FOLDER, INTERMEDIATE_008))
 ```
+
+# Heatmaps
 
 Creating heatmaps for 5s-window after the point of disambiguation
 ```{r}

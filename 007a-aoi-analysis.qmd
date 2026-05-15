@@ -18,7 +18,13 @@ library(corrr)
 library(ggpubr)
 library(bayesplot)
 library(broom.mixed)
-library(arrow)
+library(metafor)
+
+#FIT BAYESIAN MODELS
+# parameter for controlling whether to fit the Bayesian models (or load from disk)
+FIT_BAYES_MODELS = TRUE
+# parameter for controlling whether to compute Bayes factors (ocomputationally expensive)
+COMPUTE_BAYES_FACTORS = TRUE
 
 source(here("helper", "ensure_repo_structure.R"))
 plot_path <- here("plots")
@@ -125,7 +131,8 @@ ggplot(summarize_participant_familiarization, aes(N_exit)) +
 ```{r}
 # plot average proportion looking
 overall_p_fam <- ggplot(
-  filter(summarize_participant_familiarization, N_exit >= 5),
+  #filter(summarize_participant_familiarization, N_exit >= 5),
+  summarize_participant_familiarization,
   aes(x = as.factor(familiarization_trial_num), y = prop_exit, color = condition)
 ) +
   # geom_violin()+
@@ -207,7 +214,7 @@ summarize_fam_aoi_by_trial %>%
 
 #### Toddlers
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
@@ -247,6 +254,12 @@ saveRDS(bm_fam_aoi_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers.rds")
 )
 ```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers.rds"))
+```
+
 
 Organize table in a tidy format
 
@@ -312,19 +325,28 @@ saveRDS(bm_fam_aoi_toddlers_trial_number_effect,
 
 Compute the Bayes factor using bridge sampling
 
-```{r}
+```{r, eval= FIT_BAYES_MODELS}
+#fit the updated model
 bm_fam_aoi_toddlers_null <- update(bm_fam_aoi_toddlers, formula = ~ . - 1) # remove intercept
 summary(bm_fam_aoi_toddlers_null)
 
 saveRDS(bm_fam_aoi_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds")
 )
+```
 
-fam_m_comparision_PTL_toddlers <- brms::bayes_factor(
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_toddlers_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+#compute Bayes factor
+fam_m_comparison_PTL_toddlers <- brms::bayes_factor(
   bm_fam_aoi_toddlers, bm_fam_aoi_toddlers_null
 )
 
-saveRDS(fam_m_comparision_PTL_toddlers,
+saveRDS(fam_m_comparison_PTL_toddlers,
   file = here(RESULTS_FOLDER, "fam_m_comparison_PTL_toddlers.rds")
 )
 ```
@@ -339,7 +361,7 @@ rm(bm_fam_aoi_toddlers_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_aoi_adults <- brm(
   prop_exit_adj ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -362,6 +384,11 @@ summary(bm_fam_aoi_adults)
 saveRDS(bm_fam_aoi_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -416,14 +443,21 @@ saveRDS(bm_fam_aoi_adults_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_aoi_adults_null <- update(bm_fam_aoi_adults, formula = ~ . - 1) # remove intercept
 summary(bm_fam_aoi_adults_null)
 
 saveRDS(bm_fam_aoi_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_aoi_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_PTL_adults <- brms::bayes_factor(
   bm_fam_aoi_adults, bm_fam_aoi_adults_null
 )
@@ -562,104 +596,187 @@ Splitting plot by lab and age cohort
 
 ```{r}
 adults_prop <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "adults"),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
-  # geom_violin()+
-  # geom_boxplot()+
   geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "adults"),
-    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "adults"),
-    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "adults"),
-    side = "l", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "adults"),
-    side = "r", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_beeswarm(alpha = 0.5) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  geom_jitter(width = 0.05, height = 0.025, alpha = 0.3, stroke = NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  facet_wrap(~ age_cohort + lab_id) +
-  theme(legend.position = "none") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  facet_wrap(~ lab_id) +
+  theme(legend.position = "none", 
+    axis.title = element_text(size = 20), 
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), 
+    strip.text = element_text(size = 14)) +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 adults_prop
 ggsave(here(plot_path, "adults_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 16, height = 10
 )
 
 kids_prop <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
   aes(x = condition, y = prop_exit, color = condition)
 ) +
-  # geom_violin()+
-  # geom_boxplot()+
   geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "toddlers"),
-    aes(fill = condition), side = "l", nudge = 0.3, width = 0.4, alpha = 0.2
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
   ) +
-  geom_half_violin(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "toddlers"),
-    aes(fill = condition), side = "r", nudge = 0.3, width = 0.4, alpha = 0.2
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "ignorance" & age_cohort == "toddlers"),
-    side = "l", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_half_boxplot(
-    data = filter(summarize_participant_test_first_trial, N_exit >= 5 &
-      condition == "knowledge" & age_cohort == "toddlers"),
-    side = "r", nudge = 0.15, width = 0.4, errorbar.draw = F
-  ) +
-  geom_beeswarm(alpha = 0.5) +
-  stat_summary(fun.data = "mean_cl_boot", size = 1.2, color = "black") +
+  geom_jitter(width = 0.05, height = 0.025, alpha = 0.3, stroke = NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
-  facet_wrap(~ age_cohort + lab_id) +
-  theme(legend.position = "none") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)")
+  facet_wrap(~ lab_id) +
+  ggtitle("Toddlers")
+  theme(legend.position = "none", 
+    axis.title = element_text(size = 20), 
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), 
+    strip.text = element_text(size = 14)) +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
 kids_prop
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking.png"),
   bg = "white", width = 16, height = 10
+)
+
+```
+Combine Plots
+
+```{r}
+figure_prop_lab <- ggarrange(
+  adults_prop, kids_prop, 
+  ncol = 1, nrow = 2
+)
+
+figure_prop_lab <- cowplot::plot_grid(
+  adults_prop +
+    theme(
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_blank()
+    ),
+  kids_prop,
+  nrow = 2,
+  align = "v"
+)
+
+figure_prop_lab
+
+ggsave(here(plot_path, "figure_prop_lab_both.png"),
+  bg = "white", width = 16, height = 20
 )
 ```
 
 Plot the effect by age
 
 ```{r}
+# linear effect
 kid_prop_by_age <- ggplot(
-  filter(summarize_participant_test_first_trial, N_exit >= 5 & age_cohort == "toddlers"),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"),
   aes(x = age_mo, y = prop_exit, color = condition)
 ) +
   geom_hline(yintercept = 0.5, linetype = "dashed") +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "lm") +
   xlab("Age (in months)") +
-  ylab("Proportion Looking to Exit\n(Anticipatory Window, First Trial)") +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)") +
   theme_cowplot() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1")
 kid_prop_by_age
 ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age.png"),
   bg = "white", width = 9, height = 6
+)
+
+#loess
+kid_prop_by_age_loess <- ggplot(
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
+  aes(x = age_mo, y = prop_exit, color = condition)
+) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess") +
+  xlab("Age (in months)") +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)") +
+  theme_cowplot(font_size = 24) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")  
+kid_prop_by_age_loess
+ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_by_age_loess.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
+Effect of age after splitting by age bins.
+
+```{r}
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  mutate(
+    age_bin_2m = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 20 ~ "18-19 months",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 22 ~ "20-21 months",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 24 ~ "22-23 months",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 26 ~ "24-25 months",
+      age_cohort == "toddlers" & age_mo >= 26 & age_mo < 28 ~ ">26 months",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  mutate(
+    age_bin = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 19 ~ "18 mos",
+      age_cohort == "toddlers" & age_mo >= 19 & age_mo < 20 ~ "19 mos",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 21 ~ "20 mos",
+      age_cohort == "toddlers" & age_mo >= 21 & age_mo < 22 ~ "21 mos",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 23 ~ "22 mos",
+      age_cohort == "toddlers" & age_mo >= 23 & age_mo < 24 ~ "23 mos",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 25 ~ "24 mos",
+      age_cohort == "toddlers" & age_mo >= 25 & age_mo < 26 ~ "25 mos",
+      age_cohort == "toddlers" & age_mo >= 26 ~ "26 mos",
+      TRUE ~ NA_character_
+    )
+  )
+
+kids_prop_age_bin <- ggplot(
+  filter(summarize_participant_test_first_trial,age_cohort == "toddlers"),
+  aes(x = condition, y = prop_exit, color = condition)
+) +
+  geom_half_violin(
+    aes(fill = condition), side = "l", nudge = 0.2, width = 0.4, alpha = 0.2
+  ) +
+  geom_jitter(width=0.05,height=0.025,alpha=0.3,stroke=NA)+
+  stat_summary(fun.data = "mean_cl_boot", size = 0.8, position=position_nudge(x = .2, y = 0)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_cowplot(font_size = 24) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_wrap(~ age_bin,ncol=3) +
+  theme(legend.position = "none") +
+  ylab("Proportion DLS to Target Exit\n(Anticipatory Window, First Trial)")
+kids_prop_age_bin
+ggsave(here(plot_path, "kids_proportion_first_trial_target_exit_looking_age_bins.png"),
+  bg = "white", width = 16, height = 10
+)
+```
+
+Combine Loess and age bin plots
+
+```{r}
+figure_prop_age_loess_bin <- ggarrange(
+  kid_prop_by_age_loess, kids_prop_age_bin, 
+  ncol = 1, nrow = 2
+)
+
+figure_prop_age_loess_bin
+
+ggsave(here(plot_path, "figure_prop_age_loess_bin.png"),
+  bg = "white", width = 14, height = 18
+)
+ggsave(here(paper_path, "Figure10.png"),
+  bg = "white", width = 14, height = 18
 )
 ```
 
@@ -709,13 +826,210 @@ saveRDS(summarize_test_aoi,
 )
 ```
 
+### Meta-analysis
+
+First, we create a data frame computing effect sizes by lab and cohort
+
+```{r}
+avgs_by_lab <- summarize_participant_test_first_trial |>
+  filter(!is.na(prop_exit)) |> 
+   group_by(age_cohort, lab_id, condition) |>
+  summarise(mean = mean(prop_exit, na.rm = TRUE),
+            sd = sd(prop_exit, na.rm = TRUE),
+            n = sum(!is.na(prop_exit)), .groups = "drop",
+            mean_age_mo = mean(age_mo,na.rm=TRUE)) %>%
+  pivot_wider(names_from = condition, values_from = c(mean, sd, n, mean_age_mo)) 
+
+ds_by_lab <- avgs_by_lab %>%
+  mutate(
+    pooled_sd = sqrt(((n_ignorance - 1) * sd_ignorance^2 + (n_knowledge - 1) * sd_knowledge^2) /
+                     (n_ignorance + n_knowledge - 2)),
+    d = (mean_knowledge - mean_ignorance) / pooled_sd,
+    d_var = (n_ignorance + n_knowledge) / (n_ignorance * n_knowledge) +
+      (d^2) / (2 * (n_ignorance + n_knowledge)),
+    mean_age = (mean_age_mo_ignorance*n_ignorance + mean_age_mo_knowledge*n_knowledge) / (n_ignorance + n_knowledge)
+  )
+
+#compute hedges g and variance
+hedgesg_by_lab <- avgs_by_lab %>%
+  transmute(
+    age_cohort,
+    lab_id,
+    d_stats = pmap(
+      list(
+        m1i = .data[["mean_knowledge"]], 
+        sd1i = .data[["sd_knowledge"]], 
+        n1i = .data[["n_knowledge"]],
+        m2i = .data[["mean_ignorance"]], 
+        sd2i = .data[["sd_ignorance"]], 
+        n2i = .data[["n_ignorance"]]
+      ),
+      \(...) escalc(measure = "SMD", ...) #note: set correct=FALSE here to compute cohen's d - yielding identical results to the by-hand calculations above
+    )
+  ) %>%
+  unnest_wider(d_stats) %>%
+  rename(hedgesg = yi, hedgesg_var = vi)
+
+#join
+effects_by_lab <- ds_by_lab %>%
+  left_join(hedgesg_by_lab) %>%
+  #filter labs for which we can't compute effects
+  filter(!is.na(hedgesg))
+```
+
+Next, compute meta-analytic effect sizes and prepare a forest plot dataset for plotting
+
+```{r meta-analytic effects}
+# Next, we fit a meta-analytic model, including the moderator age_cohort, and prep the data for the forest plot.
+# intercept-only model
+intercept_mod <- metafor::rma(hedgesg ~ 1,
+  vi = hedgesg_var, slab = lab_id, data = effects_by_lab,
+  method = "REML"
+)
+
+# model including the moderator age_cohort
+age_mod <- metafor::rma(hedgesg ~ age_cohort,
+  vi = hedgesg_var, slab = lab_id, data = effects_by_lab, method = "REML"
+)
+
+s# get fitted estimates for all labs
+f <- fitted(intercept_mod)
+p <- predict(intercept_mod)
+
+alpha <- .05
+
+forest_data <- data.frame(
+  effects = as.numeric(intercept_mod$yi.f),
+  variances = intercept_mod$vi.f
+) |>
+  mutate(
+    effects.cil = effects -
+      qnorm(alpha / 2, lower.tail = FALSE) * sqrt(variances),
+    effects.cih = effects +
+      qnorm(alpha / 2, lower.tail = FALSE) * sqrt(variances),
+    estimate = as.numeric(f),
+    lab = factor(names(f)),
+    estimate.cil = p$ci.lb,
+    estimate.cih = p$ci.ub,
+    inverse_vars = 1 / variances,
+    identity = 1,
+    lab = str_replace(lab, "\\.[1-9]", ""),
+    index = 1:n()
+  ) |>
+  bind_cols(ungroup(effects_by_lab)  |> select(lab_id, age_cohort,hedgesg)) |>
+  # reorder data
+  arrange(effects)
+
+# predict MA means for age cohort
+mf <- fitted(age_mod)
+mp <- predict(age_mod,
+  newmods = c(0,1),
+  intercept = TRUE
+)
+
+# Add meta-analytic estimate
+forest_data <- bind_rows(
+  forest_data,
+  tibble(
+    lab = "Meta-Analytic Estimate",
+    age_cohort = "",
+    effects = summary(intercept_mod)$b[1],
+    effects.cil = summary(intercept_mod)$ci.lb,
+    effects.cih = summary(intercept_mod)$ci.ub
+  ),
+  tibble(
+    lab = "Meta-Analytic Estimate",
+    age_cohort = c(
+      "adults","toddlers"
+    ),
+    effects = mp$pred,
+    effects.cil = mp$ci.lb,
+    effects.cih = mp$ci.ub
+  )
+) |>
+  mutate(
+    age_cohort = fct_rev(fct_relevel(age_cohort, "")),
+    lab = fct_relevel(lab, "Meta-Analytic Estimate")
+  )
+
+# determine order of labs based on effect size
+forest_data <- forest_data |>
+  # make lab names unique
+  mutate(
+    unique_lab = case_when(
+      age_cohort=="" ~ lab,
+      TRUE ~ paste0(lab,"-",age_cohort)
+    )
+  )
+forest_data_lab_names_in_order <- unique(as.character(forest_data$unique_lab))
+forest_data$unique_lab <- factor(forest_data$unique_lab, levels = rev(forest_data_lab_names_in_order))
+```
+
+Create a meta-analytic forest plot of the condition effect.
+
+```{r}
+color_list <- c("#1b9e77", "#C46F3EFF")
+forest_plot <- ggplot(forest_data, aes(x = unique_lab, y = effects)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_linerange(
+    aes(
+      ymin = effects - sqrt(variances) * 1.96,
+      ymax = effects + sqrt(variances) * 1.96,
+      group = index
+    ),
+    alpha = .5,
+    position = position_dodge(width = .5)
+  ) +
+  geom_point(
+    data = filter(forest_data, lab != "Meta-Analytic Estimate"),
+    aes(
+      y = effects, size = inverse_vars, col = age_cohort,
+      group = index
+    ),
+    alpha = 1,
+    position = position_dodge(width = .5)
+  ) +
+  geom_point(
+    data = filter(forest_data, lab == "Meta-Analytic Estimate"),
+    pch = 5
+  ) +
+  geom_linerange(
+    data = filter(forest_data, lab == "Meta-Analytic Estimate"),
+    aes(ymin = effects.cil, ymax = effects.cih),
+    alpha = .5
+  ) +
+  facet_grid(age_cohort ~ ., scales = "free", space = "free") +
+  coord_flip() +
+  scale_size_continuous(guide = FALSE) +
+  xlab("Lab") +
+  ylab("Effect Size") +
+  theme(axis.text.y = element_text(size = 15)) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    panel.grid = element_blank(),
+    axis.title.x = element_text(face = "bold", size = 15),
+    axis.text.x = element_text(size = 14),
+    axis.title.y = element_text(face = "bold", size = 15),
+    axis.text.y = element_text(size = 11),
+    strip.text= element_text(size = 15, face = "bold") # was 15
+  ) +
+  scale_color_manual(values = color_list,guide = FALSE)
+
+forest_plot
+ggsave(here(plot_path, "forest_dls_condition_effect.png"),
+  bg = "white", width = 9, height = 12
+)
+```
+
+
 ### Main Model
 
 Fitting the main Bayesian hierarchical model testing the effect of condition (ignorance vs. knowledge) on first-trial proportion target looking during the anticipatory window.
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
@@ -725,8 +1039,8 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor
 
 bm_aoi_toddlers <- brm(
-  prop_exit ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_exit ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = gaussian,
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -755,6 +1069,12 @@ residual_variance <- as.numeric(random_effects$residual$sd[1])^2
 
 icc <- lab_variance / (lab_variance + residual_variance)
 ```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers.rds"))
+```
+
 
 Organize table in a tidy format
 
@@ -843,14 +1163,22 @@ ggsave(here(plot_path, "test_toddlers_model_coefficients.png"),
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_toddlers_condition_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c)
 summary(bm_aoi_toddlers_condition_null)
 
 saveRDS(bm_aoi_toddlers_condition_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_condition_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_condition_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_condition_null.rds"))
+```
+
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_toddlers <- brms::bayes_factor(
   bm_aoi_toddlers, bm_aoi_toddlers_condition_null
 )
@@ -862,14 +1190,21 @@ saveRDS(test_m_comparison_PTL_toddlers,
 
 Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
 
-```{r}
-bm_aoi_toddlers_interaction_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c * age_mo_c)
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_toddlers_interaction_null <- update(bm_aoi_toddlers, formula = ~ . - condition_c : age_mo_c)
 summary(bm_aoi_toddlers_interaction_null)
 
 saveRDS(bm_aoi_toddlers_interaction_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_interaction_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_interaction_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
   bm_aoi_toddlers, bm_aoi_toddlers_interaction_null
 )
@@ -877,11 +1212,8 @@ test_m_comparison_PTL_toddlers_interaction <- brms::bayes_factor(
 saveRDS(test_m_comparison_PTL_toddlers_interaction,
   file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_interaction.rds")
 )
-```
 
-Alternative approach to computing Bayes factor (just as a sanity check that we are using sufficient iterations - these Bayes factors should converge)
-
-```{r}
+#Alternative approach to computing Bayes factor (just as a sanity check that we are using sufficient iterations - these Bayes factors should converge)
 h_aoi_toddlers_interaction <- hypothesis(bm_aoi_toddlers, "condition_c*age_mo_c = 0", class = "b")
 h_aoi_toddlers_interaction
 plot(h_aoi_toddlers_interaction)
@@ -889,18 +1221,19 @@ plot(h_aoi_toddlers_interaction)
 1 / h_aoi_toddlers_interaction$hypothesis$Evid.Ratio
 ```
 
-Investigate robustness of the result using a model that better captures zero/1-inflation
+Investigate robustness of the result using a model that better captures zero/1-inflation (preliminary investigation)
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
+#preliminary attempt to fit a zero/one-inflated beta regression model
 bm_aoi_toddlers_01inflation_formula <- bf(
-  prop_exit ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  phi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  zoi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
-  coi ~ 1 +  condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  prop_exit ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  phi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  zoi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
+  coi ~ 1 +  condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = zero_one_inflated_beta())
 bm_aoi_toddlers_01inflation <- brm(
   formula = bm_aoi_toddlers_01inflation_formula,
@@ -921,11 +1254,12 @@ summary(bm_aoi_toddlers_01inflation)
 rm(bm_aoi_toddlers)
 rm(bm_aoi_toddlers_condition_null)
 rm(bm_aoi_toddlers_interaction_null)
+rm(bm_aoi_toddlers_01inflation)
 ```
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults <- brm(
   prop_exit ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = gaussian,
@@ -947,6 +1281,10 @@ saveRDS(bm_aoi_adults,
 )
 ```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults.rds"))
+```
 
 Organize table in a tidy format
 
@@ -981,14 +1319,21 @@ saveRDS(bm_aoi_adults_condition_effect,
 
 Alternate Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_aoi_adults_null <- update(bm_aoi_adults, formula = ~ . - condition_c)
 summary(bm_aoi_adults_null)
 
 saveRDS(bm_aoi_adults_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_PTL_adults <- brms::bayes_factor(
   bm_aoi_adults, bm_aoi_adults_null
 )
@@ -1000,7 +1345,7 @@ saveRDS(test_m_comparison_PTL_adults,
 
 Robustness: beta regression
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors_01inflation <- c(
   set_prior("uniform(0, 1)", lb = 0, ub = 1, class = "Intercept"), # uniform distribution for intercept
@@ -1032,6 +1377,365 @@ Remove Bayes model fits
 ```{r}
 rm(bm_aoi_adults)
 rm(bm_aoi_adults_null)
+```
+
+### Above/Below Chance Looking per Condition 
+
+Fitting the main Bayesian hierarchical model with adjusted coding for condition to test for above or below chance performance in each condition (ignorance and knowledge) on first-trial proportion target looking during the anticipatory window.
+
+#### Toddlers Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+# set the prior
+priors <- c(
+  set_prior("uniform(-0.5, 0.5)", lb = -0.5, ub = 0.5, class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, .1)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .05)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor
+
+# Adjust proportion looking to exit for chance level and respective condition to be set to 0
+summarize_participant_test_first_trial <- summarize_participant_test_first_trial %>%
+  mutate(
+    prop_exit_adj = prop_exit - 0.5, # adjusting for chance
+    condition_k = case_when(
+      condition == "knowledge" ~ 0, # knowledge as reference condition
+      condition == "ignorance" ~ 1), 
+    condition_i = case_when(
+      condition == "knowledge" ~ -1, # ignorance as reference condition
+      condition == "ignorance" ~ 0)
+  )
+
+bm_aoi_toddlers_knowledge <- brm(
+  prop_exit_adj ~ 1 + condition_k + age_mo_c + condition_k : age_mo_c + 
+    (1 + condition_k + age_mo_c + condition_k : age_mo_c  | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_toddlers_knowledge)
+# prior_summary(bm_aoi_toddlers_knowledge)
+
+saveRDS(bm_aoi_toddlers_knowledge,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_toddlers_knowledge_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_toddlers_knowledge_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_toddlers_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in knowledge condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_toddlers_knowledge_null <- update(bm_aoi_toddlers_knowledge, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_toddlers_knowledge_null)
+
+saveRDS(bm_aoi_toddlers_knowledge_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_toddlers_knowledge <- brms::bayes_factor(
+  bm_aoi_toddlers_knowledge, bm_aoi_toddlers_knowledge_null
+)
+
+saveRDS(test_m_comparison_PTL_toddlers_knowledge,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_knowledge.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_toddlers_knowledge)
+rm(bm_aoi_toddlers_knowledge_null)
+```
+
+#### Toddlers Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_toddlers_ignorance <- brm(
+  prop_exit_adj ~ 1 + condition_i + age_mo_c + condition_i : age_mo_c + 
+    (1 + condition_i + age_mo_c + condition_i : age_mo_c | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "toddlers"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_toddlers_ignorance)
+# prior_summary(bm_aoi_toddlers_ignorance)
+
+saveRDS(bm_aoi_toddlers_ignorance,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_toddlers_ignorance_tidy_summary <- as_tibble(summary(bm_aoi_toddlers_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_toddlers_ignorance_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_toddlers_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in ignorance condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_toddlers_ignorance_null <- update(bm_aoi_toddlers_ignorance, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_toddlers_ignorance_null)
+
+saveRDS(bm_aoi_toddlers_ignorance_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_toddlers_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_toddlers_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_toddlers_ignorance <- brms::bayes_factor(
+  bm_aoi_toddlers_ignorance, bm_aoi_toddlers_ignorance_null
+)
+
+saveRDS(test_m_comparison_PTL_toddlers_ignorance,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_toddlers_ignorance.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_toddlers_ignorance)
+rm(bm_aoi_toddlers_ignorance_null)
+```
+
+#### Adults Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_adults_knowledge <- brm(
+  prop_exit_adj ~ 1 + condition_k + 
+    (1 + condition_k | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_adults_knowledge)
+# prior_summary(bm_aoi_adults_knowledge)
+
+saveRDS(bm_aoi_adults_knowledge,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_adults_knowledge_tidy_summary <- as_tibble(summary(bm_aoi_adults_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_adults_knowledge_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_adults_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in knowledge condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_adults_knowledge_null <- update(bm_aoi_adults_knowledge, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_adults_knowledge_null)
+
+saveRDS(bm_aoi_adults_knowledge_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_adults_knowledge <- brms::bayes_factor(
+  bm_aoi_adults_knowledge, bm_aoi_adults_knowledge_null
+)
+
+saveRDS(test_m_comparison_PTL_adults_knowledge,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_knowledge.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_adults_knowledge)
+rm(bm_aoi_adults_knowledge_null)
+```
+
+#### Adults Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_aoi_adults_ignorance <- brm(
+  prop_exit_adj ~ 1 + condition_i + 
+    (1 + condition_i | lab_id),
+  family = gaussian,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(summarize_participant_test_first_trial, age_cohort == "adults"), 
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_aoi_adults_ignorance)
+# prior_summary(bm_aoi_adults_ignorance)
+
+saveRDS(bm_aoi_adults_ignorance,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_aoi_adults_ignorance_tidy_summary <- as_tibble(summary(bm_aoi_adults_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_aoi_adults_ignorance_tidy_summary,
+        file = here(RESULTS_FOLDER, "bm_test_aoi_adults_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - propDLS different from chance in ignorance condition? 
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_aoi_adults_ignorance_null <- update(bm_aoi_adults_ignorance, formula = ~ . - 1) # remove intercept
+summary(bm_aoi_adults_ignorance_null)
+
+saveRDS(bm_aoi_adults_ignorance_null,
+        file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_aoi_adults_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_aoi_adults_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_PTL_adults_ignorance <- brms::bayes_factor(
+  bm_aoi_adults_ignorance, bm_aoi_adults_ignorance_null
+)
+
+saveRDS(test_m_comparison_PTL_adults_ignorance,
+        file = here(RESULTS_FOLDER, "test_m_comparison_PTL_adults_ignorance.rds")
+)
+```
+
+Remove Bayes model fits
+
+```{r}
+rm(bm_aoi_adults_ignorance)
+rm(bm_aoi_adults_ignorance_null)
 ```
 
 # Timecourse extension
@@ -1767,7 +2471,7 @@ ggplot(
 ```{r}
 summarize_participant_test_first_look_first_trial <- d_anticipatory_test %>%
   filter(trial_num == 5) %>%
-  group_by(age_cohort, participant_lab_id, lab_id, participant_id, condition) %>%
+  group_by(age_cohort, participant_lab_id, lab_id, participant_id,age_years_n,age_mo, condition) %>%
   summarize(
     N = n(),
     prop_correct_first_look = mean(first_look == "target_exit"),
@@ -1825,13 +2529,97 @@ ggsave(here(plot_path, "overall_test_trial_first_look_first_trial.png"),
 )
 ```
 
+#### Plot by Toddler Age
+
+##### Continuous Age
+
+```{r}
+ggplot(
+  filter(summarize_participant_test_first_look_first_trial,age_cohort=="toddlers"),
+  aes(age_mo,prop_correct_first_look, color = condition)
+) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_smooth(method="loess")+
+  theme_cowplot() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  ylim(0, 1) +
+  xlab("Age (months)")+
+  ylab("First Look to Target Exit\n(First Trial Only)")
+ggsave(here(plot_path, "overall_test_trial_first_look_first_trial_age_continuous.png"),bg = "white", width = 9, height = 6)
+```
+
+##### Age Bins
+
+```{r}
+summarize_participant_test_first_look_first_trial <- summarize_participant_test_first_look_first_trial %>%
+  mutate(
+    age_bin_2m = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 20 ~ "18-19 months",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 22 ~ "20-21 months",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 24 ~ "22-23 months",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 26 ~ "24-25 months",
+      age_cohort == "toddlers" & age_mo >= 26 & age_mo < 28 ~ ">26 months",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  mutate(
+    age_bin = case_when(
+      age_cohort == "toddlers" & age_mo >= 18 & age_mo < 19 ~ "18 mos",
+      age_cohort == "toddlers" & age_mo >= 19 & age_mo < 20 ~ "19 mos",
+      age_cohort == "toddlers" & age_mo >= 20 & age_mo < 21 ~ "20 mos",
+      age_cohort == "toddlers" & age_mo >= 21 & age_mo < 22 ~ "21 mos",
+      age_cohort == "toddlers" & age_mo >= 22 & age_mo < 23 ~ "22 mos",
+      age_cohort == "toddlers" & age_mo >= 23 & age_mo < 24 ~ "23 mos",
+      age_cohort == "toddlers" & age_mo >= 24 & age_mo < 25 ~ "24 mos",
+      age_cohort == "toddlers" & age_mo >= 25 & age_mo < 26 ~ "25 mos",
+      age_cohort == "toddlers" & age_mo >= 26 ~ "26 mos",
+      TRUE ~ NA_character_
+    )
+  )
+
+summarize_overall_test_first_look_first_trial_age_bins <- summarize_participant_test_first_look_first_trial %>%
+  group_by(age_cohort, age_bin, condition) %>%
+  summarize(
+    N = sum(!is.na(prop_correct_first_look)),
+    prop_target_first_look = mean(prop_correct_first_look, na.rm = T),
+    sd_target_first_look = sd(prop_correct_first_look, na.rm = T),
+    se_target_first_look = sd_target_first_look / sqrt(N),
+    lower_ci = prop_target_first_look - qt(1 - (0.05 / 2), N - 1) * se_target_first_look,
+    upper_ci = prop_target_first_look + qt(1 - (0.05 / 2), N - 1) * se_target_first_look
+  )
+
+overall_fl_test_age_bin <- ggplot(
+  filter(summarize_overall_test_first_look_first_trial_age_bins,age_cohort=="toddlers"),
+  aes(condition, prop_target_first_look, color = condition)
+) +
+  geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0) +
+  geom_point(size = 5) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  facet_wrap(~age_cohort) +
+  theme_cowplot() +
+  ggtitle("Test") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  ylim(0, 1) +
+  ylab("First Look to Target Exit\n(First Trial Only)")+
+  facet_wrap(~age_bin,ncol=3)
+overall_fl_test_age_bin
+ggsave(here(plot_path, "overall_test_trial_first_look_first_trial_age_bins.png"),
+  bg = "white", width = 9, height = 6
+)
+```
+
 ## Main Model
 
 ### Familiarization Data
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
@@ -1865,6 +2653,11 @@ summary(bm_fam_first_look_toddlers)
 saveRDS(bm_fam_first_look_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers.rds"))
 ```
 
 Organize table in a tidy format
@@ -1920,14 +2713,21 @@ saveRDS(bm_fam_first_look_toddlers_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_toddlers_null <- update(bm_fam_first_look_toddlers, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_toddlers_null)
 
 saveRDS(bm_fam_first_look_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_toddlers <- brms::bayes_factor(
   bm_fam_first_look_toddlers, bm_fam_first_look_toddlers_null
 )
@@ -1947,7 +2747,7 @@ rm(bm_fam_first_look_toddlers_null)
 Because the BF is sensitive to the choice of prior, we will also run a secondary analysis with a less informative prior: fixed effect coefficients chosen from a normal distribution with mean 0 and SD of 3, and random effect standard deviations drawn from a normal prior with a mean of 0 and SD of 0.5. 
 
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # 2nd set of priors
 priors_less_informative <- c(
   set_prior("normal(0, 3)", class = "Intercept"), # uniform distribution for intercept
@@ -1978,6 +2778,11 @@ summary(bm_fam_first_look_toddlers_less_inf_prior)
 saveRDS(bm_fam_first_look_toddlers_less_inf_prior,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -2014,14 +2819,21 @@ saveRDS(bm_fam_first_look_toddlers_less_inf_prior_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_toddlers_less_inf_prior_null <- update(bm_fam_first_look_toddlers_less_inf_prior, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_toddlers_less_inf_prior_null)
 
 saveRDS(bm_fam_first_look_toddlers_less_inf_prior_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_toddlers_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_toddlers_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
   bm_fam_first_look_toddlers_less_inf_prior,
   bm_fam_first_look_toddlers_less_inf_prior_null
@@ -2040,7 +2852,7 @@ rm(bm_fam_first_look_toddlers_less_inf_prior_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults <- brm(
   first_look ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -2063,6 +2875,11 @@ summary(bm_fam_first_look_adults)
 saveRDS(bm_fam_first_look_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -2117,14 +2934,21 @@ saveRDS(bm_fam_first_look_adults_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_null <- update(bm_fam_first_look_adults, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_adults_null)
 
 saveRDS(bm_fam_first_look_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_adults <- brms::bayes_factor(
   bm_fam_first_look_adults, bm_fam_first_look_adults_null
 )
@@ -2142,7 +2966,7 @@ rm(bm_fam_first_look_adults_null)
 
 Less informative prior as a robustness check
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_less_inf_prior <- brm(
   first_look ~ 1 + familiarization_trial_num_4 +
     (1 + familiarization_trial_num_4 | lab_id) +
@@ -2165,6 +2989,11 @@ summary(bm_fam_first_look_adults_less_inf_prior)
 saveRDS(bm_fam_first_look_adults_less_inf_prior,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior.rds"))
 ```
 
 Summarize outcomes
@@ -2199,14 +3028,21 @@ saveRDS(bm_fam_first_look_adults_less_inf_prior_trial_number_effect,
 
 Compute Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_fam_first_look_adults_less_inf_prior_null <- update(bm_fam_first_look_adults_less_inf_prior, formula = ~ . - 1) # remove intercept
 summary(bm_fam_first_look_adults_less_inf_prior_null)
 
 saveRDS(bm_fam_first_look_adults_less_inf_prior_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_fam_first_look_adults_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_first_look_adults_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 fam_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
   bm_fam_first_look_adults_less_inf_prior,
   bm_fam_first_look_adults_less_inf_prior_null
@@ -2262,7 +3098,7 @@ d_anticipatory_test <- d_anticipatory_test %>%
 
 #### Toddlers
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 # set the prior
 priors <- c(
   set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
@@ -2272,8 +3108,8 @@ priors <- c(
 ) # lkj distribution for covariance matrix/Cholesky Factor?
 
 bm_test_first_look_toddlers <- brm(
-  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors,
   save_pars = save_pars(all = TRUE),
@@ -2292,6 +3128,11 @@ summary(bm_test_first_look_toddlers)
 saveRDS(bm_test_first_look_toddlers,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers.rds"))
 ```
 
 ```{r}
@@ -2355,7 +3196,7 @@ saveRDS(bm_test_first_look_toddlers_condition_age_interaction,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c)
 summary(bm_test_first_look_toddlers_null)
 
@@ -2363,7 +3204,14 @@ summary(bm_test_first_look_toddlers_null)
 saveRDS(bm_test_first_look_toddlers_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers <- brms::bayes_factor(
   bm_test_first_look_toddlers, bm_test_first_look_toddlers_null
 )
@@ -2373,14 +3221,22 @@ saveRDS(test_m_comparison_FL_toddlers,
 )
 ```
 
-Compute Bayes Factor (bridge sampling approach) - Condition*Age Interaction Effect
+Compute Bayes Factor (bridge sampling approach) - Condition:Age Interaction Effect
 
-```{r}
-bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c * age_mo_c)
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_toddlers_interaction_null <- update(bm_test_first_look_toddlers, formula = ~ . - condition_c : age_mo_c)
 summary(bm_test_first_look_toddlers_interaction_null)
 
 saveRDS(bm_test_first_look_toddlers_interaction_null, file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_interaction_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_interaction_null.rds"))
+```
+
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers_interaction <- brms::bayes_factor(
   bm_test_first_look_toddlers,
   bm_test_first_look_toddlers_interaction_null
@@ -2393,16 +3249,15 @@ saveRDS(test_m_comparison_FL_toddlers_interaction, file = here(RESULTS_FOLDER, "
 # remove Bayes model fits
 rm(bm_test_first_look_toddlers)
 rm(bm_test_first_look_toddlers_null)
-rm(bm_test_first_look_interaction_null)
+rm(bm_test_first_look_toddlers_interaction_null)
 ```
-
 
 Less informative priors
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_less_inf_prior <- brm(
-  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c * age_mo_c +
-    (1 + condition_c + age_mo_c + condition_c * age_mo_c | lab_id),
+  correct_first_look ~ 1 + condition_c + age_mo_c + condition_c : age_mo_c +
+    (1 + condition_c + age_mo_c + condition_c : age_mo_c | lab_id),
   family = bernoulli(link = "logit"),
   prior = priors_less_informative,
   save_pars = save_pars(all = TRUE),
@@ -2423,13 +3278,10 @@ saveRDS(bm_test_first_look_toddlers_less_inf_prior,
 )
 ```
 
-```{r}
-# quick and dirty binomial test just for exploratory purposes
-sum_correct_first_looks_knowledge <- sum(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort == "toddlers" & test_first_look_first_trial$condition == "knowledge"], na.rm = TRUE)
-sum_total_first_looks_knowledge <- sum(!is.na(test_first_look_first_trial$correct_first_look[test_first_look_first_trial$age_cohort == "toddlers" & test_first_look_first_trial$condition == "knowledge"]))
-binom.test(sum_correct_first_looks_knowledge, sum_total_first_looks_knowledge, alternative = "two.sided", p = 0.5)
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior.rds"))
 ```
-
 
 Summarize outcomes
 
@@ -2448,14 +3300,21 @@ saveRDS(bm_test_first_look_toddlers_less_inf_prior_condition_effect,
 
 Alternate Bayes factor approach
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_toddlers_less_inf_prior_null <- update(bm_test_first_look_toddlers_less_inf_prior, formula = ~ . - condition_c)
 summary(bm_test_first_look_toddlers_less_inf_prior_null)
 
 saveRDS(bm_test_first_look_toddlers_less_inf_prior_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_fam_aoi_adults_null.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_toddlers_less_inf_prior <- brms::bayes_factor(
   bm_test_first_look_toddlers_less_inf_prior,
   bm_test_first_look_toddlers_less_inf_prior_null
@@ -2475,7 +3334,7 @@ rm(bm_test_first_look_toddlers_less_inf_prior_null)
 
 #### Adults
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults <- brm(
   correct_first_look ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = bernoulli(link = "logit"),
@@ -2496,6 +3355,11 @@ summary(bm_test_first_look_adults)
 saveRDS(bm_test_first_look_adults,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults.rds")
 )
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults.rds"))
 ```
 
 Organize table in a tidy format
@@ -2533,14 +3397,21 @@ saveRDS(bm_test_first_look_adults_condition_effect,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_null <- update(bm_test_first_look_adults, formula = ~ . - condition_c)
 summary(bm_test_first_look_adults_null)
 
 saveRDS(bm_test_first_look_adults_null,
   file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_adults <- brms::bayes_factor(
   bm_test_first_look_adults, bm_test_first_look_adults_null
 )
@@ -2558,7 +3429,7 @@ rm(bm_test_first_look_adults_null)
 
 Less informative priors
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_less_inf_prior <- brm(
   correct_first_look ~ 1 + condition_c + (1 + condition_c | lab_id),
   family = bernoulli(link = "logit"),
@@ -2581,6 +3452,11 @@ saveRDS(bm_test_first_look_adults_less_inf_prior,
 )
 ```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_less_inf_prior <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior.rds"))
+```
+
 Summarize outcomes
 
 ```{r}
@@ -2598,14 +3474,21 @@ saveRDS(bm_test_first_look_adults_less_inf_prior_condition_effect,
 
 Compute Bayes Factor (bridge sampling approach) - Condition Effect
 
-```{r}
+```{r, eval = FIT_BAYES_MODELS}
 bm_test_first_look_adults_less_inf_prior_null <- update(bm_test_first_look_adults_less_inf_prior, formula = ~ . - condition_c)
 summary(bm_test_first_look_adults_less_inf_prior_null)
 
 saveRDS(bm_test_first_look_adults_less_inf_prior_null,
-  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_nulll.rds")
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_null.rds")
 )
+```
 
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_less_inf_prior_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_less_inf_prior_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
 test_m_comparison_FL_adults_less_inf_prior <- brms::bayes_factor(
   bm_test_first_look_adults_less_inf_prior,
   bm_test_first_look_adults_less_inf_prior_null
@@ -2620,6 +3503,374 @@ saveRDS(test_m_comparison_FL_adults_less_inf_prior,
 # remove Bayes model fits
 rm(bm_test_first_look_adults_less_inf_prior)
 rm(bm_test_first_look_adults_less_inf_prior_null)
+```
+
+### Above/Below Chance Looking per Condition 
+
+Fitting the exploratory Bayesian hierarchical model testing above chance performance in each condition (ignorance and knowledge) on first-trial first looks during the anticipatory window.
+
+```{r}
+# select first test trial
+test_first_look_first_trial <- d_anticipatory_test %>%
+  filter(trial_num == 5) %>%
+  group_by(age_cohort, age_mo, age_years_n, participant_lab_id, lab_id, participant_id, condition) %>%
+  summarize(
+    N = n(),
+    correct_first_look = mean(first_look == "target_exit")
+  ) %>%
+  ungroup() %>%
+  # center age and set reference condition to 0
+  mutate(
+    age_mo_c = age_mo - mean(age_mo, na.rm = TRUE),
+    condition_k = case_when(
+      condition == "knowledge" ~ 0,
+      condition == "ignorance" ~ 1
+    ), 
+    condition_i = case_when(
+      condition == "knowledge" ~ -1,
+      condition == "ignorance" ~ 0
+    )
+  )
+```
+
+#### Toddlers Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+# set the prior
+priors <- c(
+  set_prior("normal(0, 2)", class = "Intercept"), # uniform distribution for intercept
+  set_prior("normal(0, 2)", class = "b"), # normal distribution for fixed-effect coefficients
+  set_prior("normal(0, .1)", class = "sd"), # normal distribution for sd/ random effects
+  set_prior("lkj(2)", class = "L")
+) # lkj distribution for covariance matrix/Cholesky Factor?
+
+bm_test_first_look_toddlers_knowledge <- brm(
+  correct_first_look ~ 1 + condition_k + age_mo_c + condition_k : age_mo_c +
+    (1 + condition_k + age_mo_c + condition_k : age_mo_c | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_toddlers_knowledge)
+# prior_summary(bm_test_first_look_toddlers_knowledge)
+
+saveRDS(bm_test_first_look_toddlers_knowledge,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_toddlers_knowledge_tidy_summary <- as_tibble(summary(bm_test_first_look_toddlers_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_toddlers_knowledge_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_toddlers_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_toddlers_knowledge_null <- update(bm_test_first_look_toddlers_knowledge, formula = ~ . - 1)
+summary(bm_test_first_look_toddlers_knowledge_null)
+
+# cache
+saveRDS(bm_test_first_look_toddlers_knowledge_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_toddlers_knowledge <- brms::bayes_factor(
+  bm_test_first_look_toddlers_knowledge, bm_test_first_look_toddlers_knowledge_null
+)
+
+saveRDS(test_m_comparison_FL_toddlers_knowledge,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_knowledge.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_toddlers_knowledge)
+rm(bm_test_first_look_toddlers_knowledge_null)
+```
+
+#### Toddlers Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_test_first_look_toddlers_ignorance <- brm(
+  correct_first_look ~ 1 + condition_i + age_mo_c + condition_i : age_mo_c +
+    (1 + condition_i + age_mo_c + condition_i : age_mo_c | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "toddlers"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_toddlers_ignorance)
+# prior_summary(bm_test_first_look_toddlers_ignorance)
+
+saveRDS(bm_test_first_look_toddlers_ignorance,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_toddlers_ignorance_tidy_summary <- as_tibble(summary(bm_test_first_look_toddlers_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_toddlers_ignorance_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_toddlers_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in ignorance condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_toddlers_ignorance_null <- update(bm_test_first_look_toddlers_ignorance, formula = ~ . - 1)
+summary(bm_test_first_look_toddlers_ignorance_null)
+
+# cache
+saveRDS(bm_test_first_look_toddlers_ignorance_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_toddlers_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_toddlers_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_toddlers_ignorance <- brms::bayes_factor(
+  bm_test_first_look_toddlers_ignorance, bm_test_first_look_toddlers_ignorance_null
+)
+
+saveRDS(test_m_comparison_FL_toddlers_ignorance,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_toddlers_ignorance.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_toddlers_ignorance)
+rm(bm_test_first_look_toddlers_ignorance_null)
+```
+
+#### Adults Knowledge
+
+```{r, eval = FIT_BAYES_MODELS}
+
+bm_test_first_look_adults_knowledge <- brm(
+  correct_first_look ~ 1 + condition_k + (1 + condition_k | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_adults_knowledge)
+# prior_summary(bm_test_first_look_adults_knowledge)
+
+saveRDS(bm_test_first_look_adults_knowledge,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_knowledge <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_adults_knowledge_tidy_summary <- as_tibble(summary(bm_test_first_look_adults_knowledge)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_adults_knowledge_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_adults_knowledge_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_knowledge_null <- update(bm_test_first_look_adults_knowledge, formula = ~ . - 1)
+summary(bm_test_first_look_adults_knowledge_null)
+
+# cache
+saveRDS(bm_test_first_look_adults_knowledge_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_knowledge_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_knowledge_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_adults_knowledge <- brms::bayes_factor(
+  bm_test_first_look_adults_knowledge, bm_test_first_look_adults_knowledge_null
+)
+
+saveRDS(test_m_comparison_FL_adults_knowledge,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults_knowledge.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_adults_knowledge)
+rm(bm_test_first_look_adults_knowledge_null)
+```
+
+#### Adults Ignorance
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_ignorance <- brm(
+  correct_first_look ~ 1 + condition_i + (1 + condition_i | lab_id),
+  family = bernoulli(link = "logit"),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  filter(test_first_look_first_trial, age_cohort == "adults"),
+  warmup = 1000,
+  iter = 10000,
+  chains = 4,
+  cores = 4,
+  seed = 123,
+  sample_prior = TRUE,
+  control = list(adapt_delta = 0.99, stepsize = .1, max_treedepth = 12)
+)
+summary(bm_test_first_look_adults_ignorance)
+# prior_summary(bm_test_first_look_adults_ignorance)
+
+saveRDS(bm_test_first_look_adults_ignorance,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_ignorance <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance.rds"))
+```
+
+Organize table in a tidy format
+
+```{r}
+bm_test_fl_adults_ignorance_tidy_summary <- as_tibble(summary(bm_test_first_look_adults_ignorance)$fixed,rownames=NA) %>% 
+  rownames_to_column("term") %>% 
+  rename(
+    estimate = Estimate,
+    est_error = Est.Error,
+    lower_ci = `l-95% CI`,
+    upper_ci = `u-95% CI`,
+    rhat=Rhat
+  ) %>%
+  select(term,estimate,est_error,lower_ci,upper_ci,rhat)
+
+saveRDS(bm_test_fl_adults_ignorance_tidy_summary,
+  file = here(RESULTS_FOLDER, "bm_test_fl_adults_ignorance_model_summary.rds")
+)
+```
+
+Compute Bayes Factor (bridge sampling approach) - First Looks different from chance in knowledge condition?
+
+```{r, eval = FIT_BAYES_MODELS}
+bm_test_first_look_adults_ignorance_null <- update(bm_test_first_look_adults_ignorance, formula = ~ . - 1)
+summary(bm_test_first_look_adults_ignorance_null)
+
+# cache
+saveRDS(bm_test_first_look_adults_ignorance_null,
+  file = here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance_null.rds")
+)
+```
+
+```{r, eval = !FIT_BAYES_MODELS}
+# if model is not fit, load from disk
+bm_test_first_look_adults_ignorance_null <- readRDS(here(RESULTS_FOLDER, "bayes_model_fits", "bm_test_first_look_adults_ignorance_null.rds"))
+```
+
+```{r, eval = COMPUTE_BAYES_FACTORS}
+test_m_comparison_FL_adults_ignorance <- brms::bayes_factor(
+  bm_test_first_look_adults_ignorance, bm_test_first_look_adults_ignorance_null
+)
+
+saveRDS(test_m_comparison_FL_adults_ignorance,
+  file = here(RESULTS_FOLDER, "test_m_comparison_FL_adults_ignorance.rds")
+)
+```
+
+```{r}
+# remove Bayes model fits
+rm(bm_test_first_look_adults_ignorance)
+rm(bm_test_first_look_adults_ignorance_null)
 ```
 
 # Plotting PTL and First Look for familiarization and test
