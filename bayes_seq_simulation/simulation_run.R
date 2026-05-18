@@ -1,9 +1,16 @@
 # Sequential Bayesian updating simulation — top-level runner.
 #
-# Edit the CONFIG block below and source this file.
+# Usage:
+#   Rscript bayes_seq_simulation/simulation_run.R                 # fresh run
+#   Rscript bayes_seq_simulation/simulation_run.R <RUN_ID>        # resume <RUN_ID>
 #
-# Outputs go to data/04_simulation/runs/<timestamp>/:
-#   trajectory_<outer_idx>.csv   one CSV per ordering (resilient to crashes)
+# Fresh runs create data/04_simulation/runs/<timestamp>/. Resumed runs reuse
+# the named directory and skip any orderings whose trajectory CSV already
+# exists. The CONFIG block must match the original run on resume — there is
+# no consistency check.
+#
+# Outputs (under data/04_simulation/runs/<RUN_ID>/):
+#   trajectory_<outer_idx>.csv   one CSV per ordering (resume unit)
 #   lab_order.csv                full lab order log for all orderings
 #   run_config.json              run-level config
 #
@@ -48,10 +55,19 @@ START_BF_AT_N_LABS  <- 3
 # parallel as the budget allows.
 N_WORKERS <- max(1L, TOTAL_CORES %/% MCMC$cores)
 
-run_id  <- format(Sys.time(), "%Y%m%d-%H%M%S")
-out_dir <- file.path(SIMULATION_RUNS_DIR, run_id)
+# RUN_ID: positional CLI arg if given (resume mode); otherwise a fresh timestamp.
+cli_args <- commandArgs(trailingOnly = TRUE)
+run_id <- if (length(cli_args) >= 1L && nzchar(cli_args[[1L]])) {
+  cli_args[[1L]]
+} else {
+  format(Sys.time(), "%Y%m%d-%H%M%S")
+}
+out_dir       <- file.path(SIMULATION_RUNS_DIR, run_id)
+resuming      <- dir.exists(out_dir)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-message(sprintf("[run] output dir: %s", out_dir))
+message(sprintf("[run] %s: %s",
+                if (resuming) "resuming" else "fresh run",
+                out_dir))
 
 precomp_dir <- file.path(SIMULATION_PRECOMP_DIR, COHORT)
 if (!dir.exists(precomp_dir) ||
@@ -74,15 +90,23 @@ message(sprintf("[run] cohort = %s, %d labs in use (MAX_LABS = %s)",
 set.seed(SEED)
 orderings <- lapply(seq_len(N_ORDERINGS), function(i) sample(lab_ids))
 
-# Replay-ready lab-order log (long format)
-order_log <- tibble(
-  outer_idx = rep(seq_len(N_ORDERINGS), each = length(lab_ids)),
-  inner_idx = rep(seq_len(length(lab_ids)), times = N_ORDERINGS),
-  lab_id    = unlist(orderings),
-  age_cohort = COHORT
-)
-write_csv(order_log, file.path(out_dir, "lab_order.csv"))
+# Replay-ready lab-order log — write once. Resumed runs trust the existing file.
+order_log_path <- file.path(out_dir, "lab_order.csv")
+if (!file.exists(order_log_path)) {
+  order_log <- tibble(
+    outer_idx  = rep(seq_len(N_ORDERINGS), each = length(lab_ids)),
+    inner_idx  = rep(seq_len(length(lab_ids)), times = N_ORDERINGS),
+    lab_id     = unlist(orderings),
+    age_cohort = COHORT
+  )
+  write_csv(order_log, order_log_path)
+}
 
+# run_config: preserve original started_at on resume.
+run_config_path <- file.path(out_dir, "run_config.json")
+prev_config <- if (file.exists(run_config_path)) {
+  jsonlite::fromJSON(run_config_path)
+} else NULL
 
 run_config <- list(
   run_id              = run_id,
@@ -101,10 +125,12 @@ run_config <- list(
   precomp_dir         = precomp_dir,
   n_labs              = length(lab_ids),
   lab_ids             = lab_ids,
-  started_at          = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  started_at          = if (!is.null(prev_config) && !is.null(prev_config$started_at)) {
+                          prev_config$started_at
+                        } else format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+  last_resumed_at     = if (resuming) format(Sys.time(), "%Y-%m-%d %H:%M:%S") else NULL
 )
-jsonlite::write_json(run_config,
-                     file.path(out_dir, "run_config.json"),
+jsonlite::write_json(run_config, run_config_path,
                      pretty = TRUE, auto_unbox = TRUE)
 
 # --------- Worker entrypoint ------------------------------------------------
@@ -115,7 +141,7 @@ run_one_ordering_worker <- function(outer_idx, lab_order, lab_files_map,
                                     high, low, min_n_labs,
                                     here_root, out_dir) {
   suppressPackageStartupMessages({
-    library(tidyverse); library(brms); library(posterior)
+    library(tidyverse); library(brms); library(posterior); library(cmdstanr)
   })
   source(file.path(here_root, "bayes_seq_simulation", "simulation_helpers.R"))
 
@@ -135,16 +161,30 @@ run_one_ordering_worker <- function(outer_idx, lab_order, lab_files_map,
   list(outer_idx = outer_idx, n_steps = nrow(res), file = out_file)
 }
 
+# Skip orderings whose trajectory CSV already exists (resume support).
+existing_files <- list.files(out_dir, pattern = "^trajectory_\\d{5}\\.csv$")
+existing_idx   <- as.integer(sub("^trajectory_0*(\\d+)\\.csv$", "\\1", existing_files))
+to_run         <- setdiff(seq_len(N_ORDERINGS), existing_idx)
+
+if (length(to_run) == 0L) {
+  message(sprintf("[run] all %d orderings already on disk — nothing to do.",
+                  N_ORDERINGS))
+  quit(save = "no", status = 0L)
+}
+
+message(sprintf("[run] %d/%d orderings already on disk; running %d remaining.",
+                length(existing_idx), N_ORDERINGS, length(to_run)))
+
 plan(future.callr::callr, workers = N_WORKERS)
 on.exit(plan(sequential), add = TRUE)
 
 here_root <- here::here()
 message(sprintf("[run] launching %d orderings across %d workers...",
-                N_ORDERINGS, N_WORKERS))
+                length(to_run), N_WORKERS))
 t_start <- Sys.time()
 
 results <- future_map(
-  seq_len(N_ORDERINGS),
+  to_run,
   function(i) {
     run_one_ordering_worker(
       outer_idx     = i,
@@ -170,8 +210,8 @@ results <- future_map(
 )
 
 elapsed <- as.numeric(difftime(Sys.time(), t_start, units = "mins"))
-message(sprintf("[run] done. %d orderings in %.1f min. Output: %s",
-                N_ORDERINGS, elapsed, out_dir))
+message(sprintf("[run] done. %d orderings this batch in %.1f min. Output: %s",
+                length(to_run), elapsed, out_dir))
 
 # Write finished_at + total runtime to run_config
 run_config$finished_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")

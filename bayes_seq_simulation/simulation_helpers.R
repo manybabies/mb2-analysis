@@ -129,7 +129,9 @@ run_one_ordering <- function(outer_idx, lab_order, lab_files_map,
         data         = acc,
         family       = gaussian(),
         prior        = priors,
-        save_pars    = save_pars(all = TRUE),
+        backend      = "cmdstanr",
+        # NOTE: do NOT use save_pars(all = TRUE). Bridge sampling needs it;
+        # Savage-Dickey via hypothesis() does not, and it dominates memory.
         sample_prior = TRUE,
         iter         = mcmc$iter,
         warmup       = mcmc$warmup,
