@@ -708,10 +708,10 @@ authornote: |
 
 
 abstract: |
- Do toddlers and adults engage in spontaneous Theory of Mind? This multi-lab collaboration examined whether 18- to 27-month-olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In adults [n = 703 included, 68% female], we found clear evidence that they do: they showed simple goal-based action anticipation in pilot studies and differentiated between knowledge and ignorance conditions in the main study. In toddlers [n = 521, 49% female], results were less conclusive. While demonstrating goal-based action anticipation in pilot studies, they did not differentiate between knowledge and ignorance as predicted. Future research can explore adults' sensitivity to more complex epistemic states like true/false beliefs and clarify whether toddlers' results reflect competence or performance limitations.
+ Do toddlers and adults engage in spontaneous Theory of Mind? This multi-lab collaboration examined whether 18- to 27-month-olds’ and adults’ anticipatory looks distinguish between two basic forms of epistemic states: knowledge and ignorance. In adults [n = 703 included, 68% female], we found clear evidence that they do: they showed simple goal-based action anticipation and differentiated between knowledge and ignorance conditions. In toddlers [n = 521, 49% female], results were less conclusive. While demonstrating goal-based action anticipation, they did not differentiate between knowledge and ignorance as predicted. Future research can explore adults' sensitivity to more complex epistemic states like true/false beliefs and clarify whether toddlers' results reflect competence or performance limitations.
 
 keywords          : "anticipatory looking; spontaneous Theory of Mind; replication"
-wordcount         : "TODO: UPDATE"
+wordcount         : "15935"
 
 bibliography      : ["r-references.bib"]
 
